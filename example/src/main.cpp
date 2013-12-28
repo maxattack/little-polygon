@@ -5,19 +5,19 @@
 // PHYSICS DIAGNOSTICS
 //------------------------------------------------------------------------------
 
-class WireframeDraw : b2Draw {
+class WireframeDraw : public b2Draw {
 public:
 	WireframeDraw();
 
 	void Begin(vec2 canvasSize, vec2 canvasOffset=vec(0,0));
 	void End();
 
-	virtual void DrawPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color);
-	virtual void DrawSolidPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color);
-	virtual void DrawCircle(const b2Vec2& center, float32 radius, const b2Color& color);
-	virtual void DrawSolidCircle(const b2Vec2& center, float32 radius, const b2Vec2& axis, const b2Color& color);
-	virtual void DrawSegment(const b2Vec2& p1, const b2Vec2& p2, const b2Color& color);
-	virtual void DrawTransform(const b2Transform& xf);
+	void DrawPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color);
+	void DrawSolidPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color);
+	void DrawCircle(const b2Vec2& center, float32 radius, const b2Color& color);
+	void DrawSolidCircle(const b2Vec2& center, float32 radius, const b2Vec2& axis, const b2Color& color);
+	void DrawSegment(const b2Vec2& p1, const b2Vec2& p2, const b2Color& color);
+	void DrawTransform(const b2Transform& xf);
 
 private:
 	bool readyToDraw;
@@ -50,7 +50,7 @@ void WireframeDraw::DrawPolygon(const b2Vec2* vertices, int32 vertexCount, const
 
 void WireframeDraw::DrawSolidPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color) {
 	ASSERT(readyToDraw);
-	// TODO?
+	//LOG_MSG("FILLED BOX");
 }
 
 void WireframeDraw::DrawCircle(const b2Vec2& center, float32 radius, const b2Color& color) {
@@ -66,7 +66,7 @@ void WireframeDraw::DrawCircle(const b2Vec2& center, float32 radius, const b2Col
 
 void WireframeDraw::DrawSolidCircle(const b2Vec2& center, float32 radius, const b2Vec2& axis, const b2Color& color) {
 	ASSERT(readyToDraw);
-	// TODO?
+	//LOG_MSG("SOLIDE CIRCLE");
 }
 
 void WireframeDraw::DrawSegment(const b2Vec2& p1, const b2Vec2& p2, const b2Color& color) {
@@ -76,8 +76,8 @@ void WireframeDraw::DrawSegment(const b2Vec2& p1, const b2Vec2& p2, const b2Colo
 
 void WireframeDraw::DrawTransform(const b2Transform& xf) {
 	ASSERT(readyToDraw);
-	plotter.plot(xf.p, xf.p + vec(xf.q.c, 0), rgb(0xff0000));
-	plotter.plot(xf.p, xf.p + vec(0, xf.q.s), rgb(0x00ff00));
+	plotter.plot(xf.p, xf.p + 8 * vec(xf.q.c, xf.q.s), rgb(0xff0000));
+	plotter.plot(xf.p, xf.p + 8 * vec(-xf.q.s, xf.q.c), rgb(0x00ff00));
 }
 
 //------------------------------------------------------------------------------
@@ -96,15 +96,39 @@ int main(int argc, char *argv[]) {
 	static GenericVertex vertexBuffer[1024];
 	SpriteBatch batch(arraysize(vertexBuffer), vertexBuffer);
 
+	// setup physics
 	b2World world(vec(0,80));
+	WireframeDraw wireframe;
+	world.SetDebugDraw(&wireframe);
+	wireframe.SetFlags(
+		b2Draw::e_shapeBit |
+		b2Draw::e_jointBit |
+		b2Draw::e_aabbBit  |
+		b2Draw::e_pairBit  |
+		b2Draw::e_centerOfMassBit
+	);
+
+
+
+	// create some test bodies
+	b2BodyDef groundParams;
+	groundParams.position.Set(64, 64);
+	auto ground = world.CreateBody(&groundParams);
+
+	b2PolygonShape box;
+	box.SetAsBox(16, 16);
+	ground->CreateFixture(&box, 1);
+
+	// start streaming music
+	Mix_Music *music = Mix_LoadMUS("song.mid");
+	if(music) { Mix_PlayMusic(music, -1); }
 	
+	// start timer
 	Timer timer;
 	timer.init();
 
+	// initialize canvas
 	glClearColor(0.25f, 0.35f, 0.5f, 0.0f);
-
-	Mix_Music *music = Mix_LoadMUS("song.mid");
-	if(music) { Mix_PlayMusic(music, -1); }
 
 	bool done = false;
 	while(!done) {
@@ -147,6 +171,10 @@ int main(int argc, char *argv[]) {
 		);
 
 		batch.end();
+
+		wireframe.Begin(vec(300, 125));
+		world.DrawDebugData();
+		wireframe.End();
 
 		SDL_GL_SwapWindow(context.window());
 	}

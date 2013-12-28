@@ -20,7 +20,8 @@ CCFLAGS = -std=c++11  -fno-rtti
 LIBS = -Llib -L/usr/local/lib -framework OpenGL -framework Cocoa -llittlepolygon -lz
 
 # SDL2
-CFLAGS += -D_THREAD_SAFE -I/usr/local/include/SDL2
+#CFLAGS += -D_THREAD_SAFE
+CFLAGS += -I/usr/local/include/SDL2
 LIBS += -lSDL2 -lSDL2_mixer
 
 # BOX2D
