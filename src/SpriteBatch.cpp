@@ -16,7 +16,7 @@
 
 #include "littlepolygon_utils.h"
 
-const GLchar* BASIC_SPRITE_SHADER = R"GLSL(
+const GLchar* SPRITE_SHADER = R"GLSL(
 
 varying mediump vec2 uv;
 varying mediump vec4 color;
@@ -47,18 +47,20 @@ void main() {
 
 )GLSL";
 
-SpriteBatch::SpriteBatch(int buflen, GenericVertex *buf)  :
-capacity(buflen/4), 
+SpriteBatch::SpriteBatch()  :
 count(0),
-shader(BASIC_SPRITE_SHADER),
-workingBuffer(buf),
 workingTexture(0) {
-	
-	ASSERT(capacity > 0);
+	CHECK(ShaderAsset::compile(SPRITE_SHADER, &prog, &vert, &frag));
+	glUseProgram(prog);
+	uMVP = glGetUniformLocation(prog, "mvp");
+	uAtlas = glGetUniformLocation(prog, "atlas");
+	aPosition = glGetAttribLocation(prog, "aPosition");
+	aUV = glGetAttribLocation(prog, "aUv");
+	aColor = glGetAttribLocation(prog, "aColor");
 
 	// setup element array buffer (should this be static?)
-	uint16_t indices[6 * capacity];
-	for(int i=0; i<capacity; ++i) {
+	uint16_t indices[6 * SPRITE_CAPACITY];
+	for(int i=0; i<SPRITE_CAPACITY; ++i) {
 		indices[6*i+0] = 4*i;
 		indices[6*i+1] = 4*i+1;
 		indices[6*i+2] = 4*i+2;
@@ -71,7 +73,7 @@ workingTexture(0) {
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuf);
 	glBufferData(
 		GL_ELEMENT_ARRAY_BUFFER, 
-		6 * capacity * sizeof(uint16_t), 
+		6 * SPRITE_CAPACITY * sizeof(uint16_t), 
 		indices, 
 		GL_STATIC_DRAW
 	);
@@ -80,25 +82,35 @@ workingTexture(0) {
 
 SpriteBatch::~SpriteBatch() {
 	glDeleteBuffers(2, &elementBuf); 
+	glDeleteProgram(prog);
+	glDeleteShader(vert);
+	glDeleteShader(frag);	
 }
 
 void SpriteBatch::begin(vec2 canvasSize, vec2 canvasOffset) {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	
-	shader.bind();
-	GenericShader::setCanvas(shader.uMVP, canvasSize, canvasOffset);
+	ASSERT(prog);
+	glUseProgram(prog);
+	glEnableVertexAttribArray(aPosition);
+	glEnableVertexAttribArray(aUV);
+	glEnableVertexAttribArray(aColor);
+
+	setCanvas(uMVP, canvasSize, canvasOffset);
 
 	// bind element buffer
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuf);
 	glBindBuffer(GL_ARRAY_BUFFER, arrayBuf);
 
-	shader.setVertexBuffer();
+	glVertexAttribPointer(aPosition, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)0);
+	glVertexAttribPointer(aUV, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)8);
+	glVertexAttribPointer(aColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Vertex), (GLvoid*)16);	
 }
 
 void SpriteBatch::drawImage(ImageAsset *img, vec2 pos, int frame, Color c) {
 	setTextureAtlas(img->texture);
-	GenericVertex *slice = &workingBuffer[4 * count];
+	Vertex *slice = &workingBuffer[4 * count];
 	FrameAsset *fr = img->frame(frame);
 
 	pos -= vec(fr->px, fr->py);
@@ -113,7 +125,7 @@ void SpriteBatch::drawImage(ImageAsset *img, vec2 pos, int frame, Color c) {
 
 void SpriteBatch::drawImageTransformed(ImageAsset *img, vec2 pos, vec2 u, int frame, Color c) {
 	setTextureAtlas(img->texture);
-	GenericVertex *slice = &workingBuffer[4 * count];
+	Vertex *slice = &workingBuffer[4 * count];
 	FrameAsset *fr = img->frame(frame);
 
 	vec2 p0 = -vec(fr->px, fr->py);
@@ -135,7 +147,7 @@ void SpriteBatch::drawImageRotated(ImageAsset *img, vec2 pos, float radians, int
 
 void SpriteBatch::drawImageScaled(ImageAsset *img, vec2 pos, vec2 k, int frame, Color c) {
 	setTextureAtlas(img->texture);
-	GenericVertex *slice = &workingBuffer[4 * count];
+	Vertex *slice = &workingBuffer[4 * count];
 	FrameAsset *fr = img->frame(frame);
 
 	vec2 p0 = -vec(fr->px, fr->py);
@@ -156,11 +168,11 @@ void SpriteBatch::drawImageScaled(ImageAsset *img, vec2 pos, vec2 k, int frame, 
 
 void SpriteBatch::plotGlyph(const GlyphAsset& g, float x, float y, float h, Color c) {
 
-	if (count == capacity) {
+	if (count == SPRITE_CAPACITY) {
 		commitBatch();
 	}
 
-	GenericVertex *slice = &workingBuffer[4 * count];
+	Vertex *slice = &workingBuffer[4 * count];
 	float k = 1.f / workingTexture->w;
 	vec2 uv = k * vec(g.x, g.y);
 	float du = k * (g.advance-UV_LABEL_SLOP);
@@ -218,7 +230,10 @@ void SpriteBatch::end() {
 		commitBatch();
 	}
 	workingTexture = 0;
-	shader.unbind();
+	glDisableVertexAttribArray(aPosition);
+	glDisableVertexAttribArray(aUV);
+	glDisableVertexAttribArray(aColor);
+	glUseProgram(0);
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -226,7 +241,7 @@ void SpriteBatch::end() {
 
 void SpriteBatch::commitBatch() {
 	ASSERT(count > 0);
-	glBufferData(GL_ARRAY_BUFFER, 4 * count * sizeof(GenericVertex), workingBuffer, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, 4 * count * sizeof(Vertex), workingBuffer, GL_DYNAMIC_DRAW);
 	glDrawElements(GL_TRIANGLES, 6 * count, GL_UNSIGNED_SHORT, 0);
 	count = 0;
 }
@@ -235,9 +250,9 @@ void SpriteBatch::setTextureAtlas(TextureAsset *texture) {
 
 	bool atlasChange = texture != workingTexture;
 	
-	// emit a draw call if we're at capacity of if the atlas is changing.
+	// emit a draw call if we're at SPRITE_CAPACITY of if the atlas is changing.
 	// (assuming that count will be 0 if workingTexture is null)
-	if (count == capacity || (count > 0 && atlasChange)) {
+	if (count == SPRITE_CAPACITY || (count > 0 && atlasChange)) {
 		commitBatch();
 	}
 

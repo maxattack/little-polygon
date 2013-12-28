@@ -121,3 +121,18 @@ void Color::toHSV(float *h, float *s, float *v) {
   *v = r;
 }
 
+void setCanvas(GLuint uMVP, vec2 csize, vec2 coff) {
+  float zfar = 128;
+  float znear = -128;
+  float fan = zfar + znear;
+  float fsn = zfar - znear;
+  GLfloat orth[16] = {
+    2.f/csize.x, 0, 0, 0,
+    0, -2.f/csize.y, 0, 0,
+    0, 0, 2.f/fsn, 0,
+    -1+coff.x, 1-coff.y, -fan/fsn, 1
+  };
+  glUniformMatrix4fv(uMVP, 1, 0, orth);
+}
+
+

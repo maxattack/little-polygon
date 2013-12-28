@@ -93,8 +93,7 @@ int main(int argc, char *argv[]) {
 	auto kitten = assets.image("kitten");
 	auto jump = assets.sample("jump");
 
-	static GenericVertex vertexBuffer[1024];
-	SpriteBatch batch(arraysize(vertexBuffer), vertexBuffer);
+	SpriteBatch batch;
 
 	// setup physics
 	b2World world(vec(0,80));

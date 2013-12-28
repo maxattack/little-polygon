@@ -2,7 +2,6 @@ LIBRARY_OBJ_FILES =     \
 	obj/glew.o          \
 	obj/AssetBundle.o   \
 	obj/Context.o       \
-	obj/GenericShader.o \
 	obj/LinePlotter.o   \
 	obj/SampleAsset.o   \
 	obj/ShaderAsset.o   \
@@ -13,9 +12,13 @@ LIBRARY_OBJ_FILES =     \
 EXAMPLE_OBJ_FILES =     \
 	obj/main.o
 
+# COMPILER
+CC = clang
+CPP = clang++
+
 # BASE FLAGS
-# -arch i386 
-CFLAGS = -Iinclude -I/usr/local/include/ -g -Os -Wall -flto 
+# -flto 
+CFLAGS = -Iinclude -I/usr/local/include/ -g -Os -Wall 
 CCFLAGS = -std=c++11  -fno-rtti
 LIBS = -Llib -L/usr/local/lib -framework OpenGL -framework Cocoa -llittlepolygon -lz
 
@@ -43,7 +46,7 @@ refresh: bin/game
 	bin/game
 
 bin/game: lib/liblittlepolygon.a $(EXAMPLE_OBJ_FILES) 
-	clang++ -o $@ $(CFLAGS) $(CCFLAGS) $(LIBS) $(GAME_LIBS) $(EXAMPLE_OBJ_FILES)
+	$(CPP) -o $@ $(CFLAGS) $(CCFLAGS) $(LIBS) $(GAME_LIBS) $(EXAMPLE_OBJ_FILES)
 
 bin/assets.bin: example/assets/* tools/*.py
 	tools/export_asset_bin.py example/assets/assets.yaml $@ $(AFLAGS)
@@ -57,10 +60,10 @@ lib/liblittlepolygon.a: $(LIBRARY_OBJ_FILES)
 	ar rcs $@ $^
 
 obj/%.o: src/%.c
-	clang $(CFLAGS) -c -o $@ $<
+	$(CC) $(CFLAGS) -c -o $@ $<
 
 obj/%.o: src/%.cpp
-	clang++ $(CFLAGS) $(CCFLAGS) -c -o $@ $<
+	$(CPP) $(CFLAGS) $(CCFLAGS) -c -o $@ $<
 
 obj/%.o: example/src/%.cpp
-	clang++ $(CFLAGS) $(CCFLAGS) -c -o $@ $<
+	$(CPP) $(CFLAGS) $(CCFLAGS) -c -o $@ $<

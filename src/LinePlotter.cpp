@@ -60,13 +60,13 @@ void LinePlotter::begin(vec2 canvasSize, vec2 canvasOffset) {
 
 	glUseProgram(prog);
 
-	GenericShader::setCanvas(uMVP, canvasSize, canvasOffset);
+	setCanvas(uMVP, canvasSize, canvasOffset);
 
 	glEnableVertexAttribArray(aPosition);
 	glEnableVertexAttribArray(aColor);
 
-	glVertexAttribPointer(aPosition, 2, GL_FLOAT, GL_FALSE, sizeof(SimpleVertex), &vertices[0].position);
-	glVertexAttribPointer(aColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(SimpleVertex), &vertices[0].color);	
+	glVertexAttribPointer(aPosition, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), &vertices[0].position);
+	glVertexAttribPointer(aColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Vertex), &vertices[0].color);	
 }
 
 void LinePlotter::plot(vec2 p0, vec2 p1, Color c) {

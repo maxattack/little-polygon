@@ -300,40 +300,10 @@ public:
 };
 
 //--------------------------------------------------------------------------------
-// GENERIC 2D VERTEX FORMAT
+// GRAPHICS HELPERS
 //--------------------------------------------------------------------------------
-	
-struct GenericVertex {
-	vec2 position;
-	vec2 uv;
-	Color color;
-	
-	inline void set(vec2 p, vec2 u, Color c) {
-		position = p;
-		uv = u;
-		color = c;
-	}
 
-};
-
-struct GenericShader {
-	GLuint prog;
-	GLuint vert;
-	GLuint frag;
-	GLuint uMVP;
-	GLuint uAtlas;
-	GLuint aPosition;
-	GLuint aUV;
-	GLuint aColor;
-
-	GenericShader(const GLchar *source);
-	~GenericShader();
-
-	void bind();
-	static void setCanvas(GLuint mvp, vec2 canvasSize, vec2 canvasOffset);
-	void setVertexBuffer(GenericVertex *buf=0);
-	void unbind();
-};
+void setCanvas(GLuint uMVP, vec2 canvasSize, vec2 canvasOffset);
 
 //--------------------------------------------------------------------------------
 // SPRITE BATCH UTILITY
@@ -341,11 +311,12 @@ struct GenericShader {
 // by coalescing adjacent draws into larger logical draws.
 //--------------------------------------------------------------------------------
 
+#define SPRITE_CAPACITY 64
 
 class SpriteBatch {
 public:
 	// Construct a batch with an internal draw-queue for "capacity" man sprites
-	SpriteBatch(int bufLength, GenericVertex *buf);
+	SpriteBatch();
 	~SpriteBatch();
 
 	// Call this method to initialize the graphics context state.  Coordinates are
@@ -382,16 +353,37 @@ public:
 	void end();
 
 private:
+	struct Vertex {
+		vec2 position;
+		vec2 uv;
+		Color color;
+		
+		inline void set(vec2 p, vec2 u, Color c) {
+			position = p;
+			uv = u;
+			color = c;
+		}
+
+	};
+
+
 	// draw queue status
-	int capacity;
 	int count;
-	GenericShader shader;
+
+	GLuint prog;
+	GLuint vert;
+	GLuint frag;
+	GLuint uMVP;
+	GLuint uAtlas;
+	GLuint aPosition;
+	GLuint aUV;
+	GLuint aColor;	
 
 	// invariant: these two fields need to be adjacent
 	GLuint elementBuf;
 	GLuint arrayBuf;
 	
-	GenericVertex *workingBuffer;
+	Vertex workingBuffer[4 * SPRITE_CAPACITY]; // four corners
 	TextureAsset *workingTexture;
 
 	// private helper methods
@@ -418,14 +410,14 @@ public:
 	void end();
 
 private:
-	struct SimpleVertex {
+	struct Vertex {
 		vec2 position;
 		Color color;
 		inline void set(vec2 p, Color c) { position = p; color = c; }
 	};
 
 
-	SimpleVertex vertices[ 2 * LINE_PLOTTER_CAPACITY ];
+	Vertex vertices[ 2 * LINE_PLOTTER_CAPACITY ];
 	int count;
 	GLuint prog;
 	GLuint vert;
