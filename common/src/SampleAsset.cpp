@@ -66,7 +66,7 @@ void SampleAsset::init() {
 			compressedSize
 		);
 		// load the chunk
-		chunk = Mix_QuickLoad_WAV(scratch);
+		chunk = Mix_LoadWAV_RW(SDL_RWFromMem(scratch, sz+sizeof(WaveHeader)), 0);
 		ASSERT(chunk);
 		LPFREE(scratch);
 	}

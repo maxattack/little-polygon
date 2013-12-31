@@ -126,13 +126,93 @@ void setCanvas(GLuint uMVP, vec2 csize, vec2 coff) {
   float znear = -128;
   float fan = zfar + znear;
   float fsn = zfar - znear;
+  vec2 cext = coff + csize;
+  vec2 t = - (cext + coff) / csize;
   GLfloat orth[16] = {
     2.f/csize.x, 0, 0, 0,
     0, -2.f/csize.y, 0, 0,
     0, 0, 2.f/fsn, 0,
-    -1+coff.x, 1-coff.y, -fan/fsn, 1
+    t.x, -t.y, -fan/fsn, 1
   };
   glUniformMatrix4fv(uMVP, 1, 0, orth);
 }
 
+bool compileShader(const GLchar* source, GLuint *outProg, GLuint *outVert, GLuint *outFrag) {
+  int prog = glCreateProgram();
+  int vert = glCreateShader(GL_VERTEX_SHADER);
+  int frag = glCreateShader(GL_FRAGMENT_SHADER);
+
+  // setup source and compile
+  const char vpreamble[] = "#define VERTEX 1\n";
+  const char fpreamble[] = "#define VERTEX 0\n";
+  int slen = (int) strlen(source);
+  #if LITTLE_POLYGON_MOBILE
+  const char* vsrcList[] = { vpreamble, source };
+  const char* fsrcList[] = { fpreamble, source };
+  int vlengths[] = { (int) strlen(vpreamble), slen };
+  int flengths[] = { (int) strlen(fpreamble), slen };
+  glShaderSource(vert, 2, vsrcList, vlengths);
+  glShaderSource(frag, 2, fsrcList, flengths);
+  #else
+  const char preamble[] = "#version 120\n#define mediump  \n#define highp  \n#define lowp  \n";
+  const char* vsrcList[] = { preamble, vpreamble, source };
+  const char* fsrcList[] = { preamble, fpreamble, source };
+  int vlengths[] = { (int) strlen(preamble), (int) strlen(vpreamble), slen };
+  int flengths[] = { (int) strlen(preamble), (int) strlen(fpreamble), slen };
+  glShaderSource(vert, 3, vsrcList, vlengths);
+  glShaderSource(frag, 3, fsrcList, flengths);
+  #endif
+  glCompileShader(vert);
+  glCompileShader(frag);
+
+  // check compile results
+  GLint result;
+    glGetShaderiv(vert, GL_COMPILE_STATUS, &result);
+    if (result != GL_TRUE) {
+        GLchar buf[256];
+        int len;
+        glGetShaderInfoLog(vert, 256, &len, buf);
+        LOG(("VERTEX %s\n", buf));
+    glDeleteProgram(prog);
+    glDeleteShader(frag);
+    glDeleteShader(vert);        
+        return false;
+    }
+
+    glGetShaderiv(frag, GL_COMPILE_STATUS, &result);
+    if (result != GL_TRUE) {
+        GLchar buf[256];
+        int len;
+        glGetShaderInfoLog(frag, 256, &len, buf);
+        LOG(("FRAGMENT %s\n", buf));
+    glDeleteProgram(prog);
+    glDeleteShader(frag);
+    glDeleteShader(vert);        
+        return false;
+    }
+
+    // link
+  glAttachShader(prog, vert);
+  glAttachShader(prog, frag);
+  glLinkProgram(prog);
+  
+  // check link results
+  glGetProgramiv(prog, GL_LINK_STATUS, &result);
+  if (result != GL_TRUE) {
+    GLchar buf[256];
+    int len;
+    glGetProgramInfoLog(prog, 256, &len, buf);
+    LOG(("LINK %s\n", buf));
+    glDeleteProgram(prog);
+    glDeleteShader(frag);
+    glDeleteShader(vert);        
+    return false;
+  }
+
+  // save handles
+  *outProg = prog;
+  *outVert = vert;
+  *outFrag = frag;  
+  return true;
+}
 

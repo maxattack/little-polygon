@@ -26,10 +26,10 @@ ASSET_TYPE_TEXTURE = 1
 ASSET_TYPE_IMAGE = 2
 ASSET_TYPE_FONT = 3
 ASSET_TYPE_SAMPLE = 4
-ASSET_TYPE_SHADER = 5
-ASSET_TYPE_TILEMAP = 6
+ASSET_TYPE_TILEMAP = 5
+ASSET_TYPE_USERDATA = 6
 
-def export_native_assets(assetGroup, outpath, outpat):
+def export_native_assets(assetGroup, outpath, bpp):
 	print '-' * 80
 	print 'BUILDING BINARY IMAGE'
 	print '-' * 80
@@ -37,8 +37,8 @@ def export_native_assets(assetGroup, outpath, outpat):
 	textures = assetGroup.textures
 	fonts = assetGroup.fonts
 	samples = assetGroup.samples
-	shaders = assetGroup.shaders
 	tilemaps = assetGroup.tilemaps
+	userdata = assetGroup.userdata
 
 	################################################################################
 	# 
@@ -56,7 +56,7 @@ def export_native_assets(assetGroup, outpath, outpat):
 	#	font_hdr[]
 	#	tilemap_hdr[]
 	# 	sample_hdr[]
-	#   shader_source[]
+	#   userdata_hdr[]
 	# 	compressed_atlas_texture_data[]
 	#	compressed_font_texture_data[]
 	# 	compressed_sample_data[]
@@ -64,7 +64,7 @@ def export_native_assets(assetGroup, outpath, outpat):
 	# 
 	################################################################################
 
-	header_count = 1 + len(textures) + len(fonts) + len(tilemaps) + len(samples) + len(shaders)
+	header_count = 1 + len(textures) + len(fonts) + len(tilemaps) + len(samples) + len(userdata)
 	for t in textures:
 		header_count += 2 * len(t.images) # one record for image, one record for frame[]
 
@@ -88,9 +88,9 @@ def export_native_assets(assetGroup, outpath, outpat):
 	for sample in samples:
 		asset_header.append((sample.hash, ASSET_TYPE_SAMPLE, record_count))
 		record_count += 1 # sample record
-	for shader in shaders:
-		asset_header.append((shader.hash, ASSET_TYPE_SHADER, record_count))
-		record_count += 1 # shader header
+	for data in userdata:
+		asset_header.append((data.hash, ASSET_TYPE_USERDATA, record_count))
+		record_count += 1 # data header
 
 	# sort by hash, so we can bin-search at runtime
 	asset_header.sort(key = lambda tup: tup[0])
@@ -189,6 +189,7 @@ def export_native_assets(assetGroup, outpath, outpat):
 
 	for idx,tilemap in enumerate(tilemaps):
 		print "Encoding Tilemap(%s)" % tilemap.id
+		# *data            : *uint8(0)
 		# *MapData         : *uint8
 		# TileWidth        : int
 		# TileHeight       : int
@@ -205,9 +206,9 @@ def export_native_assets(assetGroup, outpath, outpat):
 		pData = header_count + len(textures) + len(fonts) + 2*idx
 		pTexData = header_count + len(textures) + len(fonts) + 2*idx + 1
 		records.append(bintools.Record(
-			'#IIIII' + '#iiIII',
-			(pData, tilemap.tw, tilemap.th, mw, mh, len(tilemap.mapData)) + \
-			(pMapData,) + tilemap.atlasImg.size + (len(tilemap.atlasData), 0, 0)
+			'P#IIIII' + '#iiIII',
+			(0, pData, tilemap.tw, tilemap.th, mw, mh, len(tilemap.mapData)) + \
+			(pTexData,) + tilemap.atlasImg.size + (len(tilemap.atlasData), 0, 0)
 		))
 
 
@@ -230,19 +231,13 @@ def export_native_assets(assetGroup, outpath, outpat):
 			len(sample.data)
 		)))
 
-	for shader in shaders:
-		print 'Writing Shader (%s)' % shader.id
-		print '--------------------------------------------------------------------------------'
-		print shader.source
-		print '--------------------------------------------------------------------------------'
-		# programHandle   : uint(0)
-		# vertexHandle    : uint(0)
-		# fragmentHandle  : uint(0)
-		# sourceCode      : char[]
-		lengthPlusNull = len(shader.source) + 1
+	for data in userdata:
+		print 'Writing Userdata (%s)' % data.id
+		# length  : size_t
+		# data    : byte[]
 		records.append(bintools.Record(
-			'III' + ('B' * lengthPlusNull),
-			(0,0,0) + tuple(ord(c) for c in shader.source) + (0,)
+			('I' if bpp == 32 else 'Q') + ('B' * len(data.data)),
+			[ len(data.data) ] + array.array('B', data.data).tolist()
 		))
 
 	# WRITE COMPRESSED DATA BLOCKS
@@ -280,7 +275,7 @@ if __name__ == '__main__':
 	input = sys.argv[1]
 	output = 'assets.bin' if len(sys.argv) <= 2 else sys.argv[2]
 	bpp = 32 if len(sys.argv) <= 3 else int(sys.argv[3])
-	export_native_assets(assets.load(input), output, bpp)
+	export_native_assets(assets.Assets(input), output, bpp)
 
 
 

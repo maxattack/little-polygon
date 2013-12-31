@@ -20,7 +20,7 @@ from PIL import Image
 from itertools import product
 from glob import glob
 from psd_tools import PSDImage
-import array, base64, collections, math, os, string, struct, sys
+import array, base64, collections, math, os, string, struct, sys, zlib, yaml
 import lxml, lxml.etree
 
 def _sanitize_rgba(im):

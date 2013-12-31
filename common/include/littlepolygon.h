@@ -107,8 +107,8 @@
 #define ASSET_TYPE_IMAGE     2
 #define ASSET_TYPE_FONT      3
 #define ASSET_TYPE_SAMPLE    4
-#define ASSET_TYPE_SHADER    5
-#define ASSET_TYPE_TILEMAP   6
+#define ASSET_TYPE_TILEMAP   5
+#define ASSET_TYPE_USERDATA  6
 
 #define CHANNEL_COUNT        16
 #define SAMPLE_CAPACITY      64
@@ -163,12 +163,35 @@ struct ImageAsset {
 	}	
 };
 
+struct uint8_pair_t {
+	uint8_t x;
+	uint8_t y;
+};
+
 struct TilemapAsset {
+	uint8_pair_t *data;
 	void *compressedData;   // zlib compressed tilemap buffer
 	uint32_t tw, th,        // the size of the individual tiles
 		mw, mh,             // the size of the tilemap
 		compressedSize;     // the byte-length of the compressed buffer
 	TextureAsset tileAtlas; // a texture-atlas of all the tiles
+
+	inline bool intialized() const { return data != 0; }
+
+	// if not initialized, decompress tiles to a dynamically-allocated buffer,
+	// and transfer the tile atlas to the graphics device
+	void init();
+
+	// if initialized, free the dynamically-allocated buffer and release the tile
+	// atlas from the graphics device
+	void release();
+
+	inline uint8_pair_t tileAt(int x, int y) const {
+		ASSERT(intialized());
+		ASSERT(x >= 0 && x < mw);
+		ASSERT(y >= 0 && y < mh);
+		return data[y * mw + x];
+	}
 };
 
 struct GlyphAsset {
@@ -218,32 +241,16 @@ struct SampleAsset {
 	void play();
 };
 
-struct ShaderAsset {
-	uint32_t vertexHandle, // gl vertex texture handle
-		fragmentHandle,    // gl fragment texture handle
-		programHandle;     // gl program handle
+struct UserdataAsset {
+	// A slice of plain old data that can represent anything - structured game assets,
+	// UTF8 strings, etc.  Data immediately follows the initial size term.
 
-	inline bool initialized() const { return programHandle != 0; }
+	size_t size; // length of the data, in bytes
 
-	// source is stored directly after this record as an ascii string
-	inline const GLchar* source() const { return (const GLchar*)(&programHandle+1); }
+	inline void *data() const { return (void*)(this+1); }
 
-	// utility method to compile shaders, even string literals unrelated
-	// to asset export.  the vertex and fragment shaders are delineated by 
-	// FRAGMENT and TEXTURE conditional compilation switches
-	static bool compile(
-		const GLchar* source, 
-		GLuint *outProg, GLuint *outVert, GLuint *outFrag
-	);
-
-	// if not initialized, compile the shader
-	void init();
-
-	// if initialized, unload the shader
-	void release();
-
-	// bind the shader to the graphics context, loading lazily if necessary
-	void bind();
+	template<typename T> 
+	T get() const { ASSERT(size == sizeof(T)); return *((T*)(this+1)); }
 };
 
 //------------------------------------------------------------------------------
@@ -290,7 +297,7 @@ public:
 	inline TilemapAsset *tilemap(const char * name) { return tilemap(hash(name)); }
 	inline FontAsset *font(const char * name) { return font(hash(name)); }
 	inline SampleAsset *sample(const char * name) { return sample(hash(name)); }
-	inline ShaderAsset *shader(const char * name) { return shader(hash(name)); }
+	inline UserdataAsset *userdata(const char *name) { return userdata(hash(name)); }
 
 	// lookup assets by hash
 	inline TextureAsset *texture(uint32_t hash) { return (TextureAsset*) findHeader(hash, ASSET_TYPE_TEXTURE); }
@@ -298,7 +305,7 @@ public:
 	inline TilemapAsset *tilemap(uint32_t hash) { return (TilemapAsset*) findHeader(hash, ASSET_TYPE_TILEMAP); }
 	inline FontAsset *font(uint32_t hash) { return (FontAsset*) findHeader(hash, ASSET_TYPE_FONT); }
 	inline SampleAsset *sample(uint32_t hash) { return (SampleAsset*) findHeader(hash, ASSET_TYPE_SAMPLE); }
-	inline ShaderAsset *shader(uint32_t hash) { return (ShaderAsset*) findHeader(hash, ASSET_TYPE_SHADER); }
+	inline UserdataAsset *userdata(uint32_t hash) { return (UserdataAsset*) findHeader(hash, ASSET_TYPE_USERDATA); }
 
 private:
 

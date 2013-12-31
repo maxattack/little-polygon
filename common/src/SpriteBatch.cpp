@@ -47,10 +47,8 @@ void main() {
 
 )GLSL";
 
-SpriteBatch::SpriteBatch()  :
-count(0),
-workingTexture(0) {
-	CHECK(ShaderAsset::compile(SPRITE_SHADER, &prog, &vert, &frag));
+SpriteBatch::SpriteBatch() : count(-1), workingTexture(0) {
+	CHECK(compileShader(SPRITE_SHADER, &prog, &vert, &frag));
 	glUseProgram(prog);
 	uMVP = glGetUniformLocation(prog, "mvp");
 	uAtlas = glGetUniformLocation(prog, "atlas");
@@ -87,7 +85,10 @@ SpriteBatch::~SpriteBatch() {
 	glDeleteShader(frag);	
 }
 
-void SpriteBatch::begin(vec2 canvasSize, vec2 canvasOffset) {
+void SpriteBatch::begin(vec2 aCanvasSize, vec2 aCanvasOffset) {
+	ASSERT(count == -1);
+	count = 0;
+
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	
@@ -97,7 +98,9 @@ void SpriteBatch::begin(vec2 canvasSize, vec2 canvasOffset) {
 	glEnableVertexAttribArray(aUV);
 	glEnableVertexAttribArray(aColor);
 
-	setCanvas(uMVP, canvasSize, canvasOffset);
+	canvasSize = aCanvasSize;
+	canvasScroll = aCanvasOffset;
+	setCanvas(uMVP, canvasSize, canvasScroll);
 
 	// bind element buffer
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuf);
@@ -109,6 +112,7 @@ void SpriteBatch::begin(vec2 canvasSize, vec2 canvasOffset) {
 }
 
 void SpriteBatch::drawImage(ImageAsset *img, vec2 pos, int frame, Color c) {
+	ASSERT(count >= 0);
 	setTextureAtlas(img->texture);
 	Vertex *slice = &workingBuffer[4 * count];
 	FrameAsset *fr = img->frame(frame);
@@ -124,6 +128,7 @@ void SpriteBatch::drawImage(ImageAsset *img, vec2 pos, int frame, Color c) {
 }
 
 void SpriteBatch::drawImageTransformed(ImageAsset *img, vec2 pos, vec2 u, int frame, Color c) {
+	ASSERT(count >= 0);
 	setTextureAtlas(img->texture);
 	Vertex *slice = &workingBuffer[4 * count];
 	FrameAsset *fr = img->frame(frame);
@@ -146,6 +151,7 @@ void SpriteBatch::drawImageRotated(ImageAsset *img, vec2 pos, float radians, int
 }
 
 void SpriteBatch::drawImageScaled(ImageAsset *img, vec2 pos, vec2 k, int frame, Color c) {
+	ASSERT(count >= 0);
 	setTextureAtlas(img->texture);
 	Vertex *slice = &workingBuffer[4 * count];
 	FrameAsset *fr = img->frame(frame);
@@ -187,6 +193,7 @@ void SpriteBatch::plotGlyph(const GlyphAsset& g, float x, float y, float h, Colo
 }
 
 void SpriteBatch::drawLabel(FontAsset *font, vec2 p, Color c, const char *msg) {
+	ASSERT(count >= 0);
 	setTextureAtlas( &(font->texture) );
 
 	float px = p.x;
@@ -206,6 +213,7 @@ void SpriteBatch::drawLabel(FontAsset *font, vec2 p, Color c, const char *msg) {
 }
 
 void SpriteBatch::drawLabelCentered(FontAsset *font, vec2 p, Color c, const char *msg) {
+	ASSERT(count >= 0);
 	setTextureAtlas( &(font->texture) );
 	float py = p.y;
 	while(*msg) {
@@ -225,10 +233,79 @@ void SpriteBatch::drawLabelCentered(FontAsset *font, vec2 p, Color c, const char
 	}
 }
 
-void SpriteBatch::end() {
-	if (count > 0) {
-		commitBatch();
+#define TILE_SLOP (0.001f)
+
+void SpriteBatch::drawTilemap(TilemapAsset *map, vec2 position) {
+	ASSERT(count >= 0);
+
+	// make sure the map is initialized
+	map->init();
+
+	// flush the draw queue first so we can turn off blending
+	flush();
+	glDisable(GL_BLEND);
+
+	vec2 cs = canvasSize / vec(map->tw, map->th);	
+	int latticeW = ceilf(cs.x) + 1;
+	int latticeH = ceilf(cs.y) + 1;
+
+	vec2 scroll = canvasScroll -position;
+	
+
+	int vox = int(scroll.x/map->tw);
+	int voy = int(scroll.y/map->th);
+	
+	vec2 rem = vec(
+		fmod(scroll.x, map->tw),
+		fmod(scroll.y, map->th)
+	);
+	setTextureAtlas(&map->tileAtlas);
+
+	float tw = map->tw + TILE_SLOP + TILE_SLOP;
+	float th = map->th + TILE_SLOP + TILE_SLOP;
+	float uw = (map->tw - TILE_SLOP - TILE_SLOP) / float(map->tileAtlas.w);
+	float uh = (map->th - TILE_SLOP - TILE_SLOP) / float(map->tileAtlas.h);
+	for(int y=0; y<latticeH; ++y)
+	for(int x=0; x<latticeW; ++x) {
+		int rawX = x+vox;
+		int rawY = y+voy;
+		if (rawX >= 0 && rawX < map->mw && rawY >= 0 && rawY < map->mh) {
+			uint8_pair_t coord = map->tileAt(rawX, rawY);
+			vec2 p = vec(x * map->tw, y * map->th) 
+				- vec(TILE_SLOP, TILE_SLOP) 
+				- rem + canvasScroll;
+			vec2 uv = 
+				(vec(map->tw * coord.x, map->th * coord.y) + vec(TILE_SLOP, TILE_SLOP))
+				/ vec(map->tileAtlas.w, map->tileAtlas.h);
+			Vertex *slice = &workingBuffer[4 * count];
+
+			slice[0].set(p, uv, rgba(0));
+			slice[1].set(p+vec(0,th), uv+vec(0,uh), rgba(0));
+			slice[2].set(p+vec(tw,0), uv+vec(uw,0), rgba(0));
+			slice[3].set(p+vec(tw,th), uv+vec(uw,uh), rgba(0));
+
+			if (++count == SPRITE_CAPACITY) {
+				commitBatch();
+			}
+		}
+	}	
+
+	// flush the queue again so we can re-enable blending
+	flush();
+	glEnable(GL_BLEND);
+}
+
+void SpriteBatch::flush() {
+	ASSERT(count >= 0); 
+	if (count > 0) { 
+		commitBatch(); 
 	}
+}
+
+void SpriteBatch::end() {
+	ASSERT(count >= 0);
+	flush();
+	count = -1;
 	workingTexture = 0;
 	glDisableVertexAttribArray(aPosition);
 	glDisableVertexAttribArray(aUV);

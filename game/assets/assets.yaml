@@ -22,4 +22,4 @@ sample/land: land.wav
 sample/pickup: pickup.wav
 sample/throw: throw.wav
 
-
+tilemap/test: test.tmx

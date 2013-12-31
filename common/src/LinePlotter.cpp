@@ -41,8 +41,8 @@ void main() {
 
 )GLSL";
 
-LinePlotter::LinePlotter() : count(0) {
-	CHECK( ShaderAsset::compile(SIMPLE_SHADER, &prog, &vert, &frag) );
+LinePlotter::LinePlotter() : count(-1) {
+	CHECK( compileShader(SIMPLE_SHADER, &prog, &vert, &frag) );
 	glUseProgram(prog);
 	uMVP = glGetUniformLocation(prog, "mvp");
 	aPosition = glGetAttribLocation(prog, "aPosition");
@@ -56,7 +56,11 @@ LinePlotter::~LinePlotter() {
 }
 
 void LinePlotter::begin(vec2 canvasSize, vec2 canvasOffset) {
+	ASSERT(count == -1);
+	count = 0;
+
 	glDisable(GL_BLEND);
+	glLineWidth(2);
 
 	glUseProgram(prog);
 
@@ -70,6 +74,7 @@ void LinePlotter::begin(vec2 canvasSize, vec2 canvasOffset) {
 }
 
 void LinePlotter::plot(vec2 p0, vec2 p1, Color c) {
+	ASSERT(count >= 0);
 	vertices[2*count  ].set(p0, c);
 	vertices[2*count+1].set(p1, c);
 
@@ -80,9 +85,11 @@ void LinePlotter::plot(vec2 p0, vec2 p1, Color c) {
 }
 
 void LinePlotter::end() {
+	ASSERT(count >= 0);
 	if (count > 0) {
 		commitBatch();
 	}
+	count = -1;
 	glDisableVertexAttribArray(aPosition);
 	glDisableVertexAttribArray(aColor);
 	glUseProgram(0);

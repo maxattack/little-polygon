@@ -1,5 +1,6 @@
 #!/usr/bin/python
 from lputil import *
+import zlib
 
 # SOURCE OBJECTS
 
@@ -39,6 +40,7 @@ class Tile:
 		self.lid = lid
 		pitch = layer.tilemap.size[0]
 		self.x, self.y = lid % pitch, lid / pitch
+		self.gid = gid
 		self.tileset, self.id = layer.tilemap.lookupGid(gid)
 
 	def image(self):
@@ -57,16 +59,33 @@ class TileLayer:
 
 		encoding = dataNode.get('encoding')
 		assert encoding in ('csv', 'base64')
-		assert dataNode.get('compression', '') == ''
+		
 		if encoding == 'csv':
 			payload = [int(token) for token in map(string.strip, dataNode.text.split(',')) if token]
 		else:
-			# warnink!  assumes we're little-endian
+			# warnink!  assumes we're little-endian (hope dat doesn't matter...)
 			payload = array.array('I', base64.b64decode(dataNode.text))
+			compression = dataNode.get('compression', '')
+			# if compression == 'zlib':
+			# 	payload = zlib.decompress(payload)
+			# else:
+			assert compression == ''
+
 		assert len(payload) == w*h
 		self.tiles = [None] * len(payload)
 		for i,gid in enumerate(payload):
 			if gid: self.tiles[i] = Tile(self, i, gid)
+
+def r2i(x): return int(round(x))
+
+class TileObject:
+	def __init__(self, tilemap, node):
+		self.tilemap = tilemap
+		self.name = node.get('name', '')
+		self.type = node.get('type', '').lower().strip()
+		tw, th = tilemap.tilesize
+		self.position = ( float(node.get('x'))/tw, float(node.get('y'))/th )
+		self.size = ( float(node.get('width'))/tw, float(node.get('height'))/th )
 
 class TileMap:
 	def __init__(self, path):
@@ -78,6 +97,7 @@ class TileMap:
 		self.tilesize = (int(mapnode.get('tilewidth')), int(mapnode.get('tileheight')))
 		self.tilesets = [TileSet(self, ts) for ts in doc.iterfind('tileset')]
 		self.tilelayers = [TileLayer(self, l) for l in doc.iterfind('layer')]
+		self.objects = [ TileObject(self, obj) for obj in doc.iterfind('objectgroup/object') ]
 
 	def pixelSize(self):
 		w,h = self.size

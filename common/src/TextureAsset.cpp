@@ -37,11 +37,8 @@ void TextureAsset::init() {
 		}
 		uLongf size = 4 * w * h;
 		Bytef *scratch = (Bytef *) LPMALLOC(size);
-		#if DEBUG
-		int result = 
-		#endif
-		uncompress(scratch, &size, (const Bytef*)compressedData, compressedSize);
-		ASSERT(result == Z_OK);
+		int result = uncompress(scratch, &size, (const Bytef*)compressedData, compressedSize);
+		CHECK(result == Z_OK);
 		int fmt = format();
 		glTexImage2D(GL_TEXTURE_2D, 0, fmt, w, h, 0, fmt, GL_UNSIGNED_BYTE, scratch);
 		LPFREE(scratch);

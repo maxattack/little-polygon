@@ -85,11 +85,10 @@ void AssetBundle::init() {
 				case ASSET_TYPE_SAMPLE:
 					((SampleAsset*)headers[i].data)->init();
 					break;
-				case ASSET_TYPE_SHADER:
-					((ShaderAsset*)headers[i].data)->init();
-					break;
 				case ASSET_TYPE_TILEMAP:
 					((TilemapAsset*)headers[i].data)->tileAtlas.init();
+					break;
+				default:
 					break;
 			}
 		}
@@ -109,12 +108,11 @@ void AssetBundle::release() {
 				case ASSET_TYPE_SAMPLE:
 					((SampleAsset*)headers[i].data)->release();
 					break;
-				case ASSET_TYPE_SHADER:
-					((ShaderAsset*)headers[i].data)->release();
-					break;
 				case ASSET_TYPE_TILEMAP:
 					((TilemapAsset*)headers[i].data)->tileAtlas.release();
 					break;
+				default:
+					break;				
 			}
 		}
 	}

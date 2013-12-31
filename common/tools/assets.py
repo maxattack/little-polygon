@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from lputil import *
-import atlas, bintools, fontsheet, shader, trim_image, tmx, wave, zlib
+import atlas, bintools, fontsheet, trim_image, tmx, wave
 
 ################################################################################
 # HELPER METHODS
@@ -161,13 +161,6 @@ class Sample:
 		self.data = zlib.compress(self.pcm, 6)
 
 
-class Shader:
-	def __init__(self, id, path):
-		set_id(self, id)
-		vertex, fragment = shader.compile(path, True) # just compile es for now
-		self.source = "#ifdef VERTEX\n%s\n#else\n%s\n#endif\n" % (vertex, fragment)
-		# compress shader source?
-
 class Tilemap:
 	def __init__(self, id, path):
 		set_id(self, id)
@@ -188,35 +181,62 @@ class Tilemap:
 
 		else:
 
-			compositedImage = open_image(path)
-			self.tw = int(node.get("tw", "16"))
-			self.th = int(node.get("th", "16"))
-
+			assert False
+			# compositedImage = open_image(path)
+			# self.tw = int(node.get("tw", "16"))
+			# self.th = int(node.get("th", "16"))
 			# if it's a PSD, should we handle layers?
+
+		print "imgsize =%d,%d" % compositedImage.size
 
 		self.atlasImg, mapArray, self.mapSize = \
 			tmx.renderTilemapTextures(compositedImage, self.tw)
+
 		cleanup_transparent_pixels(self.atlasImg)
 		self.atlasData = zlib.compress(self.atlasImg.tostring(), 6)
 		self.mapData = zlib.compress(mapArray.tostring(), 6)		
 
-class Assets:
-	def __init__(self, textures, fonts, samples, shaders, tilemaps):
-		self.textures = textures
-		self.fonts = fonts
-		self.samples = samples
-		self.shaders = shaders
-		self.tilemaps = tilemaps
+class Userdata:
+	def __init__(self, id, data):
+		set_id(self, id)
+		self.data = data
 
-		# verify that we have no hash collisions
+class Assets:
+	def __init__(self, path):
+		with open(path, 'r') as f: 
+			self.dir = os.path.split(path)[0]
+			self.doc = yaml.load(f.read())
+
+		def list_items(name): 
+			prefix = name + '/'
+			for k,v in self.doc.iteritems():
+				if k.startswith(prefix):
+					yield k[len(prefix):], v
+
+
+		self.textures = [load_yaml_texture(self, k, v) for k,v in list_items('texture')]
+		self.fonts = [load_yaml_font(self, k, v) for k,v in list_items('font')]
+		self.samples = [load_yaml_sample(self, k, v) for k,v in list_items('sample')]
+		self.tilemaps = [load_yaml_tilemap(self, k, v) for k,v in list_items('tilemap')]
+		self.userdata = []
+
 		all_hashes = \
-			[ t.hash for t in textures ] + \
-			[ i.hash for t in textures for i in t.images ] + \
-			[ f.hash for f in fonts ] + \
-			[ s.hash for s in samples ] + \
-			[ s.hash for s in shaders ] + \
-			[ t.hash for t in tilemaps ]
-		assert len(all_hashes) == len(set(all_hashes))
+			[ t.hash for t in self.textures ] + \
+			[ i.hash for t in self.textures for i in t.images ] + \
+			[ f.hash for f in self.fonts ] + \
+			[ s.hash for s in self.samples ] + \
+			[ t.hash for t in self.tilemaps ] + \
+			[ d.hash for d in self.userdata ]
+		self.hash_set = set(all_hashes)
+		assert len(all_hashes) == len(self.hash_set)
+
+	def addUserdata(self, id, data):
+		assert not id in self.hash_set
+		self.hash_set.add(id)
+		self.userdata.append(Userdata(id, data))
+
+	def addCompressedUserdata(self, id, data):
+		self.addUserdata(id, zlib.compress(data, 6))
 
 LoaderContext = collections.namedtuple('LoaderContext', ('dir', 'doc'))
 
@@ -231,25 +251,6 @@ def composite_texture(images):
 		frame_number = atlas_image.image.frame_number
 		image.atlas_images[frame_number] = atlas_image
 	return result
-
-def load(path):
-	import yaml
-	with open(path, 'r') as f: 
-		context = LoaderContext(os.path.split(path)[0], yaml.load(f.read()))
-
-	def list_items(name): 
-		prefix = name + '/'
-		for k,v in context.doc.iteritems():
-			if k.startswith(prefix):
-				yield k[len(prefix):], v
-
-	return Assets(
-		[load_yaml_texture(context, k, v) for k,v in list_items('texture')],
-		[load_yaml_font(context, k, v) for k,v in list_items('font')],
-		[load_yaml_sample(context, k, v) for k,v in list_items('sample')],
-		[load_yaml_shader(context, k, v) for k,v in list_items('shader')],
-		[load_yaml_tilemap(context, k, v) for k,v in list_items('tilemap')]
-	)
 
 def list_yaml_items(params, name):
 	if name in params:
@@ -299,9 +300,6 @@ def load_yaml_font(context, id, params):
 
 def load_yaml_sample(context, id, params):
 	return Sample(id, load_yaml_path(context, params))
-
-def load_yaml_shader(context, id, params):
-	return Shader(id, load_yaml_path(context, params))
 
 def load_yaml_tilemap(context, id, params):
 	return Tilemap(id, load_yaml_path(context, params))

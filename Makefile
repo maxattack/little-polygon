@@ -4,12 +4,15 @@ LIBRARY_OBJ_FILES =     \
 	obj/Context.o       \
 	obj/LinePlotter.o   \
 	obj/SampleAsset.o   \
-	obj/ShaderAsset.o   \
 	obj/SpriteBatch.o   \
 	obj/TextureAsset.o  \
+	obj/TilemapAsset.o  \
 	obj/utils.o      
 
-EXAMPLE_OBJ_FILES =     \
+game_OBJ_FILES =          \
+	obj/CollisionSystem.o \
+	obj/GameWorld.o       \
+	obj/Hero.o            \
 	obj/main.o
 
 # COMPILER
@@ -17,9 +20,8 @@ CC = clang
 CPP = clang++
 
 # BASE FLAGS
-# -flto 
-CFLAGS = -Iinclude -I/usr/local/include/ -g -Os -Wall 
-CCFLAGS = -std=c++11  -fno-rtti
+CFLAGS = -Icommon/include -I/usr/local/include/ -g -Os -Wall -flto
+CCFLAGS = -std=c++11  -fno-rtti -fno-exceptions
 LIBS = -Llib -L/usr/local/lib -framework OpenGL -framework Cocoa -llittlepolygon -lz
 
 # SDL2
@@ -37,19 +39,17 @@ CFLAGS += -DDEBUG
 CFLAGS += -arch i386
 AFLAGS = 32
 
+
+
 test : bin/game bin/assets.bin
-	cp example/assets/song.mid bin/song.mid
+	cp game/assets/song.mid bin/song.mid
 	bin/game
 
-refresh: bin/game
-	tools/export_asset_bin.py example/assets/assets.yaml bin/assets.bin $(AFLAGS)
-	bin/game
+bin/game: lib/liblittlepolygon.a $(game_OBJ_FILES) 
+	$(CPP) -o $@ $(CFLAGS) $(CCFLAGS) $(LIBS) $(GAME_LIBS) $(game_OBJ_FILES)
 
-bin/game: lib/liblittlepolygon.a $(EXAMPLE_OBJ_FILES) 
-	$(CPP) -o $@ $(CFLAGS) $(CCFLAGS) $(LIBS) $(GAME_LIBS) $(EXAMPLE_OBJ_FILES)
-
-bin/assets.bin: example/assets/* tools/*.py
-	tools/export_asset_bin.py example/assets/assets.yaml $@ $(AFLAGS)
+bin/assets.bin: game/assets/* common/tools/*.py game/tools/*.py
+	game/tools/export_game_assets.py game/assets/assets.yaml $@ $(AFLAGS)
 
 clean:
 	rm -f lib/*
@@ -59,11 +59,11 @@ clean:
 lib/liblittlepolygon.a: $(LIBRARY_OBJ_FILES)
 	ar rcs $@ $^
 
-obj/%.o: src/%.c
+obj/%.o: common/src/%.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-obj/%.o: src/%.cpp
+obj/%.o: common/src/%.cpp common/include/*.h
 	$(CPP) $(CFLAGS) $(CCFLAGS) -c -o $@ $<
 
-obj/%.o: example/src/%.cpp
+obj/%.o: game/src/%.cpp game/src/*.h
 	$(CPP) $(CFLAGS) $(CCFLAGS) -c -o $@ $<
