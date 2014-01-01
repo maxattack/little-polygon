@@ -18,7 +18,6 @@
 
 // include box2d before utils so that we get implicit castying
 // between LP and B2 math types.
-#include <Box2D/Box2D.h>
 #include <littlepolygon_utils.h>
 
 #ifndef PIXELS_PER_METER
@@ -27,6 +26,8 @@
 #else
 #define METERS_PER_PIXEL (1.0f/PIXELS_PER_METER)
 #endif
+
+#ifdef BOX2D_H
 
 class WireframeDraw : public b2Draw, public LinePlotter {
 public:
@@ -73,3 +74,5 @@ public:
 		doPlot(xf.p, xf.p + 0.25f * vec(-xf.q.s, xf.q.c), rgb(0x00ff00));
 	}
 };
+
+#endif

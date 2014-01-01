@@ -15,7 +15,7 @@ def loadAssets(path):
 		(tile.x, tile.y)
 		for layer in tmap.tilelayers 
 		for tile in layer.tiles 
-		if tile.id in opaque_ids
+		if tile is not None and tile.id in opaque_ids
 	)
 
 	# coalesce left-right into "slabs"
@@ -42,22 +42,30 @@ def loadAssets(path):
 		while (x0,x1,y1+1) in slabs:
 			y1 += 1
 			slabs.remove((x0,x1,y1))
-		colliders.add((x0,y0,x1,y1))
+		colliders.add((float(x0),float(y0),float(x1+1),float(y1+1)))
 
 	# create data string
 	result.addUserdata(
-		'colliders', 
-		array.array('I', (elem for c in colliders for elem in c)).tostring()
+		'environment.colliders', 
+		array.array('f', (elem for c in colliders for elem in c)).tostring()
 	)
 
 	# find player position
 	heroObj = next( obj for obj in tmap.objects if obj.type == 'hero' )
 	hx,hy = heroObj.position
 	hw,hh = heroObj.size
-	slop = 0.1
 	result.addUserdata(
-		'start',
-		struct.pack('ff', hx + 0.5 * hw, hy+hh-slop)
+		'hero.position',
+		struct.pack('ff', hx + 0.5 * hw, hy + hh)
+	)
+
+	# find kitten position
+	kittenObj = next( obj for obj in tmap.objects if obj.type == 'kitten' )
+	kx,ky = kittenObj.position
+	kw,kh = kittenObj.size
+	result.addUserdata(
+		'kitten.position',
+		struct.pack('ff', kx + 0.5 * kw, ky + kh)
 	)
 
 	return result

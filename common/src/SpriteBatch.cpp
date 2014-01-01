@@ -271,21 +271,23 @@ void SpriteBatch::drawTilemap(TilemapAsset *map, vec2 position) {
 		int rawY = y+voy;
 		if (rawX >= 0 && rawX < map->mw && rawY >= 0 && rawY < map->mh) {
 			uint8_pair_t coord = map->tileAt(rawX, rawY);
-			vec2 p = vec(x * map->tw, y * map->th) 
-				- vec(TILE_SLOP, TILE_SLOP) 
-				- rem + canvasScroll;
-			vec2 uv = 
-				(vec(map->tw * coord.x, map->th * coord.y) + vec(TILE_SLOP, TILE_SLOP))
-				/ vec(map->tileAtlas.w, map->tileAtlas.h);
-			Vertex *slice = &workingBuffer[4 * count];
+			if (coord.x != 0xff) {
+				vec2 p = vec(x * map->tw, y * map->th) 
+					- vec(TILE_SLOP, TILE_SLOP) 
+					- rem + canvasScroll;
+				vec2 uv = 
+					(vec(map->tw * coord.x, map->th * coord.y) + vec(TILE_SLOP, TILE_SLOP))
+					/ vec(map->tileAtlas.w, map->tileAtlas.h);
+				Vertex *slice = &workingBuffer[4 * count];
 
-			slice[0].set(p, uv, rgba(0));
-			slice[1].set(p+vec(0,th), uv+vec(0,uh), rgba(0));
-			slice[2].set(p+vec(tw,0), uv+vec(uw,0), rgba(0));
-			slice[3].set(p+vec(tw,th), uv+vec(uw,uh), rgba(0));
+				slice[0].set(p, uv, rgba(0));
+				slice[1].set(p+vec(0,th), uv+vec(0,uh), rgba(0));
+				slice[2].set(p+vec(tw,0), uv+vec(uw,0), rgba(0));
+				slice[3].set(p+vec(tw,th), uv+vec(uw,uh), rgba(0));
 
-			if (++count == SPRITE_CAPACITY) {
-				commitBatch();
+				if (++count == SPRITE_CAPACITY) {
+					commitBatch();
+				}
 			}
 		}
 	}	

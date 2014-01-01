@@ -1,41 +1,22 @@
-#include "game.h"
+#include "GameWorld.h"
 
 GameWorld::GameWorld(AssetBundle *aAssets) : 
 assets(aAssets), 
-done(false) {
+env(this),
+hero(this),
+kitten(this) {
 
-#if DEBUG
-	drawWireframe = true;
-#endif
-
-	// init assets
-	hero.init(this);
-	kitten = assets->image("kitten");
-	jump = assets->sample("jump");
-	tmap = assets->tilemap("test");
-	font = assets->font("default");
-
-	// init physics
-	auto *cdata = assets->userdata("colliders");
-	auto colliders = (ColliderData*) cdata->data();
-	auto ncolliders = cdata->size / sizeof(ColliderData);
-	for(int i=0; i<ncolliders; ++i) {
-		auto c = colliders[i];
-		collisionSystem.addCollider(c.box());
-	}
-
-	// start streaming music
-	Mix_Music *music = Mix_LoadMUS("song.mid");
-	if(music) { Mix_FadeInMusic(music, -1, 5000); }
-	
-	timer.reset();
+	// Mix_Music *music = Mix_LoadMUS("song.mid");
+	// if(music) { Mix_FadeInMusic(music, -1, 5000); }
 }
 
 void GameWorld::tick() {
 	timer.tick();
 	handleEvents();
-	hero.tick(this);
-	jumpPressed = false;	
+	if (timer.deltaTicks > 8) {
+		hero.tick();
+	}
+	jumpPressed = false;
 }
 
 void GameWorld::handleEvents() {
@@ -46,19 +27,8 @@ void GameWorld::handleEvents() {
 				done = true;
 				break;
 			case SDL_KEYDOWN:
-				if (event.key.repeat) {
-					break;
-				}
-				switch(event.key.keysym.sym) {
-					case SDLK_q:
-						done = true;
-						break;
-					case SDLK_TAB:
-						drawWireframe = !drawWireframe;
-						break;
-					case SDLK_SPACE:
-						jumpPressed = true;
-						break;
+				if (!event.key.repeat) {
+					handleKeyDownEvent(event.key);
 				}
 				break;
 		}
@@ -66,20 +36,40 @@ void GameWorld::handleEvents() {
 
 }
 
+void GameWorld::handleKeyDownEvent(const SDL_KeyboardEvent& key) {
+	switch(key.keysym.sym) {
+		case SDLK_ESCAPE:
+		case SDLK_q:
+			done = true;
+			break;
+		case SDLK_TAB:
+			drawWireframe = !drawWireframe;
+			break;
+		case SDLK_SPACE:
+			jumpPressed = true;
+			break;
+	}
+}
+
 void GameWorld::draw() {
-	auto scrolling = vec(0,0); //vec(15 * timer.seconds(), 0);
-	auto canvasSize = vec(320, 128);
+	auto scrolling = vec(0,0);
+	auto canvasSize = vec(CANVAS_WIDTH, CANVAS_HEIGHT);
+	
 	batch.begin(canvasSize, scrolling);
-	batch.drawTilemap( tmap );
-	hero.draw(this);
+	env.draw();
+	hero.draw();
+	kitten.draw();
 	batch.end();
 
-#if DEBUG
+	#if DEBUG
 	if (drawWireframe) {
 		wireframe.begin(canvasSize, scrolling);
 		collisionSystem.debugDraw(wireframe);
 		wireframe.end();
 	}
-#endif
-
+	#endif
 }
+
+
+
+

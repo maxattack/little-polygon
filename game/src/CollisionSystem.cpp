@@ -1,4 +1,5 @@
-#include "collisions.h"
+#include "CollisionSystem.h"
+#include <bitset>
 
 // All of these methods are O(n) right now as a first-pass implementation.
 // Note that because of their cache-friendliness this may be perfectly
@@ -7,13 +8,21 @@
 CollisionSystem::CollisionSystem() {
 }
 
-ID CollisionSystem::addCollider(const AABB& box, uint32_t categoryMask, uint32_t collisionMask) {
+ID CollisionSystem::addCollider(const AABB& box, 
+                                uint32_t categoryMask, 
+                                uint32_t collisionMask,
+                                uint32_t triggerMask,
+                                void *aUserData) {
 	// create the box
+	ASSERT((collisionMask & triggerMask) == 0);
 	auto result = colliders.takeOut();
 	auto& collider = colliders[result];
 	collider.box = box;
 	collider.categoryMask = categoryMask;
 	collider.collisionMask = collisionMask;
+	collider.triggerMask = triggerMask;
+	userDataBuf[POOL_SLOT_INDEX(result)] = aUserData;
+
 	return result;
 }
 
@@ -48,7 +57,7 @@ bool CollisionSystem::move(ID id, vec2 offset, Collision *outResult) {
 		sweep.box.p1.y += offset.y;
 		// check against other colliders
 		for(auto& c : colliders) {
-			if (c.collides(sweep)) {
+			if (sweep.collides(c)) {
 				sweep.box.p1.y = c.box.top();
 				outResult->hitBottom = true;
 			}
@@ -64,7 +73,7 @@ bool CollisionSystem::move(ID id, vec2 offset, Collision *outResult) {
 		sweep.box.p0.y += offset.y;
 		// check against other colliders
 		for(auto& c : colliders) {
-			if (c.collides(sweep)) {
+			if (sweep.collides(c)) {
 				sweep.box.p0.y = c.box.bottom();
 				outResult->hitTop = true;
 			}
@@ -82,7 +91,7 @@ bool CollisionSystem::move(ID id, vec2 offset, Collision *outResult) {
 		sweep.box.p1.x += offset.x;
 		// check against other colliders
 		for(auto& c : colliders) {
-			if (c.collides(sweep)) {
+			if (sweep.collides(c)) {
 				sweep.box.p1.x = c.box.left();
 				outResult->hitRight = true;
 			}
@@ -98,7 +107,7 @@ bool CollisionSystem::move(ID id, vec2 offset, Collision *outResult) {
 		sweep.box.p0.x += offset.x;
 		// check against other colliders
 		for(auto& c : colliders) {
-			if (c.collides(sweep)) {
+			if (sweep.collides(c)) {
 				sweep.box.p0.x = c.box.right();
 				outResult->hitLeft = true;
 			}
@@ -109,5 +118,75 @@ bool CollisionSystem::move(ID id, vec2 offset, Collision *outResult) {
 
 	}
 
+	// do we need to check for triggers?
+	outResult->triggerEventCount = 0;
+	outResult->triggerEvents = triggerEventBuf;
+	if (collider.triggerMask) {
+
+		std::bitset<CONTACT_CAPACITY> activeSet;
+
+		for(auto& c : colliders) {
+			if (collider.triggers(c)) {
+				int i = findContact(collider.id, c.id);
+				activeSet.set(i);
+				if (i < ncontacts) {
+						
+					ASSERT(outResult->triggerEventCount < CONTACT_CAPACITY);
+					auto& event = triggerEventBuf[outResult->triggerEventCount];
+					event.type = TRIGGER_EVENT_STAY;
+					event.trigger = c.id;
+					outResult->triggerEventCount++;
+
+				} else {
+					ASSERT(ncontacts < CONTACT_CAPACITY);
+					ncontacts++;
+					contacts[i].collider = collider.id;
+					contacts[i].trigger = c.id;
+
+					ASSERT(outResult->triggerEventCount < CONTACT_CAPACITY);
+					auto& event = triggerEventBuf[outResult->triggerEventCount];
+					event.type = TRIGGER_EVENT_ENTER;
+					event.trigger = c.id;
+					outResult->triggerEventCount++;
+				}
+			}
+		}
+
+		// traverse in reverse-order so that removing
+		// elements does not mess up the index order in activeSet
+		int i=ncontacts;
+		while(i > 0) {
+			--i;
+			if (contacts[i].collider == collider.id && !activeSet[i]) {
+
+				ASSERT(outResult->triggerEventCount < CONTACT_CAPACITY);
+				auto& event = triggerEventBuf[outResult->triggerEventCount];
+				event.type = TRIGGER_EVENT_EXIT;
+				event.trigger = contacts[i].trigger;
+				outResult->triggerEventCount++;
+				
+				// swap this with the last element
+				ncontacts--;
+				if (i < ncontacts) {
+					contacts[i] = contacts[ncontacts];
+				}
+			}
+		}
+
+	}
+
 	return outResult->hit;
 }
+
+int CollisionSystem::findContact(ID collider, ID trigger) {
+	for(int i=0; i<ncontacts; ++i) {
+		if (contacts[i].collider == collider && contacts[i].trigger == trigger) {
+			return i;
+		}
+	}
+	return ncontacts;
+}
+
+
+
+

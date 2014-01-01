@@ -59,14 +59,8 @@
 #define MAX(a,b)   ((a) > (b) ? (a) : (b))
 #endif
 
-//--------------------------------------------------------------------------------
-// CONFIGURABLE MEMORY ALLOCATOR
-//--------------------------------------------------------------------------------
-
-#ifndef LPMALLOC
 #define LPMALLOC malloc
 #define LPFREE   free
-#endif
 
 //--------------------------------------------------------------------------------
 // INTERNAL LOGGING
@@ -109,9 +103,6 @@
 #define ASSET_TYPE_SAMPLE    4
 #define ASSET_TYPE_TILEMAP   5
 #define ASSET_TYPE_USERDATA  6
-
-#define CHANNEL_COUNT        16
-#define SAMPLE_CAPACITY      64
 
 //------------------------------------------------------------------------------
 // ASSET RECORDS
@@ -250,7 +241,7 @@ struct UserdataAsset {
 	inline void *data() const { return (void*)(this+1); }
 
 	template<typename T> 
-	T get() const { ASSERT(size == sizeof(T)); return *((T*)(this+1)); }
+	T& as() { ASSERT(size == sizeof(T)); return *((T*)(this+1)); }
 };
 
 //------------------------------------------------------------------------------

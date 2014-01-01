@@ -413,11 +413,15 @@ struct Timer {
 	double scaledTime;
 	double scaledDeltaTime;
 
+	Timer(float aTimeScale=1) : timeScale(aTimeScale) {
+		reset();
+	}
+
 	void reset() {
 		ticks = SDL_GetTicks();
 		deltaTicks = 0;
-		timeScale = 1;
 		scaledTime = 0;
+		scaledDeltaTime = 0;
 	}
 
 	void tick() {

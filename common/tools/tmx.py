@@ -21,13 +21,13 @@ class TileSet:
 		atlasImage = open_image(os.path.join(baseDir, imageNode.get('source')))
 		
 		# validate some basic assumptions
-		desiredSize = (int(imageNode.get('width')), int(imageNode.get('height')))
-		assert desiredSize == atlasImage.size
-		desiredTileSize = (int(node.get('tilewidth')), int(node.get('tileheight')))
-		assert desiredTileSize == tilemap.tilesize
+		self.mySize = (int(imageNode.get('width')), int(imageNode.get('height')))
+		# assert self.mySize == atlasImage.size
+		self.myTileSize = (int(node.get('tilewidth')), int(node.get('tileheight')))
+		# assert self.myTileSize == tilemap.tilesize
 
-		pw, ph = desiredTileSize
-		self.tw, self.th = desiredSize[0]/pw, desiredSize[1]/ph
+		pw, ph = self.myTileSize
+		self.tw, self.th = self.mySize[0]/pw, self.mySize[1]/ph
 		self.tilecount = self.tw * self.th
 		self.images = [ 
 			atlasImage.crop((pw*tx, ph*ty, pw*(tx+1), ph*(ty+1)))
@@ -85,7 +85,14 @@ class TileObject:
 		self.type = node.get('type', '').lower().strip()
 		tw, th = tilemap.tilesize
 		self.position = ( float(node.get('x'))/tw, float(node.get('y'))/th )
-		self.size = ( float(node.get('width'))/tw, float(node.get('height'))/th )
+		gid = node.get('gid', '')
+		if gid:
+			tileset, _ = tilemap.lookupGid(int(gid))
+			self.size = ( float(tileset.mySize[0])/tw, float(tileset.mySize[1])/th )
+			# for some reason it uses bottom-left instead of top-left
+			self.position = ( self.position[0], self.position[1]-self.size[1] )
+		else:
+			self.size = ( float(node.get('width'))/tw, float(node.get('height'))/th )
 
 class TileMap:
 	def __init__(self, path):
@@ -137,42 +144,64 @@ def cutUpImage(im, tw, th):
 		for y,x in xyrange(countY, countX)
 	]
 
+def tileIsEmpty(img):
+	p = img.load()
+	return all( p[x,y][3]<8 for x,y in xyrange(*img.size) )
 
 def dedupTiles(sourceTiles):
+	# list of all the final tiles
 	atlasTiles = []
+
+	# inferred tilemap
 	sourceIdxToAtlasIdx = []
+
+
 	for tile in sourceTiles:
+		# have we already seen this tile?
 		idx = -1
-		for i,atlasTile in enumerate(atlasTiles):
-			if tile.tostring() == atlasTile.tostring():
-				idx = i
-				break
-		if idx == -1:
-			idx = len(atlasTiles)
-			atlasTiles.append(tile)
+		if not tileIsEmpty(tile):
+			for i,atlasTile in enumerate(atlasTiles):
+				if tile.tostring() == atlasTile.tostring():
+					idx = i
+					break
+			if idx == -1:
+				idx = len(atlasTiles)
+				atlasTiles.append(tile)
 		sourceIdxToAtlasIdx.append(idx)
 	return atlasTiles, sourceIdxToAtlasIdx
 
 
 def renderTilemapTextures(img, tilesize):
+	# cut up an image into a grid of tile images
 	sourceTiles = cutUpImage(img, tilesize, tilesize)
+
+	# deduplicate the tiles into a source set
 	atlasTiles, sourceIdxToAtlasIdx = dedupTiles(sourceTiles)
 
+	# determine how big the pot atlas texture should be
 	atlasDim = 4
 	while atlasDim * atlasDim < len(atlasTiles):
 		atlasDim += 1
-
 	atlasImageW = npot(atlasDim * tilesize)
 	assert atlasImageW < 2048
+
+	# allocate the atlas image and paste deduped tiles
 	atlasImg = new_image(atlasImageW, atlasImageW)
 	for i,atlasTile in enumerate(atlasTiles):
 		x, y = i%atlasDim, i/atlasDim
 		atlasImg.paste(atlasTile, (x*tilesize, y*tilesize))
 
+	# helper to list coordinates
 	def listCoords():
 		for idx in sourceIdxToAtlasIdx:
-			yield idx % atlasDim
-			yield idx / atlasDim
+			if idx == -1:
+				# special identifier for an empty tile
+				yield 0xff
+				yield 0xff
+			else:
+				# actual atlas coordinate
+				yield idx % atlasDim
+				yield idx / atlasDim
 
 	pw, ph = img.size
 	tw, th = pw/tilesize, ph/tilesize

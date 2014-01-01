@@ -11,8 +11,10 @@ LIBRARY_OBJ_FILES =     \
 
 game_OBJ_FILES =          \
 	obj/CollisionSystem.o \
+	obj/Environment.o     \
 	obj/GameWorld.o       \
 	obj/Hero.o            \
+	obj/Kitten.o          \
 	obj/main.o
 
 # COMPILER
@@ -30,7 +32,7 @@ CFLAGS += -I/usr/local/include/SDL2
 LIBS += -lSDL2 -lSDL2_mixer
 
 # BOX2D
-GAME_LIBS = -lBox2D
+# GAME_LIBS = -lBox2D
 
 # CONFIG FLAGS
 CFLAGS += -DDEBUG

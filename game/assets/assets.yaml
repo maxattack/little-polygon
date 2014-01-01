@@ -5,7 +5,7 @@ texture/sprites:
   animation/explosion: { path: explosion.psd, pivot: center }
   animation/fire: { path: fire.psd, pivot: bottom_center }
   animation/hero: { path: hero.psd, pivot: bottom_center }
-  animation/kitten: { path: kitten_walk.psd, pivot: bottom_center }
+  animation/kitten: { path: kitten.psd, pivot: bottom_center }
   image/background: { path: bg.psd, pivot: bottom_left }
   image/btnDown: { path: button_down.psd, pivot: center }
   image/btnUp: { path: button_up.psd, pivot: center }

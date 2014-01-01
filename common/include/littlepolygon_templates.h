@@ -204,17 +204,13 @@ public:
 //--------------------------------------------------------------------------------
 
 #define MAX_POOL_CAPACITY (64*1024)
-
+#define POOL_SLOT_INDEX(aID) (aID&0xffff)
 typedef uint32_t ID;
 
 struct PoolSlot {
     ID id;
     uint16_t index;
     uint16_t next;
-};
-
-struct Poolable {
-	ID id;
 };
 
 // This pool is endowed with a storage-fixed ID table 
@@ -233,116 +229,47 @@ private:
 public:
     Pool() : mCount(0), mFreelistEnqueue(N-1), mFreelistDequeue(0) {
         STATIC_ASSERT(N < MAX_POOL_CAPACITY);
-        // initialize the free queue linked-list
         for(unsigned i=0; i<N; ++i) {
-            mSlots[i].id = i;
-            mSlots[i].next = i+1;
+            mSlots[i].id = i;     // initialize lower-bits of id with index
+            mSlots[i].next = i+1; // initialize the free slot linked-list
         }
     }
 	
-	bool isEmpty() const {
-		return mCount == 0;
-	}
-	
-	bool isFull() const {
-		return mCount == N;
-	}
-	
-    bool isActive(ID id) const {
-        // use the lower-bits to find the record
-        return mSlots[id & 0xffff].id == id;
-    }
-	
-    T& operator[](ID id) {
-        ASSERT(isActive(id)); 
-        return mRecords[mSlots[id & 0xffff].index]; 
-    }
+	bool isEmpty() const { return mCount == 0; }
+	bool isFull() const { return mCount == N; }
+    bool isActive(ID id) const { return mSlots[POOL_SLOT_INDEX(id)].id == id; }
+	int count() const { return mCount; }
+    T* begin() { return mRecords; }
+    T* end() { return mRecords + mCount; }
+    T& operator[](ID id) { ASSERT(isActive(id)); return mRecords[mSlots[POOL_SLOT_INDEX(id)].index]; }
 
     ID takeOut() {
         ASSERT(mCount < N);
-        // dequeue a new index record - we do this in FIFO order so that
-        // we don't "thrash" a record with interleaved add-remove calls
-        // and use up the higher-order bits of the id
-        PoolSlot &slot = mSlots[mFreelistDequeue];
-		mFreelistDequeue = slot.next;
-        // push a new record into the buffer
-        slot.index = mCount++;
-        // write the id to the record
-        mRecords[slot.index].id = slot.id;
+        PoolSlot &slot = mSlots[mFreelistDequeue]; // dequeue a new slot - we do this in FIFO order so that
+        mFreelistDequeue = slot.next;              // we don't "thrash" a record with interleaved add-remove calls
+                                                   // and use up the higher-order bits of the id
+        slot.index = mCount++;                     // push a new record into the buffer
+        mRecords[slot.index].id = slot.id;         // write the id to the record
 		return slot.id;
     }
 
     void putBack(ID id) {
-        // assuming IDs are valid in production
-        ASSERT(isActive(id));
-        // lookup the index record
-        PoolSlot &slot = mSlots[id & 0xffff];
-		// move the last record into this slot
-		T& record = mRecords[slot.index];
+		ASSERT(isActive(id));
+		
+		PoolSlot &slot = mSlots[POOL_SLOT_INDEX(id)];
+		T& record = mRecords[slot.index];              // move the last record into this slot
 		record = mRecords[--mCount];
-		// update the index from the moved record
-		mSlots[record.id & 0xffff].index = slot.index;
-        // increment the higher-order bits of the id (a fingerprint)
-        slot.id += 0x10000;
-		if (mCount == N-1) {
-			mFreelistEnqueue = id & 0xffff;
-			mFreelistDequeue = id & 0xffff;
+		mSlots[POOL_SLOT_INDEX(record.id)].index = slot.index; // update the index from the moved record
+        
+		slot.id += 0x10000;                            // increment the fingerprint of the id
+		
+		if (mCount == N-1) {                           // enqueue the slot
+			mFreelistEnqueue = POOL_SLOT_INDEX(id);
+			mFreelistDequeue = POOL_SLOT_INDEX(id);
 		} else {
-			mSlots[mFreelistEnqueue].next = id & 0xffff;
-			mFreelistEnqueue = id & 0xffff;
+			mSlots[mFreelistEnqueue].next = POOL_SLOT_INDEX(id);
+			mFreelistEnqueue = POOL_SLOT_INDEX(id);
 		}
     }
     
-	int count() const { return mCount; }
-
-    uint16_t indexOf(ID id) { 
-        return mSlots[id & 0xffff].index; 
-    }
-
-    T* begin() { 
-        return mRecords; 
-    }
-
-    T* end() { 
-        return mRecords + mCount; 
-    }
 };
-
-// The anonymous pool is lighter weight than the regular pool because
-// objects are not identified uniquely, but treated as a group.  Pointers
-// returns from takeOut() are only valid until another non-const method on the pool
-// is called.
-template<typename T, int N>
-class AnonymousPool {
-private:
-    uint32_t mCount;
-    T mRecords[N];
-	
-public:
-	AnonymousPool() : mCount(0) {
-	}
-	
-	int count() const { return mCount; }
-	bool isFull() const { return mCount == N; }
-	T* begin() { return mRecords; }
-	T* end() { return mRecords+mCount; }
-	
-	T* takeOut() {
-		ASSERT(mCount < N);
-		mCount++;
-		return mRecords + (mCount-1);
-	}
-	
-	void putBack(T* t) {
-		int n = t - mRecords;
-		ASSERT(n < mCount);
-		mCount--;
-		mRecords[n] = mRecords[mCount];
-	}
-	
-	void drain() {
-		mCount = 0;
-	}
-};
-
-
