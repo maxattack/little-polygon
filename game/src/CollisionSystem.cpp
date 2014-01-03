@@ -73,72 +73,56 @@ bool CollisionSystem::move(Collider *collider, vec2 offset, Collision *result) {
 	if (offset.y > 0) {
 		
 		// moving down
-		auto sweep = *collider;
-		sweep.box.p1.y += offset.y;
-		// check against other colliders
+		collider->box.p1.y += offset.y;
 		for(unsigned slot : candidates) {
 			auto c = slots + slot;
-			if (sweep.collides(c)) {
-				sweep.box.p1.y = c->box.top();
+			if (collider->collides(c)) {
+				collider->box.p1.y = c->box.top();
 				result->hitBottom = true;
 			}
 		}
-		// if we hit something, update the bbox
-		collider->box.p1.y = sweep.box.p1.y;
-		collider->box.p0.y = sweep.box.p1.y - size.y;
+		collider->box.p0.y = collider->box.p1.y - size.y;
 
 	} else if (offset.y < 0) {
 
 		// moving up
-		auto sweep = *collider;
-		sweep.box.p0.y += offset.y;
-		// check against other colliders
+		collider->box.p0.y += offset.y;
 		for(unsigned slot : candidates) {
 			auto c = slots + slot;
-			if (sweep.collides(c)) {
-				sweep.box.p0.y = c->box.bottom();
+			if (collider->collides(c)) {
+				collider->box.p0.y = c->box.bottom();
 				result->hitTop = true;
 			}
 		}
-		// if we hit something update the bbox
-		collider->box.p0.y = sweep.box.p0.y;
-		collider->box.p1.y = sweep.box.p0.y + size.y;
+		collider->box.p1.y = collider->box.p0.y + size.y;
 
 	}
 
 	if (offset.x > 0) {
 		
 		// moving right
-		auto sweep = *collider;
-		sweep.box.p1.x += offset.x;
-		// check against other colliders
+		collider->box.p1.x += offset.x;
 		for(unsigned slot : candidates) {
 			auto c = slots + slot;
-			if (sweep.collides(c)) {
-				sweep.box.p1.x = c->box.left();
+			if (collider->collides(c)) {
+				collider->box.p1.x = c->box.left();
 				result->hitRight = true;
 			}
 		}
-		// if we hit something, update the bbox
-		collider->box.p1.x = sweep.box.p1.x;
-		collider->box.p0.x = sweep.box.p1.x - size.x;
+		collider->box.p0.x = collider->box.p1.x - size.x;
 
 	} else if (offset.x < 0) {
 
 		// moving left
-		auto sweep = *collider;
-		sweep.box.p0.x += offset.x;
-		// check against other colliders
+		collider->box.p0.x += offset.x;
 		for(unsigned slot : candidates) {
 			auto c = slots + slot;
-			if (sweep.collides(c)) {
-				sweep.box.p0.x = c->box.right();
+			if (collider->collides(c)) {
+				collider->box.p0.x = c->box.right();
 				result->hitLeft = true;
 			}
 		}
-		// if we hit something update the bbox
-		collider->box.p0.x = sweep.box.p0.x;
-		collider->box.p1.x = sweep.box.p0.x + size.x;
+		collider->box.p1.x = collider->box.p0.x + size.x;
 
 	}
 
