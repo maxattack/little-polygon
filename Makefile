@@ -22,7 +22,7 @@ CC = clang
 CPP = clang++
 
 # BASE FLAGS
-CFLAGS = -Icommon/include -I/usr/local/include/ -g -Os -Wall -flto
+CFLAGS = -Icommon/include -I/usr/local/include/ -g -Os -Wall -flto -ffast-math
 CCFLAGS = -std=c++11  -fno-rtti -fno-exceptions
 LIBS = -Llib -L/usr/local/lib -framework OpenGL -framework Cocoa -llittlepolygon -lz
 
