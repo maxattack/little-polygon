@@ -1,3 +1,19 @@
+// Little Polygon SDK
+// Copyright (C) 2013 Max Kaufmann
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 #pragma once
 #include "config.h"
 
@@ -7,12 +23,6 @@
 #define COLLIDER_CAPACITY 128
 #define CONTACT_CAPACITY  64
 #define BUCKET_COUNT      256
-
-enum TriggerEventType {
-	TRIGGER_EVENT_ENTER,
-	TRIGGER_EVENT_STAY,
-	TRIGGER_EVENT_EXIT
-};
 
 //------------------------------------------------------------------------------
 // HELPERS
@@ -96,8 +106,10 @@ struct Collision {
 
 //------------------------------------------------------------------------------
 
-struct TriggerEvent {
-	TriggerEventType type;
+struct Trigger {
+	enum TriggerType { ENTER, EXIT };
+
+	TriggerType type;
 	Collider* trigger;
 };
 
@@ -118,10 +130,8 @@ public:
 	void removeCollider(Collider *collider);
 		
 	bool move(Collider *c, vec2 offset, Collision *outResult);
-
-	// replace these with some kind of iterators?
-	int resolveTriggers(Collider *c, int outCapacity, TriggerEvent *resultBuf);
-	int query(const AABB& box, uint32_t mask, int outCapacity, Collider **resultBuf);
+	int queryTriggers(Collider *c, int outCapacity, Trigger *resultBuf);
+	int queryColliders(const AABB& box, uint32_t mask, int outCapacity, Collider **resultBuf);
 
 	void debugDraw(LinePlotter& plotter);
 

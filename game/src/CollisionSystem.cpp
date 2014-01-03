@@ -1,3 +1,19 @@
+// Little Polygon SDK
+// Copyright (C) 2013 Max Kaufmann
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 #include "CollisionSystem.h"
 #include <bitset>
 
@@ -130,35 +146,35 @@ bool CollisionSystem::move(Collider *collider, vec2 offset, Collision *result) {
 	return result->hit;
 }
 
-int CollisionSystem::resolveTriggers(Collider *c, int outCapacity, TriggerEvent *resultBuf) {
-	ASSERT(c->triggerMask == 0 || outCapacity > 0);
+int CollisionSystem::queryTriggers(Collider *c, int outCapacity, Trigger *resultBuf) {
+	ASSERT(outCapacity > 0);
 	int nResults = 0;
 
-	if (c->triggerMask) {
+	// identify the contacts that this collider participates in
+	Bitset<CONTACT_CAPACITY> contactSet;
+	for(int i=0; i<nContacts; ++i) {
+		if (contacts[i].collider == c) {
+			contactSet.mark(i);
+		}
+	}
 
-		// identify the contacts that this collider participates in
-		Bitset<CONTACT_CAPACITY> contactSet;
-		for(int i=0; i<nContacts; ++i) {
-			if (contacts[i].collider == c) {
-				contactSet.mark(i);
+	// inner helper methods
+	auto findContact = [this, &contactSet, &c](Collider *trig) {
+		for(auto contactIndex : contactSet) {
+			if (this->contacts[contactIndex].trigger == trig) {
+				return contactIndex;
 			}
 		}
+		return this->nContacts;
+	};
 
-		// inner helper methods
-		auto findContact = [this, &contactSet, &c](Collider *trig) {
-			for(auto contactIndex : contactSet) {
-				if (this->contacts[contactIndex].trigger == trig) {
-					return contactIndex;
-				}
-			}
-			return this->nContacts;
-		};
+	auto pushResult = [&nResults, resultBuf](Trigger::TriggerType typ, Collider *trig) {
+		resultBuf[nResults].type = typ;
+		resultBuf[nResults].trigger = trig;
+		++nResults;
+	};
 
-		auto pushResult = [&nResults, resultBuf](TriggerEventType typ, Collider *trig) {
-			resultBuf[nResults].type = typ;
-			resultBuf[nResults].trigger = trig;
-			++nResults;
-		};
+	if (c->triggerMask) {
 
 		// identify overlapping triggers (ENTER and STAY)
 		ColliderSet candidates;
@@ -169,45 +185,45 @@ int CollisionSystem::resolveTriggers(Collider *c, int outCapacity, TriggerEvent 
 				int i = findContact(trigger);
 				contactSet.clear(i);
 				if (i < nContacts) {
-					pushResult(TRIGGER_EVENT_STAY, trigger);
-					if (nResults == outCapacity) { return nResults; }
+					// leave this out unless there's a compelling reason
+					// to include it - feels like unnecessary noise/copying
+					// pushResult(Trigger::STAY, trigger);
+					// if (nResults == outCapacity) { return nResults; }
 				} else {
 					ASSERT(nContacts < CONTACT_CAPACITY);
 					nContacts++;
 					contacts[i].collider = c;
 					contacts[i].trigger = trigger;
-					pushResult(TRIGGER_EVENT_ENTER, trigger);
+					pushResult(Trigger::ENTER, trigger);
 					if (nResults == outCapacity) { return nResults; }
 				}
 			}
 		}
+	}
 
-		// identify non-ovelapping triggers (EXIT)
+	// contacts may be re-ordered in processing
+	uint32_t oldToNewIndex[nContacts]; 
+	for(int i=0; i<nContacts; ++i) {
+		oldToNewIndex[i] = i;
+	}
 
-		// contacts may be re-ordered in processing
-		uint32_t oldToNewIndex[nContacts]; 
-		for(int i=0; i<nContacts; ++i) {
-			oldToNewIndex[i] = i;
+	// identify non-ovelapping triggers (EXIT)
+	uint32_t contactIndex;
+	while(nResults < outCapacity && contactSet.clearFirst(contactIndex)) {
+		uint32_t actualIndex = oldToNewIndex[contactIndex];
+		pushResult(Trigger::EXIT, contacts[actualIndex].trigger);
+		--nContacts;
+		if (actualIndex < nContacts) {
+			// swap last contact into empty slot
+			contacts[actualIndex] = contacts[nContacts];
+			oldToNewIndex[nContacts] = actualIndex;
 		}
-
-		uint32_t contactIndex;
-		while(contactSet.clearFirst(contactIndex)) {
-			uint32_t actualIndex = oldToNewIndex[contactIndex];
-			pushResult(TRIGGER_EVENT_EXIT, contacts[actualIndex].trigger);
-			--nContacts;
-			if (actualIndex < nContacts) {
-				contacts[actualIndex] = contacts[nContacts];
-				oldToNewIndex[nContacts] = actualIndex;
-			}
-			if (nResults == outCapacity) { break; }
-		}
-
 	}
 
 	return nResults;
 }
 
-int CollisionSystem::query(const AABB& box, uint32_t mask, int outCapacity, Collider **resultBuf) {
+int CollisionSystem::queryColliders(const AABB& box, uint32_t mask, int outCapacity, Collider **resultBuf) {
 	ASSERT(outCapacity > 0);
 	ColliderSet candidates;
 	broadPhase(box, candidates);

@@ -52,23 +52,27 @@ void GameWorld::Hero::tick() {
 	// resolving collisions
 	Collision result;
 	game->collisionSystem.move(collider, speed * dt, &result);
+	bool wasGrounded = grounded;
 	if ((grounded = result.hitBottom)) {
 		speed.y = 0;
+		if (!wasGrounded) {
+			frame = 0;
+			framef = 0;			
+			game->assets->sample("footfall")->play();
+		}
 	}
 	if (result.hitHorizontal) {
 		speed.x = 0;
 	}
 
-	TriggerEvent events[8];
-	int nTriggers = game->collisionSystem.resolveTriggers(collider, 8, events);
+	Trigger events[8];
+	int nTriggers = game->collisionSystem.queryTriggers(collider, arraysize(events), events);
 	for(int i=0; i<nTriggers; ++i) {
 		switch(events[i].type) {
-			case TRIGGER_EVENT_ENTER:
+			case Trigger::ENTER:
 				LOG_MSG("ENTER");
 				break;
-			case TRIGGER_EVENT_STAY:
-				break;
-			case TRIGGER_EVENT_EXIT:
+			case Trigger::EXIT:
 				LOG_MSG("EXIT");
 				break;
 		}
