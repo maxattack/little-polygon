@@ -98,9 +98,6 @@ struct Collision {
 			uint16_t hitHorizontal;
 		};
 	};
-
-	vec2 offset; // actual offset that was applied after collision constraints
-
 };
 
 
@@ -129,7 +126,7 @@ public:
 	);
 	void removeCollider(Collider *collider);
 		
-	bool move(Collider *c, vec2 offset, Collision *outResult);
+	Collision move(Collider *c, vec2 offset);
 	int queryTriggers(Collider *c, int outCapacity, Trigger *resultBuf);
 	int queryColliders(const AABB& box, uint32_t mask, int outCapacity, Collider **resultBuf);
 

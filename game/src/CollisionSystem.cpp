@@ -50,7 +50,7 @@ Collider* CollisionSystem::addCollider(
 	return &result;
 }
 
-bool CollisionSystem::move(Collider *collider, vec2 offset, Collision *result) {
+Collision CollisionSystem::move(Collider *collider, vec2 offset) {
 	// remove this from the hash because (i) it might change and (ii) we don't want
 	// to collider with ourselves, anyway
 	unhash(collider);
@@ -58,8 +58,8 @@ bool CollisionSystem::move(Collider *collider, vec2 offset, Collision *result) {
 	// Udpate along axis separately, so that we "slide" along
 	// parallel surfaces and fix snugly into corners.  The result
 	// is the amount that we actually moved, after clipping.
-	result->offset = offset;
-	result->hit = 0;
+	Collision result;
+	result.hit = 0;
 	auto size = collider->box.size();
 
 	AABB box = collider->box;
@@ -78,7 +78,7 @@ bool CollisionSystem::move(Collider *collider, vec2 offset, Collision *result) {
 			auto c = slots + slot;
 			if (collider->collides(c)) {
 				collider->box.p1.y = c->box.top();
-				result->hitBottom = true;
+				result.hitBottom = true;
 			}
 		}
 		collider->box.p0.y = collider->box.p1.y - size.y;
@@ -91,7 +91,7 @@ bool CollisionSystem::move(Collider *collider, vec2 offset, Collision *result) {
 			auto c = slots + slot;
 			if (collider->collides(c)) {
 				collider->box.p0.y = c->box.bottom();
-				result->hitTop = true;
+				result.hitTop = true;
 			}
 		}
 		collider->box.p1.y = collider->box.p0.y + size.y;
@@ -106,7 +106,7 @@ bool CollisionSystem::move(Collider *collider, vec2 offset, Collision *result) {
 			auto c = slots + slot;
 			if (collider->collides(c)) {
 				collider->box.p1.x = c->box.left();
-				result->hitRight = true;
+				result.hitRight = true;
 			}
 		}
 		collider->box.p0.x = collider->box.p1.x - size.x;
@@ -119,7 +119,7 @@ bool CollisionSystem::move(Collider *collider, vec2 offset, Collision *result) {
 			auto c = slots + slot;
 			if (collider->collides(c)) {
 				collider->box.p0.x = c->box.right();
-				result->hitLeft = true;
+				result.hitLeft = true;
 			}
 		}
 		collider->box.p1.x = collider->box.p0.x + size.x;
@@ -127,7 +127,7 @@ bool CollisionSystem::move(Collider *collider, vec2 offset, Collision *result) {
 	}
 
 	hash(collider);
-	return result->hit;
+	return result;
 }
 
 int CollisionSystem::queryTriggers(Collider *c, int outCapacity, Trigger *resultBuf) {

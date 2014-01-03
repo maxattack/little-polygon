@@ -19,8 +19,7 @@ image(game->assets->image("hero")) {
 		position-vec(HALF_WIDTH, 2*HALF_HEIGHT),
 		position+vec(HALF_WIDTH, 0)
 	), HERO_BIT, ENVIRONMENT_BIT, KITTEN_BIT, this);
-	Collision result;
-	game->collisionSystem.move(collider, vec(0,0.2f), &result);
+	game->collisionSystem.move(collider, vec(0,0.2f));
 
 }
 
@@ -50,8 +49,7 @@ void GameWorld::Hero::tick() {
 	}
 
 	// resolving collisions
-	Collision result;
-	game->collisionSystem.move(collider, speed * dt, &result);
+	auto result = game->collisionSystem.move(collider, speed * dt);
 	bool wasGrounded = grounded;
 	if ((grounded = result.hitBottom)) {
 		speed.y = 0;

@@ -11,8 +11,7 @@ image(game->assets->image("kitten")) {
 		position-vec(HALF_WIDTH, 2*HALF_HEIGHT),
 		position+vec(HALF_WIDTH, 0)
 	), KITTEN_BIT, ENVIRONMENT_BIT, 0, this);
-	Collision result;
-	game->collisionSystem.move(collider, vec(0,0.2f), &result);
+	game->collisionSystem.move(collider, vec(0,0.2f));
 }
 
 void GameWorld::Kitten::tick() {
