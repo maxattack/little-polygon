@@ -5,7 +5,8 @@
 // CONSTANTS
 
 #define COLLIDER_CAPACITY 128
-#define CONTACT_CAPACITY  128
+#define CONTACT_CAPACITY  64
+#define BUCKET_COUNT      256
 
 enum TriggerEventType {
 	TRIGGER_EVENT_ENTER,
@@ -51,14 +52,31 @@ inline AABB aabb(vec2 p0, vec2 p1) {
 	return result;
 }
 
-struct TriggerEvent {
-	TriggerEventType type;
-	ID trigger;
+//------------------------------------------------------------------------------
+
+struct Collider {
+	AABB box;
+	uint32_t categoryMask;
+	uint32_t collisionMask;
+	uint32_t triggerMask;
+	void *userData;
+
+	inline bool collides(const Collider *c) const {
+		return (collisionMask & c->categoryMask) &&
+		       box.overlaps(c->box);
+	}
+
+	inline bool triggers(const Collider *c) const {
+		return (triggerMask & c->categoryMask) &&
+		       box.overlaps(c->box);
+	}
 };
 
+//------------------------------------------------------------------------------
+
 struct Collision {
-	union {
-		uint32_t hit;
+	union {                      // collision directions (since everything is
+		uint32_t hit;            // an AABB we can make this simplification)
 		struct {
 			uint8_t hitBottom;
 			uint8_t hitTop;
@@ -71,77 +89,73 @@ struct Collision {
 		};
 	};
 
-	int triggerEventCount;
-	TriggerEvent *triggerEvents;
-
-	vec2 offset;
+	vec2 offset; // actual offset that was applied after collision constraints
 
 };
 
+
 //------------------------------------------------------------------------------
-// MAIN INTERFACE
+
+struct TriggerEvent {
+	TriggerEventType type;
+	Collider* trigger;
+};
+
+//------------------------------------------------------------------------------
 
 class CollisionSystem {
 public:
+
 	CollisionSystem();
 
-	ID addCollider(const AABB& box, 
-	               uint32_t categoryMask=0xffffffff, 
-	               uint32_t collisionMask=0xffffffff,
-	               uint32_t triggerMask=0,
-	               void *userData=0);
-	
-	bool move(ID id, vec2 offset, Collision *outResult);
-	
-	bool move(ID id, vec2 offset) {
-		Collision result;
-		return move(id, offset, &result);
-	}
-	
-	void removeCollider(ID id);
+	Collider* addCollider(
+		const AABB& box, 
+		uint32_t categoryMask = 0xffffffff, 
+		uint32_t collisionMask = 0xffffffff,
+		uint32_t triggerMask = 0x00000000,
+		void *userData = 0
+	);
+	void removeCollider(Collider *collider);
+		
+	bool move(Collider *c, vec2 offset, Collision *outResult);
 
-	inline AABB& bounds(ID id) { return colliders[id].box; }
-	inline uint32_t& categoryMask(ID id) { return colliders[id].categoryMask; }
-	inline uint32_t& collisionMask(ID id) { return colliders[id].collisionMask; }
-	inline void*& userData(ID id) { return userDataBuf[POOL_SLOT_INDEX(id)]; }
+	// replace these with some kind of iterators?
+	int resolveTriggers(Collider *c, int outCapacity, TriggerEvent *resultBuf);
+	int query(const AABB& box, uint32_t mask, int outCapacity, Collider **resultBuf);
 
 	void debugDraw(LinePlotter& plotter);
 
 private:
-	
-	struct Collider {
-		ID id;
-		uint32_t categoryMask;
-		uint32_t collisionMask;
-		uint32_t triggerMask;
-		AABB box;
+	typedef Bitset<COLLIDER_CAPACITY> ColliderSet;
 
-		inline bool collides(const Collider &c) {
-			return id != c.id && 
-			       (collisionMask & c.categoryMask) &&
-			       box.overlaps(c.box);
-		}
-
-		inline bool triggers(const Collider &c) {
-			return id != c.id &&
-			       (triggerMask & c.categoryMask) &&
-			       box.overlaps(c.box);
-		}
-	};
+	ColliderSet freeSlots;
+	Collider slots[COLLIDER_CAPACITY];
+	ColliderSet buckets[BUCKET_COUNT];
 
 	struct Contact {
-		ID collider;
-		ID trigger;
+		Collider *collider;
+		Collider *trigger;
 	};
 
-	int ncontacts = 0;
-
-	Pool<Collider, COLLIDER_CAPACITY> colliders;
-
+	uint32_t nContacts = 0;
 	Contact contacts[CONTACT_CAPACITY];
-	TriggerEvent triggerEventBuf[CONTACT_CAPACITY];
 
-	void* userDataBuf[COLLIDER_CAPACITY];
+	ColliderSet& bucketFor(int x, int y);
+	void hash(Collider *c);
+	void unhash(Collider *c);
+	void broadPhase(const AABB& sweep, ColliderSet& outResult);
 
-	int findContact(ID collider, ID trigger);
+// public:
+// 	int debugBroadPhase(Collider *c) {
+// 		ColliderSet result;
+// 		broadPhase(c->box, result);
+// 		result.clear(c-slots);
+// 		return result.count();
+// 	}
+
 };
+
+
+
+
+

@@ -11,7 +11,8 @@ image(game->assets->image("kitten")) {
 		position-vec(HALF_WIDTH, 2*HALF_HEIGHT),
 		position+vec(HALF_WIDTH, 0)
 	), KITTEN_BIT, ENVIRONMENT_BIT, 0, this);
-	game->collisionSystem.move(collider, vec(0,0.2f));
+	Collision result;
+	game->collisionSystem.move(collider, vec(0,0.2f), &result);
 }
 
 void GameWorld::Kitten::tick() {
@@ -19,6 +20,6 @@ void GameWorld::Kitten::tick() {
 }
 
 void GameWorld::Kitten::draw() {
-	auto p = PIXELS_PER_METER * game->collisionSystem.bounds(collider).bottomCenter();
+	auto p = PIXELS_PER_METER * collider->box.bottomCenter();
 	game->batch.drawImageScaled(image, p, flipped ? vec(-1,1) : vec(1,1), frame);	
 }

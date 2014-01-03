@@ -6,8 +6,8 @@ env(this),
 hero(this),
 kitten(this) {
 
-	// Mix_Music *music = Mix_LoadMUS("song.mid");
-	// if(music) { Mix_FadeInMusic(music, -1, 5000); }
+	Mix_Music *music = Mix_LoadMUS("song.mid");
+	if(music) { Mix_FadeInMusic(music, -1, 5000); }
 }
 
 void GameWorld::tick() {

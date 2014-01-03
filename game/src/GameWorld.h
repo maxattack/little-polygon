@@ -39,7 +39,7 @@ public:
 		GameWorld *game;
 
 		// physics parameters
-		ID collider;
+		Collider* collider;
 		vec2 speed = vec(0,0);
 		bool grounded = true;
 
@@ -61,7 +61,7 @@ public:
 	private:
 		GameWorld *game;
 
-		ID collider;
+		Collider* collider;
 
 		ImageAsset *image;
 		int frame = 0;

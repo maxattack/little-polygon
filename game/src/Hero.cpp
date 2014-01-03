@@ -1,6 +1,6 @@
 #include "GameWorld.h"
 
-#define HALF_WIDTH      0.25f
+#define HALF_WIDTH      0.225f
 #define HALF_HEIGHT     0.6f
 #define GRAVITY         80.0f
 #define JUMP_HEIGHT     2.05f
@@ -19,7 +19,8 @@ image(game->assets->image("hero")) {
 		position-vec(HALF_WIDTH, 2*HALF_HEIGHT),
 		position+vec(HALF_WIDTH, 0)
 	), HERO_BIT, ENVIRONMENT_BIT, KITTEN_BIT, this);
-	game->collisionSystem.move(collider, vec(0,0.2f));
+	Collision result;
+	game->collisionSystem.move(collider, vec(0,0.2f), &result);
 
 }
 
@@ -58,14 +59,17 @@ void GameWorld::Hero::tick() {
 		speed.x = 0;
 	}
 
-	for(int i=0; i<result.triggerEventCount; ++i) {
-		auto event = result.triggerEvents[i];
-		switch(event.type) {
+	TriggerEvent events[8];
+	int nTriggers = game->collisionSystem.resolveTriggers(collider, 8, events);
+	for(int i=0; i<nTriggers; ++i) {
+		switch(events[i].type) {
 			case TRIGGER_EVENT_ENTER:
+				LOG_MSG("ENTER");
 				break;
 			case TRIGGER_EVENT_STAY:
 				break;
 			case TRIGGER_EVENT_EXIT:
+				LOG_MSG("EXIT");
 				break;
 		}
 	}
@@ -77,16 +81,13 @@ void GameWorld::Hero::tick() {
             framef += WALK_ANIM_RATE * sx * dt;
             framef = fmodf(framef, 3.f);
             int fr = int(framef);
-            if (frame != fr && fr == 0) {
+            if (frame != fr && fr == 2) {
             	game->assets->sample("footfall")->play();
             }
            	frame = fr;
         } else {
             framef = 0;
-            if (frame != 0) {
-            	frame = 0;
-            	game->assets->sample("footfall")->play();
-            }
+            frame = 0;
         }
     } else {
         framef = 0;
@@ -96,7 +97,7 @@ void GameWorld::Hero::tick() {
 }
 
 void GameWorld::Hero::draw() {
-	auto p = PIXELS_PER_METER * game->collisionSystem.bounds(collider).bottomCenter();
+	auto p = PIXELS_PER_METER * collider->box.bottomCenter();
 	game->batch.drawImageScaled(image, p, flipped ? vec(-1,1) : vec(1,1), frame);
 }
 
