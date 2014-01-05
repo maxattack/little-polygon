@@ -1,13 +1,13 @@
 LIBRARY_OBJ_FILES =     \
 	obj/glew.o          \
 	obj/AssetBundle.o   \
-	obj/Context.o       \
 	obj/LinePlotter.o   \
 	obj/SampleAsset.o   \
 	obj/SpriteBatch.o   \
 	obj/TextureAsset.o  \
 	obj/TilemapAsset.o  \
-	obj/utils.o      
+	obj/utils.o         \
+	obj/utils_context.o
 
 game_OBJ_FILES =           \
 	obj/CollisionSystem.o  \

@@ -5,8 +5,8 @@
 #define GRAVITY         80.0f
 #define JUMP_HEIGHT     2.05f
 #define MOVE_SPEED      4.0f
-#define MOVE_EASING     0.25f
-#define WALK_ANIM_RATE  4.0f
+#define MOVE_EASING     0.15f
+#define WALK_ANIM_RATE  5.0f
 #define REST_THRESHOLD  0.075f
 
 GameWorld::Hero::Hero(GameWorld *aGame) : 
@@ -45,7 +45,7 @@ void GameWorld::Hero::tick() {
 		speed.x = easeTowards(speed.x, MOVE_SPEED, MOVE_EASING, dt);
 		flipped = false;
 	} else {
-		speed.x = 0;
+		speed.x = easeTowards(speed.x, 0, MOVE_EASING, dt);
 	}
 
 	// resolving collisions

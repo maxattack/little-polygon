@@ -234,29 +234,7 @@ inline int pingPong(int i, int n) {
 // SDL2 CONTEXT SETUP AND RAII FINALIZATION
 //--------------------------------------------------------------------------------
 
-class Context {
-private:
-	static Context *pInst;
-	SDL_Window *pWindow;
-
-public:
-	Context(const char *caption, int w=0, int h=0);
-	~Context();
-
-	static inline Context *inst() { return pInst; }
-	
-	inline SDL_Window *window() const { 
-		return pWindow; 
-	}	
-	
-	SDL_Point windowSize() const {
-		// In general I prefer to not wrap any SDL methods just to save on typing,
-		// but this is such a common one that that I made an exception.
-		SDL_Point result;
-		SDL_GetWindowSize(window(), &result.x, &result.y);
-		return result;
-	}
-};
+SDL_Window *initContext(const char *caption, int w=0, int h=0);
 
 //--------------------------------------------------------------------------------
 // GRAPHICS HELPERS

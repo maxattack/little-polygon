@@ -16,8 +16,6 @@
 
 #include "littlepolygon_utils.h"
 
-Context *Context::pInst = 0;
-
 #if LITTLE_POLYGON_MOBILE
 static int handleAppEvents(void *userdata, SDL_Event *event) {
     switch (event->type) {
@@ -47,32 +45,38 @@ static int handleAppEvents(void *userdata, SDL_Event *event) {
 }
 #endif
 
-Context::Context(const char *caption, int w, int h) {
-	ASSERT(pInst == 0);
-	pInst = this;
+static void doTearDown() {
+	Mix_CloseAudio();
+	SDL_Quit();
+}
+
+SDL_Window *initContext(const char *caption, int w, int h) {
 	SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO);
 	Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024);
+	atexit(doTearDown);
 
 	#if LITTLE_POLYGON_MOBILE
 
 	SDL_SetEventFilter(handleAppEvents, 0);	
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-	pWindow = SDL_CreateWindow(
+	SDL_Window *pWindow = SDL_CreateWindow(
 		"", 0, 0, 0, 0, 
 		SDL_WINDOW_OPENGL|SDL_WINDOW_FULLSCREEN|SDL_WINDOW_BORDERLESS
 	);
 
 	#else
 
+	#if LITTLE_POLYGON_GL_CORE_PROFILE
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+	#endif
 	if (w == 0) {
 		// iphone 5 resolution :P
 		w = 1136;
 		h = 640;
 	}
-	pWindow = SDL_CreateWindow(
+	SDL_Window *pWindow = SDL_CreateWindow(
 		caption ? caption : "Little Polygon Context", 
 		SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 
 		w, h, SDL_WINDOW_OPENGL
@@ -81,7 +85,6 @@ Context::Context(const char *caption, int w, int h) {
 	#endif
 
 	SDL_GL_CreateContext(pWindow);
-
 	#if !LITTLE_POLYGON_MOBILE
 	glewInit();
 	#endif
@@ -90,14 +93,6 @@ Context::Context(const char *caption, int w, int h) {
 	glEnable(GL_TEXTURE_2D);
 	glActiveTexture(GL_TEXTURE0);
 	glEnableClientState(GL_VERTEX_ARRAY);
+
+	return pWindow;
 }
-
-Context::~Context() {
-	Mix_CloseAudio();
-	SDL_DestroyWindow(pWindow);
-	SDL_Quit();
-	pInst = 0;
-}
-
-
-

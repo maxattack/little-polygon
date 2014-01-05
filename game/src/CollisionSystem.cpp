@@ -158,29 +158,26 @@ int CollisionSystem::queryTriggers(Collider *c, int outCapacity, Trigger *result
 		++nResults;
 	};
 
-	if (c->triggerMask) {
-
-		// identify overlapping triggers (ENTER and STAY)
-		ColliderSet candidates;
-		broadPhase(c->box, candidates);
-		for(unsigned slot : candidates) {
-			auto trigger = slots + slot;
-			if (c->triggers(trigger)) {
-				int i = findContact(trigger);
-				contactSet.clear(i);
-				if (i < nContacts) {
-					// leave this out unless there's a compelling reason
-					// to include it - feels like unnecessary noise/copying
-					// pushResult(Trigger::STAY, trigger);
-					// if (nResults == outCapacity) { return nResults; }
-				} else {
-					ASSERT(nContacts < CONTACT_CAPACITY);
-					nContacts++;
-					contacts[i].collider = c;
-					contacts[i].trigger = trigger;
-					pushResult(Trigger::ENTER, trigger);
-					if (nResults == outCapacity) { return nResults; }
-				}
+	// identify overlapping triggers (ENTER and STAY)
+	ColliderSet candidates;
+	broadPhase(c->box, candidates);
+	for(unsigned slot : candidates) {
+		auto trigger = slots + slot;
+		if (c->triggers(trigger)) {
+			int i = findContact(trigger);
+			contactSet.clear(i);
+			if (i < nContacts) {
+				// leave this out unless there's a compelling reason
+				// to include it - feels like unnecessary noise/copying
+				// pushResult(Trigger::STAY, trigger);
+				// if (nResults == outCapacity) { return nResults; }
+			} else {
+				ASSERT(nContacts < CONTACT_CAPACITY);
+				nContacts++;
+				contacts[i].collider = c;
+				contacts[i].trigger = trigger;
+				pushResult(Trigger::ENTER, trigger);
+				if (nResults == outCapacity) { return nResults; }
 			}
 		}
 	}

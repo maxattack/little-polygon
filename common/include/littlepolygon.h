@@ -18,9 +18,12 @@
 
 // determine platform
 #if __IPHONEOS__
-#define LITTLE_POLYGON_MOBILE     1
+	#define LITTLE_POLYGON_MOBILE     1
 #else
-#define LITTLE_POLYGON_MOBILE     0
+	#define LITTLE_POLYGON_MOBILE     0
+	#ifndef LITTLE_POLYGON_GL_CORE_PROFILE
+		#define LITTLE_POLYGON_GL_CORE_PROFILE 1
+	#endif
 #endif
 
 // standard includes
