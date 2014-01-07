@@ -21,7 +21,7 @@ are added as I need them for my personal work, but I'm always game for contribut
 
 Little Polygon is emphatically __not__ "middleware" or a "framework."  Modules do not maintain
 any global state or manage control flow, and individual modules are decoupled from each other
-and usable independently.  My goal is to add value, not express a particular archetectural 
+and usable independently.  My goal is to add value, not express a particular architectural 
 point of view.
 
 Build Dependencies (python2x + pip)
