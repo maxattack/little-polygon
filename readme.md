@@ -19,6 +19,11 @@ DESCRIPTION
 A collection of useful little scripts for making native mobile and desktop games.  Features
 are added as I need them for my personal work, but I'm always game for contributions.
 
+Little Polygon is emphatically __not__ "middleware" or a "framework."  Modules do not maintain
+any global state or manage control flow, and individual modules are decoupled from each other
+and usable independently.  My goal is to add value, not express a particular archetectural 
+point of view.
+
 Build Dependencies (python2x + pip)
 * lxml - For parsing TMX Files
 * Pillow - For image processing and compositting sprite atlasses
@@ -47,12 +52,12 @@ tasks in higher-level scripts.
 Native code is written in C++ with a "C with Objects" mentality.  Each object is expressed
 as a plain-old-data structure with just a few convenience getter methods.  Initialization and
 non-idempotent methods are top-level functions which take the structure as a "context" argument.
-This is a lot more flexible for controlling memory allocation, initialization order, multithreading, 
-binding to scripting environments, keeping private methods out of headers, and allowing the use of
-completely opaque pointers that are just forward-declared.
+This is a lot more flexible for controlling memory allocation, initialization order, 
+multithreading, binding to scripting environments, keeping private methods out of headers, and 
+allowing the use of completely opaque pointers that are just forward-declared.
 
-The example game, on the other hand, is written with a modern C++11 mentality.  Different tools for 
-different levels of abstraction ;)
+The example game, on the other hand, is written with a modern C++11 mentality.  Different tools 
+for different levels of abstraction ;)
 
 Wishlist
 --------
