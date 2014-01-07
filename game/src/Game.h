@@ -1,6 +1,5 @@
 #pragma once
 
-#include "config.h"
 #include "CollisionSystem.h"
 
 #define CANVAS_WIDTH   320
@@ -11,6 +10,11 @@
 #define KITTEN_BIT      0x00000004
 
 class Game;
+
+extern SpriteBatch *gSpriteBatch;
+#if DEBUG
+extern LinePlotter *gPlotter;
+#endif
 
 //----------------------------------------------------------------------
 
@@ -84,7 +88,6 @@ private:
 	AssetBundle *assets;
 	CollisionSystem collisionSystem;
 	Timer timer;	
-	SpriteBatch batch;
 
 
 	bool done = false;
@@ -95,7 +98,6 @@ private:
 	Kitten kitten;
 
 	#if DEBUG
-	LinePlotter wireframe;
 	bool drawWireframe = false;
 	#endif
 

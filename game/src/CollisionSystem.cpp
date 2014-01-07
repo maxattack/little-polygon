@@ -292,13 +292,13 @@ void CollisionSystem::broadPhase(const AABB& sweep, ColliderSet& outResult) {
 
 }
 
-void CollisionSystem::debugDraw(LinePlotter& plotter) {
+void CollisionSystem::debugDraw(LinePlotter* plotter) {
 	unsigned slot;
 	for(auto i=(~freeSlots).listBits(); i.next(slot);) {
 		auto& c = slots[slot];
-		plotter.plot(PIXELS_PER_METER * c.box.topLeft(), PIXELS_PER_METER * c.box.topRight(), rgb(0xffff00));
-		plotter.plot(PIXELS_PER_METER * c.box.topRight(), PIXELS_PER_METER * c.box.bottomRight(), rgb(0xffff00));
-		plotter.plot(PIXELS_PER_METER * c.box.bottomRight(), PIXELS_PER_METER * c.box.bottomLeft(), rgb(0xffff00));
-		plotter.plot(PIXELS_PER_METER * c.box.bottomLeft(), PIXELS_PER_METER * c.box.topLeft(), rgb(0xffff00));
+		plot(plotter, PIXELS_PER_METER * c.box.topLeft(), PIXELS_PER_METER * c.box.topRight(), rgb(0xffff00));
+		plot(plotter, PIXELS_PER_METER * c.box.topRight(), PIXELS_PER_METER * c.box.bottomRight(), rgb(0xffff00));
+		plot(plotter, PIXELS_PER_METER * c.box.bottomRight(), PIXELS_PER_METER * c.box.bottomLeft(), rgb(0xffff00));
+		plot(plotter, PIXELS_PER_METER * c.box.bottomLeft(), PIXELS_PER_METER * c.box.topLeft(), rgb(0xffff00));
 	}
 }

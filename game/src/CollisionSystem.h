@@ -15,10 +15,15 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
-#include "config.h"
+#include <littlepolygon_utils.h>
+#include <littlepolygon_templates.h>
+
 
 //------------------------------------------------------------------------------
 // CONSTANTS
+
+#define PIXELS_PER_METER 16
+#define METERS_PER_PIXEL (1.0f/16.0f)
 
 #define COLLIDER_CAPACITY 1024
 #define CONTACT_CAPACITY  1024	
@@ -130,7 +135,7 @@ public:
 	int queryTriggers(Collider *c, int outCapacity, Trigger *resultBuf);
 	int queryColliders(const AABB& box, uint32_t mask, int outCapacity, Collider **resultBuf);
 
-	void debugDraw(LinePlotter& plotter);
+	void debugDraw(LinePlotter* plotter);
 
 private:
 	typedef Bitset<COLLIDER_CAPACITY> ColliderSet;
@@ -151,14 +156,6 @@ private:
 	void hash(Collider *c);
 	void unhash(Collider *c);
 	void broadPhase(const AABB& sweep, ColliderSet& outResult);
-
-// public:
-// 	int debugBroadPhase(Collider *c) {
-// 		ColliderSet result;
-// 		broadPhase(c->box, result);
-// 		result.clear(c-slots);
-// 		return result.count();
-// 	}
 
 };
 

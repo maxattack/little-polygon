@@ -100,7 +100,7 @@ void Hero::tick() {
 
 void Hero::draw() {
 	auto p = PIXELS_PER_METER * collider->box.bottomCenter();
-	game->batch.drawImageScaled(image, p, flipped ? vec(-1,1) : vec(1,1), frame);
+	drawImageScaled(gSpriteBatch, image, p, flipped ? vec(-1,1) : vec(1,1), frame);
 }
 
 

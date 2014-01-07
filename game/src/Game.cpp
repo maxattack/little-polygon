@@ -55,17 +55,17 @@ void Game::draw() {
 	auto scrolling = vec(0,0);
 	auto canvasSize = vec(CANVAS_WIDTH, CANVAS_HEIGHT);
 	
-	batch.begin(canvasSize, scrolling);
+	begin(gSpriteBatch, canvasSize, scrolling);
 	env.draw();
 	hero.draw();
 	kitten.draw();
-	batch.end();
+	end(gSpriteBatch);
 
 	#if DEBUG
 	if (drawWireframe) {
-		wireframe.begin(canvasSize, scrolling);
-		collisionSystem.debugDraw(wireframe);
-		wireframe.end();
+		begin(gPlotter, canvasSize, scrolling);
+		collisionSystem.debugDraw(gPlotter);
+		end(gPlotter);
 	}
 	#endif
 }

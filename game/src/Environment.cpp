@@ -21,8 +21,8 @@ Environment::Environment(Game *aGame) : game(aGame) {
 }
 
 void Environment::draw() {
-	game->batch.drawImage( bg, vec(4,CANVAS_HEIGHT) );
-	game->batch.drawImageScaled( bg, vec(CANVAS_WIDTH-8, CANVAS_HEIGHT-56), vec(-1,1) );
-	game->batch.drawTilemap( tmap );
+	drawImage( gSpriteBatch, bg, vec(4,CANVAS_HEIGHT) );
+	drawImageScaled( gSpriteBatch, bg, vec(CANVAS_WIDTH-8, CANVAS_HEIGHT-56), vec(-1,1) );
+	drawTilemap( gSpriteBatch, tmap );
 }
 

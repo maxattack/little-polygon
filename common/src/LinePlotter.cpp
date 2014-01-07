@@ -41,63 +41,67 @@ void main() {
 
 )GLSL";
 
-LinePlotter::LinePlotter() : count(-1) {
-	CHECK( compileShader(SIMPLE_SHADER, &prog, &vert, &frag) );
-	glUseProgram(prog);
-	uMVP = glGetUniformLocation(prog, "mvp");
-	aPosition = glGetAttribLocation(prog, "aPosition");
-	aColor = glGetAttribLocation(prog, "aColor");
+// private helper functions
+void commitBatch(LinePlotter *context);	
+
+void initialize(LinePlotter* context) {
+	context->count = -1;
+	CHECK( compileShader(SIMPLE_SHADER, &context->prog, &context->vert, &context->frag) );
+	glUseProgram(context->prog);
+	context->uMVP = glGetUniformLocation(context->prog, "mvp");
+	context->aPosition = glGetAttribLocation(context->prog, "aPosition");
+	context->aColor = glGetAttribLocation(context->prog, "aColor");
 }
 
-LinePlotter::~LinePlotter() {
-	glDeleteProgram(prog);
-	glDeleteShader(vert);
-	glDeleteShader(frag);
+void destroy(LinePlotter *context) {
+	glDeleteProgram(context->prog);
+	glDeleteShader(context->vert);
+	glDeleteShader(context->frag);
 }
 
-void LinePlotter::begin(vec2 canvasSize, vec2 canvasOffset) {
-	ASSERT(count == -1);
-	count = 0;
+void begin(LinePlotter *context, vec2 canvasSize, vec2 canvasOffset) {
+	ASSERT(context->count == -1);
+	context->count = 0;
 
 	glDisable(GL_BLEND);
 	glLineWidth(2);
 
-	glUseProgram(prog);
+	glUseProgram(context->prog);
 
-	setCanvas(uMVP, canvasSize, canvasOffset);
+	setCanvas(context->uMVP, canvasSize, canvasOffset);
 
-	glEnableVertexAttribArray(aPosition);
-	glEnableVertexAttribArray(aColor);
+	glEnableVertexAttribArray(context->aPosition);
+	glEnableVertexAttribArray(context->aColor);
 
-	glVertexAttribPointer(aPosition, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), &vertices[0].position);
-	glVertexAttribPointer(aColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Vertex), &vertices[0].color);	
+	glVertexAttribPointer(context->aPosition, 2, GL_FLOAT, GL_FALSE, sizeof(LinePlotter::Vertex), &context->vertices[0].position);
+	glVertexAttribPointer(context->aColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(LinePlotter::Vertex), &context->vertices[0].color);	
 }
 
-void LinePlotter::plot(vec2 p0, vec2 p1, Color c) {
-	ASSERT(count >= 0);
-	vertices[2*count  ].set(p0, c);
-	vertices[2*count+1].set(p1, c);
+void plot(LinePlotter *context, vec2 p0, vec2 p1, Color c) {
+	ASSERT(context->count >= 0);
+	context->vertices[2*context->count  ].set(p0, c);
+	context->vertices[2*context->count+1].set(p1, c);
 
-	++count;
-	if (count == LINE_PLOTTER_CAPACITY) {
-		commitBatch();
+	++context->count;
+	if (context->count == LINE_PLOTTER_CAPACITY) {
+		commitBatch(context);
 	}
 }
 
-void LinePlotter::end() {
-	ASSERT(count >= 0);
-	if (count > 0) {
-		commitBatch();
+void end(LinePlotter *context) {
+	ASSERT(context->count >= 0);
+	if (context->count > 0) {
+		commitBatch(context);
 	}
-	count = -1;
-	glDisableVertexAttribArray(aPosition);
-	glDisableVertexAttribArray(aColor);
+	context->count = -1;
+	glDisableVertexAttribArray(context->aPosition);
+	glDisableVertexAttribArray(context->aColor);
 	glUseProgram(0);
 }
 
-void LinePlotter::commitBatch() {
-	ASSERT(count > 0);
-	glDrawArrays(GL_LINES, 0, 2*count);
-	count = 0;
+void commitBatch(LinePlotter *context) {
+	ASSERT(context->count > 0);
+	glDrawArrays(GL_LINES, 0, 2*context->count);
+	context->count = 0;
 }
 

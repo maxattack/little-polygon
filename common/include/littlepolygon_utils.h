@@ -180,7 +180,7 @@ vec2 cubicHermiteDeriv(vec2 p0, vec2 m0, vec2 p1, vec2 m1, float u);
 
 struct Color {
 	union {
-		uint32_t abgr; // messed-up opengl byte order :P
+		uint32_t abgr; // big-endian opengl byte order :P
 		struct {
 			uint8_t r, g, b, a; // little endian
 		};
@@ -222,163 +222,7 @@ inline Color lerp(Color a, Color b, float u) {
 }
 
 //--------------------------------------------------------------------------------
-// ANIMATION UTILITIES
-//--------------------------------------------------------------------------------
-
-inline int pingPong(int i, int n) {
-	i  = i % (n + n - 2);
-	return i >= n ? 2 * (n-1) - i : i;
-}	
-
-//--------------------------------------------------------------------------------
-// SDL2 CONTEXT SETUP AND RAII FINALIZATION
-//--------------------------------------------------------------------------------
-
-SDL_Window *initContext(const char *caption, int w=0, int h=0);
-
-//--------------------------------------------------------------------------------
-// GRAPHICS HELPERS
-//--------------------------------------------------------------------------------
-
-void setCanvas(GLuint uMVP, vec2 canvasSize, vec2 canvasOffset);
-bool compileShader(const GLchar* source, GLuint *outProg, GLuint *outVert, GLuint *outFrag);
-
-//--------------------------------------------------------------------------------
-// SPRITE BATCH UTILITY
-// This object can render lots of sprites in a small number of batched draw calls
-// by coalescing adjacent draws into larger logical draws.
-// TODO: perform batch-level clipping?
-//--------------------------------------------------------------------------------
-
-#define SPRITE_CAPACITY 64
-
-class SpriteBatch {
-public:
-	// Construct a batch with an internal draw-queue for "capacity" man sprites
-	SpriteBatch();
-	~SpriteBatch();
-
-	// Call this method to initialize the graphics context state.  Coordinates are
-	// set to a orthogonal projection matrix, and some basic settings like blending are
-	// enabled.  Any additional state changes can be set *after* this function but *before*
-	// issuing any draw calls.
-	void begin(vec2 canvasSize, vec2 scrolling=vec(0,0));
-
-	// Draw the given image.  Will potentially cause a draw call to actually be emitted
-	// to the graphics device if: (i) the buffer has reached capacity or (ii) the texture 
-	// atlas has changed.  Color transforms *can* be batched, because they are encoded
-	// in the vertices, not in shader uniforms.
-	void drawImage(ImageAsset *image, vec2 position, int frame=0, Color color=rgba(0x00000000));
-
-	// Draw the given image, with it's local coordinates transformed by the given
-	// "attitude" vector using complex multiplication, which supports rotation and
-	// uniform scale
-	void drawImageTransformed(ImageAsset *image, vec2 position, vec2 attitude, int frame=0, Color color=rgba(0x00000000));
-
-	// Draw the given image with the given rotation (internally calls drawImageTransformed)
-	void drawImageRotated(ImageAsset *image, vec2 position, float radians, int frame=0, Color color=rgba(0x00000000));
-
-	// Draw the given image with the given non-uniform local scale
-	void drawImageScaled(ImageAsset *image, vec2 position, vec2 k, int frame=0, Color color=rgba(0x00000000));
-	
-	// Draw the given texture using the texture-atlas for a specific font.
-	void drawLabel(FontAsset *font, vec2 p, Color c, const char *msg);
-
-	// Draw centered texture by measuring each line and subtracting half the advance
-	void drawLabelCentered(FontAsset *font, vec2 p, Color c, const char *msg);
-
-	// Draw a tilemap (TODO: scrolling, clipping)
-	void drawTilemap(TilemapAsset *map, vec2 position=vec(0,0));
-
-	// if you want to monkey with the global rendering state you need to flush
-	// the render queue first
-	void flush();
-
-	// Commit the current draw queue and return the graphics context state to it's
-	// canonical form, to play nice with other renderers.
-	void end();
-
-private:
-	struct Vertex {
-		vec2 position;
-		vec2 uv;
-		Color color;
-		
-		inline void set(vec2 p, vec2 u, Color c) {
-			position = p;
-			uv = u;
-			color = c;
-		}
-
-	};
-
-
-	vec2 canvasSize;
-	vec2 canvasScroll;
-	int count;
-
-	GLuint prog;
-	GLuint vert;
-	GLuint frag;
-	GLuint uMVP;
-	GLuint uAtlas;
-	GLuint aPosition;
-	GLuint aUV;
-	GLuint aColor;	
-
-	// invariant: these two fields need to be adjacent
-	GLuint elementBuf;
-	GLuint arrayBuf;
-	
-	Vertex workingBuffer[4 * SPRITE_CAPACITY]; // four corners
-	TextureAsset *workingTexture;
-
-	// private helper methods
-	void setTextureAtlas(TextureAsset* texture);
-	void commitBatch();
-	void plotGlyph(const GlyphAsset& g, float x, float y, float h, Color c);
-};
-
-//--------------------------------------------------------------------------------
-// LINE PLOTTER
-// This is mainly a debugging tool for things like b2DebugDraw and diagnostics,
-// so it's not exactly ninja'd for performance.
-//--------------------------------------------------------------------------------
-
-#define LINE_PLOTTER_CAPACITY 16
-
-class LinePlotter {
-public:
-	LinePlotter();
-	~LinePlotter();
-
-	void begin(vec2 canvasSize, vec2 canvasOffset=vec(0,0));
-	void plot(vec2 p0, vec2 p1, Color c);
-	void end();
-
-private:
-	struct Vertex {
-		vec2 position;
-		Color color;
-		inline void set(vec2 p, Color c) { position = p; color = c; }
-	};
-
-
-	Vertex vertices[ 2 * LINE_PLOTTER_CAPACITY ];
-	int count;
-	GLuint prog;
-	GLuint vert;
-	GLuint frag;
-	GLuint uMVP;
-	GLuint aPosition;
-	GLuint aColor;
-
-	void commitBatch();	
-};
-
-
-//--------------------------------------------------------------------------------
-// TIMER UTILS
+// TIMING & ANIMATION UTILITIES
 //--------------------------------------------------------------------------------
 
 struct Timer {
@@ -412,3 +256,120 @@ struct Timer {
 	double seconds() const { return 0.001 * ticks; }
 	double deltaSeconds() const { return 0.001 * deltaTicks; }
 };
+
+inline int pingPong(int i, int n) {
+	i  = i % (n + n - 2);
+	return i >= n ? 2 * (n-1) - i : i;
+}	
+
+//--------------------------------------------------------------------------------
+// GRAPHICS UTILITIES
+//--------------------------------------------------------------------------------
+
+SDL_Window *initContext(const char *caption, int w=0, int h=0);
+void setCanvas(GLuint uMVP, vec2 canvasSize, vec2 canvasOffset);
+bool compileShader(const GLchar* source, GLuint *outProg, GLuint *outVert, GLuint *outFrag);
+
+#define SPRITE_CAPACITY 256
+
+struct SpriteBatch {
+	vec2 canvasSize;
+	vec2 canvasScroll;
+	int count;
+
+	GLuint prog;
+	GLuint vert;
+	GLuint frag;
+	GLuint uMVP;
+	GLuint uAtlas;
+	GLuint aPosition;
+	GLuint aUV;
+	GLuint aColor;	
+
+	// invariant: these two fields need to be adjacent
+	GLuint elementBuf;
+	GLuint arrayBuf;
+
+	struct Vertex {
+		vec2 position;
+		vec2 uv;
+		Color color;
+		
+		inline void set(vec2 p, vec2 u, Color c) {
+			position = p;
+			uv = u;
+			color = c;
+		}
+
+	};
+
+	Vertex workingBuffer[4 * SPRITE_CAPACITY]; // four corners
+	TextureAsset *workingTexture;
+};
+
+// This object can render lots of sprites in a small number of batched draw calls
+// by coalescing adjacent draws into larger logical draws.
+// TODO: perform batch-level clipping?
+
+// Create and destroy a sprite batch.  
+void initialize(SpriteBatch* context);
+void destroy(SpriteBatch *context);
+
+// Call this method to initialize the graphics context state.  Coordinates are
+// set to a orthogonal projection matrix, and some basic settings like blending are
+// enabled.  Any additional state changes can be set *after* this function but *before*
+// issuing any draw calls.
+void begin(SpriteBatch* context, vec2 canvasSize, vec2 scrolling=vec(0,0));
+
+// Draw the given image.  Will potentially cause a draw call to actually be emitted
+// to the graphics device if: (i) the buffer has reached capacity or (ii) the texture 
+// atlas has changed.  Color transforms *can* be batched, because they are encoded
+// in the vertices, not in shader uniforms.
+void drawImage(SpriteBatch* context, ImageAsset *image, vec2 position, int frame=0, Color color=rgba(0x00000000));
+void drawImageTransformed(SpriteBatch* context, ImageAsset *image, vec2 position, vec2 attitude, int frame=0, Color color=rgba(0x00000000));
+void drawImageRotated(SpriteBatch* context, ImageAsset *image, vec2 position, float radians, int frame=0, Color color=rgba(0x00000000));
+void drawImageScaled(SpriteBatch* context, ImageAsset *image, vec2 position, vec2 k, int frame=0, Color color=rgba(0x00000000));
+void drawLabel(SpriteBatch* context, FontAsset *font, vec2 p, Color c, const char *msg);
+void drawLabelCentered(SpriteBatch* context, FontAsset *font, vec2 p, Color c, const char *msg);
+void drawTilemap(SpriteBatch* context, TilemapAsset *map, vec2 position=vec(0,0));
+
+// if you want to monkey with the global rendering state you need to flush
+// the render queue first
+void flush(SpriteBatch* context);
+
+// Commit the current draw queue and return the graphics context state to it's
+// canonical form, to play nice with other renderers.
+void end(SpriteBatch* context);
+
+// This is mainly a debugging tool for things like b2DebugDraw and diagnostics,
+// so it's not exactly ninja'd for performance.
+#define LINE_PLOTTER_CAPACITY 256
+
+struct LinePlotter {
+	int count;
+	GLuint prog;
+	GLuint vert;
+	GLuint frag;
+	GLuint uMVP;
+	GLuint aPosition;
+	GLuint aColor;
+
+	struct Vertex {
+		vec2 position;
+		Color color;
+
+		inline void set(vec2 p, Color c) { 
+			position = p; 
+			color = c; 
+		}
+	};
+
+	Vertex vertices[ 2 * LINE_PLOTTER_CAPACITY ];
+};
+
+void initialize(LinePlotter* context);
+void destroy(LinePlotter* context);
+
+void begin(LinePlotter *context, vec2 canvasSize, vec2 canvasOffset=vec(0,0));
+void plot(LinePlotter *context, vec2 p0, vec2 p1, Color c);
+void end(LinePlotter *context);
