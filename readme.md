@@ -28,6 +28,7 @@ Build Dependencies (python2)
 Runtime Dependencies (native)
 * sdl2 - platform abstraction
 * sdl2_mixer - music and sound effects
+* glew - desktop graphics feature wrangling
 * zlib - asset decompression
 
 Modules
@@ -41,7 +42,7 @@ CODING STANDARDS
 
 Python scripts are organized into "tasks" - scripts that encapsulate a single method which
 can be invoked directly (checking for "__main__"), or imported and composited with other
-tasks in high-level scripts.
+tasks in higher-level scripts.
 
 Native code is written in C++ with a "C with Objects" mentality.  Each object is expressed
 as a plain-old-data structure with just a few convenience getter methods.  Initialization and
@@ -50,14 +51,15 @@ This is a lot more flexible for controlling memory allocation, initialization or
 binding to scripting environments, keeping private methods out of headers, and allowing the use of
 completely opaque pointers that are just forward-declared.
 
-The example game is written with a modern C++11 mentality.  Different tools for different levels
-of abstraction ;)
+The example game, on the other hand, is written with a modern C++11 mentality.  Different tools for 
+different levels of abstraction ;)
 
 Wishlist
 --------
 
 * automatic lua binding (using python scripts, not C++ template madness)
 * lightweight entity-component system for in-game "hit F7" level editting
+* savedata (sqlite?)
 * asynchronous sprite-batch (for multithreading)
 * more import asset types (SVG, Flash)
 * non-native export targets (e.g. unity, webgl)
@@ -66,7 +68,7 @@ LICENSE
 -------
 
 Little Polygon SDK
-Copyright (C) 2014 Max Kaufmann
+Copyright (C) 2014 Max Kaufmann (max@littlepolygon.com)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
