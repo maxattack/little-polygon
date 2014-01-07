@@ -207,9 +207,9 @@ public:
 typedef uint32_t ID;
 
 struct LinearPoolSlot {
-    ID id;
-    uint16_t index;
-    uint16_t next;
+	ID id;
+	uint16_t index;
+	uint16_t next;
 };
 
 // This pool is endowed with a storage-fixed ID table 
@@ -218,36 +218,36 @@ struct LinearPoolSlot {
 template<typename T, int N>
 class LinearPool {
 private:
-    uint32_t mCount;
-    T mRecords[N];
-    LinearPoolSlot mSlots[N];
-    uint16_t mFreelistEnqueue;
-    uint16_t mFreelistDequeue;
+	uint32_t mCount;
+	T mRecords[N];
+	LinearPoolSlot mSlots[N];
+	uint16_t mFreelistEnqueue;
+	uint16_t mFreelistDequeue;
 	
 public:
-    LinearPool() : mCount(0), mFreelistEnqueue(N-1), mFreelistDequeue(0) {
-        STATIC_ASSERT(N < MAX_POOL_CAPACITY);
-        for(unsigned i=0; i<N; ++i) {
-            mSlots[i].id = i;     // initialize lower-bits of id with index
-            mSlots[i].next = i+1; // initialize the free slot linked-list
-        }
-    }
-	
+	LinearPool() : mCount(0), mFreelistEnqueue(N-1), mFreelistDequeue(0) {
+		STATIC_ASSERT(N < MAX_POOL_CAPACITY);
+		for(unsigned i=0; i<N; ++i) {
+			mSlots[i].id = i;     // initialize lower-bits of id with index
+			mSlots[i].next = i+1; // initialize the free slot linked-list
+		}
+	}
+
 	bool isEmpty() const { return mCount == 0; }
 	bool isFull() const { return mCount == N; }
-    bool isActive(ID id) const { return mSlots[POOL_SLOT_INDEX(id)].id == id; }
+	bool isActive(ID id) const { return mSlots[POOL_SLOT_INDEX(id)].id == id; }
 	int count() const { return mCount; }
-    T* begin() { return mRecords; }
-    T* end() { return mRecords + mCount; }
-    T& operator[](ID id) { ASSERT(isActive(id)); return mRecords[mSlots[POOL_SLOT_INDEX(id)].index]; }
+	T* begin() { return mRecords; }
+	T* end() { return mRecords + mCount; }
+	T& operator[](ID id) { ASSERT(isActive(id)); return mRecords[mSlots[POOL_SLOT_INDEX(id)].index]; }
 
-    ID takeOut() {
-        ASSERT(mCount < N);
-        LinearPoolSlot &slot = mSlots[mFreelistDequeue]; // dequeue a new slot - we do this in FIFO order so that
-        mFreelistDequeue = slot.next;              // we don't "thrash" a record with interleaved add-remove calls
-                                                   // and use up the higher-order bits of the id
-        slot.index = mCount++;                     // push a new record into the buffer
-        mRecords[slot.index].id = slot.id;         // write the id to the record
+	ID takeOut() {
+		ASSERT(mCount < N);
+		LinearPoolSlot &slot = mSlots[mFreelistDequeue]; // dequeue a new slot - we do this in FIFO order so that
+		mFreelistDequeue = slot.next;                    // we don't "thrash" a record with interleaved add-remove calls
+		                                                 // and use up the higher-order bits of the id
+		slot.index = mCount++;                           // push a new record into the buffer
+		mRecords[slot.index].id = slot.id;               // write the id to the record
 		return slot.id;
     }
 
@@ -277,187 +277,187 @@ public:
 //--------------------------------------------------------------------------------
 
 template <unsigned tSize>
-class Bitset
-{
-    inline static unsigned clz(uint32_t word) { return __builtin_clz(word); }
-    inline static uint32_t lz(unsigned bit) { return 0x80000000 >> bit; }
-    inline static unsigned ones(uint32_t word) { return __builtin_popcount(word); }
+class Bitset {
+	inline static unsigned clz(uint32_t word) { return __builtin_clz(word); }
+	inline static uint32_t lz(unsigned bit) { return 0x80000000 >> bit; }
+	inline static unsigned ones(uint32_t word) { return __builtin_popcount(word); }
 
-    uint32_t nonzeroWords;
-    uint32_t words[tSize/32];
+	uint32_t nonzeroWords;
+	uint32_t words[tSize/32];
 
 public:
 
-    Bitset() { 
-        STATIC_ASSERT(tSize > 0);
-        STATIC_ASSERT(tSize % 32 == 0);
-        STATIC_ASSERT(tSize <= 1024);
-        clear(); 
-    }
-    
-    inline static unsigned size() { return tSize; }
-    inline bool empty() const { return nonzeroWords == 0; }
+	Bitset() { 
+		STATIC_ASSERT(tSize > 0);
+		STATIC_ASSERT(tSize % 32 == 0);
+		STATIC_ASSERT(tSize <= 1024);
+		clear(); 
+	}
+
+	inline static unsigned size() { return tSize; }
+	inline bool empty() const { return nonzeroWords == 0; }
 
 
-    void mark(unsigned index) {
-        ASSERT(index < tSize);
-        unsigned word = index >> 5;
-        unsigned bit = index & 31;
-        nonzeroWords |= lz(word);
-        words[word] |= lz(bit);
-    }
+	void mark(unsigned index) {
+		ASSERT(index < tSize);
+		unsigned word = index >> 5;
+		unsigned bit = index & 31;
+		nonzeroWords |= lz(word);
+		words[word] |= lz(bit);
+	}
 
-    void clear(unsigned index) {
-        ASSERT(index < tSize);
-        unsigned word = index >> 5;
-        unsigned bit = index & 31;
-        words[word] &= ~lz(bit);
-        if (words[word] == 0) {
-            nonzeroWords &= ~lz(word);
-        }
-    }
+	void clear(unsigned index) {
+		ASSERT(index < tSize);
+		unsigned word = index >> 5;
+		unsigned bit = index & 31;
+		words[word] &= ~lz(bit);
+		if (words[word] == 0) {
+			nonzeroWords &= ~lz(word);
+		}
+	}
 
-    void mark() {
-        const unsigned NUM_WORDS = tSize / 32;
-        const unsigned NUM_ZEROES = 32 - NUM_WORDS;
-        nonzeroWords = ~((1<<NUM_ZEROES)-1);
-        memset(words, 0xff, sizeof(uint32_t) * NUM_WORDS);
-    }
+	void mark() {
+		const unsigned NUM_WORDS = tSize / 32;
+		const unsigned NUM_ZEROES = 32 - NUM_WORDS;
+		nonzeroWords = ~((1<<NUM_ZEROES)-1);
+		memset(words, 0xff, sizeof(uint32_t) * NUM_WORDS);
+	}
 
-    void clear() {
-        const unsigned NUM_WORDS = tSize / 32;
-        nonzeroWords = 0;
-        memset(words, 0, sizeof(uint32_t) * NUM_WORDS);
-    }
+	void clear() {
+		const unsigned NUM_WORDS = tSize / 32;
+		nonzeroWords = 0;
+		memset(words, 0, sizeof(uint32_t) * NUM_WORDS);
+	}
 
-    bool operator[](const unsigned index) const {
-        unsigned word = index >> 5;
-        unsigned bit = index & 31;
-        return (words[word] & lz(bit)) != 0;
-    }
+	bool operator[](const unsigned index) const {
+		ASSERT(index < tSize);
+		unsigned word = index >> 5;
+		unsigned bit = index & 31;
+		return (words[word] & lz(bit)) != 0;
+	}
 
-    unsigned count() const {
-        uint32_t remainder = nonzeroWords;
-        unsigned c = 0;
-        while(remainder != 0) {
-            unsigned w = clz(remainder);
-            remainder ^= lz(w);
-            c += ones(words[w]);
-        }
-        return c;
-    }
+	unsigned count() const {
+		uint32_t remainder = nonzeroWords;
+		unsigned c = 0;
+		while(remainder != 0) {
+			unsigned w = clz(remainder);
+			remainder ^= lz(w);
+			c += ones(words[w]);
+		}
+		return c;
+	}
 
-    bool findFirst(unsigned &index) const {
-        if (nonzeroWords) {
-            unsigned w = clz(nonzeroWords);
-            index = clz(words[w]) + (w<<5);
-            return true;
-        } else {
-            return false;
-        }
-    }
+	bool findFirst(unsigned &index) const {
+		if (nonzeroWords) {
+			unsigned w = clz(nonzeroWords);
+			index = clz(words[w]) + (w<<5);
+			return true;
+		} else {
+			return false;
+		}
+	}
 
-    bool clearFirst(unsigned &index) {
-        if (nonzeroWords) {
-            unsigned w = clz(nonzeroWords);
-            index = clz(words[w]);
-            words[w] ^= lz(index);
-            if (words[w] == 0) {
-                nonzeroWords ^= lz(w);
-            }
-            index += (w<<5);
-            return true;
-        } else {
-            return false;
-        }
-    }
+	bool clearFirst(unsigned &index) {
+		if (nonzeroWords) {
+			unsigned w = clz(nonzeroWords);
+			index = clz(words[w]);
+			words[w] ^= lz(index);
+			if (words[w] == 0) {
+				nonzeroWords ^= lz(w);
+			}
+			index += (w<<5);
+			return true;
+		} else {
+			return false;
+		}
+	}
 
-    class iterator {
-    private:
-        const Bitset<tSize> *bs;
-        uint32_t remainder;
-        unsigned w, v;
+	class iterator {
+	private:
+		const Bitset<tSize> *bs;
+		uint32_t remainder;
+		unsigned w, v;
 
-    public:
-        iterator(const Bitset<tSize>& aSet) : bs(&aSet) {
-            remainder = bs->nonzeroWords;
-            if (remainder) {
-                w = clz(remainder);
-                v = bs->words[w];
-            }
-        }
+	public:
+		iterator(const Bitset<tSize>& aSet) : bs(&aSet) {
+			remainder = bs->nonzeroWords;
+			if (remainder) {
+				w = clz(remainder);
+				v = bs->words[w];
+			}
+		}
 
-        bool next(unsigned &index) {
-            if (remainder) {
-                index = clz(v);
-                v ^= lz(index);
-                index += (w<<5);
-                if (v == 0) {
-                    remainder ^= lz(w);
-                    if (remainder) {
-                        w = clz(remainder);
-                        v = bs->words[w];
-                    }
-                }
-                return true;
-            } else {
-                return false;
-            }
-        }
-    };
+		bool next(unsigned &index) {
+			if (remainder) {
+				index = clz(v);
+				v ^= lz(index);
+				index += (w<<5);
+				if (v == 0) {
+					remainder ^= lz(w);
+					if (remainder) {
+						w = clz(remainder);
+						v = bs->words[w];
+					}
+				}
+				return true;
+			} else {
+				return false;
+			}
+		}
+	};
 
-    iterator listBits() const { return iterator(*this); }
+	iterator listBits() const { return iterator(*this); }
 
-    Bitset<tSize>& operator &= (const Bitset<tSize> &other) {
+	Bitset<tSize>& operator &= (const Bitset<tSize> &other) {
 
-        uint32_t remainder = nonzeroWords | other.nonzeroWords;
-        while(remainder) {
-            unsigned w = clz(remainder);
-            remainder ^= lz(w);
-            words[w] &= other.words[w];
-            if (words[w] == 0) {
-                nonzeroWords &= ~lz(w);
-            }
-        }
+		uint32_t remainder = nonzeroWords | other.nonzeroWords;
+		while(remainder) {
+			unsigned w = clz(remainder);
+			remainder ^= lz(w);
+			words[w] &= other.words[w];
+			if (words[w] == 0) {
+				nonzeroWords &= ~lz(w);
+			}
+		}
 
-        return *this;
-    }
+		return *this;
+	}
 
-    Bitset<tSize>& operator |= (const Bitset<tSize> &other) {
-        nonzeroWords |= other.nonzeroWords;
-        uint32_t remainder = nonzeroWords;
-        while(remainder) {
-            unsigned w = clz(remainder);
-            remainder ^= lz(w);
-            words[w] |= other.words[w];
-        }
-        return *this;
-    }
+	Bitset<tSize>& operator |= (const Bitset<tSize> &other) {
+		nonzeroWords |= other.nonzeroWords;
+		uint32_t remainder = nonzeroWords;
+		while(remainder) {
+			unsigned w = clz(remainder);
+			remainder ^= lz(w);
+			words[w] |= other.words[w];
+		}
+		return *this;
+	}
 
-    Bitset<tSize> operator ^= (const Bitset<tSize> &other) {
-        int remainder = nonzeroWords | other.nonzeroWords;
-        nonzeroWords = 0;
-        while(remainder) {
-            unsigned w = clz(remainder);
-            remainder ^= lz(w);
-            words[w] ^= other.words[w];
-            if (words) {
-                nonzeroWords |= lz(w);
-            }
-        }
-        return *this;
-    }
+	Bitset<tSize> operator ^= (const Bitset<tSize> &other) {
+		int remainder = nonzeroWords | other.nonzeroWords;
+		nonzeroWords = 0;
+		while(remainder) {
+			unsigned w = clz(remainder);
+			remainder ^= lz(w);
+			words[w] ^= other.words[w];
+			if (words) {
+				nonzeroWords |= lz(w);
+			}
+		}
+		return *this;
+	}
 
-    Bitset<tSize> operator ~ () const {
-        const unsigned NUM_WORDS = tSize/32;
-        Bitset<tSize> result;
-        for(int w=0; w<NUM_WORDS; ++w) {
-            result.words[w] = ~words[w];
-            if (result.words[w]) {
-                result.nonzeroWords |= lz(w);
-            }
-        }
-        return result;
-    }
+	Bitset<tSize> operator ~ () const {
+		const unsigned NUM_WORDS = tSize/32;
+		Bitset<tSize> result;
+		for(int w=0; w<NUM_WORDS; ++w) {
+			result.words[w] = ~words[w];
+			if (result.words[w]) {
+				result.nonzeroWords |= lz(w);
+			}
+		}
+		return result;
+	}
 };
 
