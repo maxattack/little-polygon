@@ -1,6 +1,6 @@
-#include "GameWorld.h"
+#include "Game.h"
 
-GameWorld::Environment::Environment(GameWorld *aGame) : game(aGame) {
+Environment::Environment(Game *aGame) : game(aGame) {
 
 	tmap = game->assets->tilemap("test");
 	bg = game->assets->image("background");
@@ -20,7 +20,7 @@ GameWorld::Environment::Environment(GameWorld *aGame) : game(aGame) {
 	}
 }
 
-void GameWorld::Environment::draw() {
+void Environment::draw() {
 	game->batch.drawImage( bg, vec(4,CANVAS_HEIGHT) );
 	game->batch.drawImageScaled( bg, vec(CANVAS_WIDTH-8, CANVAS_HEIGHT-56), vec(-1,1) );
 	game->batch.drawTilemap( tmap );

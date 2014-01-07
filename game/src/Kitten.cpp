@@ -1,9 +1,9 @@
-#include "GameWorld.h"
+#include "Game.h"
 
 #define HALF_WIDTH      0.25f
 #define HALF_HEIGHT     0.25f
 
-GameWorld::Kitten::Kitten(GameWorld *aGame) :
+Kitten::Kitten(Game *aGame) :
 game(aGame),
 image(game->assets->image("kitten")) {
 	auto position = game->assets->userdata("kitten.position")->as<vec2>() - vec(0,0.1f);
@@ -14,11 +14,11 @@ image(game->assets->image("kitten")) {
 	game->collisionSystem.move(collider, vec(0,0.2f));
 }
 
-void GameWorld::Kitten::tick() {
+void Kitten::tick() {
 
 }
 
-void GameWorld::Kitten::draw() {
+void Kitten::draw() {
 	auto p = PIXELS_PER_METER * collider->box.bottomCenter();
 	game->batch.drawImageScaled(image, p, flipped ? vec(-1,1) : vec(1,1), frame);	
 }

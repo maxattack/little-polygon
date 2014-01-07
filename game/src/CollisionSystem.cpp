@@ -69,12 +69,13 @@ Collision CollisionSystem::move(Collider *collider, vec2 offset) {
 	else { box.p0.y += offset.y; }
 	ColliderSet candidates;
 	broadPhase(box, candidates);
+	unsigned slot;
 
 	if (offset.y > 0) {
 		
 		// moving down
 		collider->box.p1.y += offset.y;
-		for(unsigned slot : candidates) {
+		for(auto i=candidates.listBits(); i.next(slot);) {
 			auto c = slots + slot;
 			if (collider->collides(c)) {
 				collider->box.p1.y = c->box.top();
@@ -87,7 +88,7 @@ Collision CollisionSystem::move(Collider *collider, vec2 offset) {
 
 		// moving up
 		collider->box.p0.y += offset.y;
-		for(unsigned slot : candidates) {
+		for(auto i=candidates.listBits(); i.next(slot);) {
 			auto c = slots + slot;
 			if (collider->collides(c)) {
 				collider->box.p0.y = c->box.bottom();
@@ -102,7 +103,7 @@ Collision CollisionSystem::move(Collider *collider, vec2 offset) {
 		
 		// moving right
 		collider->box.p1.x += offset.x;
-		for(unsigned slot : candidates) {
+		for(auto i=candidates.listBits(); i.next(slot);) {
 			auto c = slots + slot;
 			if (collider->collides(c)) {
 				collider->box.p1.x = c->box.left();
@@ -115,7 +116,7 @@ Collision CollisionSystem::move(Collider *collider, vec2 offset) {
 
 		// moving left
 		collider->box.p0.x += offset.x;
-		for(unsigned slot : candidates) {
+		for(auto i=candidates.listBits(); i.next(slot);) {
 			auto c = slots + slot;
 			if (collider->collides(c)) {
 				collider->box.p0.x = c->box.right();
@@ -144,7 +145,8 @@ int CollisionSystem::queryTriggers(Collider *c, int outCapacity, Trigger *result
 
 	// inner helper methods
 	auto findContact = [this, &contactSet, &c](Collider *trig) {
-		for(auto contactIndex : contactSet) {
+		unsigned contactIndex;
+		for(auto i=contactSet.listBits(); i.next(contactIndex);) {
 			if (this->contacts[contactIndex].trigger == trig) {
 				return contactIndex;
 			}
@@ -161,7 +163,8 @@ int CollisionSystem::queryTriggers(Collider *c, int outCapacity, Trigger *result
 	// identify overlapping triggers (ENTER and STAY)
 	ColliderSet candidates;
 	broadPhase(c->box, candidates);
-	for(unsigned slot : candidates) {
+	unsigned slot;
+	for(auto i=candidates.listBits(); i.next(slot);) {
 		auto trigger = slots + slot;
 		if (c->triggers(trigger)) {
 			int i = findContact(trigger);
@@ -209,7 +212,8 @@ int CollisionSystem::queryColliders(const AABB& box, uint32_t mask, int outCapac
 	ColliderSet candidates;
 	broadPhase(box, candidates);
 	int nResults = 0;
-	for(unsigned slot : candidates) {
+	unsigned slot;
+	for(auto i=candidates.listBits(); i.next(slot);) {
 		auto& collider = slots[slot];
 		if ((collider.categoryMask & mask) != 0 && collider.box.overlaps(box)) {
 			resultBuf[nResults] = &collider;
@@ -283,13 +287,14 @@ void CollisionSystem::broadPhase(const AABB& sweep, ColliderSet& outResult) {
 	// union buckets for those sectors
 	for(int x=minX; x<=maxX; ++x)
 	for(int y=minY; y<=maxY; ++y) {
-		outResult = outResult | bucketFor(x,y);
+		outResult |= bucketFor(x,y);
 	}
 
 }
 
 void CollisionSystem::debugDraw(LinePlotter& plotter) {
-	for(unsigned slot : (~freeSlots)) {
+	unsigned slot;
+	for(auto i=(~freeSlots).listBits(); i.next(slot);) {
 		auto& c = slots[slot];
 		plotter.plot(PIXELS_PER_METER * c.box.topLeft(), PIXELS_PER_METER * c.box.topRight(), rgb(0xffff00));
 		plotter.plot(PIXELS_PER_METER * c.box.topRight(), PIXELS_PER_METER * c.box.bottomRight(), rgb(0xffff00));

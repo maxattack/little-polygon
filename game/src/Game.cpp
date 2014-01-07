@@ -1,6 +1,6 @@
-#include "GameWorld.h"
+#include "Game.h"
 
-GameWorld::GameWorld(AssetBundle *aAssets) : 
+Game::Game(AssetBundle *aAssets) : 
 assets(aAssets), 
 env(this),
 hero(this),
@@ -10,7 +10,7 @@ kitten(this) {
 	if(music) { Mix_FadeInMusic(music, -1, 5000); }
 }
 
-void GameWorld::tick() {
+void Game::tick() {
 	timer.tick();
 	handleEvents();
 	if (timer.deltaTicks > 8) {
@@ -19,7 +19,7 @@ void GameWorld::tick() {
 	jumpPressed = false;
 }
 
-void GameWorld::handleEvents() {
+void Game::handleEvents() {
 	SDL_Event event;
 	while(SDL_PollEvent(&event)) {
 		switch(event.type) {
@@ -36,7 +36,7 @@ void GameWorld::handleEvents() {
 
 }
 
-void GameWorld::handleKeyDownEvent(const SDL_KeyboardEvent& key) {
+void Game::handleKeyDownEvent(const SDL_KeyboardEvent& key) {
 	switch(key.keysym.sym) {
 		case SDLK_ESCAPE:
 		case SDLK_q:
@@ -51,7 +51,7 @@ void GameWorld::handleKeyDownEvent(const SDL_KeyboardEvent& key) {
 	}
 }
 
-void GameWorld::draw() {
+void Game::draw() {
 	auto scrolling = vec(0,0);
 	auto canvasSize = vec(CANVAS_WIDTH, CANVAS_HEIGHT);
 	

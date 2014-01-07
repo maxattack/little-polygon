@@ -44,6 +44,9 @@ def loadAssets(path):
 			slabs.remove((x0,x1,y1))
 		colliders.add((float(x0),float(y0),float(x1+1),float(y1+1)))
 
+	# find "sentry floors"
+	
+
 	# create data string
 	result.addUserdata(
 		'environment.colliders', 

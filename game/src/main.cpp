@@ -1,4 +1,4 @@
-#include "GameWorld.h"
+#include "Game.h"
 
 int main(int argc, char *argv[]) {
 
@@ -10,7 +10,7 @@ int main(int argc, char *argv[]) {
 	AssetBundle assets;
 	assets.load("assets.bin");
 
-	GameWorld world(&assets);
+	Game world(&assets);
 
 	while(!world.isDone()) {
 		glClear(GL_COLOR_BUFFER_BIT);
@@ -22,4 +22,3 @@ int main(int argc, char *argv[]) {
 	return 0;
 
 }
-

@@ -1,4 +1,4 @@
-#include "GameWorld.h"
+#include "Game.h"
 
 #define HALF_WIDTH      0.225f
 #define HALF_HEIGHT     0.6f
@@ -9,7 +9,7 @@
 #define WALK_ANIM_RATE  5.0f
 #define REST_THRESHOLD  0.075f
 
-GameWorld::Hero::Hero(GameWorld *aGame) : 
+Hero::Hero(Game *aGame) : 
 game(aGame), 
 image(game->assets->image("hero")) {
 
@@ -23,7 +23,7 @@ image(game->assets->image("hero")) {
 
 }
 
-void GameWorld::Hero::tick() {
+void Hero::tick() {
 
 	float dt = game->timer.scaledDeltaTime;
 
@@ -98,7 +98,7 @@ void GameWorld::Hero::tick() {
 
 }
 
-void GameWorld::Hero::draw() {
+void Hero::draw() {
 	auto p = PIXELS_PER_METER * collider->box.bottomCenter();
 	game->batch.drawImageScaled(image, p, flipped ? vec(-1,1) : vec(1,1), frame);
 }

@@ -20,9 +20,9 @@
 //------------------------------------------------------------------------------
 // CONSTANTS
 
-#define COLLIDER_CAPACITY 128
-#define CONTACT_CAPACITY  64
-#define BUCKET_COUNT      256
+#define COLLIDER_CAPACITY 1024
+#define CONTACT_CAPACITY  1024	
+#define BUCKET_COUNT      1024
 
 //------------------------------------------------------------------------------
 // HELPERS
