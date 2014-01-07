@@ -6,13 +6,12 @@ LIBRARY_OBJ_FILES =     \
 	obj/SpriteBatch.o   \
 	obj/TextureAsset.o  \
 	obj/TilemapAsset.o  \
-	obj/utils.o         \
-	obj/utils_context.o
+	obj/utils.o         
 
 game_OBJ_FILES =           \
 	obj/CollisionSystem.o  \
 	obj/Environment.o      \
-	obj/Game.o        \
+	obj/Game.o             \
 	obj/Hero.o             \
 	obj/Kitten.o           \
 	obj/main.o

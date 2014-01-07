@@ -17,6 +17,88 @@
 #include "littlepolygon_utils.h"
 #include <algorithm>
 
+
+#if LITTLE_POLYGON_MOBILE
+static int handleAppEvents(void *userdata, SDL_Event *event) {
+    switch (event->type) {
+    case SDL_QUIT:
+      exit(0);
+      break;
+      
+    case SDL_APP_TERMINATING:
+      // shut down everything
+      return 0;
+    case SDL_APP_LOWMEMORY:
+      // release as much as possible?
+      return 0;
+    case SDL_APP_WILLENTERBACKGROUND:
+      return 0;
+    case SDL_APP_DIDENTERBACKGROUND:
+      // 5s to save state or you are dead
+      return 0;
+    case SDL_APP_WILLENTERFOREGROUND:
+      return 0;
+    case SDL_APP_DIDENTERFOREGROUND:
+      return 0;
+    default:
+      // just put event on the queue
+      return 1;
+    }
+}
+#endif
+
+static void doTearDown() {
+  Mix_CloseAudio();
+  SDL_Quit();
+}
+
+SDL_Window *initContext(const char *caption, int w, int h) {
+  SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO);
+  Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024);
+  atexit(doTearDown);
+
+  #if LITTLE_POLYGON_MOBILE
+
+  SDL_SetEventFilter(handleAppEvents, 0); 
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+  SDL_Window *pWindow = SDL_CreateWindow(
+    "", 0, 0, 0, 0, 
+    SDL_WINDOW_OPENGL|SDL_WINDOW_FULLSCREEN|SDL_WINDOW_BORDERLESS
+  );
+
+  #else
+
+  #if LITTLE_POLYGON_GL_CORE_PROFILE
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+  #endif
+  if (w == 0) {
+    // iphone 5 resolution :P
+    w = 1136;
+    h = 640;
+  }
+  SDL_Window *pWindow = SDL_CreateWindow(
+    caption ? caption : "Little Polygon Context", 
+    SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 
+    w, h, SDL_WINDOW_OPENGL
+  );
+
+  #endif
+
+  SDL_GL_CreateContext(pWindow);
+  #if !LITTLE_POLYGON_MOBILE
+  glewInit();
+  #endif
+  
+  glViewport(0, 0, w, h);
+  glEnable(GL_TEXTURE_2D);
+  glActiveTexture(GL_TEXTURE0);
+  glEnableClientState(GL_VERTEX_ARRAY);
+
+  return pWindow;
+}
+
 bool linearIntersection(vec2 u0, vec2 u1, vec2 v0, vec2 v1, float& u) {
   float norm = (v1.y - v0.y)*(u1.x-u0.x) - (v1.x-v0.x)*(u1.y-u0.y);
   if (norm > -M_COLINEAR_SLOP && norm < M_COLINEAR_SLOP) {

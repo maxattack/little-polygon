@@ -39,10 +39,13 @@
 
 // handy constants
 #ifndef M_PI
-#define M_PI 3.14159265359
+#define M_PI  (3.141592653589793)
 #endif
-#define M_TAU             (M_PI+M_PI)
-#define M_COLINEAR_SLOP   (0.0001f)
+#define M_TAU (M_PI+M_PI)
+
+#ifndef M_COLINEAR_SLOP
+#define M_COLINEAR_SLOP (0.0001f)
+#endif
 
 // easy to use two-dimensional vector with shorthand operators
 struct vec2 {
@@ -53,7 +56,6 @@ struct vec2 {
 	vec2(SDL_Point p) : x(p.x), y(p.y) {}
 
 	#ifdef BOX2D_H
-	// helpers if we're using box2D
 	vec2(b2Vec2 v) : x(v.x), y(v.y) {}
 	operator b2Vec2() { return b2Vec2(x, y); }
 	#endif

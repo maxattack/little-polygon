@@ -36,7 +36,6 @@
 #define ASSET_TYPE_SAMPLE    4
 #define ASSET_TYPE_TILEMAP   5
 #define ASSET_TYPE_USERDATA  6
-//#define ASSET_TYPE_COMPRESSED_USERDATA 7 // Useful? Or just roll into regular ud?
 
 //------------------------------------------------------------------------------
 // ASSET RECORDS
@@ -143,6 +142,8 @@ struct UserdataAsset {
 	// A slice of plain old data that can represent anything - structured game assets,
 	// UTF8 strings, etc.  Data immediately follows the initial size term.
 
+	// TODO: Add support for optionally-compressed userdata ("always add value"!).
+
 	size_t size; // length of the data, in bytes
 
 	inline void *data() const { return (void*)(this+1); }
@@ -159,7 +160,7 @@ struct AssetBundle {
 	int assetCount;
 
 	// Assets are keyed by name-hashes (fnv-1a)
-	// inlined so that the compile can constant-fold over string literals :)
+	// inlined so that the compiler can constant-fold over string literals :)
 	inline static uint32_t hash(const char* name) {
 	    uint32_t hval = 0x811c9dc5;
 	    while(*name) {
