@@ -14,11 +14,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "littlepolygon.h"
+#include "littlepolygon_assets.h"
 
-int AssetBundle::load(const char *path, uint32_t crc) {
-	// check if we need to unload something first
-	unload();
+void initialize(AssetBundle *bundle, const char* path, uint32_t crc) {
+	bundle->assetCount = 0;
+	bundle->headers = 0;
 
 	SDL_RWops* file = SDL_RWFromFile(path, "rb");
 	
@@ -27,10 +27,10 @@ int AssetBundle::load(const char *path, uint32_t crc) {
 	int count = SDL_ReadLE32(file);
 
 	// read data
-	void *result = LPMALLOC(length);
+	void *result = LITTLE_POLYGON_MALLOC(length);
 	if (SDL_RWread(file, result, length, 1) == -1) {
-		LPFREE(result);
-		return 1;
+		LITTLE_POLYGON_FREE(result);
+		return;
 	}
 
 	// read pointer fixup
@@ -41,17 +41,16 @@ int AssetBundle::load(const char *path, uint32_t crc) {
 	}
 	SDL_RWclose(file);
 
-	assetCount = count;
-	headers = reinterpret_cast<AssetBundle::Header*>(result);
-	return 0;
+	bundle->assetCount = count;
+	bundle->headers = reinterpret_cast<AssetBundle::Header*>(result);
 }
 
-void AssetBundle::unload() {
-	release();
-	if (assetCount > 0) {
-		LPFREE(headers);
-		assetCount = 0;
-		headers = 0;
+void release(AssetBundle *bundle) {
+	releaseContents(bundle);
+	if (bundle->headers) {
+		LITTLE_POLYGON_FREE(bundle->headers);
+		bundle->assetCount = 0;
+		bundle->headers = 0;
 	}
 }
 
@@ -72,21 +71,21 @@ void* AssetBundle::findHeader(uint32_t hash, uint32_t assetType) {
 	return 0;
 }
 
-void AssetBundle::init() {
-	if (headers) { 
-		for(int i=0; i<assetCount; ++i) {
-			switch(headers[i].type) {
+void intializeContents(AssetBundle *bundle) {
+	if (bundle->headers) { 
+		for(int i=0; i<bundle->assetCount; ++i) {
+			switch(bundle->headers[i].type) {
 				case ASSET_TYPE_TEXTURE:
-					((TextureAsset*)headers[i].data)->init();
+					initialize( (TextureAsset*)bundle->headers[i].data );
 					break;
 				case ASSET_TYPE_FONT:
-					((FontAsset*)headers[i].data)->texture.init();
+					initialize( &(((FontAsset*)bundle->headers[i].data)->texture) );
 					break;
 				case ASSET_TYPE_SAMPLE:
-					((SampleAsset*)headers[i].data)->init();
+					initialize( (SampleAsset*)bundle->headers[i].data );
 					break;
 				case ASSET_TYPE_TILEMAP:
-					((TilemapAsset*)headers[i].data)->tileAtlas.init();
+					initialize( (TilemapAsset*)bundle->headers[i].data );
 					break;
 				default:
 					break;
@@ -95,21 +94,21 @@ void AssetBundle::init() {
 	}
 }
 
-void AssetBundle::release() {
-	if (headers) { 
-		for(int i=0; i<assetCount; ++i) {
-			switch(headers[i].type) {
+void releaseContents(AssetBundle *bundle) {
+	if (bundle->headers) { 
+		for(int i=0; i<bundle->assetCount; ++i) {
+			switch(bundle->headers[i].type) {
 				case ASSET_TYPE_TEXTURE:
-					((TextureAsset*)headers[i].data)->release();
+					release( (TextureAsset*)bundle->headers[i].data );
 					break;
 				case ASSET_TYPE_FONT:
-					((FontAsset*)headers[i].data)->texture.release();
+					release( &(((FontAsset*)bundle->headers[i].data)->texture) );
 					break;
 				case ASSET_TYPE_SAMPLE:
-					((SampleAsset*)headers[i].data)->release();
+					release( (SampleAsset*)bundle->headers[i].data );
 					break;
 				case ASSET_TYPE_TILEMAP:
-					((TilemapAsset*)headers[i].data)->tileAtlas.release();
+					release( (TilemapAsset*)bundle->headers[i].data );
 					break;
 				default:
 					break;				

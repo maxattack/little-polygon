@@ -20,11 +20,8 @@ int main(int argc, char *argv[]) {
 	initialize(gPlotter);
 	#endif
 
-	auto color = rgb(0x95b5a2);
-	glClearColor(color.red(), color.green(), color.blue(), 0.0f);
-	
 	AssetBundle assets;
-	assets.load("assets.bin");
+	initialize(&assets, "assets.bin");
 
 	Game world(&assets);
 

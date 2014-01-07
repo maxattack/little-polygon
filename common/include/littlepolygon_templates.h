@@ -15,7 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
-#include "littlepolygon.h"
+#include "littlepolygon_base.h"
 
 //--------------------------------------------------------------------------------
 // SIMPLE TEMPLATE QUEUE
@@ -350,7 +350,7 @@ public:
     bool findFirst(unsigned &index) const {
         if (nonzeroWords) {
             unsigned w = clz(nonzeroWords);
-            index = clz(words[w]);
+            index = clz(words[w]) + (w<<5);
             return true;
         } else {
             return false;
@@ -365,6 +365,7 @@ public:
             if (words[w] == 0) {
                 nonzeroWords ^= lz(w);
             }
+            index += (w<<5);
             return true;
         } else {
             return false;
@@ -390,6 +391,7 @@ public:
             if (remainder) {
                 index = clz(v);
                 v ^= lz(index);
+                index += (w<<5);
                 if (v == 0) {
                     remainder ^= lz(w);
                     if (remainder) {

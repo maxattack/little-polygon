@@ -17,7 +17,7 @@
 #pragma once
 #include <littlepolygon_utils.h>
 #include <littlepolygon_templates.h>
-
+#include <littlepolygon_graphics.h>
 
 //------------------------------------------------------------------------------
 // CONSTANTS

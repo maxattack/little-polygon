@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "littlepolygon.h"
+#include "littlepolygon_assets.h"
 #include <zlib.h>
 
 struct WaveHeader {
@@ -46,43 +46,40 @@ struct WaveHeader {
 	}
 };
 
-void SampleAsset::init() {
-	if (chunk == 0) {
+void initialize(SampleAsset *sample) {
+	if (sample->chunk == 0) {
 		// Allocate a buffer for the RW_ops structure to read from 
-		Bytef *scratch = (Bytef*) LPMALLOC(size + sizeof(WaveHeader));
+		Bytef *scratch = (Bytef*) LITTLE_POLYGON_MALLOC(sample->size + sizeof(WaveHeader));
 		{
 		// Mixer expects a WAVE header on PCM data, so let's provide it :P
 		WaveHeader hdr = {{'R','I','F','F'},0,{'W','A','V','E'},{'f','m','t',' '},16,1,1,0,0,0,0,{'d','a','t','a'},0};
-		int sampleCount = size / (sampleWidth * channelCount);
-		hdr.init(channelCount, frequency, sampleWidth, sampleCount);
+		int sampleCount = sample->size / (sample->sampleWidth * sample->channelCount);
+		hdr.init(sample->channelCount, sample->frequency, sample->sampleWidth, sampleCount);
 		memcpy(scratch, &hdr, sizeof(WaveHeader));
 		}
 		// Now decompress the actual PCM data
-		uLongf sz = size;
+		uLongf sz = sample->size;
 		uncompress(
 			scratch + sizeof(WaveHeader), 
 			&sz, 
-			(const Bytef*)compressedData, 
-			compressedSize
+			(const Bytef*)sample->compressedData, 
+			sample->compressedSize
 		);
 		// load the chunk
-		chunk = Mix_LoadWAV_RW(SDL_RWFromMem(scratch, sz+sizeof(WaveHeader)), 0);
-		ASSERT(chunk);
-		LPFREE(scratch);
+		sample->chunk = Mix_LoadWAV_RW(SDL_RWFromMem(scratch, sz+sizeof(WaveHeader)), 0);
+		ASSERT(sample->chunk);
+		LITTLE_POLYGON_FREE(scratch);
 	}
 }
 
-void SampleAsset::release() {
-	if (chunk) {
-		Mix_FreeChunk(chunk);
-		chunk = 0;
+void release(SampleAsset *sample) {
+	if (sample->chunk) {
+		Mix_FreeChunk(sample->chunk);
+		sample->chunk = 0;
 	}
 }
 
-void SampleAsset::play() {
-	if (!initialized()) {
-		init();
-	}
-	Mix_PlayChannel(-1, chunk, 0);
+void play(SampleAsset *sample) {
+	initialize(sample);
+	Mix_PlayChannel(-1, sample->chunk, 0);
 }
-

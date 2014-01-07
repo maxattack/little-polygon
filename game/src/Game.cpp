@@ -6,6 +6,9 @@ env(this),
 hero(this),
 kitten(this) {
 
+	auto color = rgb(0x95b5a2);
+	glClearColor(color.red(), color.green(), color.blue(), 0.0f);
+	
 	Mix_Music *music = Mix_LoadMUS("song.mid");
 	if(music) { Mix_FadeInMusic(music, -1, 5000); }
 }

@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "littlepolygon_utils.h"
+#include "littlepolygon_graphics.h"
 
 const GLchar* SPRITE_SHADER = R"GLSL(
 varying mediump vec2 uv;
@@ -84,7 +84,7 @@ void initialize(SpriteBatch *context) {
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void destroy(SpriteBatch *context) {
+void release(SpriteBatch *context) {
 	glDeleteBuffers(2, &context->elementBuf); 
 	glDeleteProgram(context->prog);
 	glDeleteShader(context->vert);
@@ -244,7 +244,7 @@ void drawTilemap(SpriteBatch* context, TilemapAsset *map, vec2 position) {
 	ASSERT(context->count >= 0);
 
 	// make sure the map is initialized
-	map->init();
+	initialize(map);
 
 	// flush the draw queue first so we can turn off blending
 	flush(context);
@@ -342,7 +342,7 @@ void setTextureAtlas(SpriteBatch* context, TextureAsset *texture) {
 
 	// check if we need to bind a new texture
 	if (atlasChange) {
-		texture->bind();
+		bind(texture);
 		context->workingTexture = texture;		
 	}
 }

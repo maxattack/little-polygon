@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "littlepolygon_utils.h"
+#include "littlepolygon_graphics.h"
 
 const GLchar* SIMPLE_SHADER = R"GLSL(
 
@@ -53,7 +53,7 @@ void initialize(LinePlotter* context) {
 	context->aColor = glGetAttribLocation(context->prog, "aColor");
 }
 
-void destroy(LinePlotter *context) {
+void release(LinePlotter *context) {
 	glDeleteProgram(context->prog);
 	glDeleteShader(context->vert);
 	glDeleteShader(context->frag);

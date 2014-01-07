@@ -29,7 +29,7 @@ void Hero::tick() {
 
 	// jumping and freefall
 	if (grounded && game->jumpPressed) {
-		game->assets->sample("jump")->play();
+		play( game->assets->sample("jump") );
 		speed.y = - sqrtf(2.f * GRAVITY * JUMP_HEIGHT);
 		grounded = false;
 	} else {
@@ -56,7 +56,7 @@ void Hero::tick() {
 		if (!wasGrounded) {
 			frame = 0;
 			framef = 0;			
-			game->assets->sample("footfall")->play();
+			play( game->assets->sample("footfall") );
 		}
 	}
 	if (result.hitHorizontal) {
@@ -84,7 +84,7 @@ void Hero::tick() {
             framef = fmodf(framef, 3.f);
             int fr = int(framef);
             if (frame != fr && fr == 2) {
-            	game->assets->sample("footfall")->play();
+            	play( game->assets->sample("footfall") );
             }
            	frame = fr;
         } else {

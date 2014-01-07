@@ -15,77 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
-
-// determine platform
-#if __IPHONEOS__
-	#define LITTLE_POLYGON_MOBILE     1
-#else
-	#define LITTLE_POLYGON_MOBILE     0
-	#ifndef LITTLE_POLYGON_GL_CORE_PROFILE
-		#define LITTLE_POLYGON_GL_CORE_PROFILE 1
-	#endif
-#endif
-
-// standard includes
-#include <cstdio>
-#include <cstdlib>
-#include <cmath>
-#include <cassert>
-#include <cstring>
-#include <stdint.h>
-#include <limits.h>
-#include <SDL.h>
-#if !LITTLE_POLYGON_MOBILE
-#define GLEW_STATIC
-#include <glew.h>
-#include <SDL_opengl.h>
-#else
-#include <SDL_opengles2.h>
-#endif
-#include <SDL2/SDL_mixer.h>
-
-//--------------------------------------------------------------------------------
-// COMMON MACROS
-//--------------------------------------------------------------------------------
-
-#ifndef STATIC_ASSERT
-#define STATIC_ASSERT(_x)  ((void)sizeof(char[1 - 2*!(_x)]))
-#endif
-#ifndef arraysize
-#define arraysize(a)   (sizeof(a) / sizeof((a)[0]))
-#endif
-#ifndef offsetof
-#define offsetof(t,m)  ((uintptr_t)(uint8_t*)&(((t*)0)->m))
-#endif
-#ifndef MIN
-#define MIN(a,b)   ((a) < (b) ? (a) : (b))
-#define MAX(a,b)   ((a) > (b) ? (a) : (b))
-#endif
-
-#define LPMALLOC malloc
-#define LPFREE   free
-
-//--------------------------------------------------------------------------------
-// INTERNAL LOGGING
-//--------------------------------------------------------------------------------
-
-#ifdef DEBUG
-#   define ASSERT(cond)     (assert(cond))
-#	define CHECK(cond)      {int _result=(cond); ASSERT(_result);}
-#   define LOG(_x)          printf _x
-#   define LOG_MSG(_msg)    printf("%s:%d " _msg "\n", __FILE__, __LINE__)
-#	define LOG_INT(_expr)	printf("%s:%d " #_expr " = %d\n", __FILE__, __LINE__, (_expr))
-#	define LOG_FLOAT(_expr)	printf("%s:%d " #_expr " = %f\n", __FILE__, __LINE__, (_expr))
-#	define LOG_VEC(_expr)	{ vec2 __u__ = (_expr); printf("%s:%d " #_expr " = <%f,%f>\n", __FILE__, __LINE__, __u__.x, __u__.y); }
-#else
-#   define ASSERT(cond)
-#   define CHECK(cond)      {if (!(cond)) { puts("FATAL: ##cond"); exit(-1); }}
-#   define LOG(_x)
-#   define LOG_MSG(_msg)
-#	define LOG_INT(_expr)
-#	define LOG_FLOAT(_expr)
-#	define LOG_VEC(_expr)
-#endif
+#include "littlepolygon_base.h"
 
 //------------------------------------------------------------------------------
 // CONSTANTS
@@ -106,6 +36,7 @@
 #define ASSET_TYPE_SAMPLE    4
 #define ASSET_TYPE_TILEMAP   5
 #define ASSET_TYPE_USERDATA  6
+//#define ASSET_TYPE_COMPRESSED_USERDATA 7 // Useful? Or just roll into regular ud?
 
 //------------------------------------------------------------------------------
 // ASSET RECORDS
@@ -122,16 +53,6 @@ struct TextureAsset {
 	
 	inline bool initialized() const { return textureHandle != 0; }
 	inline int format() const { return GL_RGBA; }
-
-	// if the texture is not initialized, decompress the it from memory
-	// and transfer it to the graphics device
-	void init();
-
-	// if the texture is initialized, unload it from the graphics device
-	void release();
-
-	// bind the texture to the current graphics state, load lazily if needed
-	void bind();
 };
 
 struct FrameAsset {
@@ -171,14 +92,6 @@ struct TilemapAsset {
 	TextureAsset tileAtlas; // a texture-atlas of all the tiles
 
 	inline bool intialized() const { return data != 0; }
-
-	// if not initialized, decompress tiles to a dynamically-allocated buffer,
-	// and transfer the tile atlas to the graphics device
-	void init();
-
-	// if initialized, free the dynamically-allocated buffer and release the tile
-	// atlas from the graphics device
-	void release();
 
 	inline uint8_pair_t tileAt(int x, int y) const {
 		ASSERT(intialized());
@@ -224,15 +137,6 @@ struct SampleAsset {
 	uint32_t size, compressedSize; // byte-length of the compressed data
 
 	inline bool initialized() const { return chunk != 0; }
-
-	// if not initialized, decompress the PCM and load it into the audio device
-	void init();
-
-	// if initialized, unload the PCM data from the audio device
-	void release();
-
-	// play the sample, initializing lazily if necessary
-	void play();
 };
 
 struct UserdataAsset {
@@ -251,27 +155,8 @@ struct UserdataAsset {
 // MAIN INTERFACE
 //------------------------------------------------------------------------------
 
-class AssetBundle {
-public:
-	
-	AssetBundle() : assetCount(0), headers(0) {}
-	~AssetBundle() { unload(); }
-
-	// Load the asset bundle binary at the given sdl-managed path.
-	// Returns null if there are any problems or if a crc is specified
-	// which does not match the binary (before pointer fixup).
-	int load(const char *path, uint32_t crc=0);
-
-	// unload dynamically allocated memory, releasing assets first
-	// if necessary
-	void unload();
-
-	// Load all the textures, audio samples, etc from their compressed
-	// buffers into a ready-to-use form.
-	void init();
-
-	// Release all the textures, audio samples, etc that are in use.
-	void release();
+struct AssetBundle {
+	int assetCount;
 
 	// Assets are keyed by name-hashes (fnv-1a)
 	// inlined so that the compile can constant-fold over string literals :)
@@ -284,6 +169,16 @@ public:
 	    }
 	    return hval;
 	}
+
+	struct Header {
+		uint32_t hash, type;
+		void* data;
+	};
+
+	Header *headers;
+
+	// headers are sorted by hash, so lookup is LOG(N)
+	void* findHeader(uint32_t hash, uint32_t assetType);
 
 	// lookup assets by name
 	inline TextureAsset *texture(const char * name) { return texture(hash(name)); }
@@ -301,22 +196,31 @@ public:
 	inline SampleAsset *sample(uint32_t hash) { return (SampleAsset*) findHeader(hash, ASSET_TYPE_SAMPLE); }
 	inline UserdataAsset *userdata(uint32_t hash) { return (UserdataAsset*) findHeader(hash, ASSET_TYPE_USERDATA); }
 
-private:
-
-	// key->record mapping is done using a sorted array of hashes, with type double-checking.
-	struct Header {
-		uint32_t hash, type;
-		void* data;
-	};
-
-	// number of assets
-	int assetCount;
-
-	// sorted dictionary array
-	Header *headers;
-
-	// key search and typecheck
-	void* findHeader(uint32_t hash, uint32_t assetType);
-
 };
+
+// Initialize an asset bundle by memory-mapping the binary at the given
+// SDL path and then performing pointer-fixup.
+void initialize(AssetBundle *bundle, const char* path, uint32_t crc=0);
+void release(AssetBundle *bundle);
+
+// By default, resource handles for assets are initializes lazily, however
+// you can use these functions to initialize them eagerly.
+void intializeContents(AssetBundle *bundle);
+void releaseContents(AssetBundle *bundle);
+
+// Methods for decompressing textures and binding to opengl
+void initialize(TextureAsset *asset);
+void bind(TextureAsset *asset);
+void release(TextureAsset *asset);
+
+// Methods for decompressing tilemaps and initializing its
+// texture-atlas
+void initialize(TilemapAsset *asset);
+void release(TilemapAsset *asset);
+
+// Methods for decompressing audio samples bind to mixer
+void initialize(SampleAsset *asset);
+void play(SampleAsset *asset);
+void release(SampleAsset *asset);
+
 
