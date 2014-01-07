@@ -41,7 +41,7 @@ CODING STANDARDS
 ----------------
 
 Python scripts are organized into "tasks" - scripts that encapsulate a single method which
-can be invoked directly (checking for "__main__"), or imported and composited with other
+can be invoked directly (checking for `__main__`), or imported and composited with other
 tasks in higher-level scripts.
 
 Native code is written in C++ with a "C with Objects" mentality.  Each object is expressed
