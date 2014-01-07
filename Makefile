@@ -20,6 +20,10 @@ game_OBJ_FILES =           \
 CC = clang
 CPP = clang++
 
+# NOTE: Depedencies were installed using homebrew.  I had to monkeypatch a few formulas
+# to ensure that all libraries were using universal binaries so I can support 32-bit builds
+# as well.
+
 # BASE FLAGS
 CFLAGS = -Icommon/include -I/usr/local/include/ -g -Os -Wall -flto -ffast-math
 CCFLAGS = -std=c++11  -fno-rtti -fno-exceptions
@@ -39,8 +43,6 @@ CFLAGS += -DDEBUG
 # 32 BITS
 CFLAGS += -arch i386
 AFLAGS = 32
-
-
 
 test : bin/game bin/assets.bin
 	cp game/assets/song.mid bin/song.mid
