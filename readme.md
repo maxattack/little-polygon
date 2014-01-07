@@ -19,7 +19,7 @@ DESCRIPTION
 A collection of useful little scripts for making native mobile and desktop games.  Features
 are added as I need them for my personal work, but I'm always game for contributions.
 
-Build Dependencies (python2)
+Build Dependencies (python2x + pip)
 * lxml - For parsing TMX Files
 * Pillow - For image processing and compositting sprite atlasses
 * pyyaml - For asset-script parsing
