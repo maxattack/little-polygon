@@ -52,9 +52,10 @@ tasks in higher-level scripts.
 Native code is written in C++ with a "C with Objects" mentality.  Each object is expressed
 as a plain-old-data structure with just a few convenience getter methods.  Initialization and
 non-idempotent methods are top-level functions which take the structure as a "context" argument.
-This is a lot more flexible for controlling memory allocation, initialization order, 
-multithreading, binding to scripting environments, keeping private methods out of headers, and 
-allowing the use of completely opaque pointers that are just forward-declared.
+I try to keep method names short by using argument overloading as an implicit namespace. This 
+is a lot more flexible for controlling memory allocation, initialization order,  multithreading, 
+binding to scripting environments, keeping private methods out of headers, and  allowing the use 
+of completely opaque pointers that are just forward-declared.
 
 The example game, on the other hand, is written with a modern C++11 mentality.  Different tools 
 for different levels of abstraction ;)
