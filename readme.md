@@ -28,7 +28,7 @@ Build Dependencies (python2x + pip)
 Runtime Dependencies (native)
 * sdl2 - platform abstraction
 * sdl2_mixer - music and sound effects
-* glew - desktop graphics feature wrangling
+* glew - desktop graphics feature discovery
 * zlib - asset decompression
 
 Modules
