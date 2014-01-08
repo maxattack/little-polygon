@@ -248,6 +248,11 @@ struct Timer {
 		scaledDeltaTime = 0;
 	}
 
+	void skipTicks() {
+		// for things, like, coming back from pause
+		ticks = SDL_GetTicks();
+	}
+
 	void tick() {
 		deltaTicks = SDL_GetTicks() - ticks;
 		scaledDeltaTime = timeScale * deltaSeconds();

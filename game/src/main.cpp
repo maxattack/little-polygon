@@ -1,13 +1,5 @@
 #include "Game.h"
 
-static AssetBundle assets;
-static SpriteBatch batch;
-static LinePlotter plotter;
-static CollisionSystem collisions;
-static Environment environment;
-static Hero hero;
-static Kitten kitten;
-
 static void handleEvents(PlayerInput& input);
 static void handleKeyDown(PlayerInput& input, const SDL_KeyboardEvent& key);
 
@@ -51,8 +43,15 @@ int main(int argc, char *argv[]) {
 	glClearColor(color.red(), color.green(), color.blue(), 0.0f);
 	
 	// initialize scene
-	Timer timer;
-	PlayerInput input;
+	static AssetBundle assets;
+	static SpriteBatch batch;
+	static LinePlotter plotter;
+	static CollisionSystem collisions;
+	static Environment environment;
+	static Hero hero;
+	static Kitten kitten;
+	static Timer timer;
+	static PlayerInput input;
 	initialize(assets, "assets.bin");
 	initialize(batch);
 	initialize(plotter);

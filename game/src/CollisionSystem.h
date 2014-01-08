@@ -89,22 +89,19 @@ struct Collider {
 
 //------------------------------------------------------------------------------
 
-struct Collision {
-	union {                      // collision directions (since everything is
-		uint32_t hit;            // an AABB we can make this simplification)
-		struct {
-			uint8_t hitBottom;
-			uint8_t hitTop;
-			uint8_t hitLeft;
-			uint8_t hitRight;
-		};
-		struct {
-			uint16_t hitVertical;
-			uint16_t hitHorizontal;
-		};
+union Collision {
+	uint32_t hit;            // an AABB we can make this simplification)
+	struct {
+		uint8_t hitBottom;
+		uint8_t hitTop;
+		uint8_t hitLeft;
+		uint8_t hitRight;
+	};
+	struct {
+		uint16_t hitVertical;
+		uint16_t hitHorizontal;
 	};
 };
-
 
 //------------------------------------------------------------------------------
 

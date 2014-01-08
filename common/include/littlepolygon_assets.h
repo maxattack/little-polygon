@@ -186,9 +186,6 @@ struct AssetBundle {
 
 	Header *headers;
 
-	// headers are sorted by hash, so lookup is LOG(N)
-	void* findHeader(uint32_t hash, uint32_t assetType);
-
 	// lookup assets by name
 	inline TextureAsset *texture(const char * name) { ASSET_RESULT_VERIFY(texture(hash(name))) }
 	inline ImageAsset *image(const char * name) { ASSET_RESULT_VERIFY(image(hash(name))) }
@@ -204,6 +201,9 @@ struct AssetBundle {
 	inline FontAsset *font(uint32_t hash) { return (FontAsset*) findHeader(hash, ASSET_TYPE_FONT); }
 	inline SampleAsset *sample(uint32_t hash) { return (SampleAsset*) findHeader(hash, ASSET_TYPE_SAMPLE); }
 	inline UserdataAsset *userdata(uint32_t hash) { return (UserdataAsset*) findHeader(hash, ASSET_TYPE_USERDATA); }
+
+	// headers are sorted by hash, so lookup is LOG(N)
+	void* findHeader(uint32_t hash, uint32_t assetType);
 
 };
 
