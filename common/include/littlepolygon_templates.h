@@ -350,7 +350,7 @@ public:
 	bool findFirst(unsigned &index) const {
 		if (nonzeroWords) {
 			unsigned w = clz(nonzeroWords);
-			index = clz(words[w]) + (w<<5);
+			index = clz(words[w]) | (w<<5);
 			return true;
 		} else {
 			return false;
@@ -365,7 +365,7 @@ public:
 			if (words[w] == 0) {
 				nonzeroWords ^= lz(w);
 			}
-			index += (w<<5);
+			index |= (w<<5);
 			return true;
 		} else {
 			return false;
@@ -391,7 +391,7 @@ public:
 			if (remainder) {
 				index = clz(v);
 				v ^= lz(index);
-				index += (w<<5);
+				index |= (w<<5);
 				if (v == 0) {
 					remainder ^= lz(w);
 					if (remainder) {

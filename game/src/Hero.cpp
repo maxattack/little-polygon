@@ -80,18 +80,18 @@ void tick(Hero& hero, PlayerInput& input, CollisionSystem& collisions, float dt)
 		hero.speed.x = 0;
 	}
 
-	Trigger events[8];
-	int nTriggers = collisions.queryTriggers(hero.collider, arraysize(events), events);
-	for(int i=0; i<nTriggers; ++i) {
-		switch(events[i].type) {
-			case Trigger::ENTER:
-				LOG_MSG("ENTER");
-				break;
-			case Trigger::EXIT:
-				LOG_MSG("EXIT");
-				break;
-		}
-	}
+	// Trigger events[8];
+	// int nTriggers = collisions.queryTriggers(hero.collider, arraysize(events), events);
+	// for(int i=0; i<nTriggers; ++i) {
+	// 	switch(events[i].type) {
+	// 		case Trigger::ENTER:
+	// 			LOG_MSG("ENTER");
+	// 			break;
+	// 		case Trigger::EXIT:
+	// 			LOG_MSG("EXIT");
+	// 			break;
+	// 	}
+	// }
 
 	// update fx
  	if (hero.grounded) {
