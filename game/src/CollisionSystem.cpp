@@ -292,7 +292,7 @@ void CollisionSystem::broadPhase(const AABB& sweep, ColliderSet& outResult) {
 
 }
 
-void CollisionSystem::debugDraw(LinePlotter* plotter) {
+void CollisionSystem::debugDraw(LinePlotter& plotter) {
 	unsigned slot;
 	for(auto i=(~freeSlots).listBits(); i.next(slot);) {
 		auto& c = slots[slot];

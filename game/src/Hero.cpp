@@ -9,62 +9,79 @@
 #define WALK_ANIM_RATE  5.0f
 #define REST_THRESHOLD  0.075f
 
-Hero::Hero(Game *aGame) : 
-game(aGame), 
-image(game->assets->image("hero")) {
+void initialize(Hero& hero, AssetBundle& assets, CollisionSystem& collisions) {
+	
+	// init physics
+	auto position = assets.userdata("hero.position")->as<vec2>() - vec(0,0.1f);
+	hero.collider = collisions.addCollider(
+		aabb(
+			position-vec(HALF_WIDTH, 2*HALF_HEIGHT),
+			position+vec(HALF_WIDTH, 0)
+		), 
+		HERO_BIT, 
+		ENVIRONMENT_BIT, 
+		KITTEN_BIT, 
+		&hero
+	);
+	auto collision = collisions.move(hero.collider, vec(0,0.2f));
+	hero.speed = vec(0,0);
+	hero.grounded = collision.hitBottom;
 
-	// init bounding box and snap to ground
-	auto position = game->assets->userdata("hero.position")->as<vec2>() - vec(0,0.1f);
-	collider = game->collisionSystem.addCollider(aabb(
-		position-vec(HALF_WIDTH, 2*HALF_HEIGHT),
-		position+vec(HALF_WIDTH, 0)
-	), HERO_BIT, ENVIRONMENT_BIT, KITTEN_BIT, this);
-	game->collisionSystem.move(collider, vec(0,0.2f));
+	// init fx
+	hero.image = assets.image("hero");
+	hero.framef = 0;
+	hero.frame = 0;
+	hero.flipped = 0;
+
+	hero.sfxJump = assets.sample("jump");
+	hero.sfxFootfall = assets.sample("footfall");
 
 }
 
-void Hero::tick() {
-
-	float dt = game->timer.scaledDeltaTime;
+void tick(Hero& hero, PlayerInput& input, CollisionSystem& collisions, float dt) {
 
 	// jumping and freefall
-	if (grounded && game->jumpPressed) {
-		play( game->assets->sample("jump") );
-		speed.y = - sqrtf(2.f * GRAVITY * JUMP_HEIGHT);
-		grounded = false;
+	if (hero.grounded && input.jumpPressed) {
+		play(hero.sfxJump);
+		hero.speed.y = - sqrtf(2.f * GRAVITY * JUMP_HEIGHT);
+		hero.grounded = false;
 	} else {
-		speed.y += GRAVITY * dt;
+		hero.speed.y += GRAVITY * dt;
 	}
 
 	// running
-	auto kb = SDL_GetKeyboardState(0);
-	if (kb[SDL_SCANCODE_LEFT]) {
-		speed.x = easeTowards(speed.x, -MOVE_SPEED, MOVE_EASING, dt);
-		flipped = true;
-	} else if (kb[SDL_SCANCODE_RIGHT]) {
-		speed.x = easeTowards(speed.x, MOVE_SPEED, MOVE_EASING, dt);
-		flipped = false;
-	} else {
-		speed.x = easeTowards(speed.x, 0, MOVE_EASING, dt);
+	switch(input.xdir()) {
+		case -1:
+			hero.speed.x = easeTowards(hero.speed.x, -MOVE_SPEED, MOVE_EASING, dt);
+			hero.flipped = true;
+			break;
+		case 1:
+			hero.speed.x = easeTowards(hero.speed.x, MOVE_SPEED, MOVE_EASING, dt);
+			hero.flipped = false;
+			break;
+		default:
+			hero.speed.x = easeTowards(hero.speed.x, 0, MOVE_EASING, dt);
+			break;
+
 	}
 
 	// resolving collisions
-	auto result = game->collisionSystem.move(collider, speed * dt);
-	bool wasGrounded = grounded;
-	if ((grounded = result.hitBottom)) {
-		speed.y = 0;
+	auto result = collisions.move(hero.collider, hero.speed * dt);
+	bool wasGrounded = hero.grounded;
+	if ((hero.grounded = result.hitBottom)) {
+		hero.speed.y = 0;
 		if (!wasGrounded) {
-			frame = 0;
-			framef = 0;			
-			play( game->assets->sample("footfall") );
+			hero.frame = 0;
+			hero.framef = 0;			
+			play(hero.sfxFootfall);
 		}
 	}
 	if (result.hitHorizontal) {
-		speed.x = 0;
+		hero.speed.x = 0;
 	}
 
 	Trigger events[8];
-	int nTriggers = game->collisionSystem.queryTriggers(collider, arraysize(events), events);
+	int nTriggers = collisions.queryTriggers(hero.collider, arraysize(events), events);
 	for(int i=0; i<nTriggers; ++i) {
 		switch(events[i].type) {
 			case Trigger::ENTER:
@@ -77,30 +94,35 @@ void Hero::tick() {
 	}
 
 	// update fx
- 	if (grounded) {
-        auto sx = fabs(speed.x);
+ 	if (hero.grounded) {
+        auto sx = fabs(hero.speed.x);
         if (sx > REST_THRESHOLD) {
-            framef += WALK_ANIM_RATE * sx * dt;
-            framef = fmodf(framef, 3.f);
-            int fr = int(framef);
-            if (frame != fr && fr == 2) {
-            	play( game->assets->sample("footfall") );
+            hero.framef += WALK_ANIM_RATE * sx * dt;
+            hero.framef = fmodf(hero.framef, 3.f);
+            int fr = int(hero.framef);
+            if (hero.frame != fr && fr == 2) {
+            	play(hero.sfxFootfall);
             }
-           	frame = fr;
+           	hero.frame = fr;
         } else {
-            framef = 0;
-            frame = 0;
+            hero.framef = 0;
+            hero.frame = 0;
         }
     } else {
-        framef = 0;
-        frame = 2;
+        hero.framef = 0;
+        hero.frame = 2;
     }    
 
 }
 
-void Hero::draw() {
-	auto p = PIXELS_PER_METER * collider->box.bottomCenter();
-	drawImageScaled(gSpriteBatch, image, p, flipped ? vec(-1,1) : vec(1,1), frame);
+void draw(Hero& hero, SpriteBatch& spriteBatch) {
+	drawImageScaled(
+		spriteBatch, 
+		hero.image, 
+		PIXELS_PER_METER * hero.position(), 
+		hero.flipped ? vec(-1,1) : vec(1,1), 
+		hero.frame
+	);
 }
 
 

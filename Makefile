@@ -11,7 +11,6 @@ LIBRARY_OBJ_FILES =     \
 game_OBJ_FILES =           \
 	obj/CollisionSystem.o  \
 	obj/Environment.o      \
-	obj/Game.o             \
 	obj/Hero.o             \
 	obj/Kitten.o           \
 	obj/main.o

@@ -57,9 +57,6 @@ is a lot more flexible for controlling memory allocation, initialization order, 
 binding to scripting environments, keeping private methods out of headers, and  allowing the use 
 of completely opaque pointers that are just forward-declared.
 
-The example game, on the other hand, is written with a modern C++11 mentality.  Different tools 
-for different levels of abstraction ;)
-
 Wishlist
 --------
 

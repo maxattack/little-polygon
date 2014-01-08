@@ -9,98 +9,71 @@
 #define HERO_BIT        0x00000002
 #define KITTEN_BIT      0x00000004
 
-class Game;
-
-extern SpriteBatch *gSpriteBatch;
-#if DEBUG
-extern LinePlotter *gPlotter;
-#endif
-
-//----------------------------------------------------------------------
-
-class Environment {
-public:
-	Environment(Game *game);
-	void draw();
-
-private:
-	Game *game;
-	ImageAsset *bg;
-	TilemapAsset *tmap;	
-};
-
-//----------------------------------------------------------------------
-
-class Hero {
-public:
-	Hero(Game *game);
-	void tick();
-	void draw();
-
-private:
-	Game *game;
-
-	// physics parameters
-	Collider* collider;
-	vec2 speed = vec(0,0);
-	bool grounded = true;
-
-	// fx parameters
-	ImageAsset *image;
-	float framef = 0;
-	int frame = 0;
-	bool flipped = false;
-};
-
-//----------------------------------------------------------------------
-
-class Kitten {
-public:
-	Kitten(Game *game);
-	void tick();
-	void draw();
-	
-private:
-	Game *game;
-
-	Collider* collider;
-
-	ImageAsset *image;
-	int frame = 0;
-	bool flipped = false;
-};
-
-
-class Game {
-friend class Environment;
-friend class Hero;
-friend class Kitten;
-public:
-
-	Game(AssetBundle *assets);
-	void tick();
-	void draw();
-
-	inline bool isDone() const { return done; }
-
-private:
-
-	AssetBundle *assets;
-	CollisionSystem collisionSystem;
-	Timer timer;	
-
-
+struct PlayerInput {
 	bool done = false;
 	bool jumpPressed = false;
-
-	Environment env;
-	Hero hero;
-	Kitten kitten;
-
-	#if DEBUG
 	bool drawWireframe = false;
-	#endif
 
-	void handleEvents();
-	void handleKeyDownEvent(const SDL_KeyboardEvent& key);
+	int xdir() {
+		auto kb = SDL_GetKeyboardState(0);
+		return kb[SDL_SCANCODE_LEFT] ? -1 : 
+		       kb[SDL_SCANCODE_RIGHT] ? 1 : 0;
+	}
 };
+
+struct Environment {
+
+	// rendering parameters
+	ImageAsset *bg;
+	TilemapAsset *tmap;
+
+};
+
+struct Hero {
+
+	// physics parameters
+	Collider *collider;
+	vec2 speed;
+	bool grounded;
+
+	vec2 position() const {
+		return collider->box.bottomCenter();
+	}
+
+	// rendering parameters
+	ImageAsset *image;
+	float framef;
+	int frame;
+	bool flipped;
+
+	SampleAsset *sfxJump;
+	SampleAsset *sfxFootfall;
+
+};
+
+struct Kitten {
+
+	// physics parameters
+	Collider *collider;
+
+	vec2 position() const {
+		return collider->box.bottomCenter();
+	}
+
+	// rendering parameters
+	ImageAsset *image;
+	int frame;
+	bool flipped;
+};
+
+void initialize(Environment& environment, AssetBundle& assets, CollisionSystem& collisions);
+void initialize(Hero& hero, AssetBundle& assets, CollisionSystem& collisions);
+void initialize(Kitten& kitten, AssetBundle& assets, CollisionSystem& collisions);
+
+void tick(Hero& hero, PlayerInput& input, CollisionSystem& collisions, float dt);
+
+void draw(Environment& environment, SpriteBatch& spriteBatch);
+void draw(Hero& hero, SpriteBatch& spriteBatch);
+void draw(Kitten& kitten, SpriteBatch& spriteBatch);
+
+

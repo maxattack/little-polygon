@@ -201,13 +201,13 @@ struct AssetBundle {
 
 // Initialize an asset bundle by memory-mapping the binary at the given
 // SDL path and then performing pointer-fixup.
-void initialize(AssetBundle *bundle, const char* path, uint32_t crc=0);
-void release(AssetBundle *bundle);
+void initialize(AssetBundle& bundle, const char* path, uint32_t crc=0);
+void release(AssetBundle& bundle);
 
 // By default, resource handles for assets are initializes lazily, however
 // you can use these functions to initialize them eagerly.
-void intializeContents(AssetBundle *bundle);
-void releaseContents(AssetBundle *bundle);
+void intializeContents(AssetBundle& bundle);
+void releaseContents(AssetBundle& bundle);
 
 // Methods for decompressing textures and binding to opengl
 void initialize(TextureAsset *asset);

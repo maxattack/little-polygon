@@ -16,9 +16,9 @@
 
 #include "littlepolygon_assets.h"
 
-void initialize(AssetBundle *bundle, const char* path, uint32_t crc) {
-	bundle->assetCount = 0;
-	bundle->headers = 0;
+void initialize(AssetBundle& bundle, const char* path, uint32_t crc) {
+	bundle.assetCount = 0;
+	bundle.headers = 0;
 
 	SDL_RWops* file = SDL_RWFromFile(path, "rb");
 	
@@ -41,16 +41,16 @@ void initialize(AssetBundle *bundle, const char* path, uint32_t crc) {
 	}
 	SDL_RWclose(file);
 
-	bundle->assetCount = count;
-	bundle->headers = reinterpret_cast<AssetBundle::Header*>(result);
+	bundle.assetCount = count;
+	bundle.headers = reinterpret_cast<AssetBundle::Header*>(result);
 }
 
-void release(AssetBundle *bundle) {
+void release(AssetBundle& bundle) {
 	releaseContents(bundle);
-	if (bundle->headers) {
-		LITTLE_POLYGON_FREE(bundle->headers);
-		bundle->assetCount = 0;
-		bundle->headers = 0;
+	if (bundle.headers) {
+		LITTLE_POLYGON_FREE(bundle.headers);
+		bundle.assetCount = 0;
+		bundle.headers = 0;
 	}
 }
 
@@ -71,21 +71,21 @@ void* AssetBundle::findHeader(uint32_t hash, uint32_t assetType) {
 	return 0;
 }
 
-void intializeContents(AssetBundle *bundle) {
-	if (bundle->headers) { 
-		for(int i=0; i<bundle->assetCount; ++i) {
-			switch(bundle->headers[i].type) {
+void intializeContents(AssetBundle& bundle) {
+	if (bundle.headers) { 
+		for(int i=0; i<bundle.assetCount; ++i) {
+			switch(bundle.headers[i].type) {
 				case ASSET_TYPE_TEXTURE:
-					initialize( (TextureAsset*)bundle->headers[i].data );
+					initialize( (TextureAsset*)bundle.headers[i].data );
 					break;
 				case ASSET_TYPE_FONT:
-					initialize( &(((FontAsset*)bundle->headers[i].data)->texture) );
+					initialize( &(((FontAsset*)bundle.headers[i].data)->texture) );
 					break;
 				case ASSET_TYPE_SAMPLE:
-					initialize( (SampleAsset*)bundle->headers[i].data );
+					initialize( (SampleAsset*)bundle.headers[i].data );
 					break;
 				case ASSET_TYPE_TILEMAP:
-					initialize( (TilemapAsset*)bundle->headers[i].data );
+					initialize( (TilemapAsset*)bundle.headers[i].data );
 					break;
 				default:
 					break;
@@ -94,21 +94,21 @@ void intializeContents(AssetBundle *bundle) {
 	}
 }
 
-void releaseContents(AssetBundle *bundle) {
-	if (bundle->headers) { 
-		for(int i=0; i<bundle->assetCount; ++i) {
-			switch(bundle->headers[i].type) {
+void releaseContents(AssetBundle& bundle) {
+	if (bundle.headers) { 
+		for(int i=0; i<bundle.assetCount; ++i) {
+			switch(bundle.headers[i].type) {
 				case ASSET_TYPE_TEXTURE:
-					release( (TextureAsset*)bundle->headers[i].data );
+					release( (TextureAsset*)bundle.headers[i].data );
 					break;
 				case ASSET_TYPE_FONT:
-					release( &(((FontAsset*)bundle->headers[i].data)->texture) );
+					release( &(((FontAsset*)bundle.headers[i].data)->texture) );
 					break;
 				case ASSET_TYPE_SAMPLE:
-					release( (SampleAsset*)bundle->headers[i].data );
+					release( (SampleAsset*)bundle.headers[i].data );
 					break;
 				case ASSET_TYPE_TILEMAP:
-					release( (TilemapAsset*)bundle->headers[i].data );
+					release( (TilemapAsset*)bundle.headers[i].data );
 					break;
 				default:
 					break;				
