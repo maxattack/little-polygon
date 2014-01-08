@@ -99,7 +99,7 @@ int main(int argc, char *argv[]) {
 	delete collisions;
 	destroy(plotter);
 	destroy(batch);
-	release(assets);
+	destroy(assets);
 	
 	return 0;
 

@@ -215,7 +215,8 @@ AssetBundle* newAssetBundle(const char* path, uint32_t crc=0);
 void destroy(AssetBundle *bundle);
 
 // By default, resource handles for assets are initializes lazily, however
-// you can use these functions to initialize them eagerly.
+// you can use these functions to initialize them eagerly. NOOP if this is just
+// an empty header.
 void initialize(AssetBundle* bundle);
 void release(AssetBundle* bundle);
 
