@@ -8,7 +8,7 @@ LIBRARY_OBJ_FILES =     \
 	obj/TilemapAsset.o  \
 	obj/utils.o         
 
-game_OBJ_FILES =           \
+PLATFORMER_OBJ_FILES =           \
 	obj/CollisionSystem.o  \
 	obj/Environment.o      \
 	obj/Hero.o             \
@@ -24,7 +24,7 @@ CPP = clang++
 # as well.
 
 # BASE FLAGS
-CFLAGS = -Icommon/include -I/usr/local/include/ -g -Os -Wall -flto -ffast-math
+CFLAGS = -Icommon/include -I/usr/local/include/ -g -Wall -ffast-math
 CCFLAGS = -std=c++11  -fno-rtti -fno-exceptions
 LIBS = -Llib -L/usr/local/lib -framework OpenGL -framework Cocoa -llittlepolygon -lz
 
@@ -39,19 +39,22 @@ LIBS += -lSDL2 -lSDL2_mixer
 # CONFIG FLAGS
 CFLAGS += -DDEBUG
 
+# OPTIMIZATION FLAGS
+# CFLAGS += -Os -flto 
+
 # 32 BITS
 CFLAGS += -arch i386
 AFLAGS = 32
 
-test : bin/game bin/assets.bin
-	cp game/assets/song.mid bin/song.mid
-	bin/game
+test : bin/platformer bin/assets.bin
+	cp platformer/assets/song.mid bin/song.mid
+	bin/platformer
 
-bin/game: lib/liblittlepolygon.a $(game_OBJ_FILES) 
-	$(CPP) -o $@ $(CFLAGS) $(CCFLAGS) $(LIBS) $(GAME_LIBS) $(game_OBJ_FILES)
+bin/platformer: lib/liblittlepolygon.a $(PLATFORMER_OBJ_FILES) 
+	$(CPP) -o $@ $(CFLAGS) $(CCFLAGS) $(LIBS) $(GAME_LIBS) $(PLATFORMER_OBJ_FILES)
 
-bin/assets.bin: game/assets/* common/tools/*.py game/tools/*.py
-	game/tools/export_game_assets.py game/assets/assets.yaml $@ $(AFLAGS)
+bin/assets.bin: platformer/assets/* common/tools/*.py platformer/tools/*.py
+	platformer/tools/export_game_assets.py platformer/assets/assets.yaml $@ $(AFLAGS)
 
 clean:
 	rm -f lib/*
@@ -67,5 +70,5 @@ obj/%.o: common/src/%.c
 obj/%.o: common/src/%.cpp common/include/*.h
 	$(CPP) $(CFLAGS) $(CCFLAGS) -c -o $@ $<
 
-obj/%.o: game/src/%.cpp game/src/*.h
+obj/%.o: platformer/src/%.cpp platformer/src/*.h
 	$(CPP) $(CFLAGS) $(CCFLAGS) -c -o $@ $<
