@@ -42,26 +42,24 @@ int main(int argc, char *argv[]) {
 	auto color = rgb(0x95b5a2);
 	glClearColor(color.red(), color.green(), color.blue(), 0.0f);
 	
-	// initialize systems
-	static AssetBundle assets;
-	initialize(&assets, "platformer.bin");
-
+	// initialize lp systems
+	auto assets = newAssetBundle("platformer.bin");
 	auto batch = newSpriteBatch();
 	auto plotter = newLinePlotter();
 
 	// things with ctors
-	static Timer timer;
-	static PlayerInput input;
-	static CollisionSystem collisions;
+	Timer timer;
+	PlayerInput input;
+	CollisionSystem* collisions = new CollisionSystem();
 
 	// scene entities
-	static Environment environment;
-	static Hero hero;
-	static Kitten kitten;
+	Environment environment;
+	Hero hero;
+	Kitten kitten;
 	
-	environment.init(&assets, &collisions);
-	hero.init(&assets, &collisions);
-	kitten.init(&assets, &collisions);
+	environment.init(assets, collisions);
+	hero.init(assets, collisions);
+	kitten.init(assets, collisions);
 	
 	// start music
 	Mix_Music *music = Mix_LoadMUS("song.mid");
@@ -75,7 +73,7 @@ int main(int argc, char *argv[]) {
 		// tick time
 		timer.tick();
 		handleEvents(input);
-		hero.tick(&input, &collisions, timer.scaledDeltaTime);
+		hero.tick(&input, collisions, timer.scaledDeltaTime);
 		input.jumpPressed = false;
 
 		// render scene
@@ -90,13 +88,18 @@ int main(int argc, char *argv[]) {
 
 		if (input.drawWireframe) {
 			begin(plotter, canvasSize, scrolling);
-			collisions.debugDraw(plotter);
+			collisions->debugDraw(plotter);
 			end(plotter);
 		}
 
 		// present and wait for next frame
 		SDL_GL_SwapWindow(window);
 	}
+
+	delete collisions;
+	destroy(plotter);
+	destroy(batch);
+	release(assets);
 	
 	return 0;
 

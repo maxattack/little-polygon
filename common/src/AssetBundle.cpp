@@ -16,10 +16,7 @@
 
 #include "littlepolygon_assets.h"
 
-void initialize(AssetBundle* bundle, const char* path, uint32_t crc) {
-	bundle->assetCount = 0;
-	bundle->headers = 0;
-
+AssetBundle* newAssetBundle(const char* path, uint32_t crc) {
 	SDL_RWops* file = SDL_RWFromFile(path, "rb");
 	
 	// read length and count
@@ -27,10 +24,11 @@ void initialize(AssetBundle* bundle, const char* path, uint32_t crc) {
 	int count = SDL_ReadLE32(file);
 
 	// read data
-	void *result = LITTLE_POLYGON_MALLOC(length);
+	AssetBundle *bundle = (AssetBundle*) LITTLE_POLYGON_MALLOC(sizeof(AssetBundle) + length);
+	void *result = (bundle+1);
 	if (SDL_RWread(file, result, length, 1) == -1) {
-		LITTLE_POLYGON_FREE(result);
-		return;
+		LITTLE_POLYGON_FREE(bundle);
+		return 0;
 	}
 
 	// read pointer fixup
@@ -43,15 +41,12 @@ void initialize(AssetBundle* bundle, const char* path, uint32_t crc) {
 
 	bundle->assetCount = count;
 	bundle->headers = reinterpret_cast<AssetBundle::Header*>(result);
+	return bundle;
 }
 
-void release(AssetBundle* bundle) {
-	releaseContents(bundle);
-	if (bundle->headers) {
-		LITTLE_POLYGON_FREE(bundle->headers);
-		bundle->assetCount = 0;
-		bundle->headers = 0;
-	}
+void destroy(AssetBundle *bundle) {
+	release(bundle);
+	LITTLE_POLYGON_FREE(bundle);
 }
 
 void* AssetBundle::findHeader(uint32_t hash, uint32_t assetType) {
@@ -71,8 +66,8 @@ void* AssetBundle::findHeader(uint32_t hash, uint32_t assetType) {
 	return 0;
 }
 
-void intializeContents(AssetBundle* bundle) {
-	if (bundle->headers) { 
+void initialize(AssetBundle* bundle) {
+	if (bundle->assetCount) { 
 		for(int i=0; i<bundle->assetCount; ++i) {
 			switch(bundle->headers[i].type) {
 				case ASSET_TYPE_TEXTURE:
@@ -94,8 +89,8 @@ void intializeContents(AssetBundle* bundle) {
 	}
 }
 
-void releaseContents(AssetBundle* bundle) {
-	if (bundle->headers) { 
+void release(AssetBundle* bundle) {
+	if (bundle->assetCount) { 
 		for(int i=0; i<bundle->assetCount; ++i) {
 			switch(bundle->headers[i].type) {
 				case ASSET_TYPE_TEXTURE:

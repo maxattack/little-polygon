@@ -165,7 +165,7 @@ struct UserdataAsset {
 #endif
 
 struct AssetBundle {
-	int assetCount;
+	size_t assetCount;
 
 	// Assets are keyed by name-hashes (fnv-1a)
 	// inlined so that the compiler can constant-fold over string literals :)
@@ -209,15 +209,15 @@ struct AssetBundle {
 
 #undef ASSET_RESULT_VERIFY
 
-// Initialize an asset bundle by memory-mapping the binary at the given
-// SDL path and then performing pointer-fixup.
-void initialize(AssetBundle* bundle, const char* path, uint32_t crc=0);
-void release(AssetBundle* bundle);
+// Block allocate assets from the binary at the given SDL path.  Can optionally
+// pass a crc along to double-check it's a specific build.
+AssetBundle* newAssetBundle(const char* path, uint32_t crc=0);
+void destroy(AssetBundle *bundle);
 
 // By default, resource handles for assets are initializes lazily, however
 // you can use these functions to initialize them eagerly.
-void intializeContents(AssetBundle* bundle);
-void releaseContents(AssetBundle* bundle);
+void initialize(AssetBundle* bundle);
+void release(AssetBundle* bundle);
 
 // Methods for decompressing textures and binding to opengl
 void initialize(TextureAsset *asset);
