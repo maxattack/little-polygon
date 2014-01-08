@@ -39,7 +39,9 @@
 
 //------------------------------------------------------------------------------
 // ASSET RECORDS
-// These records are directly mapped into memory from the asset binary.
+// These records are directly mapped into memory from the asset binary.  We 
+// should be able to construct these procedurally as well, though I haven't run
+// up against that use case yet in practice.
 //------------------------------------------------------------------------------
 
 struct TextureAsset {
@@ -156,6 +158,12 @@ struct UserdataAsset {
 // MAIN INTERFACE
 //------------------------------------------------------------------------------
 
+#ifdef DEBUG
+#define ASSET_RESULT_VERIFY(expr) auto res = (expr); if (!res) { LOG(("ASSET UNDEFINED: %s\n", name)); } return res;
+#else
+#define ASSET_RESULT_VERIFY(expr) return expr;
+#endif
+
 struct AssetBundle {
 	int assetCount;
 
@@ -182,12 +190,12 @@ struct AssetBundle {
 	void* findHeader(uint32_t hash, uint32_t assetType);
 
 	// lookup assets by name
-	inline TextureAsset *texture(const char * name) { return texture(hash(name)); }
-	inline ImageAsset *image(const char * name) { return image(hash(name)); }
-	inline TilemapAsset *tilemap(const char * name) { return tilemap(hash(name)); }
-	inline FontAsset *font(const char * name) { return font(hash(name)); }
-	inline SampleAsset *sample(const char * name) { return sample(hash(name)); }
-	inline UserdataAsset *userdata(const char *name) { return userdata(hash(name)); }
+	inline TextureAsset *texture(const char * name) { ASSET_RESULT_VERIFY(texture(hash(name))) }
+	inline ImageAsset *image(const char * name) { ASSET_RESULT_VERIFY(image(hash(name))) }
+	inline TilemapAsset *tilemap(const char * name) { ASSET_RESULT_VERIFY(tilemap(hash(name))) }
+	inline FontAsset *font(const char * name) { ASSET_RESULT_VERIFY(font(hash(name))) }
+	inline SampleAsset *sample(const char * name) { ASSET_RESULT_VERIFY(sample(hash(name))) }
+	inline UserdataAsset *userdata(const char *name) { ASSET_RESULT_VERIFY(userdata(hash(name))) }
 
 	// lookup assets by hash
 	inline TextureAsset *texture(uint32_t hash) { return (TextureAsset*) findHeader(hash, ASSET_TYPE_TEXTURE); }
@@ -198,6 +206,8 @@ struct AssetBundle {
 	inline UserdataAsset *userdata(uint32_t hash) { return (UserdataAsset*) findHeader(hash, ASSET_TYPE_USERDATA); }
 
 };
+
+#undef ASSET_RESULT_VERIFY
 
 // Initialize an asset bundle by memory-mapping the binary at the given
 // SDL path and then performing pointer-fixup.
