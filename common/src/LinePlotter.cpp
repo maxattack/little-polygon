@@ -41,8 +41,51 @@ void main() {
 
 )GLSL";
 
+#define LINE_PLOTTER_CAPACITY 256
+
+struct LinePlotter {
+	int count;
+	GLuint prog;
+	GLuint vert;
+	GLuint frag;
+	GLuint uMVP;
+	GLuint aPosition;
+	GLuint aColor;
+
+	struct Vertex {
+		vec2 position;
+		Color color;
+
+		inline void set(vec2 p, Color c) { 
+			position = p; 
+			color = c; 
+		}
+	};
+
+	Vertex vertices[ 2 * LINE_PLOTTER_CAPACITY ];
+};
+
 // private helper functions
 void commitBatch(LinePlotter* context);	
+
+LinePlotter *newLinePlotter() {
+	auto result = allocLinePlotter();
+	initialize(result);
+	return result;
+}
+
+void destroy(LinePlotter *plotter) {
+	release(plotter);
+	dealloc(plotter);
+}
+
+LinePlotter *allocLinePlotter() {
+	return (LinePlotter*) LITTLE_POLYGON_MALLOC(sizeof(LinePlotter));
+}
+
+void dealloc(LinePlotter *plotter) {
+	LITTLE_POLYGON_FREE(plotter);
+}
 
 void initialize(LinePlotter* context) {
 	context->count = -1;

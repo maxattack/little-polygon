@@ -22,50 +22,21 @@ SDL_Window *initContext(const char *caption, int w=0, int h=0);
 void setCanvas(GLuint uMVP, vec2 canvasSize, vec2 canvasOffset);
 bool compileShader(const GLchar* source, GLuint *outProg, GLuint *outVert, GLuint *outFrag);
 
-#define SPRITE_CAPACITY 256
-
-struct SpriteBatch {
-	vec2 canvasSize;
-	vec2 canvasScroll;
-	int count;
-
-	GLuint prog;
-	GLuint vert;
-	GLuint frag;
-	GLuint uMVP;
-	GLuint uAtlas;
-	GLuint aPosition;
-	GLuint aUV;
-	GLuint aColor;	
-
-	// invariant: these two fields need to be adjacent
-	GLuint elementBuf;
-	GLuint arrayBuf;
-
-	struct Vertex {
-		vec2 position;
-		vec2 uv;
-		Color color;
-		
-		inline void set(vec2 p, vec2 u, Color c) {
-			position = p;
-			uv = u;
-			color = c;
-		}
-
-	};
-
-	Vertex workingBuffer[4 * SPRITE_CAPACITY]; // four corners
-	TextureAsset *workingTexture;
-};
 
 // This object can render lots of sprites in a small number of batched draw calls
 // by coalescing adjacent draws into larger logical draws.
 // TODO: perform batch-level clipping?
+struct SpriteBatch;
 
 // Create and destroy a sprite batch.  
+SpriteBatch *newSpriteBatch();
+void destroy(SpriteBatch *context);
+
+// decoupled allocation and intialization
+SpriteBatch *allocSpriteBatch();
 void initialize(SpriteBatch* context);
 void release(SpriteBatch *context);
+void dealloc(SpriteBatch *context);
 
 // Call this method to initialize the graphics context state.  Coordinates are
 // set to a orthogonal projection matrix, and some basic settings like blending are
@@ -95,32 +66,16 @@ void end(SpriteBatch* context);
 
 // This is mainly a debugging tool for things like b2DebugDraw and diagnostics,
 // so it's not exactly ninja'd for performance.
-#define LINE_PLOTTER_CAPACITY 256
+struct LinePlotter;
 
-struct LinePlotter {
-	int count;
-	GLuint prog;
-	GLuint vert;
-	GLuint frag;
-	GLuint uMVP;
-	GLuint aPosition;
-	GLuint aColor;
+LinePlotter *newLinePlotter();
+void destroy(LinePlotter *plotter);
 
-	struct Vertex {
-		vec2 position;
-		Color color;
-
-		inline void set(vec2 p, Color c) { 
-			position = p; 
-			color = c; 
-		}
-	};
-
-	Vertex vertices[ 2 * LINE_PLOTTER_CAPACITY ];
-};
-
+// decoupled allocation and initialization
+LinePlotter *allocLinePlotter();
 void initialize(LinePlotter* context);
 void release(LinePlotter* context);
+void dealloc(LinePlotter *plotter);
 
 void begin(LinePlotter* context, vec2 canvasSize, vec2 canvasOffset=vec(0,0));
 void plot(LinePlotter* context, vec2 p0, vec2 p1, Color c);

@@ -45,11 +45,68 @@ void main() {
 #endif
 )GLSL";
 
+#define SPRITE_CAPACITY 256
+
+struct SpriteBatch {
+	vec2 canvasSize;
+	vec2 canvasScroll;
+	int count;
+
+	GLuint prog;
+	GLuint vert;
+	GLuint frag;
+	GLuint uMVP;
+	GLuint uAtlas;
+	GLuint aPosition;
+	GLuint aUV;
+	GLuint aColor;	
+
+	// invariant: these two fields need to be adjacent
+	GLuint elementBuf;
+	GLuint arrayBuf;
+
+	struct Vertex {
+		vec2 position;
+		vec2 uv;
+		Color color;
+		
+		inline void set(vec2 p, vec2 u, Color c) {
+			position = p;
+			uv = u;
+			color = c;
+		}
+
+	};
+
+	Vertex workingBuffer[4 * SPRITE_CAPACITY]; // four corners
+	TextureAsset *workingTexture;
+};
+
 // private helper methods
 
 void setTextureAtlas(SpriteBatch* context, TextureAsset* texture);
 void commitBatch(SpriteBatch* context);
 void plotGlyph(SpriteBatch* context, const GlyphAsset& g, float x, float y, float h, Color c);
+
+SpriteBatch *newSpriteBatch() {
+	auto result = allocSpriteBatch();
+	initialize(result);
+	return result;
+}
+
+void destroy(SpriteBatch *context) {
+	release(context);
+	dealloc(context);
+}
+
+
+SpriteBatch *allocSpriteBatch() {
+	return (SpriteBatch*) LITTLE_POLYGON_MALLOC(sizeof(SpriteBatch));
+}
+
+void dealloc(SpriteBatch *context) {
+	LITTLE_POLYGON_FREE(context);
+}
 
 void initialize(SpriteBatch* context) {
 	context->count = -1;
