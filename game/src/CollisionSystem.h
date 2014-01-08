@@ -119,6 +119,8 @@ public:
 
 	CollisionSystem();
 
+	void reset();
+
 	Collider* addCollider(
 		const AABB& box, 
 		uint32_t categoryMask = 0xffffffff, 
@@ -132,7 +134,7 @@ public:
 	int queryTriggers(Collider *c, int outCapacity, Trigger *resultBuf);
 	int queryColliders(const AABB& box, uint32_t mask, int outCapacity, Collider **resultBuf);
 
-	void debugDraw(LinePlotter& plotter);
+	void debugDraw(LinePlotter* plotter);
 
 private:
 	typedef Bitset<COLLIDER_CAPACITY> ColliderSet;

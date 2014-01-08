@@ -42,22 +42,27 @@ int main(int argc, char *argv[]) {
 	auto color = rgb(0x95b5a2);
 	glClearColor(color.red(), color.green(), color.blue(), 0.0f);
 	
-	// initialize scene
+	// initialize systems
 	static AssetBundle assets;
 	static SpriteBatch batch;
 	static LinePlotter plotter;
+	initialize(&assets, "assets.bin");
+	initialize(&batch);
+	initialize(&plotter);
+
+	// things with ctors
+	static Timer timer;
+	static PlayerInput input;
 	static CollisionSystem collisions;
+
+	// scene entities
 	static Environment environment;
 	static Hero hero;
 	static Kitten kitten;
-	static Timer timer;
-	static PlayerInput input;
-	initialize(assets, "assets.bin");
-	initialize(batch);
-	initialize(plotter);
-	initialize(environment, assets, collisions);
-	initialize(hero, assets, collisions);
-	initialize(kitten, assets, collisions);
+	
+	environment.init(&assets, &collisions);
+	hero.init(&assets, &collisions);
+	kitten.init(&assets, &collisions);
 	
 	// start music
 	Mix_Music *music = Mix_LoadMUS("song.mid");
@@ -71,23 +76,23 @@ int main(int argc, char *argv[]) {
 		// tick time
 		timer.tick();
 		handleEvents(input);
-		tick(hero, input, collisions, timer.scaledDeltaTime);
+		hero.tick(&input, &collisions, timer.scaledDeltaTime);
 		input.jumpPressed = false;
 
 		// render scene
 		auto scrolling = vec(0,0);
 		auto canvasSize = vec(CANVAS_WIDTH, CANVAS_HEIGHT);
 
-		begin(batch, canvasSize, scrolling);
-		draw(environment, batch);
-		draw(hero, batch);
-		draw(kitten, batch);
-		end(batch);
+		begin(&batch, canvasSize, scrolling);
+		environment.draw(&batch);
+		hero.draw(&batch);
+		kitten.draw(&batch);
+		end(&batch);
 
 		if (input.drawWireframe) {
-			begin(plotter, canvasSize, scrolling);
-			collisions.debugDraw(plotter);
-			end(plotter);
+			begin(&plotter, canvasSize, scrolling);
+			collisions.debugDraw(&plotter);
+			end(&plotter);
 		}
 
 		// present and wait for next frame

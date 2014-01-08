@@ -27,6 +27,9 @@ struct Environment {
 	ImageAsset *bg;
 	TilemapAsset *tmap;
 
+	void init(AssetBundle* assets, CollisionSystem* collisions);
+	void draw(SpriteBatch* batch);
+
 };
 
 struct Hero {
@@ -49,6 +52,9 @@ struct Hero {
 	SampleAsset *sfxJump;
 	SampleAsset *sfxFootfall;
 
+	void init(AssetBundle* assets, CollisionSystem* collisions);
+	void tick(PlayerInput* input, CollisionSystem* collisions, float dt);
+	void draw(SpriteBatch* batch);
 };
 
 struct Kitten {
@@ -64,16 +70,7 @@ struct Kitten {
 	ImageAsset *image;
 	int frame;
 	bool flipped;
+
+	void init(AssetBundle* assets, CollisionSystem* collisions);
+	void draw(SpriteBatch* batch);
 };
-
-void initialize(Environment& environment, AssetBundle& assets, CollisionSystem& collisions);
-void initialize(Hero& hero, AssetBundle& assets, CollisionSystem& collisions);
-void initialize(Kitten& kitten, AssetBundle& assets, CollisionSystem& collisions);
-
-void tick(Hero& hero, PlayerInput& input, CollisionSystem& collisions, float dt);
-
-void draw(Environment& environment, SpriteBatch& spriteBatch);
-void draw(Hero& hero, SpriteBatch& spriteBatch);
-void draw(Kitten& kitten, SpriteBatch& spriteBatch);
-
-

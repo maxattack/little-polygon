@@ -21,6 +21,14 @@ CollisionSystem::CollisionSystem() {
 	freeSlots.mark();
 }
 
+void CollisionSystem::reset() {
+	freeSlots.mark();
+	nContacts = 0;
+	for(int i=0; i<BUCKET_COUNT; ++i) {
+		buckets[i].clear();
+	}
+}
+
 Collider* CollisionSystem::addCollider(
 	const AABB& box, 
 	uint32_t categoryMask, 
@@ -292,7 +300,7 @@ void CollisionSystem::broadPhase(const AABB& sweep, ColliderSet& outResult) {
 
 }
 
-void CollisionSystem::debugDraw(LinePlotter& plotter) {
+void CollisionSystem::debugDraw(LinePlotter* plotter) {
 	unsigned slot;
 	for(auto i=(~freeSlots).listBits(); i.next(slot);) {
 		auto& c = slots[slot];

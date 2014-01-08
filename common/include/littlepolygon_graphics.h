@@ -64,34 +64,34 @@ struct SpriteBatch {
 // TODO: perform batch-level clipping?
 
 // Create and destroy a sprite batch.  
-void initialize(SpriteBatch& context);
+void initialize(SpriteBatch* context);
 void release(SpriteBatch *context);
 
 // Call this method to initialize the graphics context state.  Coordinates are
 // set to a orthogonal projection matrix, and some basic settings like blending are
 // enabled.  Any additional state changes can be set *after* this function but *before*
 // issuing any draw calls.
-void begin(SpriteBatch& context, vec2 canvasSize, vec2 scrolling=vec(0,0));
+void begin(SpriteBatch* context, vec2 canvasSize, vec2 scrolling=vec(0,0));
 
 // Draw the given image.  Will potentially cause a draw call to actually be emitted
 // to the graphics device if: (i) the buffer has reached capacity or (ii) the texture 
 // atlas has changed.  Color transforms *can* be batched, because they are encoded
 // in the vertices, not in shader uniforms.
-void drawImage(SpriteBatch& context, ImageAsset *image, vec2 position, int frame=0, Color color=rgba(0x00000000));
-void drawImageTransformed(SpriteBatch& context, ImageAsset *image, vec2 position, vec2 attitude, int frame=0, Color color=rgba(0x00000000));
-void drawImageRotated(SpriteBatch& context, ImageAsset *image, vec2 position, float radians, int frame=0, Color color=rgba(0x00000000));
-void drawImageScaled(SpriteBatch& context, ImageAsset *image, vec2 position, vec2 k, int frame=0, Color color=rgba(0x00000000));
-void drawLabel(SpriteBatch& context, FontAsset *font, vec2 p, Color c, const char *msg);
-void drawLabelCentered(SpriteBatch& context, FontAsset *font, vec2 p, Color c, const char *msg);
-void drawTilemap(SpriteBatch& context, TilemapAsset *map, vec2 position=vec(0,0));
+void drawImage(SpriteBatch* context, ImageAsset *image, vec2 position, int frame=0, Color color=rgba(0x00000000));
+void drawImageTransformed(SpriteBatch* context, ImageAsset *image, vec2 position, vec2 attitude, int frame=0, Color color=rgba(0x00000000));
+void drawImageRotated(SpriteBatch* context, ImageAsset *image, vec2 position, float radians, int frame=0, Color color=rgba(0x00000000));
+void drawImageScaled(SpriteBatch* context, ImageAsset *image, vec2 position, vec2 k, int frame=0, Color color=rgba(0x00000000));
+void drawLabel(SpriteBatch* context, FontAsset *font, vec2 p, Color c, const char *msg);
+void drawLabelCentered(SpriteBatch* context, FontAsset *font, vec2 p, Color c, const char *msg);
+void drawTilemap(SpriteBatch* context, TilemapAsset *map, vec2 position=vec(0,0));
 
 // if you want to monkey with the global rendering state you need to flush
 // the render queue first
-void flush(SpriteBatch& context);
+void flush(SpriteBatch* context);
 
 // Commit the current draw queue and return the graphics context state to it's
 // canonical form, to play nice with other renderers.
-void end(SpriteBatch& context);
+void end(SpriteBatch* context);
 
 // This is mainly a debugging tool for things like b2DebugDraw and diagnostics,
 // so it's not exactly ninja'd for performance.
@@ -119,10 +119,10 @@ struct LinePlotter {
 	Vertex vertices[ 2 * LINE_PLOTTER_CAPACITY ];
 };
 
-void initialize(LinePlotter& context);
-void release(LinePlotter& context);
+void initialize(LinePlotter* context);
+void release(LinePlotter* context);
 
-void begin(LinePlotter& context, vec2 canvasSize, vec2 canvasOffset=vec(0,0));
-void plot(LinePlotter& context, vec2 p0, vec2 p1, Color c);
-void end(LinePlotter& context);
+void begin(LinePlotter* context, vec2 canvasSize, vec2 canvasOffset=vec(0,0));
+void plot(LinePlotter* context, vec2 p0, vec2 p1, Color c);
+void end(LinePlotter* context);
 
