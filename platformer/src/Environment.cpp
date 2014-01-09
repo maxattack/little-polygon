@@ -28,6 +28,10 @@ void Environment::draw(SpriteBatch* spriteBatch) {
 	drawImageScaled(spriteBatch, bg, vec(CANVAS_WIDTH-8, CANVAS_HEIGHT-56), vec(-1,1));
 	
 	// actual tilemap
+	flush(spriteBatch);
+	glDisable(GL_BLEND);
 	drawTilemap(spriteBatch, tmap);
+	flush(spriteBatch);
+	glEnable(GL_BLEND);
 }
 

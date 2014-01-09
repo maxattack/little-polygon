@@ -45,11 +45,10 @@ void main() {
 #endif
 )GLSL";
 
-#define SPRITE_CAPACITY 256
-
 struct SpriteBatch {
 	vec2 canvasSize;
 	vec2 canvasScroll;
+	int capacity;
 	int count;
 
 	GLuint prog;
@@ -65,6 +64,8 @@ struct SpriteBatch {
 	GLuint elementBuf;
 	GLuint arrayBuf;
 
+	TextureAsset *workingTexture;
+
 	struct Vertex {
 		vec2 position;
 		vec2 uv;
@@ -78,8 +79,8 @@ struct SpriteBatch {
 
 	};
 
-	Vertex workingBuffer[4 * SPRITE_CAPACITY]; // four corners
-	TextureAsset *workingTexture;
+	Vertex *workingBuffer() const { return (Vertex*)(this+1); }
+	Vertex *nextSlice() const { return workingBuffer() + (4 * count); }
 };
 
 // private helper methods
@@ -88,27 +89,19 @@ void setTextureAtlas(SpriteBatch* context, TextureAsset* texture);
 void commitBatch(SpriteBatch* context);
 void plotGlyph(SpriteBatch* context, const GlyphAsset& g, float x, float y, float h, Color c);
 
-SpriteBatch *newSpriteBatch() {
-	auto result = allocSpriteBatch();
-	initialize(result);
-	return result;
+static SpriteBatch *allocSpriteBatch(int capacity) {
+	return (SpriteBatch*) LITTLE_POLYGON_MALLOC(
+		sizeof(SpriteBatch) + 
+		sizeof(SpriteBatch::Vertex) * 4 * capacity
+	);
 }
 
-void destroy(SpriteBatch *context) {
-	release(context);
-	dealloc(context);
-}
-
-
-SpriteBatch *allocSpriteBatch() {
-	return (SpriteBatch*) LITTLE_POLYGON_MALLOC(sizeof(SpriteBatch));
-}
-
-void dealloc(SpriteBatch *context) {
+static void dealloc(SpriteBatch *context) {
 	LITTLE_POLYGON_FREE(context);
 }
 
-void initialize(SpriteBatch* context) {
+static void initialize(SpriteBatch* context, int capacity) {
+	context->capacity = capacity;
 	context->count = -1;
 	context->workingTexture = 0;
 	CHECK(compileShader(SPRITE_SHADER, &context->prog, &context->vert, &context->frag));
@@ -120,8 +113,8 @@ void initialize(SpriteBatch* context) {
 	context->aColor = glGetAttribLocation(context->prog, "aColor");
 
 	// setup element array buffer (should this be static?)
-	uint16_t indices[6 * SPRITE_CAPACITY];
-	for(int i=0; i<SPRITE_CAPACITY; ++i) {
+	uint16_t indices[6 * context->capacity];
+	for(int i=0; i<context->capacity; ++i) {
 		indices[6*i+0] = 4*i;
 		indices[6*i+1] = 4*i+1;
 		indices[6*i+2] = 4*i+2;
@@ -134,27 +127,36 @@ void initialize(SpriteBatch* context) {
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, context->elementBuf);
 	glBufferData(
 		GL_ELEMENT_ARRAY_BUFFER, 
-		6 * SPRITE_CAPACITY * sizeof(uint16_t), 
+		6 * context->capacity * sizeof(uint16_t), 
 		indices, 
 		GL_STATIC_DRAW
 	);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void release(SpriteBatch* context) {
+static void release(SpriteBatch* context) {
 	glDeleteBuffers(2, &context->elementBuf); 
 	glDeleteProgram(context->prog);
 	glDeleteShader(context->vert);
 	glDeleteShader(context->frag);
 }
 
+
+SpriteBatch *createSpriteBatch(int capacity) {
+	auto result = allocSpriteBatch(capacity);
+	initialize(result, capacity);
+	return result;
+}
+
+void destroy(SpriteBatch *context) {
+	release(context);
+	dealloc(context);
+}
+
 void begin(SpriteBatch* context, vec2 aCanvasSize, vec2 aCanvasOffset) {
 	ASSERT(context->count == -1);
 	context->count = 0;
 
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	
 	ASSERT(context->prog);
 	glUseProgram(context->prog);
 	glEnableVertexAttribArray(context->aPosition);
@@ -177,7 +179,7 @@ void begin(SpriteBatch* context, vec2 aCanvasSize, vec2 aCanvasOffset) {
 void drawImage(SpriteBatch* context, ImageAsset *img, vec2 pos, int frame, Color c) {
 	ASSERT(context->count >= 0);
 	setTextureAtlas(context, img->texture);
-	SpriteBatch::Vertex *slice = &context->workingBuffer[4 * context->count];
+	SpriteBatch::Vertex *slice = context->nextSlice();
 	FrameAsset *fr = img->frame(frame);
 
 	pos -= vec(fr->px, fr->py);
@@ -193,7 +195,7 @@ void drawImage(SpriteBatch* context, ImageAsset *img, vec2 pos, int frame, Color
 void drawImageTransformed(SpriteBatch* context, ImageAsset *img, vec2 pos, vec2 u, int frame, Color c) {
 	ASSERT(context->count >= 0);
 	setTextureAtlas(context, img->texture);
-	SpriteBatch::Vertex *slice = &context->workingBuffer[4 * context->count];
+	SpriteBatch::Vertex *slice = context->nextSlice();
 	FrameAsset *fr = img->frame(frame);
 
 	vec2 p0 = -vec(fr->px, fr->py);
@@ -216,7 +218,7 @@ void drawImageRotated(SpriteBatch* context, ImageAsset *img, vec2 pos, float rad
 void drawImageScaled(SpriteBatch* context, ImageAsset *img, vec2 pos, vec2 k, int frame, Color c) {
 	ASSERT(context->count >= 0);
 	setTextureAtlas(context, img->texture);
-	SpriteBatch::Vertex *slice = &context->workingBuffer[4 * context->count];
+	SpriteBatch::Vertex *slice = context->nextSlice();
 	FrameAsset *fr = img->frame(frame);
 
 	vec2 p0 = -vec(fr->px, fr->py);
@@ -236,11 +238,11 @@ void drawImageScaled(SpriteBatch* context, ImageAsset *img, vec2 pos, vec2 k, in
 #define UV_LABEL_SLOP (0.0001f)
 
 void plotGlyph(SpriteBatch* context, const GlyphAsset& g, float x, float y, float h, Color c) {
-	if (context->count == SPRITE_CAPACITY) {
+	if (context->count == context->capacity) {
 		commitBatch(context);
 	}
 
-	SpriteBatch::Vertex *slice = &context->workingBuffer[4 * context->count];
+	SpriteBatch::Vertex *slice = context->nextSlice();
 	float k = 1.f / context->workingTexture->w;
 	vec2 uv = k * vec(g.x, g.y);
 	float du = k * (g.advance-UV_LABEL_SLOP);
@@ -303,10 +305,6 @@ void drawTilemap(SpriteBatch* context, TilemapAsset *map, vec2 position) {
 	// make sure the map is initialized
 	initialize(map);
 
-	// flush the draw queue first so we can turn off blending
-	flush(context);
-	glDisable(GL_BLEND);
-
 	vec2 cs = context->canvasSize / vec(map->tw, map->th);	
 	int latticeW = ceilf(cs.x) + 1;
 	int latticeH = ceilf(cs.y) + 1;
@@ -340,23 +338,19 @@ void drawTilemap(SpriteBatch* context, TilemapAsset *map, vec2 position) {
 				vec2 uv = 
 					(vec(map->tw * coord.x, map->th * coord.y) + vec(TILE_SLOP, TILE_SLOP))
 					/ vec(map->tileAtlas.w, map->tileAtlas.h);
-				SpriteBatch::Vertex *slice = &context->workingBuffer[4 * context->count];
+				SpriteBatch::Vertex *slice = context->nextSlice();
 
 				slice[0].set(p, uv, rgba(0));
 				slice[1].set(p+vec(0,th), uv+vec(0,uh), rgba(0));
 				slice[2].set(p+vec(tw,0), uv+vec(uw,0), rgba(0));
 				slice[3].set(p+vec(tw,th), uv+vec(uw,uh), rgba(0));
 
-				if (++context->count == SPRITE_CAPACITY) {
+				if (++context->count == context->capacity) {
 					commitBatch(context);
 				}
 			}
 		}
 	}	
-
-	// flush the queue again so we can re-enable blending
-	flush(context);
-	glEnable(GL_BLEND);
 }
 
 void flush(SpriteBatch* context) {
@@ -382,7 +376,7 @@ void end(SpriteBatch* context) {
 
 void commitBatch(SpriteBatch* context) {
 	ASSERT(context->count > 0);
-	glBufferData(GL_ARRAY_BUFFER, 4 * context->count * sizeof(SpriteBatch::Vertex), context->workingBuffer, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, 4 * context->count * sizeof(SpriteBatch::Vertex), context->workingBuffer(), GL_DYNAMIC_DRAW);
 	glDrawElements(GL_TRIANGLES, 6 * context->count, GL_UNSIGNED_SHORT, 0);
 	context->count = 0;
 }
@@ -393,7 +387,7 @@ void setTextureAtlas(SpriteBatch* context, TextureAsset *texture) {
 	
 	// emit a draw call if we're at SPRITE_CAPACITY of if the atlas is changing.
 	// (assuming that count will be 0 if workingTexture is null)
-	if (context->count == SPRITE_CAPACITY || (context->count > 0 && atlasChange)) {
+	if (context->count == context->capacity || (context->count > 0 && atlasChange)) {
 		commitBatch(context);
 	}
 

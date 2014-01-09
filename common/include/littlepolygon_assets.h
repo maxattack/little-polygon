@@ -211,7 +211,7 @@ struct AssetBundle {
 
 // Block allocate assets from the binary at the given SDL path.  Can optionally
 // pass a crc along to double-check it's a specific build.
-AssetBundle* newAssetBundle(const char* path, uint32_t crc=0);
+AssetBundle* createAssetBundle(const char* path, uint32_t crc=0);
 void destroy(AssetBundle *bundle);
 
 // By default, resource handles for assets are initializes lazily, however

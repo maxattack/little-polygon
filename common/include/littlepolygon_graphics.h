@@ -17,26 +17,35 @@
 #pragma once
 #include "littlepolygon_assets.h"
 #include "littlepolygon_utils.h"
+#include "littlepolygon_vmath.h"
 
+//------------------------------------------------------------------------------
+// UTIL FUNCTIONS.
+//------------------------------------------------------------------------------
+
+// initialize everything the asset system needs (SDL, MIXER, etc).  Uses atexit()
+// to register teardown.
 SDL_Window *initContext(const char *caption, int w=0, int h=0);
+
+// uniform methods for setting orthographic cancas parameters
 void setCanvas(GLuint uMVP, vec2 canvasSize, vec2 canvasOffset);
+
+// Dead-simple shader-compiler.  Easiest to just use C++11 raw string
+// literals to store the source, or else you could stash it in asset 
+// userdata if it's configurable from content.  Uses a VERTEX conditional-
+// compilation macro to differentiate the vertex and fragment shader.
 bool compileShader(const GLchar* source, GLuint *outProg, GLuint *outVert, GLuint *outFrag);
 
+//------------------------------------------------------------------------------
+// SPRITE RENDERING
+//------------------------------------------------------------------------------
 
 // This object can render lots of sprites in a small number of batched draw calls
 // by coalescing adjacent draws into larger logical draws.
 // TODO: perform batch-level clipping?
 struct SpriteBatch;
-
-// Create and destroy a sprite batch.  
-SpriteBatch *newSpriteBatch();
+SpriteBatch *createSpriteBatch(int capacity=64);
 void destroy(SpriteBatch *context);
-
-// decoupled allocation and intialization
-SpriteBatch *allocSpriteBatch();
-void initialize(SpriteBatch* context);
-void release(SpriteBatch *context);
-void dealloc(SpriteBatch *context);
 
 // Call this method to initialize the graphics context state.  Coordinates are
 // set to a orthogonal projection matrix, and some basic settings like blending are
@@ -64,20 +73,35 @@ void flush(SpriteBatch* context);
 // canonical form, to play nice with other renderers.
 void end(SpriteBatch* context);
 
+//------------------------------------------------------------------------------
+// DEBUG LINE RENDERING
+//------------------------------------------------------------------------------
+
 // This is mainly a debugging tool for things like b2DebugDraw and diagnostics,
 // so it's not exactly ninja'd for performance.
 struct LinePlotter;
-
-LinePlotter *newLinePlotter();
+LinePlotter *createLinePlotter();
 void destroy(LinePlotter *plotter);
-
-// decoupled allocation and initialization
-LinePlotter *allocLinePlotter();
-void initialize(LinePlotter* context);
-void release(LinePlotter* context);
-void dealloc(LinePlotter *plotter);
 
 void begin(LinePlotter* context, vec2 canvasSize, vec2 canvasOffset=vec(0,0));
 void plot(LinePlotter* context, vec2 p0, vec2 p1, Color c);
 void end(LinePlotter* context);
+
+//------------------------------------------------------------------------------
+// SPLINE REDNERING
+//------------------------------------------------------------------------------
+
+// This is a handy way to render splines without uploading vertices.  A single
+// static vertex batch is buffered with "parametric coordinates" of the form
+// <x^3, x^2, x^1, 1> which are "programmed" by a unifrm hermite matrix.  Supports
+// Non-uniform tapering as well for making things like tentacles :P
+
+struct SplinePlotter;
+SplinePlotter *createSplinePlotter(int resolution=128);
+void destroy(SplinePlotter *context);
+
+void begin(SplinePlotter *context, vec2 canvasSize, vec2 canvasOffset=vec(0,0));
+void drawSpline(SplinePlotter *context, mat4 positionMatrix, vec4 strokeVector, Color c);
+void end(SplinePlotter *context);
+
 

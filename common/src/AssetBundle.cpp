@@ -16,7 +16,7 @@
 
 #include "littlepolygon_assets.h"
 
-AssetBundle* newAssetBundle(const char* path, uint32_t crc) {
+AssetBundle* createAssetBundle(const char* path, uint32_t crc) {
 	SDL_RWops* file = SDL_RWFromFile(path, "rb");
 	
 	// read length and count

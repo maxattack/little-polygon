@@ -3,12 +3,13 @@ LIBRARY_OBJ_FILES =     \
 	obj/AssetBundle.o   \
 	obj/LinePlotter.o   \
 	obj/SampleAsset.o   \
+	obj/SplinePlotter.o \
 	obj/SpriteBatch.o   \
 	obj/TextureAsset.o  \
 	obj/TilemapAsset.o  \
 	obj/utils.o         
 
-PLATFORMER_OBJ_FILES =           \
+PLATFORMER_OBJ_FILES =     \
 	obj/CollisionSystem.o  \
 	obj/Environment.o      \
 	obj/Hero.o             \
