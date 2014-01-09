@@ -39,7 +39,7 @@ Runtime Dependencies (native)
 Modules
 * littlepolygon_assets - a simple system for packaging and loading compressed game assets
 * littlepolygon_vmath - SIMD vector math with scalar fallbacks
-* littlepolygon_graphics - fast sprite-batching renderer for pixel games
+* littlepolygon_graphics - fast batching sprite and spline renderers
 * littlepolygon_templates - a collection of slim-and-handy C++ collection templates
 * littlepolygon_utils - small math and utility helpers
 
