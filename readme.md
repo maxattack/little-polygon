@@ -57,11 +57,11 @@ is a lot more flexible for controlling memory allocation, initialization order, 
 binding to scripting environments, keeping private methods out of headers, and  allowing the use 
 of completely opaque pointers that are just forward-declared.
 
-Wishlist
+WISHLIST
 --------
 
 * automatic lua binding (using python scripts, not C++ template madness)
-* lightweight entity-component system for in-game "hit F7" level editting
+* heirarchical go templates in asset export
 * savedata (sqlite?)
 * asynchronous sprite-batch (for multithreading)
 * more import asset types (SVG, Flash)
