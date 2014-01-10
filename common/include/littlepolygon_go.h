@@ -15,7 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
-#include "littlepolygon_util.h"
+#include "littlepolygon_utils.h"
 
 // Generic GameObject (GO) system for entity-component style assets.  The basic idea
 // is to model content as a database of GOs, each of which is assembled (by data) out of
@@ -42,25 +42,28 @@ GO createGameObject(GoContext *context, const char* name);
 // Destroying a GO also nukes all the components that are logically attached to it.
 void destroy(GoContext *context, GO go);
 
+// Enumerating GOs (for editting and debug purposes, mainly)
+int numGameObjects(GoContext *context);
+int listGameObjects(GoContext *context, int capacity, GO *resultBuf);
+
 // Lookup a game object by name.  In the case of duplicate-names, simply returns the
 // first one it finds.
 GO find(GoContext *context, const char *name);
 
 // GOs support enabling and disabling, routed to it's components, for the purpose of
-// implementing two common game idioms: GO pools and state-based content.
+// implementing two common game idioms: GO pools and state-based content.  There's also
+// a generic message-sending function (a last resort if there isn't a better way to 
+// handle data-flow).
 void enable(GoContext *context, GO go);
 void disable(GoContext *context, GO go);
+void sendMessage(GoContext *context, GO go, uint32_t messageId, void *params);
 
 // GO parameters
 const char* goName(GoContext *context, GO go);
+int goComponentCount(GoContext *context, GO go);
 vec2 goPosition(GoContext *context, GO go);
 void setPosition(GoContext *context, GO go);
-
-int numGameObjects(GoContext *context);
-int numComponents(GoContext *context, GO go);
-
-// List game objects (for editting and debug purposes, mainly)
-int listGameObjects(GoContext *context, int capacity, GO *resultBuf);
+// TODO: GO parent-child relationships?
 
 // Provide the plumping for components.  In principle, components are stored in 
 // separate systems that update them in batches, rather than iterating through
@@ -73,7 +76,7 @@ int listGameObjects(GoContext *context, int capacity, GO *resultBuf);
 // Concrete Example 1: A "Body" component backed by Box2D.  Your asset-exporter
 // can save a single readonly b2BodyDef record and the userData pointer can
 // identify the actual b2Body instance.  Bodies are updated in b2World.Step(), not
-// in a component loop.
+// through the Go system
 
 // Concrete Example 2: A "Scripted" component backed by a readonly lua metatable and
 // and instance lua table.  All scripts in the vm are all updated in one "dispatchEvents"
@@ -87,29 +90,33 @@ struct GoComponent {
 	void *userData;   // active data associated with the component
 };
 
-typedef void (*GoMethod)(GoComponent *component);
-
 // While components all have different specialized concrete behaviour, the share a
 // basic interface for responding to GO messages:
-//  - init: initialize the component (due to order of init, not a good idea to depend
-//          on sibling components here).  Components leave init logicall "disabled"
-//  - enable: the gameObject is enabled.  All siblings init'd at this point
-//  - disable: the gameObject has been disabled (but not destroyed).  May be interleaved
+//  - INIT: initialize the component (due to order of init, not a good idea to depend
+//          on sibling components here).  Components leave init logically "disabled"
+//  - ENABLE: the gameObject is enabled.  All siblings init'd at this point
+//  - DISABLE: the gameObject has been disabled (but not destroyed).  May be interleaved
 //             with called to enable
-//  - destroy: actually tear-down the component and release resources.  The Go will be 
+//  - DESTROY: actually tear-down the component and release resources.  The Go will be 
 //             dealloced after all components are destroyed.
-int registerComponent(GoContext *context, 
-                      CID cid, 
-                      GoMethod init,
-                      GoMethod enable,
-                      GoMethod disable,
-                      GoMethod destroy);
+// All other nonnegative-messages are interpretted as "custom" messages.
 
-// Add component to the given game object.
+enum GoMessage {
+	GO_MESSAGE_INIT    = -1,
+	GO_MESSAGE_ENABLE  = -2,
+	GO_MESSAGE_DISABLE = -3,
+	GO_MESSAGE_DESTROY = -4
+};
+
+typedef int (*GoMessageHandler)(GoComponent *component, uint32_t message, void *params);
+
+// Main component interface
+int registerComponent(GoContext *context, CID cid, GoMessageHandler handler);
 GoComponent *addComponent(GoContext *context, GO go, CID cid, const void *data);
 GoComponent *getComponent(GoContext *context, GO go, CID cid);
 GoComponent *removeComponent(GoContext *context, GO go, CID cid);
 
+// Listing components
 struct GoComponentIterator {
 	GoComponent *current;
 
@@ -117,7 +124,3 @@ struct GoComponentIterator {
 	inline bool finished() const { return current == 0; }
 	void next();
 };
-
-// TODO: use opaaque handles instead of pointers for components?
-
-
