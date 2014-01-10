@@ -94,13 +94,18 @@ struct GoComponent {
 
 // While components all have different specialized concrete behaviour, the share a
 // basic interface for responding to GO messages:
-//  - INIT: initialize the component (due to order of init, not a good idea to depend
-//          on sibling components here).  Components leave init logically "disabled"
-//  - ENABLE: the gameObject is enabled.  All siblings init'd at this point
-//  - DISABLE: the gameObject has been disabled (but not destroyed).  May be interleaved
-//             with called to enable
-//  - DESTROY: actually tear-down the component and release resources.  The Go will be 
-//             dealloced after all components are destroyed.
+//
+//  INIT: initialize the component (due to order of init, not a good idea to depend
+//        on sibling components here).  Components leave init logically "disabled"
+//
+//  ENABLE: the gameObject is enabled.  All siblings init'd at this point
+//
+//  DISABLE: the gameObject has been disabled (but not destroyed).  May be interleaved
+//           with called to enable
+//
+//  DESTROY: actually tear-down the component and release resources.  The Go will be 
+//           dealloced after all components are destroyed.
+//
 // All other nonnegative-messages are interpretted as "custom" messages.
 
 enum GoMessage {
@@ -116,7 +121,7 @@ typedef int (*GoMessageHandler)(GoComponent *component, uint32_t message, void *
 int registerComponent(GoContext *context, CID cid, GoMessageHandler handler);
 GoComponent *addComponent(GoContext *context, GO go, CID cid, const void *data);
 GoComponent *getComponent(GoContext *context, GO go, CID cid);
-GoComponent *removeComponent(GoContext *context, GO go, CID cid);
+void removeComponent(GoContext *context, GO go, GoComponent *component);
 
 // Listing components
 struct GoComponentIterator {
