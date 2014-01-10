@@ -68,7 +68,32 @@ struct LinePlotter {
 // private helper functions
 void commitBatch(LinePlotter* context);	
 
-LinePlotter *newLinePlotter() {
+static LinePlotter *allocLinePlotter() {
+	return (LinePlotter*) LITTLE_POLYGON_MALLOC(sizeof(LinePlotter));
+}
+
+static void dealloc(LinePlotter *plotter) {
+	LITTLE_POLYGON_FREE(plotter);
+}
+
+static void initialize(LinePlotter* context) {
+	context->count = -1;
+	CHECK( 
+		compileShader(SIMPLE_SHADER, &context->prog, &context->vert, &context->frag) 
+	);
+	glUseProgram(context->prog);
+	context->uMVP = glGetUniformLocation(context->prog, "mvp");
+	context->aPosition = glGetAttribLocation(context->prog, "aPosition");
+	context->aColor = glGetAttribLocation(context->prog, "aColor");
+}
+
+static void release(LinePlotter* context) {
+	glDeleteProgram(context->prog);
+	glDeleteShader(context->vert);
+	glDeleteShader(context->frag);
+}
+
+LinePlotter *createLinePlotter() {
 	auto result = allocLinePlotter();
 	initialize(result);
 	return result;
@@ -79,38 +104,11 @@ void destroy(LinePlotter *plotter) {
 	dealloc(plotter);
 }
 
-LinePlotter *allocLinePlotter() {
-	return (LinePlotter*) LITTLE_POLYGON_MALLOC(sizeof(LinePlotter));
-}
-
-void dealloc(LinePlotter *plotter) {
-	LITTLE_POLYGON_FREE(plotter);
-}
-
-void initialize(LinePlotter* context) {
-	context->count = -1;
-	CHECK( compileShader(SIMPLE_SHADER, &context->prog, &context->vert, &context->frag) );
-	glUseProgram(context->prog);
-	context->uMVP = glGetUniformLocation(context->prog, "mvp");
-	context->aPosition = glGetAttribLocation(context->prog, "aPosition");
-	context->aColor = glGetAttribLocation(context->prog, "aColor");
-}
-
-void release(LinePlotter* context) {
-	glDeleteProgram(context->prog);
-	glDeleteShader(context->vert);
-	glDeleteShader(context->frag);
-}
-
 void begin(LinePlotter* context, vec2 canvasSize, vec2 canvasOffset) {
 	ASSERT(context->count == -1);
 	context->count = 0;
 
-	glDisable(GL_BLEND);
-	glLineWidth(2);
-
 	glUseProgram(context->prog);
-
 	setCanvas(context->uMVP, canvasSize, canvasOffset);
 
 	glEnableVertexAttribArray(context->aPosition);
