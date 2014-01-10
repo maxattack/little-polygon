@@ -100,6 +100,121 @@ struct SplinePlotter;
 SplinePlotter *createSplinePlotter(int resolution=128);
 void destroy(SplinePlotter *context);
 
+// stroke vector helpers
+inline vec4 uniformStroke(float u) { return vec(0, 0, 0, u); }
+inline vec4 taperingStroke(float u, float v) { return vec(0, 0, v-u, u); }
+
+inline vec4 eccentricStroke(float t0, float e, float t1) {
+	return vec(0, -e-e-e-e, e+e+e+e+t1-t0, t0); 
+}
+
+inline vec4 quadraticBezierStroke(float t0, float t1, float t2) { 
+	return vec(0, t0-t1-t1+t2, -t0-t0+t1+t1, t0); 
+}
+
+// curve matrix helpers
+// These compute hermite curves based on linear multiplication by
+// a "cubic parameteric vector", e.g.:
+//   U = < u^3, u^2, u, 1 >,
+#define XY_ROTATION_MATRIX (mat(0, -1, 0, 0, 1, 0, 0, 0))
+
+inline mat4 derivativeMatrix(mat4 m) {
+	// Returns the derivative of the function encoded by the given
+	// matrix, which computes the slope of the curve at that point. E.g. 
+	// f = Au*3 + Bu^2 + Cu + D
+	// f' = 3Au^2 + 2Bu + C
+	return mat(
+		0, 0, 0, 0,
+		3*m.m00, 3*m.m01, 3*m.m02, 3*m.m03,
+		2*m.m10, 2*m.m11, 2*m.m12, 2*m.m13,
+		m.m20, m.m21, m.m22, m.m23
+	);
+}
+
+inline mat4 perpendicularMatrix(mat4 m) {
+	// Takes the derivaive and then rotates 90-degrees in the 
+	// XY-plane to produce planar-normals (useful for "stroke" vectors).
+	// XY_ROTATION_MATRIX * derivativeMatrix(m)
+	return mat(
+		0, 0, 0, 0,
+		3*m.m01, -3*m.m00, 3*m.m02, 3*m.m03,
+		2*m.m11, -2*m.m10, 2*m.m12, 2*m.m13,
+		m.m21, -m.m20, m.m22, m.m23
+	);
+}
+
+inline mat4 linearMatrix(vec4 p0, vec4 p1) {
+	return mat(p0, p1, vec(0,0,0,0), vec(0,0,0,0)) * mat(
+		0, 0, 0, 0,
+		0, 0, 0, 0,
+		-1, 1, 0, 0,
+		1, 0, 0, 0
+	);
+}
+
+inline mat4 linearDerivMatrix(vec4 p0, vec4 p1) {
+	return mat(p0, p1, vec(0,0,0,0), vec(0,0,0,0)) * mat(
+		0, 0, 0, 0,
+		0, 0, 0, 0,
+		0, 0, 0, 0,
+		-1, 1, 0, 0
+	);  
+}
+
+inline mat4 hermiteMatrix(vec4 p0, vec4 p1, vec4 t0, vec4 t1) {
+	return mat(p0, p1, t0, t1) * mat(
+		2, -2, 1, 1, 
+		-3, 3, -2, -1, 
+		0, 0, 1, 0, 
+		1, 0, 0, 0
+	);
+}
+
+inline mat4 hermiteDerivMatrix(vec4 p0, vec4 p1, vec4 t0, vec4 t1) {
+	return mat(p0, p1, t0, t1) * mat(
+		0, 0, 0, 0, 
+		6, -6, 3, 3, 
+		-6, 6, -4, -2, 
+		0, 0, 1, 0
+	);
+}
+
+inline mat4 bezierMatrix(vec4 p0, vec4 p1, vec4 p2, vec4 p3) {
+	return mat(p0, p1, p2, p3) * mat(
+		-1, 3, -3, 1, 
+		3, -6, 3, 0, 
+		-3, 3, 0, 0, 
+		1, 0, 0, 0
+	);
+}
+
+inline mat4 bezierDerivMatrix(vec4 p0, vec4 p1, vec4 p2, vec4 p3) {
+	return mat(p0, p1, p2, p3) * mat(
+		0, 0, 0, 0, 
+		-3, 9, -9, 3, 
+		6, -12, 6, 0, 
+		-3, 3, 0, 0
+	);
+}
+
+inline mat4 quadraticBezierMatrix(vec4 p0, vec4 p1, vec4 p2) {
+	return mat(vec(0,0,0,0), p0, p1, p2) * mat(
+		0, 0, 0, 0,
+		0, 1, -2, 1,
+		0, -2, 2, 0,
+		0, 1, 0, 0
+	);
+}
+
+inline mat4 quadraticBezierDerivMatrix(vec4 p0, vec4 p1, vec4 p2) {
+	return mat(vec(0,0,0,0), p0, p1, p2) * mat(
+		0, 0, 0, 0,
+		0, 0, 0, 0,
+		0, 2, -4, 2,
+		0, -2, 2, 0
+	);
+}
+
 void begin(SplinePlotter *context, vec2 canvasSize, vec2 canvasOffset=vec(0,0));
 void drawSpline(SplinePlotter *context, mat4 positionMatrix, vec4 strokeVector, Color c);
 void end(SplinePlotter *context);

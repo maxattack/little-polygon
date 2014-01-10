@@ -35,6 +35,11 @@ static void handleKeyDown(PlayerInput& input, const SDL_KeyboardEvent& key) {
 	}
 }
 
+static vec2 mousePosition() {
+	int mx, my;
+	SDL_GetMouseState(&mx, &my);
+	return 0.25f * vec(mx, my);
+}
 
 int main(int argc, char *argv[]) {
 
@@ -100,16 +105,14 @@ int main(int argc, char *argv[]) {
 			end(plotter);
 		}
 
-		int mx, my;
-		SDL_GetMouseState(&mx, &my);
-		float px = 0.25f * mx;
-		float py = 0.25f * my;
+
+		auto p = mousePosition();
 
 		begin(splines, canvasSize, scrolling);
 		drawSpline(
 			splines, 
-			quadraticBezierMatrix(vec(0,0,0,0), vec(px, py, 0, 0), vec(canvasSize.x, canvasSize.y, 0, 0)), 
-			vec(0,-8,-8,16), 
+			quadraticBezierMatrix(vec(0,0,0,0), vec(p.x, p.y, 0, 0), vec(canvasSize.x, canvasSize.y, 0, 0)), 
+			eccentricStroke(16, -15.75f, 16), 
 			rgb(0xff00ff)
 		);
 		end(splines);

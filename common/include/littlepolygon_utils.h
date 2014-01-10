@@ -164,17 +164,17 @@ inline float parabola(float x) {
 	return 1.0f - x * x;
 }
 
-// line-line intersection test
-bool linearIntersection(vec2 u0, vec2 u1, vec2 v0, vec2 v1, float& u);
-bool linearIntersection(vec2 u0, vec2 u1, vec2 v0, vec2 v1, float& u, float& v);
+// // line-line intersection test
+// bool linearIntersection(vec2 u0, vec2 u1, vec2 v0, vec2 v1, float& u);
+// bool linearIntersection(vec2 u0, vec2 u1, vec2 v0, vec2 v1, float& u, float& v);
 
-// some common curves
-vec2 quadraticBezier(vec2 p0, vec2 p1, vec2 p2, float u);
-vec2 quadraticBezierDeriv(vec2 p0, vec2 p1, vec2 p2, float u);
-vec2 cubicBezier(vec2 p0, vec2 p1, vec2 p2, vec2 p3, float u);
-vec2 cubicBezierDeriv(vec2 p0, vec2 p1, vec2 p2, vec2 p3, float u);
-vec2 cubicHermite(vec2 p0, vec2 m0, vec2 p1, vec2 m1, float u);
-vec2 cubicHermiteDeriv(vec2 p0, vec2 m0, vec2 p1, vec2 m1, float u);
+// // some common curves
+// vec2 quadraticBezier(vec2 p0, vec2 p1, vec2 p2, float u);
+// vec2 quadraticBezierDeriv(vec2 p0, vec2 p1, vec2 p2, float u);
+// vec2 cubicBezier(vec2 p0, vec2 p1, vec2 p2, vec2 p3, float u);
+// vec2 cubicBezierDeriv(vec2 p0, vec2 p1, vec2 p2, vec2 p3, float u);
+// vec2 cubicHermite(vec2 p0, vec2 m0, vec2 p1, vec2 m1, float u);
+// vec2 cubicHermiteDeriv(vec2 p0, vec2 m0, vec2 p1, vec2 m1, float u);
 
 //--------------------------------------------------------------------------------
 // COLOR HELPER
