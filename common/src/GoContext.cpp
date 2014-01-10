@@ -194,7 +194,7 @@ void destroy(GoContext *context, GO go) {
 	context->goFirstFree = slot;
 
 	// udpate fields
-	slot->allocated = false;
+	slot->flags = 0;
 	slot->go += 0x10000; // fingerprint the ID to reduce duping
 }
 
