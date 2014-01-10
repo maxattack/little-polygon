@@ -52,11 +52,12 @@ int listGameObjects(GoContext *context, int capacity, GO *resultBuf);
 GO find(GoContext *context, const char *name);
 
 // GOs support enabling and disabling, routed to it's components, for the purpose of
-// implementing two common game idioms: GO pools and state-based content.  There's also
-// a generic message-sending function (a last resort if there isn't a better way to 
-// handle data-flow).
+// implementing two common game idioms: GO pools and state-based content.  
 void enable(GoContext *context, GO go);
 void disable(GoContext *context, GO go);
+
+// A generic message-sending function (a last resort if there isn't a better way to 
+// handle data-flow, e.g. IoC dynamic event subscription + dispatch).
 void sendMessage(GoContext *context, GO go, uint32_t messageId, void *params);
 
 // GO parameters
