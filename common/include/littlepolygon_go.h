@@ -29,8 +29,9 @@ typedef uint32_t GO;  // opaque game-object handle
 typedef uint32_t CID; // opaque component-type handle
 
 // Initialize a new GO context.  These are in principle serializable to ease the 
-// implementation of "in-game editing"
-GoContext *createGoContext();
+// implementation of "in-game editing."  Capacity is needed because the whole database
+// is "block-allocated" to keep everything thread-local friendly.
+GoContext *createGoContext(int goCapacity=1024, int componentCapacity=1024);
 void destroy(GoContext *context);
 
 // Create a new GO.  This really just allocated an identifier and hashes the
