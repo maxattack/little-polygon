@@ -41,6 +41,7 @@ Modules
 * littlepolygon_vmath - SIMD vector math with scalar fallbacks
 * littlepolygon_graphics - fast batching sprite and spline renderers
 * littlepolygon_templates - a collection of slim-and-handy C++ collection templates
+* littlepolygon_go - a simple entity-component / "GameObject" metadata system
 * littlepolygon_utils - small math and utility helpers
 
 CODING STANDARDS
