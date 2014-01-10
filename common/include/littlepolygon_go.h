@@ -29,42 +29,34 @@ typedef uint32_t GO;  // opaque game-object handle
 typedef uint32_t CID; // opaque component-type handle
 
 // Initialize a new GO context.  These are in principle serializable to ease the 
-// implementation of "in-game editing."  Capacity is needed because the whole database
-// is "block-allocated" to keep everything thread-local friendly.
-GoContext *createGoContext(int goCapacity=1024, int componentCapacity=1024);
+// implementation of "in-game editing" as well as syncable across networks for 
+// "remote contexts" like in MMOs. Capacity is needed because the whole database
+// is "block-allocated" to keep everything thread-local friendly.  No internal
+// dynamic memory is used.
+GoContext *createGoContext(size_t goCapacity=1024, size_t componentCapacity=1024, size_t componentTypeCapacity=256);
 void destroy(GoContext *context);
 
 // Create a new GO.  This really just allocated an identifier and hashes the
 // name for lookup purposes. While in principle GOs are just database "primary keys,"
 // in practice I find it useful to associate a position with each GO for use in 
 // level-editting.
-GO createGameObject(GoContext *context, const char* name=0, float x=0, float y=0);
+// Explicit IDs are useful for deserialization and network syncronization.  Passing
+// 0 will just generate a new one.  IDs may conflict, which will cause this method to
+// fail.  Passing 1-N to a fresh context should work OK.
+GO createGameObject(GoContext *context, const char* name=0, float x=0, float y=0, GO explicitId=0);
 
 // Destroying a GO also nukes all the components that are logically attached to it.
 void destroy(GoContext *context, GO go);
-
-// Enumerating GOs (for editting and debug purposes, mainly)
-int numGameObjects(GoContext *context);
-int listGameObjects(GoContext *context, int capacity, GO *resultBuf);
 
 // Lookup a game object by name.  In the case of duplicate-names, simply returns the
 // first one it finds.
 GO find(GoContext *context, const char *name);
 
-// GOs support enabling and disabling, routed to it's components, for the purpose of
-// implementing two common game idioms: GO pools and state-based content.  
-void enable(GoContext *context, GO go);
-void disable(GoContext *context, GO go);
-
-// A generic message-sending function (a last resort if there isn't a better way to 
-// handle data-flow, e.g. IoC dynamic event subscription + dispatch).
-void sendMessage(GoContext *context, GO go, uint32_t messageId, void *params);
-
 // GO parameters
+bool goEnabled(GoContext *context, GO go);
 const char* goName(GoContext *context, GO go);
-int goComponentCount(GoContext *context, GO go);
 vec2 goPosition(GoContext *context, GO go);
-void setPosition(GoContext *context, GO go);
+void setPosition(GoContext *context, GO go, vec2 p);
 // TODO: GO parent-child relationships?
 
 // Provide the plumping for components.  In principle, components are stored in 
@@ -85,11 +77,13 @@ void setPosition(GoContext *context, GO go);
 // rather than individual calls, but discoverable throught the Go metadata.
 
 struct GoComponent {
+
 	CID cid;          // logical type
 	GO go;            // logical go
 
 	const void *data; // initialization data (copy-on-write semantics)
 	void *userData;   // active data associated with the component
+
 };
 
 // While components all have different specialized concrete behaviour, the share a
@@ -118,16 +112,46 @@ enum GoMessage {
 typedef int (*GoMessageHandler)(GoComponent *component, uint32_t message, void *params);
 
 // Main component interface
-int registerComponent(GoContext *context, CID cid, GoMessageHandler handler);
-GoComponent *addComponent(GoContext *context, GO go, CID cid, const void *data);
+void registerComponent(GoContext *context, CID cid, GoMessageHandler handler);
+GoComponent *addComponent(GoContext *context, GO go, CID cid, const void *data=0);
 GoComponent *getComponent(GoContext *context, GO go, CID cid);
-void removeComponent(GoContext *context, GO go, GoComponent *component);
+void removeComponent(GoContext *context, GoComponent *component);
 
-// Listing components
+// GOs support enabling and disabling, routed to it's components, for the purpose of
+// implementing two common game idioms: GO pools and state-based content.  
+void enable(GoContext *context, GO go);
+void disable(GoContext *context, GO go);
+
+// A generic message-sending function (a last resort if there isn't a better way to 
+// handle data-flow, e.g. IoC dynamic event subscription + dispatch).
+void sendMessage(GoContext *context, GO go, uint32_t messageId, void *params=0);
+
+//------------------------------------------------------------------------------
+// ITERATORS
+//------------------------------------------------------------------------------
+
+// Example useage:
+//   for(auto i=GoIterator(context); !i.finished(); i.next()) {
+//     ...
+//   }
+
+struct GoIterator {
+	void *internal;
+	GO current;
+
+	GoIterator(GoContext *context);
+	inline bool finished() const { return internal == 0; }
+	void next();
+
+};
+
 struct GoComponentIterator {
 	GoComponent *current;
 
 	GoComponentIterator(GoContext *context, GO go);
 	inline bool finished() const { return current == 0; }
 	void next();
+
 };
+
+

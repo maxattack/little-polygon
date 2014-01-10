@@ -1,6 +1,7 @@
 LIBRARY_OBJ_FILES =     \
 	obj/glew.o          \
 	obj/AssetBundle.o   \
+	obj/GoContext.o     \
 	obj/LinePlotter.o   \
 	obj/SampleAsset.o   \
 	obj/SplinePlotter.o \
