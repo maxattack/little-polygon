@@ -38,7 +38,7 @@ void destroy(GoContext *context);
 // name for lookup purposes. While in principle GOs are just database "primary keys,"
 // in practice I find it useful to associate a position with each GO for use in 
 // level-editting.
-GO createGameObject(GoContext *context, const char* name);
+GO createGameObject(GoContext *context, const char* name=0, float x=0, float y=0);
 
 // Destroying a GO also nukes all the components that are logically attached to it.
 void destroy(GoContext *context, GO go);
