@@ -8,9 +8,9 @@
 
 # just a plain-old shared property, using typical YAML anchor stuff
 squidColor: &sc
-	r: 155
-	g: 255
-	b: 75
+  r: 155
+  g: 255
+  b: 75
 
 # A basic squid template with three tentacles and an eye. The "slash" syntax
 # is a compact type/name idiom.
@@ -43,9 +43,9 @@ squid!/squid2:
   position: (20,10)
 
 differentColor: &dc
-	r: 255
-	g: 255
-	b: 35
+  r: 255
+  g: 255
+  b: 35
 
 # squid 3 overrides the color
 

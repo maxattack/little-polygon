@@ -32,7 +32,6 @@ int main(int argc, char *argv[]) {
 	auto goContext = createGoContext();
 	createGameObject(goContext, "Squid");
 	
-
 	auto color = rgb(0x95b5a2);
 	glClearColor(color.red(), color.green(), color.blue(), 0.0f);
 
