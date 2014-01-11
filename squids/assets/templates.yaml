@@ -1,5 +1,12 @@
+# This is an example of creating scenes using littlepolygon_go.  Each
+# template is a recipe for building a game object with a number of
+# predefined components.  These templates can be subclassed and ultimately
+# instantiated, every level adding or overriding parameters like in CSS.
 
-# just a plain-old shared property
+# The types of the components are enumerated in the python scripts for
+# this project which knows how to serialize them to asset userdata.
+
+# just a plain-old shared property, using typical YAML anchor stuff
 squidColor: &sc
 	r: 155
 	g: 255
@@ -7,6 +14,8 @@ squidColor: &sc
 
 # A basic squid template with three tentacles and an eye
 template/squid: 
+  description: a basic squid with an eye and three tentacles
+  enabled: Yes
   tentacle/tentacle1:
     color: *sc
     angle: -30
@@ -20,10 +29,10 @@ template/squid:
     angle: 30
     length: 96
   eye/myeyeball:
-    color: *sc
+    color: rgb()
     radius: 64
 
-# now instantiate a bunch of squids
+# now we instantiate a bunch of squids
 
 squid/squid1:
   position: (10,10)
@@ -47,3 +56,4 @@ squid/squid3:
   tentacle/tentacle3:
     color: *dc
 
+# you'll be able to look this fella up at runtime with find(goContext, "squid3")
