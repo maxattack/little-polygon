@@ -12,6 +12,11 @@ squidColor: &sc
   g: 255
   b: 75
 
+eyeColor: &ec
+  r: 75
+  g: 155
+  b: 255
+
 # A basic squid template with three tentacles and an eye. The "slash" syntax
 # is a compact type/name idiom.
 go/squid: 
@@ -30,17 +35,17 @@ go/squid:
     angle: 30
     length: 96
   eye/myeyeball:
-    color: rgb()
+    color: *ec
     radius: 64
 
 # now we instantiate a bunch of squids.  We use a special bang! to denote
 # actual concrete instances
 
 squid!/squid1:
-  position: (10,10)
+  position: [10,10]
 
 squid!/squid2:
-  position: (20,10)
+  position: [20,10]
 
 differentColor: &dc
   r: 255
@@ -50,7 +55,7 @@ differentColor: &dc
 # squid 3 overrides the color
 
 squid!/squid3:
-  position: (30,10)
+  position: [30,10]
   tentacle/tentacle1:
     color: *dc
   tentacle/tentacle2:

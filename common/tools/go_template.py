@@ -19,34 +19,21 @@
 from lputil import *
 import copy
 
+#
+# GAME OBJECT TEMPLATE COMPILER
+#
+# Inspects a YAML file and builds up a template-specialization heirarchy
+# (templates specialize other templates, overriding and adding properties
+# like in CSS).  The "concrete" templates are actually instantiated in the
+# scene and have some special markup identifying them.  The result of the
+# "load" method is a 2-tuple containing:
+# (i) A list of GoTemplate instances whose properties have been fully
+#     concatenated with their parents and the components deduplicated
+#     with each other.
+# (ii) A table of the deduplicated components which actually need to be
+#      converted into assets for initializing components at runtime.
+
 # A lot of my parsing here is kinda roughshod/postel-ish.  Apologies T__T;;
-
-def isPositionString(pos):
-	return isinstance(pos, str) \
-	and pos.startswith('(') \
-	and pos.endswith(')') \
-	and ',' in pos
-
-def isColor(val):
-	return isinstance(val,dict) \
-	and 'r' in val and 'g' in val and 'b' in val
-
-def unpackPosition(pos):
-	if not isPositionString(pos): return (0,0)
-	x,y = pos[1:-1].split(',')[:2]
-	try:
-		return (int(x), int(y))
-	except:
-		return (0,0)
-
-def unpackValue(val):
-	if isPositionString(val):
-		return unpackPosition(val)
-	# elif isColor(val):
-	# 	r, g, b = int(val['r']), int(val['g']), int(val['b'])
-	# 	return (r << 16) + (g << 8) + (b)
-	else:
-		return val
 
 class GoTemplate:
 	def __init__(self, key, val):
@@ -59,8 +46,10 @@ class GoTemplate:
 		# process val (steamrolling type :P)
 		self.hasEnabled = 'enabled' in val
 		self.hasPosition = 'position' in val
-		self.enabled = bool(val['enabled']) if self.hasEnabled else False
-		self.position = unpackPosition(val['position']) if self.hasPosition else (0,0)
+		self.enabled = val['enabled'] if self.hasEnabled else False
+		self.position = val['position'] if self.hasPosition else [0,0]
+		assert isinstance(self.enabled, bool)
+		assert isinstance(self.position, list)
 
 		# populate components
 		self.components = dict((c.name,c) for c in (
@@ -93,12 +82,19 @@ class GoComponent:
 	def __init__(self, template, key, val):
 		self.template = template
 		self.type, self.name = key.split('/')[:2]
-		self.properties = dict((p,unpackValue(v)) for p,v in val.iteritems())
+		self.properties = val
+		self.dedupIndex = -1
 
 	def concatenate(self, component):
 		for key, val in component.properties.iteritems():
 			if not key in self.properties:
 				self.properties[key] = val
+
+	def equiv(self, component):
+		if self.type != component.type or len(self.properties) != len(component.properties): 
+			return False
+		sharedItems = set(self.properties.items()) & set(component.properties.items())
+		return len(sharedItems) == len(self.properties)
 
 
 def load(path):
@@ -129,17 +125,39 @@ def load(path):
 	# now starting at the leaves, we want to "pull down" properties from the root
 	for template in leafTemplates:
 		template.concatenateProperties()
-		print "----------------------------------------"
-		print template.name
-		print "Pos:", template.position
-		print "Enabled:", template.enabled
-		for key,component in template.components.iteritems():
-			print "- %s : %s" % (key, component.type)
-			for pkey,pval in component.properties.iteritems():
-				print "  %s: %s" % (pkey, str(pval))
+		if '-v' in sys.argv:
+			print "----------------------------------------"
+			print template.name
+			print "Pos:", template.position
+			print "Enabled:", template.enabled
+			for key,component in template.components.iteritems():
+				print "- %s : %s" % (key, component.type)
+				for pkey,pval in component.properties.iteritems():
+					print "  %s: %s" % (pkey, str(pval))
 
 
-	# dedup leaf components
+	# dedup leaf components (store in a table hashed by their component type)
+	dedupedComponents = {}
+	for template in leafTemplates:
+		for component in template.components.itervalues():
+			# determine the dedup index
+			if component.type in dedupedComponents:
+				# check if we match any previously-registered components
+				dedupList = dedupedComponents[component.type]
+				for i,otherComponent in enumerate(dedupList):
+					if component.equiv(otherComponent):
+						component.dedupIndex = i
+						break
+				if component.dedupIndex == -1:
+					# append this component to the list
+					component.dedupIndex = len(dedupList)
+					dedupList.append(component)
+			else:
+				# create a new list
+				dedupedComponents[component.type] = [ component ]
+				component.dedupIndex = 0
+
+	return (leafTemplates, dedupedComponents)
 
 
 	

@@ -29,7 +29,7 @@ static void handleEvents(bool *outDone) {
 int main(int argc, char *argv[]) {
 	auto window = initContext("GameObject Demo", 800, 800);
 
-	auto goContext = createGoContext();
+	auto goContext = createGoContext(0, 0);
 	createGameObject(goContext, "Squid");
 	
 	auto color = rgb(0x95b5a2);

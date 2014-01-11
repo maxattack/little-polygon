@@ -39,7 +39,6 @@ struct GoSlot {
 	};
 	uint32_t nameHash;
 	const char *name;
-	vec2 position;
 	GoComponentSlot *coFirst;
 	GoSlot *prev;
 	GoSlot *next;
@@ -48,6 +47,8 @@ struct GoSlot {
 struct GoComponenTypeSlot {
 	GoMessageHandler handler;
 };
+
+#define GO_INDEX(go) ((0xffff & go)-1)
 
 struct GoContext {
 	size_t goCapacity;
@@ -59,13 +60,29 @@ struct GoContext {
 	GoSlot *goFirst;
 	GoSlot *goFirstFree;
 	GoComponentSlot *coFirstFree;
+
+	GoSlot *goBuf() { return (GoSlot*)(this+1); }
+	
+	GoSlot *slotFor(GO go) {
+		auto index = GO_INDEX(go);
+		ASSERT(index < goCapacity);
+		auto slot = goBuf()  + index;
+		ASSERT(go == slot->go && slot->allocated);
+		return slot;		
+	}
+
+	GoComponenTypeSlot *coTypes() { return (GoComponenTypeSlot*)(goBuf() + goCapacity * sizeof(GoSlot)); }
+
+	GoComponenTypeSlot *coType(CID cid) {
+		ASSERT(cid < typeCapacity);
+		return coTypes() + cid;
+	}
+
 };
 
 //------------------------------------------------------------------------------
 // HELPERS
 //------------------------------------------------------------------------------
-
-#define GO_INDEX(go) ((0xffff & go)-1)
 
 // fnv-1a
 static uint32_t hash(const char* name) {
@@ -78,24 +95,8 @@ static uint32_t hash(const char* name) {
     return hval;
 }
 
-static GoSlot* slotFor(GoContext *context, GO go) {
-	auto goBuf = (GoSlot*)(context+1);
-	auto index = GO_INDEX(go);
-	ASSERT(index < context->goCapacity);
-	auto slot = goBuf  + index;
-	ASSERT(go == slot->go && slot->allocated);
-	return slot;	
-}
-
-static GoComponenTypeSlot* coTypeSlotFor(GoContext *context, CID cid) {
-	ASSERT(cid < context->typeCapacity);
-	auto goBuf = (GoSlot*)(context+1);
-	auto tpBuf = (GoComponenTypeSlot*)(goBuf + context->goCapacity);
-	return tpBuf + cid;
-}
-
 static void sendMessage(GoContext *context, GoComponent *component, uint32_t messageId, void *params) {
-	auto coTypeSlot  = coTypeSlotFor(context, component->cid);
+	auto coTypeSlot  = context->coType(component->cid);
 	ASSERT(coTypeSlot->handler != 0);
 	coTypeSlot->handler(component, messageId, params);
 }
@@ -104,29 +105,31 @@ static void sendMessage(GoContext *context, GoComponent *component, uint32_t mes
 // IMPLEMENTATION
 //------------------------------------------------------------------------------
 
-GoContext *createGoContext(size_t goCapacity, size_t coCapacity, size_t coTypeCapacity) {
+GoContext *createGoContext(size_t numComponents, GoMessageHandler *componentBuf, size_t goCapacity, size_t componentCapacity) {
 	ASSERT(goCapacity < 0xffff);
 
 	// block allocate the memory
 	GoContext *context = (GoContext*) LITTLE_POLYGON_MALLOC(
 		sizeof(GoContext) + 
 		goCapacity * sizeof(GoSlot) + 
-		coTypeCapacity * sizeof(GoComponenTypeSlot) +
-		coCapacity * sizeof(GoComponentSlot)
+		numComponents * sizeof(GoComponenTypeSlot) +
+		componentCapacity * sizeof(GoComponentSlot)
 	);
 	auto goBuf = (GoSlot*) (context+1);
 	auto coTypeBuf = (GoComponenTypeSlot*) (goBuf + goCapacity);
-	auto coBuf = (GoComponentSlot*) (coTypeBuf + coTypeCapacity);
+	auto coBuf = (GoComponentSlot*) (coTypeBuf + numComponents);
 
 	// initialize fields
 	context->goCapacity = goCapacity;
 	context->goCount = 0;
-	context->coCapacity = coCapacity;
+	context->coCapacity = componentCapacity;
 	context->coCount = 0;
-	context->typeCapacity = coTypeCapacity;
+	context->typeCapacity = numComponents;
 	context->goFirst = 0;
 	context->goFirstFree = goBuf;
 	context->coFirstFree = coBuf;
+
+	memcpy(coTypeBuf, componentBuf, sizeof(GoComponentSlot) * numComponents);
 	
 	// initialize free-slot linked lists
 	for(size_t i=0; i<goCapacity; ++i) {
@@ -135,10 +138,10 @@ GoContext *createGoContext(size_t goCapacity, size_t coCapacity, size_t coTypeCa
 		goBuf[i].prev = i == 0 ? 0 : &goBuf[i-1];
 		goBuf[i].next = i == goCapacity-1 ? 0 : &goBuf[i+1];
 	}
-	memset(coTypeBuf, 0, sizeof(GoComponentSlot) * coTypeCapacity);
-	for(size_t i=0; i<coCapacity; ++i) {
+
+	for(size_t i=0; i<componentCapacity; ++i) {
 		coBuf[i].prev = i == 0 ? 0 : &coBuf[i-1];
-		coBuf[i].next = i == coCapacity-1 ? 0 : &coBuf[i+1];
+		coBuf[i].next = i == componentCapacity-1 ? 0 : &coBuf[i+1];
 	}
 	
 	return context;
@@ -155,7 +158,7 @@ void destroy(GoContext *context) {
 	LITTLE_POLYGON_FREE(context);
 }
 
-GO createGameObject(GoContext *context, const char* name, float x, float y, GO result) {
+GO createGameObject(GoContext *context, const char* name, GO result) {
 	
 	// check capacity
 	if (context->goCount == context->goCapacity) {
@@ -196,7 +199,6 @@ GO createGameObject(GoContext *context, const char* name, float x, float y, GO r
 	slot->allocated = 1;
 	slot->nameHash = hash(name);
 	slot->name = name;
-	slot->position = vec(x,y);
 	slot->coFirst = 0;
 
 	// finalize bookkeeping and return
@@ -248,31 +250,17 @@ GO find(GoContext *context, const char *name) {
 }
 
 bool goEnabled(GoContext *context, GO go) {
-	return slotFor(context, go)->enabled;	
+	return context->slotFor(go)->enabled;	
 }
 
 const char* goName(GoContext *context, GO go) {
-	return slotFor(context, go)->name;
-}
-
-vec2 goPosition(GoContext *context, GO go) {
-	return slotFor(context, go)->position;	
-}
-
-void setPosition(GoContext *context, GO go, vec2 p) {
-	slotFor(context, go)->position = p;	
-}
-
-void registerComponent(GoContext *context, CID cid, GoMessageHandler handler) {
-	auto coSlot  = coTypeSlotFor(context, cid);
-	ASSERT(coSlot->handler == 0);
-	coSlot->handler = handler;
+	return context->slotFor(go)->name;
 }
 
 GoComponent *addComponent(GoContext *context, GO go, CID cid, const void *data) {
 	ASSERT(context->coCount < context->coCapacity);
-	auto slot = slotFor(context, go);
-	auto coSlot  = coTypeSlotFor(context, cid);
+	auto slot = context->slotFor(go);
+	auto coSlot  = context->coType(cid);
 	ASSERT(coSlot->handler != 0);
 
 	// pop a slot from the component free list
@@ -304,7 +292,7 @@ GoComponent *addComponent(GoContext *context, GO go, CID cid, const void *data) 
 }
 
 GoComponent *getComponent(GoContext *context, GO go, CID cid) {
-	for(auto p=slotFor(context, go)->coFirst; p; p=p->next) {
+	for(auto p=context->slotFor(go)->coFirst; p; p=p->next) {
 		if (p->cid == cid) {
 			return p;
 		}
@@ -313,8 +301,8 @@ GoComponent *getComponent(GoContext *context, GO go, CID cid) {
 }
 
 void removeComponent(GoContext *context, GoComponent *component) {
-	auto slot = slotFor(context, component->go);
-	auto coTypeSlot  = coTypeSlotFor(context, component->cid);
+	auto slot = context->slotFor(component->go);
+	auto coTypeSlot  = context->coType(component->cid);
 	ASSERT(coTypeSlot->handler != 0);
 
 	// logically destroy
@@ -353,7 +341,7 @@ void enable(GoContext *context, GO go) {
 }
 
 void disable(GoContext *context, GO go) {
-	auto slot = slotFor(context, go);
+	auto slot = context->slotFor(go);
 	if (slot->enabled) {
 		for (auto p=slot->coFirst; p; p=p->next) {
 			sendMessage(context, p, GO_MESSAGE_DISABLE, 0);
@@ -363,7 +351,7 @@ void disable(GoContext *context, GO go) {
 }
 
 void sendMessage(GoContext *context, GO go, uint32_t messageId, void *params) {
-	auto slot = slotFor(context, go);	
+	auto slot = context->slotFor(go);	
 	for(auto p=slot->coFirst; p; p=p->next) {
 		sendMessage(context, p, messageId, params);
 	}
@@ -385,7 +373,7 @@ void GoIterator::next() {
 }
 
 GoComponentIterator::GoComponentIterator(GoContext *context, GO go) {
-	current = slotFor(context, go)->coFirst;
+	current = context->slotFor(go)->coFirst;
 }
 
 void GoComponentIterator::next() { 

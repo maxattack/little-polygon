@@ -15,7 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
-#include "littlepolygon_utils.h"
+#include "littlepolygon_base.h"
 
 // Generic GameObject (GO) system for entity-component style assets.  The basic idea
 // is to model content as a database of GOs, each of which is assembled (by data) out of
@@ -27,37 +27,6 @@
 struct GoContext;
 typedef uint32_t GO;  // opaque game-object handle
 typedef uint32_t CID; // opaque component-type handle
-
-// Initialize a new GO context.  These are in principle serializable to ease the 
-// implementation of "in-game editing" as well as syncable across networks for 
-// "remote contexts" like in MMOs. Capacity is needed because the whole database
-// is "block-allocated" to keep everything thread-local friendly.  No internal
-// dynamic memory is used.
-GoContext *createGoContext(size_t goCapacity=1024, size_t componentCapacity=1024, size_t componentTypeCapacity=256);
-void destroy(GoContext *context);
-
-// Create a new GO.  This really just allocated an identifier and hashes the
-// name for lookup purposes. While in principle GOs are just database "primary keys,"
-// in practice I find it useful to associate a position with each GO for use in 
-// level-editting.
-// Explicit IDs are useful for deserialization and network syncronization.  Passing
-// 0 will just generate a new one.  IDs may conflict, which will cause this method to
-// fail.  Passing 1-N to a fresh context should work OK.
-GO createGameObject(GoContext *context, const char* name=0, float x=0, float y=0, GO explicitId=0);
-
-// Destroying a GO also nukes all the components that are logically attached to it.
-void destroy(GoContext *context, GO go);
-
-// Lookup a game object by name.  In the case of duplicate-names, simply returns the
-// first one it finds.
-GO find(GoContext *context, const char *name);
-
-// GO parameters
-bool goEnabled(GoContext *context, GO go);
-const char* goName(GoContext *context, GO go);
-vec2 goPosition(GoContext *context, GO go);
-void setPosition(GoContext *context, GO go, vec2 p);
-// TODO: GO parent-child relationships?
 
 // Provide the plumping for components.  In principle, components are stored in 
 // separate systems that update them in batches, rather than iterating through
@@ -106,26 +75,35 @@ enum GoMessage {
 
 typedef int (*GoMessageHandler)(GoComponent *component, uint32_t message, const void *args);
 
-// Main component interface.  Can be implemented with a handy, dandy C++11 lambda:
-// registerComponent(ctxt, TYPE_BODY, [](GoComponent *comp, uint32_t msg, void *args) {
-//   switch(msg) {
-//     case GO_MESSAGE_INIT:
-//       comp->userData = createPhysicsBody((BodyDef*)args);
-//       break;
-//     case GO_MESSAGE_ENABLE:
-//       ((Body*)comp->userData)->Enable(1);
-//       break;
-//     case GO_MESSAGE_DISABLE:
-//       ((Body*)comp->userData)->Enable(0);
-//       break;
-//     case GO_MESSAGE_DESTROY:
-//       destroyPhysicsBody((Body*)comp->userData)
-//       break;
-//   }
-// });
-void registerComponent(GoContext *context, CID cid, GoMessageHandler handler);
+// Initialize a new GO context.  These are in principle serializable to ease the 
+// implementation of "in-game editing" as well as syncable across networks for 
+// "remote contexts" like in MMOs. Capacity is needed because the whole database
+// is "block-allocated" to keep everything thread-local friendly.  No internal
+// dynamic memory is used.
+GoContext *createGoContext(size_t numComponents, GoMessageHandler *componentBuf, size_t goCapacity=1024, size_t componentCapacity=1024);
+void destroy(GoContext *context);
 
-// Attach a component to the given game object, initialized with the given data
+// Create a new GO.  This really just allocated an identifier and hashes the
+// name for lookup purposes. 
+// Explicit IDs are useful for deserialization and network syncronization.  Passing
+// 0 will just generate a new one.  IDs may conflict, which will cause this method to
+// fail.  Passing 1-N to a fresh context should work OK.
+GO createGameObject(GoContext *context, const char* name=0, GO explicitId=0);
+
+// Destroying a GO also nukes all the components that are logically attached to it.
+void destroy(GoContext *context, GO go);
+
+// Lookup a game object by name.  In the case of duplicate-names, simply returns the
+// first one it finds.
+GO find(GoContext *context, const char *name);
+
+// GO parameters
+bool goEnabled(GoContext *context, GO go);
+const char* goName(GoContext *context, GO go);
+
+// Attach a component to the given game object, initialized with the given data.  CID 
+// corresponds to the index of the component message handler that the context was
+// intialized with.
 GoComponent *addComponent(GoContext *context, GO go, CID cid, const void *data=0);
 
 // lookup a component by type.  Returns the first match.  For an exhaustive search
