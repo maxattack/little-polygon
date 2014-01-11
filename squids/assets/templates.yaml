@@ -1,6 +1,6 @@
 # This is an example of creating scenes using littlepolygon_go.  Each
 # template is a recipe for building a game object with a number of
-# predefined components.  These templates can be subclassed and ultimately
+# predefined components.  These templates can be refined and ultimately
 # instantiated, every level adding or overriding parameters like in CSS.
 
 # The types of the components are enumerated in the python scripts for
@@ -12,8 +12,9 @@ squidColor: &sc
 	g: 255
 	b: 75
 
-# A basic squid template with three tentacles and an eye
-template/squid: 
+# A basic squid template with three tentacles and an eye. The "slash" syntax
+# is a compact type/name idiom.
+go/squid: 
   description: a basic squid with an eye and three tentacles
   enabled: Yes
   tentacle/tentacle1:
@@ -32,12 +33,13 @@ template/squid:
     color: rgb()
     radius: 64
 
-# now we instantiate a bunch of squids
+# now we instantiate a bunch of squids.  We use a special bang! to denote
+# actual concrete instances
 
-squid/squid1:
+squid!/squid1:
   position: (10,10)
 
-squid/squid2:
+squid!/squid2:
   position: (20,10)
 
 differentColor: &dc
@@ -47,7 +49,7 @@ differentColor: &dc
 
 # squid 3 overrides the color
 
-squid/squid3:
+squid!/squid3:
   position: (30,10)
   tentacle/tentacle1:
     color: *dc
