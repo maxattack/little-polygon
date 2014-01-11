@@ -94,6 +94,7 @@ GoContext *createGoContext(size_t goCapacity, size_t coCapacity, size_t coTypeCa
 	context->goFirst = 0;
 	context->goFirstFree = goBuf;
 	context->coFirstFree = coBuf;
+	
 	// initialize free-slot linked lists
 	for(size_t i=0; i<goCapacity; ++i) {
 		goBuf[i].go = 0x10000;
@@ -108,19 +109,23 @@ GoContext *createGoContext(size_t goCapacity, size_t coCapacity, size_t coTypeCa
 	for(size_t i=0; i<coTypeCapacity; ++i) {
 		coTypeBuf[i].handler = 0;
 	}
+	
 	return context;
 }
 
 void destroy(GoContext *context) {
+	
 	// tear-down all the game objects
 	while(context->goFirst) {
 		destroy(context, context->goFirst->go);
 	}
+	
 	// de-alloc the memory
 	LITTLE_POLYGON_FREE(context);
 }
 
 GO createGameObject(GoContext *context, const char* name, float x, float y, GO result) {
+	
 	// check capacity
 	if (context->goCount == context->goCapacity) {
 		return 0;
@@ -169,6 +174,7 @@ GO createGameObject(GoContext *context, const char* name, float x, float y, GO r
 }
 
 void destroy(GoContext *context, GO go) {
+	
 	// lookup slot
 	auto goBuf = (GoSlot*)(context+1);
 	auto index = GO_INDEX(go);
@@ -187,7 +193,6 @@ void destroy(GoContext *context, GO go) {
 	if (slot->next) { slot->next->prev = slot->prev; }
 
 	// prepend to free list
-	// (append to tail instead?  would reduce "slot thrashing"?)
 	slot->prev = 0;
 	slot->next = context->goFirstFree;
 	if (context->goFirstFree) { context->goFirstFree->prev = slot; }
@@ -210,64 +215,49 @@ GO find(GoContext *context, const char *name) {
 	return 0;
 }
 
-bool goEnabled(GoContext *context, GO go) {
+static GoSlot* slotFor(GoContext *context, GO go) {
 	auto goBuf = (GoSlot*)(context+1);
 	auto index = GO_INDEX(go);
 	ASSERT(index < context->goCapacity);
 	auto slot = goBuf  + index;
 	ASSERT(go == slot->go && slot->allocated);
-	return slot->enabled;	
+	return slot;	
+}
+
+bool goEnabled(GoContext *context, GO go) {
+	return slotFor(context, go)->enabled;	
 }
 
 const char* goName(GoContext *context, GO go) {
-	auto goBuf = (GoSlot*)(context+1);
-	auto index = GO_INDEX(go);
-	ASSERT(index < context->goCapacity);
-	auto slot = goBuf  + index;
-	ASSERT(go == slot->go && slot->allocated);
-	return slot->name;
+	return slotFor(context, go)->name;
 }
 
 vec2 goPosition(GoContext *context, GO go) {
-	auto goBuf = (GoSlot*)(context+1);
-	auto index = GO_INDEX(go);
-	ASSERT(index < context->goCapacity);
-	auto slot = goBuf  + index;
-	ASSERT(go == slot->go && slot->allocated);
-	return slot->position;	
+	return slotFor(context, go)->position;	
 }
 
 void setPosition(GoContext *context, GO go, vec2 p) {
-	auto goBuf = (GoSlot*)(context+1);
-	auto index = GO_INDEX(go);
-	ASSERT(index < context->goCapacity);
-	auto slot = goBuf  + index;
-	ASSERT(go == slot->go && slot->allocated);
-	slot->position = p;	
+	slotFor(context, go)->position = p;	
 }
 
-void registerComponent(GoContext *context, CID cid, GoMessageHandler handler) {
+static GoComponenTypeSlot* coTypeSlotFor(GoContext *context, CID cid) {
 	ASSERT(cid < context->typeCapacity);
 	auto goBuf = (GoSlot*)(context+1);
 	auto tpBuf = (GoComponenTypeSlot*)(goBuf + context->goCapacity);
-	ASSERT(tpBuf[cid].handler == 0);
-	tpBuf[cid].handler = handler;
+	return tpBuf + cid;
+}
+
+void registerComponent(GoContext *context, CID cid, GoMessageHandler handler) {
+	auto coSlot  = coTypeSlotFor(context, cid);
+	ASSERT(coSlot->handler == 0);
+	coSlot->handler = handler;
 }
 
 GoComponent *addComponent(GoContext *context, GO go, CID cid, const void *data) {
 	ASSERT(context->coCount < context->coCapacity);
-
-	// verify that GO is OK
-	auto goBuf = (GoSlot*)(context+1);
-	auto index = GO_INDEX(go);
-	ASSERT(index < context->goCapacity);
-	auto slot = goBuf  + index;
-	ASSERT(slot->go == go && slot->allocated);
-
-	// verify that type is OK
-	ASSERT(cid < context->typeCapacity);
-	auto tpBuf = (GoComponenTypeSlot*)(goBuf + context->goCapacity);
-	ASSERT(tpBuf[cid].handler != 0);
+	auto slot = slotFor(context, go);
+	auto coSlot  = coTypeSlotFor(context, cid);
+	ASSERT(coSlot->handler != 0);
 
 	// pop a slot from the component free list
 	auto result = context->coFirstFree;
@@ -289,9 +279,9 @@ GoComponent *addComponent(GoContext *context, GO go, CID cid, const void *data) 
 	context->coCount++;
 
 	// logically initialize
-	tpBuf[cid].handler(result, GO_MESSAGE_INIT, 0);
+	coSlot->handler(result, GO_MESSAGE_INIT, 0);
 	if (slot->enabled) {
-		tpBuf[cid].handler(result, GO_MESSAGE_ENABLE, 0);
+		coSlot->handler(result, GO_MESSAGE_ENABLE, 0);
 	}
 
 	// update bookkeeping and return
@@ -299,14 +289,7 @@ GoComponent *addComponent(GoContext *context, GO go, CID cid, const void *data) 
 }
 
 GoComponent *getComponent(GoContext *context, GO go, CID cid) {
-	// verify that GO is OK
-	auto goBuf = (GoSlot*)(context+1);
-	auto index = GO_INDEX(go);
-	ASSERT(index < context->goCapacity);
-	auto slot = goBuf  + index;
-	ASSERT(slot->go == go && slot->allocated);
-	
-	for(auto p=slot->coFirst; p; p=p->next) {
+	for(auto p=slotFor(context, go)->coFirst; p; p=p->next) {
 		if (p->cid == cid) {
 			return p;
 		}
@@ -316,22 +299,12 @@ GoComponent *getComponent(GoContext *context, GO go, CID cid) {
 }
 
 void removeComponent(GoContext *context, GoComponent *component) {
-	// verify that GO is OK
-	GO go = component->go;
-	auto goBuf = (GoSlot*)(context+1);
-	auto index = GO_INDEX(go);
-	ASSERT(index < context->goCapacity);
-	auto slot = goBuf  + index;
-	ASSERT(slot->go == go && slot->allocated);
-
-	// verify that type is OK
-	auto cid = component->cid;
-	ASSERT(cid < context->typeCapacity);
-	auto tpBuf = (GoComponenTypeSlot*)(goBuf + context->goCapacity);
-	ASSERT(tpBuf[cid].handler != 0);
+	auto slot = slotFor(context, component->go);
+	auto coTypeSlot  = coTypeSlotFor(context, component->cid);
+	ASSERT(coTypeSlot->handler != 0);
 
 	// logically destroy
-	tpBuf[cid].handler(component, GO_MESSAGE_DESTROY, 0);
+	coTypeSlot->handler(component, GO_MESSAGE_DESTROY, 0);
 
 	// remove from GO list
 	auto coSlot = (GoComponentSlot*) component;
@@ -347,13 +320,9 @@ void removeComponent(GoContext *context, GoComponent *component) {
 }
 
 static void sendMessage(GoContext *context, GoComponent *component, uint32_t messageId, void *params) {
-	// verify that type is OK
-	auto cid = component->cid;
-	ASSERT(cid < context->typeCapacity);
-	auto goBuf = (GoSlot*)(context + 1);
-	auto tpBuf = (GoComponenTypeSlot*)(goBuf + context->goCapacity);
-	ASSERT(tpBuf[cid].handler != 0);
-	tpBuf[cid].handler(component, messageId, params);
+	auto coTypeSlot  = coTypeSlotFor(context, component->cid);
+	ASSERT(coTypeSlot->handler != 0);
+	coTypeSlot->handler(component, messageId, params);
 }
 
 void enable(GoContext *context, GO go) {
@@ -374,28 +343,17 @@ void enable(GoContext *context, GO go) {
 }
 
 void disable(GoContext *context, GO go) {
-	auto goBuf = (GoSlot*)(context+1);
-	auto index = GO_INDEX(go);
-	ASSERT(index < context->goCapacity);
-	auto slot = goBuf  + index;
-	ASSERT(slot->allocated);
-
+	auto slot = slotFor(context, go);
 	if (slot->enabled) {
 		for (auto p=slot->coFirst; p; p=p->next) {
 			sendMessage(context, p, GO_MESSAGE_DISABLE, 0);
 		}
 		slot->enabled = 0;
 	}
-
 }
 
 void sendMessage(GoContext *context, GO go, uint32_t messageId, void *params) {
-	auto goBuf = (GoSlot*)(context+1);
-	auto index = GO_INDEX(go);
-	ASSERT(index < context->goCapacity);
-	auto slot = goBuf  + index;
-	ASSERT(slot->allocated);
-	
+	auto slot = slotFor(context, go);	
 	for(auto p=slot->coFirst; p; p=p->next) {
 		sendMessage(context, p, messageId, params);
 	}
