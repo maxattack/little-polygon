@@ -62,14 +62,11 @@ void setPosition(GoContext *context, GO go, vec2 p);
 // Provide the plumping for components.  In principle, components are stored in 
 // separate systems that update them in batches, rather than iterating through
 // all the game objects and updating them logically with lots of inefficient
-// interleaved context-switches.  This GoComponent record simply identifies the 
-// type of the handle to the GoContext, and provides a simple interface for 
-// separating read-only data (which allows property deduplication across instances)
-// and dynamic "user data."  This separation also helps for "reloading" content.
+// interleaved context-switches.  
 
 // Concrete Example 1: A "Body" component backed by Box2D.  Your asset-exporter
-// can save a single readonly b2BodyDef record and the userData pointer can
-// identify the actual b2Body instance.  Bodies are updated in b2World.Step(), not
+// can save a single readonly BodyDef record and the userData pointer can
+// identify the actual Body instance.  Bodies are updated in b2World.Step(), not
 // through the Go system
 
 // Concrete Example 2: A "Scripted" component backed by a readonly lua metatable and
@@ -80,8 +77,6 @@ struct GoComponent {
 
 	CID cid;          // logical type
 	GO go;            // logical go
-
-	const void *data; // initialization data (copy-on-write semantics)
 	void *userData;   // active data associated with the component
 
 };
@@ -109,10 +104,27 @@ enum GoMessage {
 	GO_MESSAGE_DESTROY = -4
 };
 
-typedef int (*GoMessageHandler)(GoComponent *component, uint32_t message, void *params);
+typedef int (*GoMessageHandler)(GoComponent *component, uint32_t message, const void *args);
 
-// Main component interface
+// Main component interface.  Can be implemented with a handy, dandy C++11 lambda:
+// registerComponent(ctxt, TYPE_BODY, [](GoComponent *comp, uint32_t msg, void *args) {
+//   switch(msg) {
+//     case GO_MESSAGE_INIT:
+//       comp->userData = createPhysicsBody((BodyDef*)args);
+//       break;
+//     case GO_MESSAGE_ENABLE:
+//       ((Body*)comp->userData)->Enable(1);
+//       break;
+//     case GO_MESSAGE_DISABLE:
+//       ((Body*)comp->userData)->Enable(0);
+//       break;
+//     case GO_MESSAGE_DESTROY:
+//       destroyPhysicsBody((Body*)comp->userData)
+//       break;
+//   }
+// });
 void registerComponent(GoContext *context, CID cid, GoMessageHandler handler);
+
 GoComponent *addComponent(GoContext *context, GO go, CID cid, const void *data=0);
 GoComponent *getComponent(GoContext *context, GO go, CID cid);
 void removeComponent(GoContext *context, GoComponent *component);
@@ -131,7 +143,7 @@ void sendMessage(GoContext *context, GO go, uint32_t messageId, void *params=0);
 //------------------------------------------------------------------------------
 
 // Example useage:
-//   for(auto i=GoIterator(context); !i.finished(); i.next()) {
+//   for(GoIterator i(context); !i.finished(); i.next()) {
 //     ...
 //   }
 

@@ -16,6 +16,10 @@
 
 #include "littlepolygon_go.h"
 
+//------------------------------------------------------------------------------
+// MEMORY RECORDS
+//------------------------------------------------------------------------------
+
 // Collections are maintained using an intrusive doubly-linked list between
 // pre-allocated slots - no dynamic memory after init.
 
@@ -57,8 +61,11 @@ struct GoContext {
 	GoComponentSlot *coFirstFree;
 };
 
-#define GO_INDEX(go) (0xffff & go)
-#define GO_FINGERPRINT(go) ((0xffff0000 & go) >> 16)
+//------------------------------------------------------------------------------
+// HELPERS
+//------------------------------------------------------------------------------
+
+#define GO_INDEX(go) ((0xffff & go)-1)
 
 // fnv-1a
 static uint32_t hash(const char* name) {
@@ -70,6 +77,32 @@ static uint32_t hash(const char* name) {
     }
     return hval;
 }
+
+static GoSlot* slotFor(GoContext *context, GO go) {
+	auto goBuf = (GoSlot*)(context+1);
+	auto index = GO_INDEX(go);
+	ASSERT(index < context->goCapacity);
+	auto slot = goBuf  + index;
+	ASSERT(go == slot->go && slot->allocated);
+	return slot;	
+}
+
+static GoComponenTypeSlot* coTypeSlotFor(GoContext *context, CID cid) {
+	ASSERT(cid < context->typeCapacity);
+	auto goBuf = (GoSlot*)(context+1);
+	auto tpBuf = (GoComponenTypeSlot*)(goBuf + context->goCapacity);
+	return tpBuf + cid;
+}
+
+static void sendMessage(GoContext *context, GoComponent *component, uint32_t messageId, void *params) {
+	auto coTypeSlot  = coTypeSlotFor(context, component->cid);
+	ASSERT(coTypeSlot->handler != 0);
+	coTypeSlot->handler(component, messageId, params);
+}
+
+//------------------------------------------------------------------------------
+// IMPLEMENTATION
+//------------------------------------------------------------------------------
 
 GoContext *createGoContext(size_t goCapacity, size_t coCapacity, size_t coTypeCapacity) {
 	ASSERT(goCapacity < 0xffff);
@@ -97,7 +130,7 @@ GoContext *createGoContext(size_t goCapacity, size_t coCapacity, size_t coTypeCa
 	
 	// initialize free-slot linked lists
 	for(size_t i=0; i<goCapacity; ++i) {
-		goBuf[i].go = 0x10000;
+		goBuf[i].go = i+1;
 		goBuf[i].flags = 0;
 		goBuf[i].prev = i == 0 ? 0 : &goBuf[i-1];
 		goBuf[i].next = i == goCapacity-1 ? 0 : &goBuf[i+1];
@@ -201,6 +234,7 @@ void destroy(GoContext *context, GO go) {
 	// udpate fields
 	slot->flags = 0;
 	slot->go += 0x10000; // fingerprint the ID to reduce duping
+	--context->goCount;
 }
 
 
@@ -213,15 +247,6 @@ GO find(GoContext *context, const char *name) {
 		}
 	}
 	return 0;
-}
-
-static GoSlot* slotFor(GoContext *context, GO go) {
-	auto goBuf = (GoSlot*)(context+1);
-	auto index = GO_INDEX(go);
-	ASSERT(index < context->goCapacity);
-	auto slot = goBuf  + index;
-	ASSERT(go == slot->go && slot->allocated);
-	return slot;	
 }
 
 bool goEnabled(GoContext *context, GO go) {
@@ -238,13 +263,6 @@ vec2 goPosition(GoContext *context, GO go) {
 
 void setPosition(GoContext *context, GO go, vec2 p) {
 	slotFor(context, go)->position = p;	
-}
-
-static GoComponenTypeSlot* coTypeSlotFor(GoContext *context, CID cid) {
-	ASSERT(cid < context->typeCapacity);
-	auto goBuf = (GoSlot*)(context+1);
-	auto tpBuf = (GoComponenTypeSlot*)(goBuf + context->goCapacity);
-	return tpBuf + cid;
 }
 
 void registerComponent(GoContext *context, CID cid, GoMessageHandler handler) {
@@ -274,17 +292,16 @@ GoComponent *addComponent(GoContext *context, GO go, CID cid, const void *data) 
 	// init fields
 	result->cid = cid;
 	result->go = slot->go;
-	result->data = data;
 	result->userData = 0;
-	context->coCount++;
 
 	// logically initialize
-	coSlot->handler(result, GO_MESSAGE_INIT, 0);
+	coSlot->handler(result, GO_MESSAGE_INIT, data);
 	if (slot->enabled) {
 		coSlot->handler(result, GO_MESSAGE_ENABLE, 0);
 	}
 
 	// update bookkeeping and return
+	++context->coCount;
 	return result;
 }
 
@@ -293,8 +310,7 @@ GoComponent *getComponent(GoContext *context, GO go, CID cid) {
 		if (p->cid == cid) {
 			return p;
 		}
-	}	
-
+	}
 	return 0;
 }
 
@@ -317,12 +333,8 @@ void removeComponent(GoContext *context, GoComponent *component) {
 	coSlot->next = context->coFirstFree;
 	if (context->coFirstFree) { context->coFirstFree->prev = coSlot; }
 	context->coFirstFree = coSlot;
-}
 
-static void sendMessage(GoContext *context, GoComponent *component, uint32_t messageId, void *params) {
-	auto coTypeSlot  = coTypeSlotFor(context, component->cid);
-	ASSERT(coTypeSlot->handler != 0);
-	coTypeSlot->handler(component, messageId, params);
+	--context->coCount;
 }
 
 void enable(GoContext *context, GO go) {
@@ -359,7 +371,13 @@ void sendMessage(GoContext *context, GO go, uint32_t messageId, void *params) {
 	}
 }
 
-GoIterator::GoIterator(GoContext *context) : internal(context->goFirst), current(context->goFirst ? context->goFirst->go : 0) {
+//------------------------------------------------------------------------------
+// ITERATORS
+//------------------------------------------------------------------------------
+
+GoIterator::GoIterator(GoContext *context) : 
+internal(context->goFirst), 
+current(context->goFirst ? context->goFirst->go : 0) {
 }
 
 void GoIterator::next() { 
@@ -369,12 +387,7 @@ void GoIterator::next() {
 }
 
 GoComponentIterator::GoComponentIterator(GoContext *context, GO go) {
-	auto goBuf = (GoSlot*)(context+1);
-	auto index = GO_INDEX(go);
-	ASSERT(index < context->goCapacity);
-	auto slot = goBuf  + index;
-	ASSERT(slot->allocated);
-	current = slot->coFirst;	
+	current = slotFor(context, go)->coFirst;
 }
 
 void GoComponentIterator::next() { 
