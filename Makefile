@@ -17,6 +17,9 @@ PLATFORMER_OBJ_FILES =     \
 	obj/Kitten.o           \
 	obj/main.o
 
+squids_OBJ_FILES = \
+    obj/squids.o
+
 # COMPILER
 CC = clang
 CPP = clang++
@@ -35,9 +38,6 @@ LIBS = -Llib -L/usr/local/lib -framework OpenGL -framework Cocoa -llittlepolygon
 CFLAGS += -I/usr/local/include/SDL2
 LIBS += -lSDL2 -lSDL2_mixer
 
-# BOX2D
-# GAME_LIBS = -lBox2D
-
 # CONFIG FLAGS
 CFLAGS += -DDEBUG
 
@@ -48,12 +48,18 @@ CFLAGS += -DDEBUG
 CFLAGS += -arch i386
 AFLAGS = 32
 
+stest: bin/squids
+	bin/squids
+
 test : bin/platformer bin/platformer.bin
 	cp platformer/assets/song.mid bin/song.mid
 	bin/platformer
 
+bin/squids: lib/liblittlepolygon.a $(squids_OBJ_FILES) 
+	$(CPP) -o $@ $(CFLAGS) $(CCFLAGS) $(LIBS) $(squids_OBJ_FILES)
+
 bin/platformer: lib/liblittlepolygon.a $(PLATFORMER_OBJ_FILES) 
-	$(CPP) -o $@ $(CFLAGS) $(CCFLAGS) $(LIBS) $(GAME_LIBS) $(PLATFORMER_OBJ_FILES)
+	$(CPP) -o $@ $(CFLAGS) $(CCFLAGS) $(LIBS) $(PLATFORMER_OBJ_FILES)
 
 bin/platformer.bin: platformer/assets/* common/tools/*.py platformer/tools/*.py
 	platformer/tools/export_game_assets.py platformer/assets/assets.yaml $@ $(AFLAGS)
@@ -74,3 +80,8 @@ obj/%.o: common/src/%.cpp common/include/*.h
 
 obj/%.o: platformer/src/%.cpp platformer/src/*.h
 	$(CPP) $(CFLAGS) $(CCFLAGS) -c -o $@ $<
+
+obj/%.o: squids/src/%.cpp # squids/src/*.h
+	$(CPP) $(CFLAGS) $(CCFLAGS) -c -o $@ $<
+
+

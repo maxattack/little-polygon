@@ -135,12 +135,10 @@ GoContext *createGoContext(size_t goCapacity, size_t coCapacity, size_t coTypeCa
 		goBuf[i].prev = i == 0 ? 0 : &goBuf[i-1];
 		goBuf[i].next = i == goCapacity-1 ? 0 : &goBuf[i+1];
 	}
+	memset(coTypeBuf, 0, sizeof(GoComponentSlot) * coTypeCapacity);
 	for(size_t i=0; i<coCapacity; ++i) {
 		coBuf[i].prev = i == 0 ? 0 : &coBuf[i-1];
 		coBuf[i].next = i == coCapacity-1 ? 0 : &coBuf[i+1];
-	}
-	for(size_t i=0; i<coTypeCapacity; ++i) {
-		coTypeBuf[i].handler = 0;
 	}
 	
 	return context;

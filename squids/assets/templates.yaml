@@ -1,0 +1,49 @@
+
+# just a plain-old shared property
+squidColor: &sc
+	r: 155
+	g: 255
+	b: 75
+
+# A basic squid template with three tentacles and an eye
+template/squid: 
+  tentacle/tentacle1:
+    color: *sc
+    angle: -30
+    length: 96
+  tentacle/tentacle2:
+    color: *sc
+    angle: 0
+    length: 128
+  tentacle/tentacle3:
+    color: *sc
+    angle: 30
+    length: 96
+  eye/myeyeball:
+    color: *sc
+    radius: 64
+
+# now instantiate a bunch of squids
+
+squid/squid1:
+  position: (10,10)
+
+squid/squid2:
+  position: (20,10)
+
+differentColor: &dc
+	r: 255
+	g: 255
+	b: 35
+
+# squid 3 overrides the color
+
+squid/squid3:
+  position: (30,10)
+  tentacle/tentacle1:
+    color: *dc
+  tentacle/tentacle2:
+    color: *dc
+  tentacle/tentacle3:
+    color: *dc
+

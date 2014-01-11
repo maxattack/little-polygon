@@ -125,8 +125,14 @@ typedef int (*GoMessageHandler)(GoComponent *component, uint32_t message, const 
 // });
 void registerComponent(GoContext *context, CID cid, GoMessageHandler handler);
 
+// Attach a component to the given game object, initialized with the given data
 GoComponent *addComponent(GoContext *context, GO go, CID cid, const void *data=0);
+
+// lookup a component by type.  Returns the first match.  For an exhaustive search
+// (in the event of multiple components of the same type), use the component iterator
 GoComponent *getComponent(GoContext *context, GO go, CID cid);
+
+// Remove a component, destroying it completely.
 void removeComponent(GoContext *context, GoComponent *component);
 
 // GOs support enabling and disabling, routed to it's components, for the purpose of
