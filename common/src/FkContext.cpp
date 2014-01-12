@@ -131,6 +131,7 @@ NODE createNode(FkContext *context, NODE parent, void *userData, NODE explicitId
 }
 
 void destroy(FkContext *context, NODE node) {
+	ASSERT(node);
 	ASSERT(context->allocationMask[NODE_INDEX(node)]);
 
 	// kill children
@@ -253,7 +254,7 @@ void FkChildIterator::next() {
 // GO SYSTEM BINDINGS
 //------------------------------------------------------------------------------
 
-int fkMessageHandler(
+static int nodeMessageHandler(
 	GoComponent *component, 
 	int msg, 
 	const void *args, 
@@ -299,11 +300,8 @@ int fkMessageHandler(
 	}
 }
 
-GoComponentDef fkComponentDef(FkContext *context) {
-	GoComponentDef result = {
-		context,
-		fkMessageHandler
-	};
+GoComponentDef nodeDef(FkContext *context) {
+	GoComponentDef result = { context, nodeMessageHandler };
 	return result;
 }
 
