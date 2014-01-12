@@ -20,8 +20,15 @@
 // ? Is there value in caching the world transforms ?
 // -- save a "dirty mask" bitset
 // -- world() - check all parents' dirty bits (teehee)
-// -- 
-// 
+// -- ???
+// -- profit!
+
+// ? Is it worth is to store transforms in DAG order
+//   for batch-processing world transforms (e.g. in a
+//   multithreaded universe)
+// - Alternatively, we could write nodes out to a buffer
+//   in dag order during thread "sync" between physics
+//   and rendering.
 
 #define NODE_INDEX(handle) ((0xffff & handle)-1)
 
@@ -254,7 +261,9 @@ int fkMessageHandler(
 	
 	switch(msg) {
 		case GO_MESSAGE_INIT: {
-			// should parent-child attachments happen *after* init?
+
+			// should parent-child attachments happen *after* init?  It would decouple
+			// potential order-of-initialization issues...
 			auto nodeArgs = (NodeAsset*) args;
 			NODE result = createNode(fkContext, nodeArgs->parent, component, nodeArgs->id);
 			mat4f m;
@@ -262,6 +271,7 @@ int fkMessageHandler(
 			setLocal(fkContext, result, m);
 			component->userData = (void*) result;
 			return 0;
+
 		}
 		
 		case GO_MESSAGE_DESTROY: {
