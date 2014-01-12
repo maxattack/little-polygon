@@ -17,11 +17,11 @@
 #include "littlepolygon_fk.h"
 #include "littlepolygon_templates.h"
 
-// This implementation is pretty naive right now.  I'd like to store
-// nodes as a structure-of-arrays that's sorted in DAG order so that 
-// we can get a batched interface that's fast for computing the whole
-// concatenated tree, but I'm waiting for an actual concrete use case
-// to inform the fidgety details.
+// ? Is there value in caching the world transforms ?
+// -- save a "dirty mask" bitset
+// -- world() - check all parents' dirty bits (teehee)
+// -- 
+// 
 
 #define NODE_INDEX(handle) ((0xffff & handle)-1)
 
