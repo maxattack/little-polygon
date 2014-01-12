@@ -18,7 +18,9 @@
 #include <vectorial/vectorial.h>
 using namespace vectorial;
 
-#include "littlepolygon_base.h"
+// this dependency is only required for the go bindings; the system is
+// useable without it.
+#include "littlepolygon_go.h"
 
 // A Generic Forward-Kinematic (FK) system for creating display-trees
 // like in flash.  While this is was implemented with the intention of
@@ -34,7 +36,7 @@ using namespace vectorial;
 
 struct FkContext;
 typedef uint32_t NODE;
-typedef void (*FkNodeCallback)(NODE node);
+typedef void (*FkNodeCallback)(FkContext *fk, NODE node, void *context);
 
 // Create a context.  Different contexts can be allocated withing a single
 // application, but NODEs from different contexts cannot directly
@@ -51,7 +53,7 @@ NODE createNode(FkContext *context, NODE parent=0, void *userData=0, NODE explic
 
 // Destroy this node and all it's children (with an optional callback if you
 // need to know who's being destroyed - invoked in leaf->root order).
-void destroy(FkContext *context, NODE node, FkNodeCallback willDestroy=0);
+void destroy(FkContext *context, NODE node);
 
 // Attach the given child to the given parent, detach from it's current
 // parent if necessary.
@@ -88,3 +90,12 @@ struct FkChildIterator {
 	void next();
 };
 
+// bindings for the GameObject system
+
+struct NodeAsset {
+	NODE id;
+	NODE parent;
+	float matrix[16];
+};
+
+GoComponentDef nodeDef(FkContext *context);

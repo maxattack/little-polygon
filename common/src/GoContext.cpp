@@ -44,8 +44,7 @@ struct GoSlot {
 	GoSlot *next;
 };
 
-struct GoComponenTypeSlot {
-	GoMessageHandler handler;
+struct GoComponenTypeSlot : GoComponentDef {
 };
 
 #define GO_INDEX(go) ((0xffff & go)-1)
@@ -98,14 +97,14 @@ static uint32_t hash(const char* name) {
 static void sendMessage(GoContext *context, GoComponent *component, uint32_t messageId, void *params) {
 	auto coTypeSlot  = context->coType(component->cid);
 	ASSERT(coTypeSlot->handler != 0);
-	coTypeSlot->handler(component, messageId, params);
+	coTypeSlot->handler(component, messageId, params, coTypeSlot->context);
 }
 
 //------------------------------------------------------------------------------
 // IMPLEMENTATION
 //------------------------------------------------------------------------------
 
-GoContext *createGoContext(size_t numComponents, GoMessageHandler *componentBuf, size_t goCapacity, size_t componentCapacity) {
+GoContext *createGoContext(size_t numComponents, GoComponentDef *componentBuf, size_t goCapacity, size_t componentCapacity) {
 	ASSERT(goCapacity <= 1024); // in case we wannt use BitSet<1024> in the future or something
 
 	// block allocate the memory
@@ -278,12 +277,13 @@ GoComponent *addComponent(GoContext *context, GO go, CID cid, const void *data) 
 	// init fields
 	result->cid = cid;
 	result->go = slot->go;
+	result->context = context;
 	result->userData = 0;
 
 	// logically initialize
-	coSlot->handler(result, GO_MESSAGE_INIT, data);
+	coSlot->handler(result, GO_MESSAGE_INIT, data, coSlot->context);
 	if (slot->enabled) {
-		coSlot->handler(result, GO_MESSAGE_ENABLE, 0);
+		coSlot->handler(result, GO_MESSAGE_ENABLE, 0, coSlot->context);
 	}
 
 	// update bookkeeping and return
@@ -306,7 +306,7 @@ void removeComponent(GoContext *context, GoComponent *component) {
 	ASSERT(coTypeSlot->handler != 0);
 
 	// logically destroy
-	coTypeSlot->handler(component, GO_MESSAGE_DESTROY, 0);
+	coTypeSlot->handler(component, GO_MESSAGE_DESTROY, 0, coTypeSlot->context);
 
 	// remove from GO list
 	auto coSlot = (GoComponentSlot*) component;

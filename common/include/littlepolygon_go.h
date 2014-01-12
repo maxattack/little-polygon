@@ -14,7 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#pragma once
+#ifndef LITTLEPOLYGON_GO
+#define LITTLEPOLYGON_GO
+
 #include "littlepolygon_base.h"
 
 // Generic GameObject (GO) system for entity-component style assets.  The basic idea
@@ -43,11 +45,10 @@ typedef uint32_t CID; // opaque component-type handle
 // rather than individual calls, but discoverable throught the Go metadata.
 
 struct GoComponent {
-
-	CID cid;          // logical type
-	GO go;            // logical go
-	void *userData;   // active data associated with the component
-
+	CID cid;            // logical type
+	GO go;              // logical go
+	GoContext *context; // context for this component
+	void *userData;     // active data associated with the component
 };
 
 // While components all have different specialized concrete behaviour, the share a
@@ -73,14 +74,24 @@ enum GoMessage {
 	GO_MESSAGE_DESTROY = -4
 };
 
-typedef int (*GoMessageHandler)(GoComponent *component, uint32_t message, const void *args);
+typedef int (*GoMessageHandler)(
+	GoComponent *component,       // the component receiving the message
+	int message,             // the message identifier
+	const void *args,             // the arguments to the message
+	void *user                    // a user-supplied pointer
+);
+
+struct GoComponentDef {
+	void *context;
+	GoMessageHandler handler;
+};
 
 // Initialize a new GO context.  These are in principle serializable to ease the 
 // implementation of "in-game editing" as well as syncable across networks for 
 // "remote contexts" like in MMOs. Capacity is needed because the whole database
 // is "block-allocated" to keep everything thread-local friendly.  No internal
 // dynamic memory is used.
-GoContext *createGoContext(size_t numComponents, GoMessageHandler *componentBuf, size_t goCapacity=1024, size_t componentCapacity=1024);
+GoContext *createGoContext(size_t numComponents, GoComponentDef *componentBuf, size_t goCapacity=1024, size_t componentCapacity=1024);
 void destroy(GoContext *context);
 
 // Create a new GO.  This really just allocated an identifier and hashes the
@@ -151,3 +162,4 @@ struct GoComponentIterator {
 };
 
 
+#endif

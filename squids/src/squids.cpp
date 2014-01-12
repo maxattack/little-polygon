@@ -1,5 +1,6 @@
-#include <littlepolygon_graphics.h>
 #include <littlepolygon_go.h>
+#include <littlepolygon_fk.h>
+#include <littlepolygon_graphics.h>
 
 static void handleKeyDown(const SDL_KeyboardEvent& key, bool *outDone) {
 	switch(key.keysym.sym) {
