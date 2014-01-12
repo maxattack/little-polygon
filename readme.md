@@ -33,12 +33,12 @@ Build Dependencies (python2x + pip)
 Runtime Dependencies (native)
 * sdl2 - platform abstraction
 * sdl2_mixer - music and sound effects
+* vectorial - SIMD math
 * glew - desktop graphics feature discovery
 * zlib - asset decompression
 
 Modules
 * littlepolygon_assets - a simple system for packaging and loading compressed game assets
-* littlepolygon_vmath - SIMD vector math with scalar fallbacks
 * littlepolygon_graphics - fast batching sprite and spline renderers
 * littlepolygon_templates - a collection of slim-and-handy C++ collection templates
 * littlepolygon_go - a simple entity-component / "GameObject" metadata system

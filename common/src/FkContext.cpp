@@ -15,6 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "littlepolygon_fk.h"
+#include "littlepolygon_templates.h"
 
 // This implementation is pretty naive right now.  I'd like to store
 // nodes as a structure-of-arrays that's sorted in DAG order so that 
@@ -31,31 +32,30 @@ struct FkNode {
 	FkNode *nextSibling;
 	FkNode *prevSibling;
 	void *userData;
-
-	union {
-		uint32_t flags;
-		struct {
-			uint32_t allocated : 1;
-			uint32_t unused : 31;
-		};
-	};
-
-	mat4 localToParent;
 };
 
 struct FkContext {
 	size_t capacity;
-	FkNode *firstFree;
-	FkNode first; // really just a hack to make sure SIMD alignment is OK :P
+	size_t count;
+	Bitset<1024> allocationMask;
+	
+	mat4f first; // really just a hack to make sure SIMD alignment is OK :P
 
-	inline FkNode *nodeBuf() { return &first; }
+	inline mat4f *tformBuf() { return &first; }
+	inline FkNode *nodeBuf() { return (FkNode*)(tformBuf() + capacity); }
+
+	inline mat4f *tform(NODE node) {
+		auto index = NODE_INDEX(node);
+		ASSERT(index < capacity);
+		ASSERT(allocationMask[index]);
+		return tformBuf() + index;
+	}
 
 	inline FkNode *lookup(NODE node) {
 		auto index = NODE_INDEX(node);
 		ASSERT(index < capacity);
-		auto result = nodeBuf() + index;
-		ASSERT(result->allocated);
-		return result;
+		ASSERT(allocationMask[index]);
+		return nodeBuf() + index;
 	}
 };
 
@@ -66,18 +66,16 @@ FkContext *createFkContext(size_t capacity) {
 	// allocate memory
 	auto context = (FkContext*) LITTLE_POLYGON_MALLOC(
 		sizeof(FkContext) + 
-		(capacity-1) * sizeof(FkNode)
+		(capacity-1) * sizeof(mat4f) + 
+		(capacity) * sizeof(FkNode)
 	);
 	context->capacity = capacity;
+	context->count = 0;
+	context->allocationMask = Bitset<1024>();
 
-	// initialize the free-list
-	auto nodes = context->nodeBuf();
-	context->firstFree = nodes;
-	for(size_t i=0; i<capacity; ++i) {
-		nodes[i].flags = 0;
-		nodes[i].node = i+1;
-		nodes[i].nextSibling = i < capacity-1 ? &nodes[i+1] : 0;
-		nodes[i].prevSibling = i > 0 ? &nodes[i-0] : 0;
+	// initialize node indices
+	for(int i=0; i<capacity; ++i) {
+		context->nodeBuf()[i].node = i+1;
 	}
 
 	return 0;
@@ -88,24 +86,23 @@ void destroy(FkContext *context) {
 }
 
 NODE createNode(FkContext *context, NODE parent, void *userData, NODE explicitId) {
-	ASSERT(context->firstFree);
+	ASSERT(context->count < context->capacity);
 
-	auto result = context->firstFree;
+	unsigned index;
 	if (explicitId) {
-		auto index = NODE_INDEX(explicitId);
+		index = NODE_INDEX(explicitId);
 		ASSERT(index < context->capacity);
-		result = context->nodeBuf() + index;
-		if (result->allocated) {
+		if(context->allocationMask[index]) {
 			return 0;
 		}
 	} else {
-		result = context->firstFree;
+		if (!(~context->allocationMask).clearFirst(index)) {
+			return 0;
+		}
 	}
 
-	// pop first node from free list
-	if (result == context->firstFree) {
-		context->firstFree = context->firstFree->nextSibling;
-	}
+	context->allocationMask.mark(index);
+	auto result = context->nodeBuf() + index;
 
 	// intialize fields
 	result->parent = 0;
@@ -113,17 +110,20 @@ NODE createNode(FkContext *context, NODE parent, void *userData, NODE explicitId
 	result->nextSibling = 0;
 	result->prevSibling = 0;
 	result->userData = userData;
-	result->allocated = 1;
-	result->localToParent = mat();
+
+	context->tformBuf()[index] = mat4f::identity();
 
 	if (parent) {
 		setParent(context, result->node, parent);
 	}
 
+	++context->count;
 	return result->node;
 }
 
 void destroy(FkContext *context, NODE node, FkNodeCallback willDestroy) {
+	ASSERT(context->allocationMask[NODE_INDEX(node)]);
+
 	// kill children
 	auto slot = context->lookup(node);
 	while (slot->firstChild) {
@@ -138,12 +138,9 @@ void destroy(FkContext *context, NODE node, FkNodeCallback willDestroy) {
 	setParent(context, node, 0);
 
 	// prepend to free list
-	slot->nextSibling = context->firstFree;
-	slot->prevSibling = 0;
-	slot->flags = 0;
 	slot->node += 0x10000; // fingerprint slot
-	if (context->firstFree) { context->firstFree->prevSibling = slot; }
-	context->firstFree = slot;
+	context->allocationMask.clear(NODE_INDEX(node));
+	--context->count;
 }
 
 void setParent(FkContext *context, NODE child, NODE parent) {
@@ -203,17 +200,16 @@ void setUserData(FkContext *context, NODE node, void *userData) {
 	context->lookup(node)->userData = userData;
 }
 
-void setLocal(FkContext *context, NODE node, mat4 transform) {
-	auto slot = context->lookup(node);
-	slot->localToParent = transform;
+void setLocal(FkContext *context, NODE node, mat4f transform) {
+	*(context->tform(node)) = transform;
 }
 
-void setWorld(FkContext *context, NODE node, mat4 transform) {
+void setWorld(FkContext *context, NODE node, mat4f transform) {
 	auto slot = context->lookup(node);
 	if (slot->parent) {
-		slot->localToParent = transform * invert(world(context, slot->parent->node));
+		*context->tform(node) = transform * inverse(world(context, slot->parent->node));
 	} else {
-		slot->localToParent = transform;
+		*context->tform(node) = transform;
 	}
 }
 
@@ -226,16 +222,16 @@ NODE parent(FkContext *context, NODE node) {
 	return context->lookup(node)->parent->node;
 }
 
-mat4 local(FkContext *context, NODE node) {
-	return context->lookup(node)->localToParent;
+mat4f local(FkContext *context, NODE node) {
+	return *context->tform(node);
 }
 
-mat4 world(FkContext *context, NODE node) {
+mat4f world(FkContext *context, NODE node) {
 	auto slot = context->lookup(node);
 	if (slot->parent) {
-		return slot->localToParent * world(context, slot->parent->node);
+		return local(context, node) * world(context, slot->parent->node);
 	} else {
-		return slot->localToParent;
+		return local(context, node);
 	}
 }
 

@@ -15,9 +15,12 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
+
+#include <vectorial/vectorial.h>
+using namespace vectorial;
+
 #include "littlepolygon_assets.h"
 #include "littlepolygon_utils.h"
-#include "littlepolygon_vmath.h"
 
 //------------------------------------------------------------------------------
 // UTIL FUNCTIONS.
@@ -101,15 +104,15 @@ SplinePlotter *createSplinePlotter(int resolution=128);
 void destroy(SplinePlotter *context);
 
 // stroke vector helpers
-inline vec4 uniformStroke(float u) { return vec(0, 0, 0, u); }
-inline vec4 taperingStroke(float u, float v) { return vec(0, 0, v-u, u); }
+inline vec4f uniformStroke(float u) { return vec4f(0, 0, 0, u); }
+inline vec4f taperingStroke(float u, float v) { return vec4f(0, 0, v-u, u); }
 
-inline vec4 eccentricStroke(float t0, float e, float t1) {
-	return vec(0, -e-e-e-e, e+e+e+e+t1-t0, t0); 
+inline vec4f eccentricStroke(float t0, float e, float t1) {
+	return vec4f(0, -e-e-e-e, e+e+e+e+t1-t0, t0); 
 }
 
-inline vec4 quadraticBezierStroke(float t0, float t1, float t2) { 
-	return vec(0, t0-t1-t1+t2, -t0-t0+t1+t1, t0); 
+inline vec4f quadraticBezierStroke(float t0, float t1, float t2) { 
+	return vec4f(0, t0-t1-t1+t2, -t0-t0+t1+t1, t0); 
 }
 
 // curve matrix helpers
@@ -118,105 +121,110 @@ inline vec4 quadraticBezierStroke(float t0, float t1, float t2) {
 //   U = < u^3, u^2, u, 1 >,
 #define XY_ROTATION_MATRIX (mat(0, -1, 0, 0, 1, 0, 0, 0))
 
-inline mat4 derivativeMatrix(mat4 m) {
+
+inline mat4f derivativeMatrix(mat4f m) {
 	// Returns the derivative of the function encoded by the given
 	// matrix, which computes the slope of the curve at that point. E.g. 
 	// f = Au*3 + Bu^2 + Cu + D
 	// f' = 3Au^2 + 2Bu + C
-	return mat(
+	float mm[16];
+	m.store(mm);
+	return mat4f ({
 		0, 0, 0, 0,
-		3*m.m00, 3*m.m01, 3*m.m02, 3*m.m03,
-		2*m.m10, 2*m.m11, 2*m.m12, 2*m.m13,
-		m.m20, m.m21, m.m22, m.m23
-	);
+		3*mm[0], 3*mm[1], 3*mm[2], 3*mm[3],
+		2*mm[4], 2*mm[5], 2*mm[6], 2*mm[7],
+		mm[8], mm[9], mm[10], mm[11]
+	});
 }
 
-inline mat4 perpendicularMatrix(mat4 m) {
+inline mat4f perpendicularMatrix(mat4f m) {
 	// Takes the derivaive and then rotates 90-degrees in the 
 	// XY-plane to produce planar-normals (useful for "stroke" vectors).
 	// XY_ROTATION_MATRIX * derivativeMatrix(m)
-	return mat(
+	float mm[16];
+	m.store(mm);
+	return mat4f ({
 		0, 0, 0, 0,
-		3*m.m01, -3*m.m00, 3*m.m02, 3*m.m03,
-		2*m.m11, -2*m.m10, 2*m.m12, 2*m.m13,
-		m.m21, -m.m20, m.m22, m.m23
-	);
+		3*mm[1], -3*mm[0], 3*mm[2], 3*mm[3],
+		2*mm[5], -2*mm[4], 2*mm[6], 2*mm[7],
+		mm[9], -mm[8], mm[10], mm[11]
+	});
 }
 
-inline mat4 linearMatrix(vec4 p0, vec4 p1) {
-	return mat(p0, p1, vec(0,0,0,0), vec(0,0,0,0)) * mat(
+inline mat4f linearMatrix(vec4f p0, vec4f p1) {
+	return mat4f(p0, p1, vec4f(0,0,0,0), vec4f(0,0,0,0)) * mat4f({
 		0, 0, 0, 0,
 		0, 0, 0, 0,
 		-1, 1, 0, 0,
 		1, 0, 0, 0
-	);
+	});
 }
 
-inline mat4 linearDerivMatrix(vec4 p0, vec4 p1) {
-	return mat(p0, p1, vec(0,0,0,0), vec(0,0,0,0)) * mat(
+inline mat4f linearDerivMatrix(vec4f p0, vec4f p1) {
+	return mat4f(p0, p1, vec4f(0,0,0,0), vec4f(0,0,0,0)) * mat4f({
 		0, 0, 0, 0,
 		0, 0, 0, 0,
 		0, 0, 0, 0,
 		-1, 1, 0, 0
-	);  
+	});  
 }
 
-inline mat4 hermiteMatrix(vec4 p0, vec4 p1, vec4 t0, vec4 t1) {
-	return mat(p0, p1, t0, t1) * mat(
+inline mat4f hermiteMatrix(vec4f p0, vec4f p1, vec4f t0, vec4f t1) {
+	return mat4f(p0, p1, t0, t1) * mat4f({
 		2, -2, 1, 1, 
 		-3, 3, -2, -1, 
 		0, 0, 1, 0, 
 		1, 0, 0, 0
-	);
+	});
 }
 
-inline mat4 hermiteDerivMatrix(vec4 p0, vec4 p1, vec4 t0, vec4 t1) {
-	return mat(p0, p1, t0, t1) * mat(
+inline mat4f hermiteDerivMatrix(vec4f p0, vec4f p1, vec4f t0, vec4f t1) {
+	return mat4f(p0, p1, t0, t1) * mat4f({
 		0, 0, 0, 0, 
 		6, -6, 3, 3, 
 		-6, 6, -4, -2, 
 		0, 0, 1, 0
-	);
+	});
 }
 
-inline mat4 bezierMatrix(vec4 p0, vec4 p1, vec4 p2, vec4 p3) {
-	return mat(p0, p1, p2, p3) * mat(
+inline mat4f bezierMatrix(vec4f p0, vec4f p1, vec4f p2, vec4f p3) {
+	return mat4f(p0, p1, p2, p3) * mat4f({
 		-1, 3, -3, 1, 
 		3, -6, 3, 0, 
 		-3, 3, 0, 0, 
 		1, 0, 0, 0
-	);
+	});
 }
 
-inline mat4 bezierDerivMatrix(vec4 p0, vec4 p1, vec4 p2, vec4 p3) {
-	return mat(p0, p1, p2, p3) * mat(
+inline mat4f bezierDerivMatrix(vec4f p0, vec4f p1, vec4f p2, vec4f p3) {
+	return mat4f(p0, p1, p2, p3) * mat4f({
 		0, 0, 0, 0, 
 		-3, 9, -9, 3, 
 		6, -12, 6, 0, 
 		-3, 3, 0, 0
-	);
+	});
 }
 
-inline mat4 quadraticBezierMatrix(vec4 p0, vec4 p1, vec4 p2) {
-	return mat(vec(0,0,0,0), p0, p1, p2) * mat(
+inline mat4f quadraticBezierMatrix(vec4f p0, vec4f p1, vec4f p2) {
+	return mat4f(vec4f(0,0,0,0), p0, p1, p2) * mat4f({
 		0, 0, 0, 0,
 		0, 1, -2, 1,
 		0, -2, 2, 0,
 		0, 1, 0, 0
-	);
+	});
 }
 
-inline mat4 quadraticBezierDerivMatrix(vec4 p0, vec4 p1, vec4 p2) {
-	return mat(vec(0,0,0,0), p0, p1, p2) * mat(
+inline mat4f quadraticBezierDerivMatrix(vec4f p0, vec4f p1, vec4f p2) {
+	return mat4f(vec4f(0,0,0,0), p0, p1, p2) * mat4f({
 		0, 0, 0, 0,
 		0, 0, 0, 0,
 		0, 2, -4, 2,
 		0, -2, 2, 0
-	);
+	});
 }
 
 void begin(SplinePlotter *context, vec2 canvasSize, vec2 canvasOffset=vec(0,0));
-void drawSpline(SplinePlotter *context, mat4 positionMatrix, vec4 strokeVector, Color c);
+void drawSpline(SplinePlotter *context, mat4f positionMatrix, vec4f strokeVector, Color c);
 void end(SplinePlotter *context);
 
 

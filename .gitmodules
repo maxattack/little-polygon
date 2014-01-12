@@ -1,0 +1,3 @@
+[submodule "vectorial"]
+	path = vectorial
+	url = git@github.com:scoopr/vectorial.git

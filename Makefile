@@ -39,6 +39,9 @@ LIBS = -Llib -L/usr/local/lib -framework OpenGL -framework Cocoa -llittlepolygon
 CFLAGS += -I/usr/local/include/SDL2
 LIBS += -lSDL2 -lSDL2_mixer
 
+# VECTORIAL
+CFLAGS += -Ivectorial/include
+
 # CONFIG FLAGS
 CFLAGS += -DDEBUG
 

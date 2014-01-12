@@ -163,10 +163,14 @@ void begin(SplinePlotter *context, vec2 canvasSize, vec2 canvasOffset) {
 	glVertexAttribPointer(context->aSide, 1, GL_FLOAT, GL_FALSE, sizeof(SplinePlotter::Vertex), (GLvoid*)16);
 }
 
-void drawSpline(SplinePlotter *context, mat4 positionMatrix, vec4 strokeVector, Color c) {
-	glUniformMatrix4fv(context->uPositionMatrix, 1, 0, positionMatrix.m);
-	glUniformMatrix4fv(context->uStrokeMatrix, 1, 0, perpendicularMatrix(positionMatrix).m);
-	glUniform4fv(context->uStrokeVector, 1, strokeVector.values);
+void drawSpline(SplinePlotter *context, mat4f positionMatrix, vec4f strokeVector, Color c) {
+	float buf[16];
+	positionMatrix.store(buf);
+	glUniformMatrix4fv(context->uPositionMatrix, 1, 0, buf);
+	perpendicularMatrix(positionMatrix).store(buf);
+	glUniformMatrix4fv(context->uStrokeMatrix, 1, 0, buf);
+	strokeVector.store(buf);
+	glUniform4fv(context->uStrokeVector, 1, buf);
 	glUniform4f(context->uColor, c.red(), c.green(), c.blue(), c.alpha());
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 2*context->resolution);
 }

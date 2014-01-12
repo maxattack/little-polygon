@@ -15,8 +15,10 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
+#include <vectorial/vectorial.h>
+using namespace vectorial;
+
 #include "littlepolygon_base.h"
-#include "littlepolygon_vmath.h"
 
 // A Generic Forward-Kinematic (FK) system for creating display-trees
 // like in flash.  While this is was implemented with the intention of
@@ -27,7 +29,8 @@
 // system.
 // Implements fully 3D math since even 2D games often have some element
 // of "2.5D" and besides, the performance isn't any different and the
-// hardware is geared for it anyway.
+// hardware is geared for it anyway.  Writing math classes is boring, so
+// I found a nice SIMD implementation on github :D
 
 struct FkContext;
 typedef uint32_t NODE;
@@ -64,8 +67,8 @@ void detachChildren(FkContext *context, NODE parent, bool preserveTransforms=fal
 void setUserData(FkContext *context, NODE node, void *userData);
 
 // actually set the transform of the node
-void setLocal(FkContext *context, NODE node, mat4 transform);
-void setWorld(FkContext *context, NODE node, mat4 transform);
+void setLocal(FkContext *context, NODE node, vectorial::mat4f transform);
+void setWorld(FkContext *context, NODE node, vectorial::mat4f transform);
 // TODO: specialized versions (e.g. setPosition, setRotation, setScale, etc?)
 
 // Solve the local position of the given world-point, which is often
@@ -75,8 +78,8 @@ void setWorld(FkContext *context, NODE node, mat4 transform);
 
 // getters
 NODE parent(FkContext *context, NODE node);
-mat4 local(FkContext *context, NODE node);
-mat4 world(FkContext *context, NODE node);
+vectorial::mat4f local(FkContext *context, NODE node);
+vectorial::mat4f world(FkContext *context, NODE node);
 void* userData(FkContext *context, NODE node);
 
 // iterators
