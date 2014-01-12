@@ -68,8 +68,8 @@ void drawLabel(SpriteBatch* context, FontAsset *font, vec2 p, Color c, const cha
 void drawLabelCentered(SpriteBatch* context, FontAsset *font, vec2 p, Color c, const char *msg);
 void drawTilemap(SpriteBatch* context, TilemapAsset *map, vec2 position=vec(0,0));
 
-// if you want to monkey with the global rendering state you need to flush
-// the render queue first
+// if you want to monkey with the global rendering state (e.g. change blending settings)
+// you need to flush the render queue first.
 void flush(SpriteBatch* context);
 
 // Commit the current draw queue and return the graphics context state to it's

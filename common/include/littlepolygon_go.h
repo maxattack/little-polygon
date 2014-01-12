@@ -124,6 +124,9 @@ GoComponent *getComponent(GoContext *context, GO go, CID cid);
 // Remove a component, destroying it completely.
 void removeComponent(GoContext *context, GoComponent *component);
 
+// ?? I feel kinda weird handling raw pointers like this... is there a compelling
+//    concrete reason to only dispense opaque IDs to components?  Serialization?
+
 // GOs support enabling and disabling, routed to it's components, for the purpose of
 // implementing two common game idioms: GO pools and state-based content.  
 void enable(GoContext *context, GO go);
