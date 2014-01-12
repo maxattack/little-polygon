@@ -111,7 +111,7 @@ int main(int argc, char *argv[]) {
 		begin(splines, canvasSize, scrolling);
 		drawSpline(
 			splines, 
-			quadraticBezierMatrix(vec(0,0,0,0), vec(p.x, p.y, 0, 0), vec(canvasSize.x, canvasSize.y, 0, 0)), 
+			quadraticBezierMatrix(vec4f(0,0,0,0), vec4f(p.x, p.y, 0, 0), vec4f(canvasSize.x, canvasSize.y, 0, 0)), 
 			eccentricStroke(16, -15.75f, 16), 
 			rgb(0xff00ff)
 		);
