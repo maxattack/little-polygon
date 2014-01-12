@@ -31,6 +31,7 @@
 
 struct FkContext;
 typedef uint32_t NODE;
+typedef void (*FkNodeCallback)(NODE node);
 
 // Create a context.  Different contexts can be allocated withing a single
 // application, but NODEs from different contexts cannot directly
@@ -45,8 +46,9 @@ void destroy(FkContext *context);
 // a new ID.
 NODE createNode(FkContext *context, NODE parent=0, void *userData=0, NODE explicitId=0);
 
-// Destroy this node.  ASSERT()s that we have no children.
-void destroy(FkContext *context, NODE node);
+// Destroy this node and all it's children (with an optional callback if you
+// need to know who's being destroyed - invoked in leaf->root order).
+void destroy(FkContext *context, NODE node, FkNodeCallback willDestroy=0);
 
 // Attach the given child to the given parent, detach from it's current
 // parent if necessary.
@@ -69,7 +71,7 @@ void setWorld(FkContext *context, NODE node, mat4 transform);
 // Solve the local position of the given world-point, which is often
 // cheaper for one-off transforms than actually inverting the localToWorld
 // matrix.
-vec4 solveLocal(FkContext *context, NODE node, vec4 worldPosition);
+// vec4 solveLocal(FkContext *context, NODE node, vec4 worldPosition);
 
 // getters
 NODE parent(FkContext *context, NODE node);

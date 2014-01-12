@@ -22,7 +22,7 @@
 // concatenated tree, but I'm waiting for an actual concrete use case
 // to inform the fidgety details.
 
-#define NODE_INDEX(handle) (0xffff & handle)
+#define NODE_INDEX(handle) ((0xffff & handle)-1)
 
 struct FkNode {
 	NODE node;
@@ -36,19 +36,19 @@ struct FkNode {
 		uint32_t flags;
 		struct {
 			uint32_t allocated : 1;
-			uint32_t worldDirty : 1;
+			uint32_t unused : 31;
 		};
 	};
+
 	mat4 localToParent;
-	mat4 localToWorld;
 };
 
 struct FkContext {
 	size_t capacity;
 	FkNode *firstFree;
-	FkNode root; // really just a hack to make sure SIMD alignment is OK :P
+	FkNode first; // really just a hack to make sure SIMD alignment is OK :P
 
-	inline FkNode *nodeBuf() { return (FkNode*)(this+1); }
+	inline FkNode *nodeBuf() { return &first; }
 
 	inline FkNode *lookup(NODE node) {
 		auto index = NODE_INDEX(node);
@@ -66,7 +66,7 @@ FkContext *createFkContext(size_t capacity) {
 	// allocate memory
 	auto context = (FkContext*) LITTLE_POLYGON_MALLOC(
 		sizeof(FkContext) + 
-		capacity * sizeof(FkNode)
+		(capacity-1) * sizeof(FkNode)
 	);
 	context->capacity = capacity;
 
@@ -75,6 +75,7 @@ FkContext *createFkContext(size_t capacity) {
 	context->firstFree = nodes;
 	for(size_t i=0; i<capacity; ++i) {
 		nodes[i].flags = 0;
+		nodes[i].node = i+1;
 		nodes[i].nextSibling = i < capacity-1 ? &nodes[i+1] : 0;
 		nodes[i].prevSibling = i > 0 ? &nodes[i-0] : 0;
 	}
@@ -107,15 +108,13 @@ NODE createNode(FkContext *context, NODE parent, void *userData, NODE explicitId
 	}
 
 	// intialize fields
-	result->node = 0x10000 | (result - context->nodeBuf());
 	result->parent = 0;
 	result->firstChild = 0;
 	result->nextSibling = 0;
 	result->prevSibling = 0;
 	result->userData = userData;
 	result->allocated = 1;
-	result->worldDirty = 1;
-	result->localToWorld = mat();
+	result->localToParent = mat();
 
 	if (parent) {
 		setParent(context, result->node, parent);
@@ -124,16 +123,25 @@ NODE createNode(FkContext *context, NODE parent, void *userData, NODE explicitId
 	return result->node;
 }
 
-void destroy(FkContext *context, NODE node) {
+void destroy(FkContext *context, NODE node, FkNodeCallback willDestroy) {
+	// kill children
+	auto slot = context->lookup(node);
+	while (slot->firstChild) {
+		destroy(context, slot->firstChild->node, willDestroy);
+	}	
+
+	if (willDestroy) {
+		willDestroy(node);
+	}
+
 	// remove from parent
 	setParent(context, node, 0);
 
 	// prepend to free list
-	auto slot = context->lookup(node);
-	ASSERT(slot->firstChild == 0);
 	slot->nextSibling = context->firstFree;
 	slot->prevSibling = 0;
 	slot->flags = 0;
+	slot->node += 0x10000; // fingerprint slot
 	if (context->firstFree) { context->firstFree->prevSibling = slot; }
 	context->firstFree = slot;
 }
@@ -161,9 +169,6 @@ void setParent(FkContext *context, NODE child, NODE parent) {
 		childNode->prevSibling = 0;
 		childNode->parent = 0;
 	}
-
-	// unless we bailed early for a NOOP, dirty the world transform
-	childNode->worldDirty = 1;
 }
 
 void reparent(FkContext *context, NODE child, NODE parent) {
@@ -201,52 +206,37 @@ void setUserData(FkContext *context, NODE node, void *userData) {
 void setLocal(FkContext *context, NODE node, mat4 transform) {
 	auto slot = context->lookup(node);
 	slot->localToParent = transform;
-	if (slot->parent) {
-		slot->worldDirty = 1;
-	} else {
-		slot->worldDirty = 0;
-		slot->localToWorld = transform;
-	}
 }
 
 void setWorld(FkContext *context, NODE node, mat4 transform) {
-	ASSERT(0);
+	auto slot = context->lookup(node);
+	if (slot->parent) {
+		slot->localToParent = transform * invert(world(context, slot->parent->node));
+	} else {
+		slot->localToParent = transform;
+	}
 }
 
-vec4 solveLocal(FkContext *context, NODE node, vec4 worldPosition) {
-	ASSERT(0);
-	return vec(0,0,0,0);
-}
+// vec4 solveLocal(FkContext *context, NODE node, vec4 worldPosition) {
+// 	// temp
+// 	return invert(world(context, node)) * worldPosition;
+// }
 
 NODE parent(FkContext *context, NODE node) {
 	return context->lookup(node)->parent->node;
 }
 
 mat4 local(FkContext *context, NODE node) {
-	return context->lookup(node)->localToWorld;
-}
-
-static bool doGetWorldTransform(FkNode *node, mat4 *result) {
-	// returns the world transform this node as well as whether
-	// it had to be recalculated.
-	if (node->parent && (doGetWorldTransform(node->parent, result) || node->worldDirty)) {
-		node->localToWorld = (*result) * node->localToParent;
-		node->worldDirty = 0;
-		return true;
-	} else if (node->worldDirty) {
-		*result = node->localToWorld = node->localToParent;
-		node->worldDirty = 0;
-		return true;
-	} else {
-		*result = node->localToWorld;
-		return false;
-	}
+	return context->lookup(node)->localToParent;
 }
 
 mat4 world(FkContext *context, NODE node) {
-	mat4 result;
-	doGetWorldTransform(context->lookup(node), &result);
-	return result;
+	auto slot = context->lookup(node);
+	if (slot->parent) {
+		return slot->localToParent * world(context, slot->parent->node);
+	} else {
+		return slot->localToParent;
+	}
 }
 
 void* userData(FkContext *context, NODE node) {

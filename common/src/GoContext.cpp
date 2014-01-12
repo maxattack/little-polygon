@@ -106,7 +106,7 @@ static void sendMessage(GoContext *context, GoComponent *component, uint32_t mes
 //------------------------------------------------------------------------------
 
 GoContext *createGoContext(size_t numComponents, GoMessageHandler *componentBuf, size_t goCapacity, size_t componentCapacity) {
-	ASSERT(goCapacity < 0xffff);
+	ASSERT(goCapacity <= 1024); // in case we wannt use BitSet<1024> in the future or something
 
 	// block allocate the memory
 	GoContext *context = (GoContext*) LITTLE_POLYGON_MALLOC(

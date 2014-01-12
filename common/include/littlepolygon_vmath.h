@@ -549,48 +549,46 @@ inline mat4 mat(vec4 col0, vec4 col1, vec4 col2, vec4 col3) {
   #endif  
 }
 
-// mat4 invert(const mat4 &i) {
-//   mat4 m;
+mat4 invert(const mat4 &i) {
+  mat4 m;
 
-//     float s0 = i.m00 * i.m11 - i.m10 * i.m01;
-//     float s1 = i.m00 * i.m12 - i.m10 * i.m02;
-//     float s2 = i.m00 * i.m13 - i.m10 * i.m03;
-//     float s3 = i.m01 * i.m12 - i.m11 * i.m02;
-//     float s4 = i.m01 * i.m13 - i.m11 * i.m03;
-//     float s5 = i.m02 * i.m13 - i.m12 * i.m03;
+    float s0 = i.m00 * i.m11 - i.m10 * i.m01;
+    float s1 = i.m00 * i.m12 - i.m10 * i.m02;
+    float s2 = i.m00 * i.m13 - i.m10 * i.m03;
+    float s3 = i.m01 * i.m12 - i.m11 * i.m02;
+    float s4 = i.m01 * i.m13 - i.m11 * i.m03;
+    float s5 = i.m02 * i.m13 - i.m12 * i.m03;
 
-//     float c5 = i.m22 * i.m33 - i.m32 * i.m23;
-//     float c4 = i.m21 * i.m33 - i.m31 * i.m23;
-//     float c3 = i.m21 * i.m32 - i.m31 * i.m22;
-//     float c2 = i.m20 * i.m33 - i.m30 * i.m23;
-//     float c1 = i.m20 * i.m32 - i.m30 * i.m22;
-//     float c0 = i.m20 * i.m31 - i.m30 * i.m21;
+    float c5 = i.m22 * i.m33 - i.m32 * i.m23;
+    float c4 = i.m21 * i.m33 - i.m31 * i.m23;
+    float c3 = i.m21 * i.m32 - i.m31 * i.m22;
+    float c2 = i.m20 * i.m33 - i.m30 * i.m23;
+    float c1 = i.m20 * i.m32 - i.m30 * i.m22;
+    float c0 = i.m20 * i.m31 - i.m30 * i.m21;
 
-//     // Should check for 0 determinant
+    float det = (s0 * c5 - s1 * c4 + s2 * c3 + s3 * c2 - s4 * c1 + s5 * c0);
+    float invdet = 1 / det;
 
-//     float det = (s0 * c5 - s1 * c4 + s2 * c3 + s3 * c2 - s4 * c1 + s5 * c0);
-//     float invdet = 1 / det;
+    m.m00 = (i.m11 * c5 - i.m12 * c4 + i.m13 * c3) * invdet;
+    m.m01 = (-i.m01 * c5 + i.m02 * c4 - i.m03 * c3) * invdet;
+    m.m02 = (i.m31 * s5 - i.m32 * s4 + i.m33 * s3) * invdet;
+    m.m03 = (-i.m21 * s5 + i.m22 * s4 - i.m23 * s3) * invdet;
 
-//     m.m00 = (i.m11 * c5 - i.m12 * c4 + i.m13 * c3) * invdet;
-//     m.m01 = (-i.m01 * c5 + i.m02 * c4 - i.m03 * c3) * invdet;
-//     m.m02 = (i.m31 * s5 - i.m32 * s4 + i.m33 * s3) * invdet;
-//     m.m03 = (-i.m21 * s5 + i.m22 * s4 - i.m23 * s3) * invdet;
+    m.m10 = (-i.m10 * c5 + i.m12 * c2 - i.m13 * c1) * invdet;
+    m.m11 = (i.m00 * c5 - i.m02 * c2 + i.m03 * c1) * invdet;
+    m.m12 = (-i.m30 * s5 + i.m32 * s2 - i.m33 * s1) * invdet;
+    m.m13 = (i.m20 * s5 - i.m22 * s2 + i.m23 * s1) * invdet;
 
-//     m.m10 = (-i.m10 * c5 + i.m12 * c2 - i.m13 * c1) * invdet;
-//     m.m11 = (i.m00 * c5 - i.m02 * c2 + i.m03 * c1) * invdet;
-//     m.m12 = (-i.m30 * s5 + i.m32 * s2 - i.m33 * s1) * invdet;
-//     m.m13 = (i.m20 * s5 - i.m22 * s2 + i.m23 * s1) * invdet;
+    m.m20 = (i.m10 * c4 - i.m11 * c2 + i.m13 * c0) * invdet;
+    m.m21 = (-i.m00 * c4 + i.m01 * c2 - i.m03 * c0) * invdet;
+    m.m22 = (i.m30 * s4 - i.m31 * s2 + i.m33 * s0) * invdet;
+    m.m23 = (-i.m20 * s4 + i.m21 * s2 - i.m23 * s0) * invdet;
 
-//     m.m20 = (i.m10 * c4 - i.m11 * c2 + i.m13 * c0) * invdet;
-//     m.m21 = (-i.m00 * c4 + i.m01 * c2 - i.m03 * c0) * invdet;
-//     m.m22 = (i.m30 * s4 - i.m31 * s2 + i.m33 * s0) * invdet;
-//     m.m23 = (-i.m20 * s4 + i.m21 * s2 - i.m23 * s0) * invdet;
+    m.m30 = (-i.m10 * c3 + i.m11 * c1 - i.m12 * c0) * invdet;
+    m.m31 = (i.m00 * c3 - i.m01 * c1 + i.m02 * c0) * invdet;
+    m.m32 = (-i.m30 * s3 + i.m31 * s1 - i.m32 * s0) * invdet;
+    m.m33 = (i.m20 * s3 - i.m21 * s1 + i.m22 * s0) * invdet;
 
-//     m.m30 = (-i.m10 * c3 + i.m11 * c1 - i.m12 * c0) * invdet;
-//     m.m31 = (i.m00 * c3 - i.m01 * c1 + i.m02 * c0) * invdet;
-//     m.m32 = (-i.m30 * s3 + i.m31 * s1 - i.m32 * s0) * invdet;
-//     m.m33 = (i.m20 * s3 - i.m21 * s1 + i.m22 * s0) * invdet;
-
-//     return m;
-// }
+    return m;
+}
 
