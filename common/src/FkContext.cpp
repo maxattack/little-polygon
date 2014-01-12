@@ -254,12 +254,7 @@ void FkChildIterator::next() {
 // GO SYSTEM BINDINGS
 //------------------------------------------------------------------------------
 
-static int nodeMessageHandler(
-	GoComponent *component, 
-	int msg, 
-	const void *args, 
-	void *user
-) {	
+static int nodeMessageHandler(GoComponent *component, int msg, const void *args, void *user) {	
 	auto fkContext = (FkContext*) user;
 	
 	switch(msg) {
