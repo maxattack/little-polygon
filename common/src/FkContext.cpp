@@ -213,11 +213,6 @@ void setWorld(FkContext *context, NODE node, mat4f transform) {
 	}
 }
 
-// vec4 solveLocal(FkContext *context, NODE node, vec4 worldPosition) {
-// 	// temp
-// 	return invert(world(context, node)) * worldPosition;
-// }
-
 NODE parent(FkContext *context, NODE node) {
 	return context->lookup(node)->parent->node;
 }

@@ -67,19 +67,14 @@ void detachChildren(FkContext *context, NODE parent, bool preserveTransforms=fal
 void setUserData(FkContext *context, NODE node, void *userData);
 
 // actually set the transform of the node
-void setLocal(FkContext *context, NODE node, vectorial::mat4f transform);
-void setWorld(FkContext *context, NODE node, vectorial::mat4f transform);
+void setLocal(FkContext *context, NODE node, mat4f transform);
+void setWorld(FkContext *context, NODE node, mat4f transform);
 // TODO: specialized versions (e.g. setPosition, setRotation, setScale, etc?)
-
-// Solve the local position of the given world-point, which is often
-// cheaper for one-off transforms than actually inverting the localToWorld
-// matrix.
-// vec4 solveLocal(FkContext *context, NODE node, vec4 worldPosition);
 
 // getters
 NODE parent(FkContext *context, NODE node);
-vectorial::mat4f local(FkContext *context, NODE node);
-vectorial::mat4f world(FkContext *context, NODE node);
+mat4f local(FkContext *context, NODE node);
+mat4f world(FkContext *context, NODE node);
 void* userData(FkContext *context, NODE node);
 
 // iterators
