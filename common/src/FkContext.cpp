@@ -45,6 +45,7 @@ struct FkContext {
 	size_t capacity;
 	size_t count;
 	Bitset<1024> allocationMask;
+	FkNode *firstRoot;
 	
 	mat4f first; // really just a hack to make sure SIMD alignment is OK :P
 
@@ -124,6 +125,11 @@ NODE createNode(FkContext *context, NODE parent, void *userData, NODE explicitId
 
 	if (parent) {
 		setParent(context, result->node, parent);
+	} else {
+		// attach to the root list
+		result->nextSibling = context->firstRoot;
+		if (context->firstRoot) { context->firstRoot->prevSibling = result; }
+		context->firstRoot = result;
 	}
 
 	++context->count;
@@ -157,20 +163,31 @@ void setParent(FkContext *context, NODE child, NODE parent) {
 		// cleanup existing state
 		if (childNode->parent == parentNode) { return; }
 		if (childNode->parent) { setParent(context, child, 0); }
-		// add to linked list
+
+		// remove from root list
+		if (childNode->nextSibling) { childNode->nextSibling->prevSibling = childNode->prevSibling; }
+		if (childNode->prevSibling) { childNode->prevSibling->nextSibling = childNode->nextSibling; }
+		if (context->firstRoot == childNode) { context->firstRoot = childNode->nextSibling; }
+
+		// add to parent list
 		childNode->nextSibling = parentNode->firstChild;
+		childNode->prevSibling = 0;
 		if (parentNode->firstChild) { parentNode->firstChild->prevSibling = childNode; }
 		parentNode->firstChild = childNode;
 		childNode->parent = parentNode;
 	} else {
 		if (childNode->parent == 0) { return; }
-		// remove from linked list
+		// remove from parent list
 		if (childNode->nextSibling) { childNode->nextSibling->prevSibling = childNode->prevSibling; }
 		if (childNode->prevSibling) { childNode->prevSibling->nextSibling = childNode->nextSibling; }
 		if (childNode == childNode->parent->firstChild) { childNode->parent->firstChild = childNode->nextSibling; }
-		childNode->nextSibling = 0;
-		childNode->prevSibling = 0;
 		childNode->parent = 0;
+
+		// add to root list
+		childNode->nextSibling = context->firstRoot;
+		childNode->prevSibling = 0;
+		if (context->firstRoot) { context->firstRoot->prevSibling = childNode; }
+		context->firstRoot = childNode;
 	}
 }
 
@@ -241,7 +258,7 @@ void* userData(FkContext *context, NODE node) {
 }
 
 FkChildIterator::FkChildIterator(FkContext *context, NODE parent) : 
-internal(context->lookup(parent)->firstChild),
+internal(parent ? context->lookup(parent)->firstChild : context->firstRoot),
 current(internal ? ((FkNode*)internal)->node : 0) {
 }
 

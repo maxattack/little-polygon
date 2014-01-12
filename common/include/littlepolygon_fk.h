@@ -85,8 +85,8 @@ struct FkChildIterator {
 	void *internal;
 	NODE current;
 
-	FkChildIterator(FkContext *context, NODE parent);
-	inline bool finished() { return current == 0; }
+	FkChildIterator(FkContext *context, NODE parent=0);
+	inline bool finished() const { return current == 0; }
 	void next();
 };
 
