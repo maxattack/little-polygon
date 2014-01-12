@@ -52,6 +52,7 @@ struct FkContext {
 	inline FkNode *nodeBuf() { return (FkNode*)(tformBuf() + capacity); }
 
 	inline mat4f *tform(NODE node) {
+		ASSERT(node);
 		auto index = NODE_INDEX(node);
 		ASSERT(index < capacity);
 		ASSERT(allocationMask[index]);
@@ -59,6 +60,7 @@ struct FkContext {
 	}
 
 	inline FkNode *lookup(NODE node) {
+		ASSERT(node);
 		auto index = NODE_INDEX(node);
 		ASSERT(index < capacity);
 		ASSERT(allocationMask[index]);
