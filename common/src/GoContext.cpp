@@ -94,12 +94,6 @@ static uint32_t hash(const char* name) {
     return hval;
 }
 
-static void sendMessage(GoContext *context, GoComponent *component, uint32_t messageId, void *params) {
-	auto coTypeSlot  = context->coType(component->cid);
-	ASSERT(coTypeSlot->handler != 0);
-	coTypeSlot->handler(component, messageId, params, coTypeSlot->context);
-}
-
 //------------------------------------------------------------------------------
 // IMPLEMENTATION
 //------------------------------------------------------------------------------
@@ -260,7 +254,6 @@ GoComponent *addComponent(GoContext *context, GO go, CID cid, const void *data) 
 	ASSERT(context->coCount < context->coCapacity);
 	auto slot = context->slotFor(go);
 	auto coSlot  = context->coType(cid);
-	ASSERT(coSlot->handler != 0);
 
 	// pop a slot from the component free list
 	auto result = context->coFirstFree;
@@ -277,13 +270,14 @@ GoComponent *addComponent(GoContext *context, GO go, CID cid, const void *data) 
 	// init fields
 	result->cid = cid;
 	result->go = slot->go;
-	result->context = context;
 	result->userData = 0;
 
 	// logically initialize
-	coSlot->handler(result, GO_MESSAGE_INIT, data, coSlot->context);
-	if (slot->enabled) {
-		coSlot->handler(result, GO_MESSAGE_ENABLE, 0, coSlot->context);
+	if (coSlot->init) {
+		coSlot->init(context, result, data, coSlot->context);
+	}
+	if (slot->enabled && coSlot->enable) {
+		coSlot->enable(context, result, 0, coSlot->context);
 	}
 
 	// update bookkeeping and return
@@ -303,10 +297,11 @@ GoComponent *getComponent(GoContext *context, GO go, CID cid) {
 void removeComponent(GoContext *context, GoComponent *component) {
 	auto slot = context->slotFor(component->go);
 	auto coTypeSlot  = context->coType(component->cid);
-	ASSERT(coTypeSlot->handler != 0);
 
 	// logically destroy
-	coTypeSlot->handler(component, GO_MESSAGE_DESTROY, 0, coTypeSlot->context);
+	if (coTypeSlot->destroy) {
+		coTypeSlot->destroy(context, component, 0, coTypeSlot->context);
+	}
 
 	// remove from GO list
 	auto coSlot = (GoComponentSlot*) component;
@@ -332,7 +327,10 @@ void enable(GoContext *context, GO go) {
 
 	if (!slot->enabled) {
 		for (auto p=slot->coFirst; p; p=p->next) {
-			sendMessage(context, p, GO_MESSAGE_ENABLE, 0);
+			auto coSlot = context->coType(p->cid);
+			if (coSlot->enable) {
+				coSlot->enable(context, p, 0, coSlot->context);
+			}
 		}
 		slot->enabled = 1;
 	}
@@ -344,16 +342,12 @@ void disable(GoContext *context, GO go) {
 	auto slot = context->slotFor(go);
 	if (slot->enabled) {
 		for (auto p=slot->coFirst; p; p=p->next) {
-			sendMessage(context, p, GO_MESSAGE_DISABLE, 0);
+			auto coSlot = context->coType(p->cid);
+			if (coSlot->disable) {
+				coSlot->disable(context, p, 0, coSlot->context);
+			}
 		}
 		slot->enabled = 0;
-	}
-}
-
-void sendMessage(GoContext *context, GO go, uint32_t messageId, void *params) {
-	auto slot = context->slotFor(go);	
-	for(auto p=slot->coFirst; p; p=p->next) {
-		sendMessage(context, p, messageId, params);
 	}
 }
 

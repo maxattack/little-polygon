@@ -2,6 +2,7 @@ LIBRARY_OBJ_FILES =     \
 	obj/glew.o          \
 	obj/AssetBundle.o   \
 	obj/FkContext.o     \
+	obj/GoBinding.o     \
 	obj/GoContext.o     \
 	obj/LinePlotter.o   \
 	obj/SampleAsset.o   \

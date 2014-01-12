@@ -20,7 +20,7 @@ using namespace vectorial;
 
 // this dependency is only required for the go bindings; the system is
 // useable without it.
-#include "littlepolygon_go.h"
+#include "littlepolygon_base.h"
 
 // A Generic Forward-Kinematic (FK) system for creating display-trees
 // like in flash.  While this is was implemented with the intention of
@@ -89,13 +89,3 @@ struct FkChildIterator {
 	inline bool finished() const { return current == 0; }
 	void next();
 };
-
-// bindings for the GameObject system
-
-struct NodeAsset {
-	NODE id;
-	NODE parent;
-	float matrix[16];
-};
-
-GoComponentDef nodeDef(FkContext *context);

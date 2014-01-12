@@ -14,8 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef LITTLEPOLYGON_GO
-#define LITTLEPOLYGON_GO
+#pragma once
 
 #include "littlepolygon_base.h"
 
@@ -47,12 +46,11 @@ typedef uint32_t CID; // opaque component-type handle
 struct GoComponent {
 	CID cid;            // logical type
 	GO go;              // logical go
-	GoContext *context; // context for this component
-	void *userData;     // active data associated with the component
+	void *userData;     // implementation associated with the component
 };
 
 // While components all have different specialized concrete behaviour, the share a
-// basic interface for responding to GO messages:
+// basic interface for responding to GO messages (very COMish):
 //
 //  INIT: initialize the component (due to order of init, not a good idea to depend
 //        on sibling components here).  Components leave init logically "disabled"
@@ -64,26 +62,22 @@ struct GoComponent {
 //
 //  DESTROY: actually tear-down the component and release resources.  The Go will be 
 //           dealloced after all components are destroyed.
-//
-// All other nonnegative-messages are interpretted as "custom" messages.
 
-enum GoMessage {
-	GO_MESSAGE_INIT    = -1,
-	GO_MESSAGE_ENABLE  = -2,
-	GO_MESSAGE_DISABLE = -3,
-	GO_MESSAGE_DESTROY = -4
-};
 
-typedef int (*GoMessageHandler)(
-	GoComponent *component,       // the component receiving the message
-	int message,             // the message identifier
-	const void *args,             // the arguments to the message
-	void *user                    // a user-supplied pointer
+typedef int (*GoComponentMethod)(
+	GoContext *context,     // current go context
+	GoComponent *component, // the component receiving the method
+	const void *args,       // (optional) arguments to the method
+	void *user              // the component type's context
 );
+
 
 struct GoComponentDef {
 	void *context;
-	GoMessageHandler handler;
+	GoComponentMethod init;
+	GoComponentMethod enable;
+	GoComponentMethod disable;
+	GoComponentMethod destroy;
 };
 
 // Initialize a new GO context.  These are in principle serializable to ease the 
@@ -91,7 +85,10 @@ struct GoComponentDef {
 // "remote contexts" like in MMOs. Capacity is needed because the whole database
 // is "block-allocated" to keep everything thread-local friendly.  No internal
 // dynamic memory is used.
-GoContext *createGoContext(size_t numComponents, GoComponentDef *componentBuf, size_t goCapacity=1024, size_t componentCapacity=1024);
+GoContext *createGoContext(
+	size_t numComponents, GoComponentDef *componentBuf, 
+	size_t goCapacity=1024, size_t componentCapacity=1024
+);
 void destroy(GoContext *context);
 
 // Create a new GO.  This really just allocated an identifier and hashes the
@@ -132,10 +129,6 @@ void removeComponent(GoContext *context, GoComponent *component);
 void enable(GoContext *context, GO go);
 void disable(GoContext *context, GO go);
 
-// A generic message-sending function (a last resort if there isn't a better way to 
-// handle data-flow, e.g. IoC dynamic event subscription + dispatch).
-void sendMessage(GoContext *context, GO go, uint32_t messageId, void *params=0);
-
 //------------------------------------------------------------------------------
 // ITERATORS
 //------------------------------------------------------------------------------
@@ -164,5 +157,3 @@ struct GoComponentIterator {
 
 };
 
-
-#endif
