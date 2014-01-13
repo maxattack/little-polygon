@@ -18,40 +18,49 @@
 
 #include "littlepolygon_graphics.h"
 
-// An efficient system for storing sprites in Z-sorted "layers" and clipping/rendering
-// in a batch instead of emitting lots of individual draw-calls.  Useable on
-// it's own or in conjunction with the fk display tree via the go module.
+// An efficient system for storing sprites and rendering sprites in a batch.
+// Because the batch implements a deque, sprites can be on one of two layers 
+// (top or bottom), but are not well z-ordered within a layer.
 //
-// TODO: generic frame-based "animators" ?
+// ?? generic frame-based "animators" ??
+// ?? >2 multilayer ??
 
 struct SpriteBatch;
-typedef uint32_t SPRITE;
+struct Sprite;
 
 // Create a new sprite context from a given capacity.
-SpriteBatch *createSpriteBatch(size_t numLayers=8, size_t layerCapacity=128, size_t spriteCapacity=1024);
+SpriteBatch *createSpriteBatch(size_t capacity=1024);
 void destroy(SpriteBatch *context);
 
 // Create a new sprite
-SPRITE createSprite(SpriteBatch *context, ImageAsset *image, int layer=0, SPRITE explicitId=0);
-void destroy(SpriteBatch *context, SPRITE sprite);
+Sprite* createSprite(
+	SpriteBatch *context, 
+	ImageAsset *image, 
+	vec2 position=vec(0,0),
+	int frame=0, 
+	Color c=rgba(0), 
+	bool visible=1, 
+	bool onTop=0, 
+	void *userData=0
+);
+void destroy(SpriteBatch *context, Sprite* sprite);
 
 // setters
-void setImage(SpriteBatch *context, SPRITE sprite, ImageAsset *image);
-void setFrame(SpriteBatch *context, SPRITE sprite, int frame);
-void setLayer(SpriteBatch *context, SPRITE sprite, int layer);
-void setVisible(SpriteBatch *context, SPRITE sprite, bool visible);
-void setColor(SpriteBatch *context, SPRITE sprite, Color c);
-void setUserData(SpriteBatch *context, SPRITE sprite, void *userData);
+void setLayer(SpriteBatch *context, Sprite* sprite, int layer);
+void setImage(Sprite* sprite, ImageAsset *image);
+void setFrame(Sprite* sprite, int frame);
+void setVisible(Sprite* sprite, bool visible);
+void setColor(Sprite* sprite, Color c);
+void setUserData(Sprite* sprite, void *userData);
 
 // getters
-ImageAsset *image(SpriteBatch *context, SPRITE sprite);
-int frame(SpriteBatch *context, SPRITE sprite);
-int layer(SpriteBatch *context, SPRITE sprite);
-bool visible(SpriteBatch *context, SPRITE sprite);
-Color color(SpriteBatch *context, SPRITE sprite);
-void *userData(SpriteBatch *context, SPRITE sprite);
+int layer(Sprite *sprite);
+ImageAsset *image(Sprite* sprite);
+int frame(Sprite* sprite);
+bool visible(Sprite* sprite);
+Color color(Sprite* sprite);
+void *userData(Sprite* sprite);
 
 // batch methods
 // void advanceAnimations(SpriteBatch *context, float dt);
-void drawLayer(SpriteBatch *context, int layerIdx, SpritePlotter *plotter);
 void draw(SpriteBatch *context, SpritePlotter *plotter);

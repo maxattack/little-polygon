@@ -31,14 +31,12 @@
 //   and rendering.
 // * E.G. see positionSprites() in gobindings
 
-#define NODE_INDEX(handle) ((0xffff & handle)-1)
-
-struct FkNode {
-	NODE node;
-	FkNode *parent;
-	FkNode *firstChild;
-	FkNode *nextSibling;
-	FkNode *prevSibling;
+struct Node {
+	Node *parent;
+	Node *firstChild;
+	Node *nextSibling;
+	Node *prevSibling;
+	// mat4f local
 	void *userData;
 };
 
@@ -46,28 +44,29 @@ struct FkContext {
 	size_t capacity;
 	size_t count;
 	Bitset<1024> allocationMask;
-	FkNode *firstRoot;
+	Node *firstRoot;
 	
 	mat4f first; // really just a hack to make sure SIMD alignment is OK :P
 
 	inline mat4f *tformBuf() { return &first; }
-	inline FkNode *nodeBuf() { return (FkNode*)(tformBuf() + capacity); }
+	inline Node *nodeBuf() { return (Node*)(tformBuf() + capacity); }
 
-	inline mat4f *tform(NODE node) {
-		ASSERT(node);
-		auto index = NODE_INDEX(node);
-		ASSERT(index < capacity);
+	bool owns(Node *node) {
+		int index = node - nodeBuf();
+		return 0 <= index && index < capacity;
+	}
+
+	bool allocated(Node *node) {
+		return owns(node) && allocationMask[node - nodeBuf()];
+	}
+
+	inline mat4f *tform(Node* node) {
+		ASSERT(owns(node));
+		auto index = node - nodeBuf();
 		ASSERT(allocationMask[index]);
 		return tformBuf() + index;
 	}
 
-	inline FkNode *lookup(NODE node) {
-		ASSERT(node);
-		auto index = NODE_INDEX(node);
-		ASSERT(index < capacity);
-		ASSERT(allocationMask[index]);
-		return nodeBuf() + index;
-	}
 };
 
 FkContext *createFkContext(size_t capacity) {
@@ -78,38 +77,24 @@ FkContext *createFkContext(size_t capacity) {
 	auto context = (FkContext*) LITTLE_POLYGON_MALLOC(
 		sizeof(FkContext) + 
 		(capacity-1) * sizeof(mat4f) + 
-		(capacity) * sizeof(FkNode)
+		(capacity) * sizeof(Node)
 	);
 	context->capacity = capacity;
 	context->count = 0;
 	context->allocationMask = Bitset<1024>();
-
-	// initialize node indices
-	for(int i=0; i<capacity; ++i) {
-		context->nodeBuf()[i].node = i+1;
-	}
-
-	return 0;
+	return context;
 }
 
 void destroy(FkContext *context) {
 	LITTLE_POLYGON_FREE(context);
 }
 
-NODE createNode(FkContext *context, NODE parent, void *userData, NODE explicitId) {
+Node* createNode(FkContext *context, Node* parent, void *userData) {
 	ASSERT(context->count < context->capacity);
 
 	unsigned index;
-	if (explicitId) {
-		index = NODE_INDEX(explicitId);
-		ASSERT(index < context->capacity);
-		if(context->allocationMask[index]) {
-			return 0;
-		}
-	} else {
-		if (!(~context->allocationMask).clearFirst(index)) {
-			return 0;
-		}
+	if (!(~context->allocationMask).clearFirst(index)) {
+		return 0;
 	}
 
 	context->allocationMask.mark(index);
@@ -125,7 +110,7 @@ NODE createNode(FkContext *context, NODE parent, void *userData, NODE explicitId
 	context->tformBuf()[index] = mat4f::identity();
 
 	if (parent) {
-		setParent(context, result->node, parent);
+		setParent(context, result, parent);
 	} else {
 		// attach to the root list
 		result->nextSibling = context->firstRoot;
@@ -134,137 +119,119 @@ NODE createNode(FkContext *context, NODE parent, void *userData, NODE explicitId
 	}
 
 	++context->count;
-	return result->node;
+	return result;
 }
 
-void destroy(FkContext *context, NODE node) {
-	ASSERT(node);
-	ASSERT(context->allocationMask[NODE_INDEX(node)]);
+void destroy(FkContext *context, Node* node) {
+	ASSERT(context->allocated(node));
 
 	// kill children
-	auto slot = context->lookup(node);
-	while (slot->firstChild) {
-		destroy(context, slot->firstChild->node);
+	while (node->firstChild) {
+		destroy(context, node->firstChild);
 	}	
 
 	// remove from parent
 	setParent(context, node, 0);
 
 	// prepend to free list
-	slot->node += 0x10000; // fingerprint slot
-	context->allocationMask.clear(NODE_INDEX(node));
+	context->allocationMask.clear(node - context->nodeBuf());
 	--context->count;
 }
 
-void setParent(FkContext *context, NODE child, NODE parent) {
-	auto childNode = context->lookup(child);
-
+void setParent(FkContext *context, Node* child, Node* parent) {
 	if (parent) {
-		auto parentNode = context->lookup(parent);
 		// cleanup existing state
-		if (childNode->parent == parentNode) { return; }
-		if (childNode->parent) { setParent(context, child, 0); }
+		if (child->parent == parent) { return; }
+		if (child->parent) { setParent(context, child, 0); }
 
 		// remove from root list
-		if (childNode->nextSibling) { childNode->nextSibling->prevSibling = childNode->prevSibling; }
-		if (childNode->prevSibling) { childNode->prevSibling->nextSibling = childNode->nextSibling; }
-		if (context->firstRoot == childNode) { context->firstRoot = childNode->nextSibling; }
+		if (child->nextSibling) { child->nextSibling->prevSibling = child->prevSibling; }
+		if (child->prevSibling) { child->prevSibling->nextSibling = child->nextSibling; }
+		if (context->firstRoot == child) { context->firstRoot = child->nextSibling; }
 
 		// add to parent list
-		childNode->nextSibling = parentNode->firstChild;
-		childNode->prevSibling = 0;
-		if (parentNode->firstChild) { parentNode->firstChild->prevSibling = childNode; }
-		parentNode->firstChild = childNode;
-		childNode->parent = parentNode;
+		child->nextSibling = parent->firstChild;
+		child->prevSibling = 0;
+		if (parent->firstChild) { parent->firstChild->prevSibling = child; }
+		parent->firstChild = child;
+		child->parent = parent;
 	} else {
-		if (childNode->parent == 0) { return; }
+		if (child->parent == 0) { return; }
 		// remove from parent list
-		if (childNode->nextSibling) { childNode->nextSibling->prevSibling = childNode->prevSibling; }
-		if (childNode->prevSibling) { childNode->prevSibling->nextSibling = childNode->nextSibling; }
-		if (childNode == childNode->parent->firstChild) { childNode->parent->firstChild = childNode->nextSibling; }
-		childNode->parent = 0;
+		if (child->nextSibling) { child->nextSibling->prevSibling = child->prevSibling; }
+		if (child->prevSibling) { child->prevSibling->nextSibling = child->nextSibling; }
+		if (child == child->parent->firstChild) { child->parent->firstChild = child->nextSibling; }
+		child->parent = 0;
 
 		// add to root list
-		childNode->nextSibling = context->firstRoot;
-		childNode->prevSibling = 0;
-		if (context->firstRoot) { context->firstRoot->prevSibling = childNode; }
-		context->firstRoot = childNode;
+		child->nextSibling = context->firstRoot;
+		child->prevSibling = 0;
+		if (context->firstRoot) { context->firstRoot->prevSibling = child; }
+		context->firstRoot = child;
 	}
 }
 
-void reparent(FkContext *context, NODE child, NODE parent) {
-	// check first for NOOP
-	auto childNode = context->lookup(child);
-	if (parent) {
-		if (childNode->parent == context->lookup(parent)) { return; }
-	} else {
-		if(childNode->parent == 0) { return; }
+void reparent(FkContext *context, Node* child, Node* parent) {
+	if (child->parent != parent) {
+		auto worldTransform = world(context, child);
+		setParent(context, child, parent);
+		setWorld(context, child, worldTransform);	
 	}
-
-	// if we didn't bail early, then actually do stuff
-	auto worldTransform = world(context, child);
-	setParent(context, child, parent);
-	setWorld(context, child, worldTransform);	
 }
 
-void detachChildren(FkContext *context, NODE parent, bool preserveTransforms) {
-	auto node = context->lookup(parent);
+void detachChildren(FkContext *context, Node* node, bool preserveTransforms) {
 	if (preserveTransforms) {
 		while(node->firstChild) {
-			reparent(context, node->firstChild->node, 0);
+			reparent(context, node->firstChild, 0);
 		}
 	} else {
 		while(node->firstChild) {
-			setParent(context, node->firstChild->node, 0);
+			setParent(context, node->firstChild, 0);
 		}
 	}
 }
 
-void setUserData(FkContext *context, NODE node, void *userData) {
-	context->lookup(node)->userData = userData;
+void setUserData(FkContext *context, Node* node, void *userData) {
+	node->userData = userData;
 }
 
-void setLocal(FkContext *context, NODE node, mat4f transform) {
+void setLocal(FkContext *context, Node* node, mat4f transform) {
 	*(context->tform(node)) = transform;
 }
 
-void setWorld(FkContext *context, NODE node, mat4f transform) {
-	auto slot = context->lookup(node);
-	if (slot->parent) {
-		*context->tform(node) = transform * inverse(world(context, slot->parent->node));
+void setWorld(FkContext *context, Node* node, mat4f transform) {
+	if (node->parent) {
+		*context->tform(node) = transform * inverse(world(context, node->parent));
 	} else {
 		*context->tform(node) = transform;
 	}
 }
 
-NODE parent(FkContext *context, NODE node) {
-	return context->lookup(node)->parent->node;
+Node* parent(FkContext *context, Node* node) {
+	return node->parent;
 }
 
-mat4f local(FkContext *context, NODE node) {
+mat4f local(FkContext *context, Node* node) {
 	return *context->tform(node);
 }
 
-mat4f world(FkContext *context, NODE node) {
-	auto slot = context->lookup(node);
-	if (slot->parent) {
-		return local(context, node) * world(context, slot->parent->node);
+mat4f world(FkContext *context, Node* node) {
+	if (node->parent) {
+		return local(context, node) * world(context, node->parent);
 	} else {
 		return local(context, node);
 	}
 }
 
-void* userData(FkContext *context, NODE node) {
-	return context->lookup(node)->userData;
+void* userData(FkContext *context, Node* node) {
+	return node->userData;
 }
 
-FkChildIterator::FkChildIterator(FkContext *context, NODE parent) : 
-internal(parent ? context->lookup(parent)->firstChild : context->firstRoot),
-current(internal ? ((FkNode*)internal)->node : 0) {
+FkChildIterator::FkChildIterator(FkContext *context, Node* parent) : 
+current(parent ? parent->firstChild : context->firstRoot) {
 }
 
 void FkChildIterator::next() {
-	internal = ((FkNode*)internal)->nextSibling;
-	current = internal ? ((FkNode*)internal)->node : 0;
+	current = current->nextSibling;
 }
 

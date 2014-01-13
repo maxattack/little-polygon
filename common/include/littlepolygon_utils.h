@@ -54,6 +54,7 @@ struct vec2 {
 	vec2() {}
 	vec2(float ax, float ay) : x(ax), y(ay) {}
 	vec2(SDL_Point p) : x(p.x), y(p.y) {}
+	vec2(vec2f u) : x(u.x()), y(u.y()) {}
 
 	#ifdef BOX2D_H
 	vec2(b2Vec2 v) : x(v.x), y(v.y) {}

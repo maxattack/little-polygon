@@ -1,5 +1,4 @@
 #include "Game.h"
-#include <littlepolygon_go.h>
 
 static void handleEvents(PlayerInput& input);
 static void handleKeyDown(PlayerInput& input, const SDL_KeyboardEvent& key);

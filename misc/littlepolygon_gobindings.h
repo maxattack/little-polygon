@@ -61,15 +61,15 @@ public:
 class NodeRef {
 private:
 	FkContext *context;
-	NODE node;
+	Node* node;
 
 	NodeRef(); // no default ctor
 
 public:
-	NodeRef(FkContext *aContext, NODE aNode) : 
+	NodeRef(FkContext *aContext, Node* aNode) : 
 		context(aContext), node(aNode) {}
 
-	operator NODE() { return node; }
+	operator Node*() { return node; }
 
 	GoComponent *component() { return (GoComponent*) userData(context, node); }
 	NodeRef parent() { return NodeRef(context, ::parent(context, node)); }
@@ -86,8 +86,7 @@ public:
 };
 
 struct NodeAsset {
-	NODE id;
-	NODE parent;
+	// parent?
 	float matrix[16];
 };
 
@@ -101,12 +100,12 @@ void addNode(GoContext *context, GO go, const NodeAsset *asset=0) {
 inline NodeRef getNode(GoContext *context, GO go) { 
 	return NodeRef(
 		(FkContext*) getContext(context, COMPONENT_TYPE_NODE),
-		(NODE) getComponent(context, go, COMPONENT_TYPE_NODE)->userData
+		(Node*) getComponent(context, go, COMPONENT_TYPE_NODE)->userData
 	);
 }
 
 //------------------------------------------------------------------------------
-// SPRITE COMPONENT
+// Sprite *COMPONENT
 // Maintains a sprite batch and a draw queue that renders sprites with the 
 // node's transformation.
 //------------------------------------------------------------------------------
@@ -114,24 +113,24 @@ inline NodeRef getNode(GoContext *context, GO go) {
 class SpriteRef {
 private:
 	SpriteBatch *context;
-	SPRITE sprite;
+	Sprite *sprite;
 
 public:
-	SpriteRef(SpriteBatch *aContext, SPRITE aSprite) : 
+	SpriteRef(SpriteBatch *aContext, Sprite *aSprite) : 
 		context(aContext), sprite(aSprite) {}
 
-	GoComponent *component() { return (GoComponent*) userData(context, sprite); }
-	ImageAsset *image() { return ::image(context, sprite); }
-	int frame() { return ::frame(context, sprite); }
-	int layer() { return ::layer(context, sprite); }
-	bool visible() { return ::visible(context, sprite); }
-	Color color() { return ::color(context, sprite); }
+	GoComponent *component() { return (GoComponent*) userData(sprite); }
+	ImageAsset *image() { return ::image(sprite); }
+	int frame() { return ::frame(sprite); }
+	int layer() { return ::layer(sprite); }
+	bool visible() { return ::visible(sprite); }
+	Color color() { return ::color(sprite); }
 
-	void setImage(ImageAsset *image) { ::setImage(context, sprite, image); }
-	void setFrame(int frame) { ::setFrame(context, sprite, frame); }
 	void setLayer(int layer) { ::setLayer(context, sprite, layer); }
-	void setVisible(bool visible) { ::setVisible(context, sprite, visible); }
-	void setColor(Color c) { ::setColor(context, sprite, c); }
+	void setImage(ImageAsset *image) { ::setImage(sprite, image); }
+	void setFrame(int frame) { ::setFrame(sprite, frame); }
+	void setVisible(bool visible) { ::setVisible(sprite, visible); }
+	void setColor(Color c) { ::setColor(sprite, c); }
 
 };
 
@@ -150,7 +149,7 @@ void addSprite(GoContext *context, GO go, const SpriteAsset *asset=0) {
 inline SpriteRef getSprite(GoContext *context, GO go) {
 	return SpriteRef(
 		(SpriteBatch*) getContext(context, COMPONENT_TYPE_SPRITE),
-		(SPRITE) getComponent(context, go, COMPONENT_TYPE_SPRITE)->userData
+		(Sprite*) getComponent(context, go, COMPONENT_TYPE_SPRITE)->userData
 	);
 }
 

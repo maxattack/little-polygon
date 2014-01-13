@@ -44,6 +44,9 @@
 #endif
 #include <SDL2/SDL_mixer.h>
 
+#include <vectorial/vectorial.h>
+using namespace vectorial;
+
 #ifndef STATIC_ASSERT
 #define STATIC_ASSERT(_x)  ((void)sizeof(char[1 - 2*!(_x)]))
 #endif

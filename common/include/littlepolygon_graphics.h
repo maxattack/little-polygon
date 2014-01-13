@@ -16,9 +16,6 @@
 
 #pragma once
 
-#include <vectorial/vectorial.h>
-using namespace vectorial;
-
 #include "littlepolygon_assets.h"
 #include "littlepolygon_utils.h"
 

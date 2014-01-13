@@ -15,8 +15,6 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
-#include <vectorial/vectorial.h>
-using namespace vectorial;
 
 // this dependency is only required for the go bindings; the system is
 // useable without it.
@@ -35,57 +33,53 @@ using namespace vectorial;
 // I found a nice SIMD implementation on github :D
 
 struct FkContext;
-typedef uint32_t NODE;
-typedef void (*FkNodeCallback)(FkContext *fk, NODE node, void *context);
+struct Node;
 
 // Create a context.  Different contexts can be allocated withing a single
-// application, but NODEs from different contexts cannot directly
+// application, but Node*s from different contexts cannot directly
 // interact.
 FkContext *createFkContext(size_t nodeCapacity=1024);
 void destroy(FkContext *context);
 
 // Create a new node whose localToParent transform is initialized to
 // the identity matrix.  Optionally initialize with a specific parent
-// node and userdata.  The explicit ID argument is useful for serialization
-// or network synchronization; the default value of zero will just generate
-// a new ID.
-NODE createNode(FkContext *context, NODE parent=0, void *userData=0, NODE explicitId=0);
+// node and userdata.  
+Node* createNode(FkContext *context, Node* parent=0, void *userData=0);
 
 // Destroy this node and all it's children (with an optional callback if you
 // need to know who's being destroyed - invoked in leaf->root order).
-void destroy(FkContext *context, NODE node);
+void destroy(FkContext *context, Node* node);
 
 // Attach the given child to the given parent, detach from it's current
 // parent if necessary.
-void setParent(FkContext *context, NODE child, NODE parent=0);
+void setParent(FkContext *context, Node* child, Node* parent=0);
 
 // like addChild, but preserves the localToWorld transform of the child.
-void reparent(FkContext *context, NODE child, NODE parent=0);
+void reparent(FkContext *context, Node* child, Node* parent=0);
 
 // if we have any children, detach them all, preserving their local transforms.
-void detachChildren(FkContext *context, NODE parent, bool preserveTransforms=false);
+void detachChildren(FkContext *context, Node* parent, bool preserveTransforms=false);
 
 // Change the userdata for the given node.
-void setUserData(FkContext *context, NODE node, void *userData);
+void setUserData(FkContext *context, Node* node, void *userData);
 
 // actually set the transform of the node
-void setLocal(FkContext *context, NODE node, mat4f transform);
-void setWorld(FkContext *context, NODE node, mat4f transform);
+void setLocal(FkContext *context, Node* node, mat4f transform);
+void setWorld(FkContext *context, Node* node, mat4f transform);
 // TODO: specialized versions (e.g. setPosition, setRotation, setScale, etc?)
 
 // getters
-NODE parent(FkContext *context, NODE node);
-mat4f local(FkContext *context, NODE node);
-mat4f world(FkContext *context, NODE node);
-void* userData(FkContext *context, NODE node);
+Node* parent(FkContext *context, Node* node);
+mat4f local(FkContext *context, Node* node);
+mat4f world(FkContext *context, Node* node);
+void* userData(FkContext *context, Node* node);
 
 // iterators
 
 struct FkChildIterator {
-	void *internal;
-	NODE current;
+	Node* current;
 
-	FkChildIterator(FkContext *context, NODE parent=0);
+	FkChildIterator(FkContext *context, Node* parent=0);
 	inline bool finished() const { return current == 0; }
 	void next();
 };
