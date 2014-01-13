@@ -211,6 +211,46 @@ void drawImageTransformed(SpritePlotter* context, ImageAsset *img, vec2 pos, vec
 	++context->count;
 }
 
+void drawImageTransformed(SpritePlotter *context, ImageAsset *img, const AffineMatrix& xform, int frame, Color c) {
+	ASSERT(context->count >= 0);
+	setTextureAtlas(context, img->texture);
+	SpritePlotter::Vertex *slice = context->nextSlice();
+	FrameAsset *fr = img->frame(frame);
+
+	vec2 p0 = -vec(fr->px, fr->py);
+	vec2 p1 = p0 + vec(0, fr->h);
+	vec2 p2 = p0 + vec(fr->w, 0);
+	vec2 p3 = p0 + vec(fr->w, fr->h);
+
+
+
+	slice[0].set(xform.transformPoint(p0), vec(fr->u0, fr->v0), c);
+	slice[1].set(xform.transformPoint(p1), vec(fr->u1, fr->v1), c);
+	slice[2].set(xform.transformPoint(p2), vec(fr->u2, fr->v2), c);
+	slice[3].set(xform.transformPoint(p3), vec(fr->u3, fr->v3), c);
+
+	++context->count;	
+}
+
+void drawImageTransformed(SpritePlotter *context, ImageAsset *img, const mat4f& xform, int frame, Color c) {
+	ASSERT(context->count >= 0);
+	setTextureAtlas(context, img->texture);
+	SpritePlotter::Vertex *slice = context->nextSlice();
+	FrameAsset *fr = img->frame(frame);
+
+	vec3f p0 = -vec3f(fr->px, fr->py, 0);
+	vec3f p1 = p0 + vec3f(0, fr->h, 0);
+	vec3f p2 = p0 + vec3f(fr->w, 0, 0);
+	vec3f p3 = p0 + vec3f(fr->w, fr->h, 0);
+
+	slice[0].set(transformPoint(xform, p0).xy(), vec(fr->u0, fr->v0), c);
+	slice[1].set(transformPoint(xform, p1).xy(), vec(fr->u1, fr->v1), c);
+	slice[2].set(transformPoint(xform, p2).xy(), vec(fr->u2, fr->v2), c);
+	slice[3].set(transformPoint(xform, p3).xy(), vec(fr->u3, fr->v3), c);
+
+	++context->count;	
+}
+
 void drawImageRotated(SpritePlotter* context, ImageAsset *img, vec2 pos, float radians, int f, Color c) {
 	drawImageTransformed(context, img, pos, polar(1, radians), f, c);
 }

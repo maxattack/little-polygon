@@ -57,11 +57,12 @@ void begin(SpritePlotter* context, vec2 canvasSize, vec2 scrolling=vec(0,0));
 // to the graphics device if: (i) the buffer has reached capacity or (ii) the texture 
 // atlas has changed.  Color transforms *can* be batched, because they are encoded
 // in the vertices, not in shader uniforms.
-void drawImage(SpritePlotter* context, ImageAsset *image, vec2 position, int frame=0, Color color=rgba(0x00000000));
-void drawImageTransformed(SpritePlotter* context, ImageAsset *image, vec2 position, vec2 attitude, int frame=0, Color color=rgba(0x00000000));
-// void drawImageTransformed(SpritePlotter *context, ImageAsset *image, mat4f tform, int frame=0, Color color=rgba(0x00000000));
-void drawImageRotated(SpritePlotter* context, ImageAsset *image, vec2 position, float radians, int frame=0, Color color=rgba(0x00000000));
-void drawImageScaled(SpritePlotter* context, ImageAsset *image, vec2 position, vec2 k, int frame=0, Color color=rgba(0x00000000));
+void drawImage(SpritePlotter* context, ImageAsset *image, vec2 position, int frame=0, Color color=rgba(0));
+void drawImageTransformed(SpritePlotter* context, ImageAsset *image, vec2 position, vec2 attitude, int frame=0, Color color=rgba(0));
+void drawImageTransformed(SpritePlotter *context, ImageAsset *image, const AffineMatrix& xform, int frame=0, Color color=rgba(0));
+void drawImageTransformed(SpritePlotter *context, ImageAsset *image, const mat4f xform, int frame=0, Color color=rgba(0));
+void drawImageRotated(SpritePlotter* context, ImageAsset *image, vec2 position, float radians, int frame=0, Color color=rgba(0));
+void drawImageScaled(SpritePlotter* context, ImageAsset *image, vec2 position, vec2 k, int frame=0, Color color=rgba(0));
 void drawLabel(SpritePlotter* context, FontAsset *font, vec2 p, Color c, const char *msg);
 void drawLabelCentered(SpritePlotter* context, FontAsset *font, vec2 p, Color c, const char *msg);
 void drawTilemap(SpritePlotter* context, TilemapAsset *map, vec2 position=vec(0,0));

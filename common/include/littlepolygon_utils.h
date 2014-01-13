@@ -105,6 +105,107 @@ inline vec2 slerp(vec2 u, vec2 v, float t) {
 	return (sinf((1-t)*theta)*s)*u + (sinf(t*theta)*s)*v;
 }
 
+// simple 2d affine transform
+struct AffineMatrix {
+	union {
+		struct {
+			// mathbooks use this stupid a-b-c row-major notation :P
+			float a,d,b,e,c,f;
+		};
+		struct {
+			// 
+			vec2 u, v, t;
+		};
+	};
+	
+
+	AffineMatrix() {}
+	AffineMatrix(vec2 au, vec2 av, vec2 at) : u(au), v(av), t(at) {}	
+
+	inline AffineMatrix operator *(const AffineMatrix& m) const {
+		return AffineMatrix(
+			vec(u.x*m.u.x + v.x*m.u.y, 
+			    u.y*m.u.x + v.y*m.u.y),
+			vec(u.x*m.v.x + v.x*m.v.y, 
+			    u.y*m.v.x + v.y*m.v.y),
+			vec(u.x*m.t.x + v.x*m.t.y + t.x, 
+			    u.y*m.t.x + v.y*m.t.y + t.y)
+		);
+	}
+
+	inline AffineMatrix operator *=(const AffineMatrix &m) {
+		return *this = (*this) * m;
+	}
+
+	inline vec2 transformPoint(const vec2 p) const {
+		return vec(u.x*p.x + v.x*p.y + t.x,
+		           u.y*p.x + v.y*p.y + t.y);
+	}
+
+	inline vec2 transformVector(const vec2 w) const {
+		return vec(u.x*w.x + v.x*w.y,
+		           u.y*w.x + v.y*w.y);
+	}
+
+	float radians() const { return atan2f(u.y, u.x); }
+	vec2 scale() const { return vec(u.magnitude(), v.magnitude()); }
+	
+	mat4f matrix() const {
+		return mat4f({
+			u.x, u.y, 0, 0,
+			v.x, v.y, 0, 0,
+			0, 0, 1, 0,
+			t.x, t.y, 0, 1
+		});
+	}
+
+	bool orthogonal() const { 
+		float d = dot(u,v); 
+		return -M_COLINEAR_SLOP < d && d < M_COLINEAR_SLOP; 
+	}
+
+	bool normal() const {
+		float un = u.norm() - 1;
+		float vn = v.norm() - 1;
+		return un > -M_COLINEAR_SLOP && vn > -M_COLINEAR_SLOP &&
+		       un < M_COLINEAR_SLOP && vn < M_COLINEAR_SLOP;
+	}
+
+	float determinant() const { return a*e-b*d; }
+
+	AffineMatrix inverse() const {
+		float invDet = 1.0f / determinant();
+		return AffineMatrix(
+			invDet * vec( e, -d ),
+			invDet * vec( -b, a ),
+			vec( b*f - c*e , c*d - a*f )
+		);
+	}
+
+	void invert() {
+		*this = inverse();
+	}
+
+};
+
+// helpers
+inline AffineMatrix affineTranslation(vec2 t) { return AffineMatrix(vec(1,0), vec(0,1), t); }
+inline AffineMatrix affineRotation(float radians) { 
+	float s=sinf(radians); float c=cosf(radians); 
+	return AffineMatrix(vec(c,s), vec(-s,c), vec(0,0)); 
+}
+inline AffineMatrix affineAttitude(vec2 dir) { return AffineMatrix(dir, vec(-dir.y,dir.x), vec(0,0)); }
+inline AffineMatrix affineScale(vec2 s) { return AffineMatrix(vec(s.x,0), vec(0,s.y), vec(0,0)); }
+inline AffineMatrix affineForeshortened(const mat4f& matrix) {
+	float buf[16];
+	matrix.store(buf);
+	return AffineMatrix(
+		vec(buf[0], buf[1]), 
+		vec(buf[4], buf[5]), 
+		vec(buf[12], buf[13])
+	);
+}
+
 // linear range methods
 inline float clamp(float u, float lo=0.f, float hi=1.f) { return u<lo?lo:u>hi?hi:u; }
 inline float lerp(float u, float v, float t) { return u + t * (v-u); }
