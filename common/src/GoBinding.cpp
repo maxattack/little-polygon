@@ -194,35 +194,6 @@ void destroy(SpriteContext *context) {
 	LITTLE_POLYGON_FREE(context);
 }
 
-static void doProcessSpriteNode(GoContext *goContext, SpriteContext *context, FkContext *displayTree, NODE node, mat4f current) {
-	current = current * local(displayTree, node);
-
-	// is there a faster way to do node->sprite lookup? spritecontext stores it's own lookup table?
-	auto nodeComponent = (GoComponent*) userData(displayTree, node);
-	auto go = nodeComponent->go;
-	auto spriteComponent = getComponent(goContext, go, COMPONENT_TYPE_SPRITE);
-	if (spriteComponent) {
-		auto sprite = (Sprite*)spriteComponent->userData;
-		vec3f pos = transformPoint(current, vec3f(0,0,0));
-		auto draw = context->getSpriteDraw(sprite);
-		draw->position = vec(pos.x(), pos.y());
-	}
-
-	// ugly, ugly recursive calls
-	for(FkChildIterator i(displayTree, node); !i.finished(); i.next()) {
-		doProcessSpriteNode(goContext, context, displayTree, i.current, current);
-	}	
-}
-
-void positionSprites(GoContext *goContext, SpriteContext *context, FkContext *displayTree) {
-	// TODO: replace this recursive function call with a dag-ordered linear traversal...?
-	// Also... how can we filter nodes that don't have sprites under them?  Better to just 
-	// evaluate this lazily in draw?
-	for(FkChildIterator i(displayTree); !i.finished(); i.next()) {
-		doProcessSpriteNode(goContext, context, displayTree, i.current, mat4f::identity());
-	}
-}
-
 void draw(SpriteContext *context, SpriteBatch *batch) {
 	for(int i=0; i<context->numLayers; ++i) {
 		auto layer = context->getLayer(i);

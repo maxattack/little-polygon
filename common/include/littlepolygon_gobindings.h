@@ -159,7 +159,6 @@ void destroy(SpriteContext *context);
 
 // Create a new sprite
 // batch methods
-void positionSprites(SpriteContext *context, FkContext *displayTree);
 void advanceAnimations(SpriteContext *context, float dt);
 void draw(SpriteContext *context, SpriteBatch *batch);
 
