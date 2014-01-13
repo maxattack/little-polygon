@@ -20,7 +20,7 @@
 
 struct SpriteDraw {
 	ImageAsset *image;
-	vec2 position;
+	AffineMatrix xform;
 	Color color;
 	uint32_t slot : 10;
 	uint32_t frame : 8;
@@ -87,24 +87,6 @@ void destroy(SpriteBatch *context) {
 	LITTLE_POLYGON_FREE(context);
 }
 
-
-// void draw(SpriteBatch *context, SpritePlotter *renderer) {
-// 	auto layer = context->getLayer(layerIdx);
-// 	for(int j=0; j<layer->count; ++j) {
-// 		auto drawCall = layer->get(j);
-// 		// todo: clipping?
-// 		if (drawCall->isVisible()) {
-// 			drawImage(
-// 				renderer,
-// 				drawCall->image, 
-// 				drawCall->position, 
-// 				drawCall->frame, 
-// 				drawCall->color
-// 			);
-// 		}
-// 	}
-// }
-
 static void addToLayer(SpriteBatch *context, Sprite *sprite, int layer) {
 	if (layer == 0) {
 		sprite->cmd = context->getDraw(context->bottomCount);
@@ -144,7 +126,8 @@ static void removeFromLayer(SpriteBatch *context, Sprite *sprite) {
 
 Sprite* createSprite(
 	SpriteBatch *context, 
-	ImageAsset *image, vec2 position, int frame, Color c, bool visible, bool onTop, 
+	const AffineMatrix& xform,
+	ImageAsset *image, int frame, Color c, bool visible, bool onTop, 
 	void *userData
 ) {
 	ASSERT(context->count() < context->capacity);
@@ -163,7 +146,7 @@ Sprite* createSprite(
 
 	// setup draw call
 	result->cmd->slot = slot;
-	result->cmd->position = position;
+	result->cmd->xform = xform;
 	result->cmd->color = c;
 	result->cmd->image = image;
 	result->cmd->frame = frame;
@@ -234,3 +217,18 @@ void *userData(Sprite* sprite) {
 	return sprite->userData;
 }
 
+static void draw(SpriteDraw *cmd, SpritePlotter *renderer) {
+	if (cmd->isVisible()) {
+		drawImageTransformed(renderer, cmd->image, cmd->xform, cmd->frame, cmd->color);
+	}	
+}
+
+void draw(SpriteBatch *context, SpritePlotter *renderer) {
+	for(int i=0; i<context->bottomCount; ++i) {
+		draw(context->getDraw(i), renderer);
+	}
+	for(int i=0; i<context->topCount; ++i) {
+		draw(context->getDraw(context->capacity - (context->topCount-1) + i), renderer);
+	}
+
+}

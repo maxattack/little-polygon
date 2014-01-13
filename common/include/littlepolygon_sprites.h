@@ -35,8 +35,8 @@ void destroy(SpriteBatch *context);
 // Create a new sprite
 Sprite* createSprite(
 	SpriteBatch *context, 
+	const AffineMatrix& xform,
 	ImageAsset *image, 
-	vec2 position=vec(0,0),
 	int frame=0, 
 	Color c=rgba(0), 
 	bool visible=1, 
