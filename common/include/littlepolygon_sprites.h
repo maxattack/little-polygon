@@ -24,34 +24,34 @@
 //
 // TODO: generic frame-based "animators" ?
 
-struct SpriteContext;
+struct SpriteBatch;
 typedef uint32_t SPRITE;
 
 // Create a new sprite context from a given capacity.
-SpriteContext *createSpriteContext(size_t numLayers=8, size_t layerCapacity=128, size_t spriteCapacity=1024);
-void destroy(SpriteContext *context);
+SpriteBatch *createSpriteBatch(size_t numLayers=8, size_t layerCapacity=128, size_t spriteCapacity=1024);
+void destroy(SpriteBatch *context);
 
 // Create a new sprite
-SPRITE createSprite(SpriteContext *context, ImageAsset *image, int layer=0, SPRITE explicitId=0);
-void destroy(SpriteContext *context, SPRITE sprite);
+SPRITE createSprite(SpriteBatch *context, ImageAsset *image, int layer=0, SPRITE explicitId=0);
+void destroy(SpriteBatch *context, SPRITE sprite);
 
 // setters
-void setImage(SpriteContext *context, SPRITE sprite, ImageAsset *image);
-void setFrame(SpriteContext *context, SPRITE sprite, int frame);
-void setLayer(SpriteContext *context, SPRITE sprite, int layer);
-void setVisible(SpriteContext *context, SPRITE sprite, bool visible);
-void setColor(SpriteContext *context, SPRITE sprite, Color c);
-void setUserData(SpriteContext *context, SPRITE sprite, void *userData);
+void setImage(SpriteBatch *context, SPRITE sprite, ImageAsset *image);
+void setFrame(SpriteBatch *context, SPRITE sprite, int frame);
+void setLayer(SpriteBatch *context, SPRITE sprite, int layer);
+void setVisible(SpriteBatch *context, SPRITE sprite, bool visible);
+void setColor(SpriteBatch *context, SPRITE sprite, Color c);
+void setUserData(SpriteBatch *context, SPRITE sprite, void *userData);
 
 // getters
-ImageAsset *image(SpriteContext *context, SPRITE sprite);
-int frame(SpriteContext *context, SPRITE sprite);
-int layer(SpriteContext *context, SPRITE sprite);
-bool visible(SpriteContext *context, SPRITE sprite);
-Color color(SpriteContext *context, SPRITE sprite);
-void *userData(SpriteContext *context, SPRITE sprite);
+ImageAsset *image(SpriteBatch *context, SPRITE sprite);
+int frame(SpriteBatch *context, SPRITE sprite);
+int layer(SpriteBatch *context, SPRITE sprite);
+bool visible(SpriteBatch *context, SPRITE sprite);
+Color color(SpriteBatch *context, SPRITE sprite);
+void *userData(SpriteBatch *context, SPRITE sprite);
 
 // batch methods
-// void advanceAnimations(SpriteContext *context, float dt);
-void drawLayer(SpriteContext *context, int layerIdx, SpritePlotter *r);
-void draw(SpriteContext *context, SpritePlotter *r);
+// void advanceAnimations(SpriteBatch *context, float dt);
+void drawLayer(SpriteBatch *context, int layerIdx, SpritePlotter *plotter);
+void draw(SpriteBatch *context, SpritePlotter *plotter);

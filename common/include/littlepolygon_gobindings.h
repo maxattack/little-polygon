@@ -113,11 +113,11 @@ inline NodeRef getNode(GoContext *context, GO go) {
 
 class SpriteRef {
 private:
-	SpriteContext *context;
+	SpriteBatch *context;
 	SPRITE sprite;
 
 public:
-	SpriteRef(SpriteContext *aContext, SPRITE aSprite) : 
+	SpriteRef(SpriteBatch *aContext, SPRITE aSprite) : 
 		context(aContext), sprite(aSprite) {}
 
 	GoComponent *component() { return (GoComponent*) userData(context, sprite); }
@@ -141,7 +141,7 @@ struct SpriteAsset {
 	Color color;
 };
 
-GoComponentDef spriteDef(SpriteContext *context, AssetBundle *assets);
+GoComponentDef spriteDef(SpriteBatch *context, AssetBundle *assets);
 
 void addSprite(GoContext *context, GO go, const SpriteAsset *asset=0) {
 	addComponent(context, go, COMPONENT_TYPE_SPRITE, asset);
@@ -149,7 +149,7 @@ void addSprite(GoContext *context, GO go, const SpriteAsset *asset=0) {
 
 inline SpriteRef getSprite(GoContext *context, GO go) {
 	return SpriteRef(
-		(SpriteContext*) getContext(context, COMPONENT_TYPE_SPRITE),
+		(SpriteBatch*) getContext(context, COMPONENT_TYPE_SPRITE),
 		(SPRITE) getComponent(context, go, COMPONENT_TYPE_SPRITE)->userData
 	);
 }

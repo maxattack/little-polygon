@@ -7,8 +7,8 @@ LIBRARY_OBJ_FILES =     \
 	obj/LinePlotter.o   \
 	obj/SampleAsset.o   \
 	obj/SplinePlotter.o \
+	obj/SpriteBatch.o   \
 	obj/SpritePlotter.o \
-	obj/SpriteContext.o \
 	obj/TextureAsset.o  \
 	obj/TilemapAsset.o  \
 	obj/utils.o         

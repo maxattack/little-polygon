@@ -48,7 +48,7 @@ struct SpriteLayer {
 	}	
 };
 
-struct SpriteContext {
+struct SpriteBatch {
 	size_t spriteCapacity;
 	size_t spriteCount;
 	size_t numLayers;
@@ -86,15 +86,15 @@ struct SpriteContext {
 	}
 };
 
-SpriteContext *createSpriteContext(AssetBundle *assets, size_t numLayers, size_t layerCapacity, size_t spriteCapacity) {
+SpriteBatch *createSpriteBatch(AssetBundle *assets, size_t numLayers, size_t layerCapacity, size_t spriteCapacity) {
 	// validate args
 	ASSERT(numLayers <= 32); // seems reasonable
 	ASSERT(layerCapacity <= 1024);
 	ASSERT(spriteCapacity <= 1024);
 
 	// alloc memory
-	auto context = (SpriteContext*) LITTLE_POLYGON_MALLOC(
-		sizeof(SpriteContext) + 
+	auto context = (SpriteBatch*) LITTLE_POLYGON_MALLOC(
+		sizeof(SpriteBatch) + 
 		sizeof(Sprite) * (spriteCapacity - 1) + 
 		sizeof(SpriteLayer) * layerCapacity + 
 		sizeof(SpriteDraw) * (layerCapacity-1) * numLayers
@@ -120,11 +120,11 @@ SpriteContext *createSpriteContext(AssetBundle *assets, size_t numLayers, size_t
 	return context;
 }
 
-void destroy(SpriteContext *context) {
+void destroy(SpriteBatch *context) {
 	LITTLE_POLYGON_FREE(context);
 }
 
-void drawLayer(SpriteContext *context, int layerIdx, SpritePlotter *renderer) {
+void drawLayer(SpriteBatch *context, int layerIdx, SpritePlotter *renderer) {
 	auto layer = context->getLayer(layerIdx);
 	for(int j=0; j<layer->count; ++j) {
 		auto drawCall = layer->get(j);
@@ -141,13 +141,13 @@ void drawLayer(SpriteContext *context, int layerIdx, SpritePlotter *renderer) {
 	}
 }
 
-void draw(SpriteContext *context, SpritePlotter *renderer) {
+void draw(SpriteBatch *context, SpritePlotter *renderer) {
 	for(int i=0; i<context->numLayers; ++i) {
 		drawLayer(context, i, renderer);
 	}
 }
 
-SPRITE createSprite(SpriteContext *context, ImageAsset *image, int layerIdx, SPRITE explicitId) {
+SPRITE createSprite(SpriteBatch *context, ImageAsset *image, int layerIdx, SPRITE explicitId) {
 	ASSERT(context->spriteCount < context->spriteCapacity);
 	ASSERT(layerIdx < context->numLayers);
 
@@ -188,7 +188,7 @@ SPRITE createSprite(SpriteContext *context, ImageAsset *image, int layerIdx, SPR
 	return result->handle;
 }
 
-static void removeFromLayer(SpriteContext *context, Sprite *sprite) {
+static void removeFromLayer(SpriteBatch *context, Sprite *sprite) {
 	auto layer = context->getLayer(sprite->layer);
 	ASSERT(layer->count > 0);
 	if (context->getSpriteDraw(sprite) != layer->get(layer->count-1)) {
@@ -201,22 +201,22 @@ static void removeFromLayer(SpriteContext *context, Sprite *sprite) {
 	--layer->count;	
 }
 
-void destroy(SpriteContext *context, SPRITE hSprite) {
+void destroy(SpriteBatch *context, SPRITE hSprite) {
 	auto sprite = context->lookup(hSprite);
 	removeFromLayer(context, sprite);
 	context->allocationMask.clear(SPRITE_INDEX(hSprite));
 	sprite->handle += 0x10000; // fingerprint handle
 }
 
-void setImage(SpriteContext *context, SPRITE sprite, ImageAsset *image) {
+void setImage(SpriteBatch *context, SPRITE sprite, ImageAsset *image) {
 	context->lookupDraw(sprite)->image = image;
 }
 
-void setFrame(SpriteContext *context, SPRITE sprite, int frame) {
+void setFrame(SpriteBatch *context, SPRITE sprite, int frame) {
 	context->lookupDraw(sprite)->frame = frame;
 }
 
-void setLayer(SpriteContext *context, SPRITE sprite, int layerIdx) {
+void setLayer(SpriteBatch *context, SPRITE sprite, int layerIdx) {
 	ASSERT(layerIdx < context->numLayers);
 	auto s = context->lookup(sprite);
 	
@@ -242,39 +242,39 @@ void setLayer(SpriteContext *context, SPRITE sprite, int layerIdx) {
 	}
 }
 
-void setVisible(SpriteContext *context, SPRITE sprite, bool visible) {
+void setVisible(SpriteBatch *context, SPRITE sprite, bool visible) {
 	context->lookupDraw(sprite)->visible = visible;
 }
 
-void setColor(SpriteContext *context, SPRITE sprite, Color c) {
+void setColor(SpriteBatch *context, SPRITE sprite, Color c) {
 	context->lookupDraw(sprite)->color = c;
 }
 
-void setUserData(SpriteContext *context, SPRITE sprite, void *userData) {
+void setUserData(SpriteBatch *context, SPRITE sprite, void *userData) {
 	context->lookup(sprite)->userData = userData;
 }
 
-ImageAsset *image(SpriteContext *context, SPRITE sprite) {
+ImageAsset *image(SpriteBatch *context, SPRITE sprite) {
 	return context->lookupDraw(sprite)->image;
 }
 
-int frame(SpriteContext *context, SPRITE sprite) {
+int frame(SpriteBatch *context, SPRITE sprite) {
 	return context->lookupDraw(sprite)->frame;
 }
 
-int layer(SpriteContext *context, SPRITE sprite) {
+int layer(SpriteBatch *context, SPRITE sprite) {
 	return context->lookup(sprite)->layer;
 }
 
-bool visible(SpriteContext *context, SPRITE sprite) {
+bool visible(SpriteBatch *context, SPRITE sprite) {
 	return context->lookupDraw(sprite)->visible;
 }
 
-Color color(SpriteContext *context, SPRITE sprite) {
+Color color(SpriteBatch *context, SPRITE sprite) {
 	return context->lookupDraw(sprite)->color;
 }
 
-void *userData(SpriteContext *context, SPRITE sprite) {
+void *userData(SpriteBatch *context, SPRITE sprite) {
 	return context->lookup(sprite)->userData;
 }
 
