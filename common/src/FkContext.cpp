@@ -29,6 +29,7 @@
 // - Alternatively, we could write nodes out to a buffer
 //   in dag order during thread "sync" between physics
 //   and rendering.
+// * E.G. see positionSprites() in gobindings
 
 #define NODE_INDEX(handle) ((0xffff & handle)-1)
 

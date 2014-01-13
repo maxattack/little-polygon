@@ -121,6 +121,10 @@ GoComponent *getComponent(GoContext *context, GO go, CID cid);
 // Remove a component, destroying it completely.
 void removeComponent(GoContext *context, GoComponent *component);
 
+// Retrieve the context for the given component type - basically a pointer to it's
+// batching system.
+void *getContext(GoContext *context, CID cid);
+
 // ?? I feel kinda weird handling raw pointers like this... is there a compelling
 //    concrete reason to only dispense opaque IDs to components?  Serialization?
 

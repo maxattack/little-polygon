@@ -62,6 +62,7 @@ void begin(SpriteBatch* context, vec2 canvasSize, vec2 scrolling=vec(0,0));
 // in the vertices, not in shader uniforms.
 void drawImage(SpriteBatch* context, ImageAsset *image, vec2 position, int frame=0, Color color=rgba(0x00000000));
 void drawImageTransformed(SpriteBatch* context, ImageAsset *image, vec2 position, vec2 attitude, int frame=0, Color color=rgba(0x00000000));
+// void drawImageTransformed(SpriteBatch *context, ImageAsset *image, mat4f tform, int frame=0, Color color=rgba(0x00000000));
 void drawImageRotated(SpriteBatch* context, ImageAsset *image, vec2 position, float radians, int frame=0, Color color=rgba(0x00000000));
 void drawImageScaled(SpriteBatch* context, ImageAsset *image, vec2 position, vec2 k, int frame=0, Color color=rgba(0x00000000));
 void drawLabel(SpriteBatch* context, FontAsset *font, vec2 p, Color c, const char *msg);

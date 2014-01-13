@@ -318,6 +318,10 @@ void removeComponent(GoContext *context, GoComponent *component) {
 	--context->coCount;
 }
 
+void *getContext(GoContext *context, CID cid) {
+	return context->coType(cid)->context;
+}
+
 void enable(GoContext *context, GO go) {
 	auto goBuf = (GoSlot*)(context+1);
 	auto index = GO_INDEX(go);
