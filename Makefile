@@ -51,6 +51,7 @@ CFLAGS += -DDEBUG
 # 32 BITS
 CFLAGS += -arch i386
 AFLAGS = 32
+# AFLAGS = 64
 
 # stest: bin/squids
 # 	bin/squids

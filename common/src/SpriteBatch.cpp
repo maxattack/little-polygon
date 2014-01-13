@@ -45,7 +45,7 @@ struct SpriteBatch {
 	Sprite headSprite;
 
 	bool owns(Sprite* sprite) const {
-		int offset = (sprite - &headSprite);
+		auto offset = sprite - &headSprite;
 		return 0 <= offset && offset < capacity;
 	}
 

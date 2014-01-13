@@ -61,7 +61,7 @@ void reparent(FkContext *context, Node* child, Node* parent=0);
 void detachChildren(FkContext *context, Node* parent, bool preserveTransforms=false);
 
 // Change the userdata for the given node.
-void setUserData(FkContext *context, Node* node, void *userData);
+void setUserData(Node* node, void *userData);
 
 // actually set the transform of the node
 void setLocal(FkContext *context, Node* node, mat4f transform);
@@ -69,10 +69,10 @@ void setWorld(FkContext *context, Node* node, mat4f transform);
 // TODO: specialized versions (e.g. setPosition, setRotation, setScale, etc?)
 
 // getters
-Node* parent(FkContext *context, Node* node);
+Node* parent(Node* node);
 mat4f local(FkContext *context, Node* node);
 mat4f world(FkContext *context, Node* node);
-void* userData(FkContext *context, Node* node);
+void* userData(Node* node);
 
 // iterators
 

@@ -36,7 +36,7 @@ struct Node {
 	Node *firstChild;
 	Node *nextSibling;
 	Node *prevSibling;
-	// mat4f local
+	mat4f *local;
 	void *userData;
 };
 
@@ -52,19 +52,12 @@ struct FkContext {
 	inline Node *nodeBuf() { return (Node*)(tformBuf() + capacity); }
 
 	bool owns(Node *node) {
-		int index = node - nodeBuf();
+		auto index = node - nodeBuf();
 		return 0 <= index && index < capacity;
 	}
 
 	bool allocated(Node *node) {
 		return owns(node) && allocationMask[node - nodeBuf()];
-	}
-
-	inline mat4f *tform(Node* node) {
-		ASSERT(owns(node));
-		auto index = node - nodeBuf();
-		ASSERT(allocationMask[index]);
-		return tformBuf() + index;
 	}
 
 };
@@ -105,9 +98,10 @@ Node* createNode(FkContext *context, Node* parent, void *userData) {
 	result->firstChild = 0;
 	result->nextSibling = 0;
 	result->prevSibling = 0;
+	result->local = context->tformBuf() + index;
 	result->userData = userData;
 
-	context->tformBuf()[index] = mat4f::identity();
+	*result->local = mat4f::identity();
 
 	if (parent) {
 		setParent(context, result, parent);
@@ -191,28 +185,28 @@ void detachChildren(FkContext *context, Node* node, bool preserveTransforms) {
 	}
 }
 
-void setUserData(FkContext *context, Node* node, void *userData) {
+void setUserData(Node* node, void *userData) {
 	node->userData = userData;
 }
 
 void setLocal(FkContext *context, Node* node, mat4f transform) {
-	*(context->tform(node)) = transform;
+	*(node->local) = transform;
 }
 
 void setWorld(FkContext *context, Node* node, mat4f transform) {
 	if (node->parent) {
-		*context->tform(node) = transform * inverse(world(context, node->parent));
+		*node->local = transform * inverse(world(context, node->parent));
 	} else {
-		*context->tform(node) = transform;
+		*node->local = transform;
 	}
 }
 
-Node* parent(FkContext *context, Node* node) {
+Node* parent(Node* node) {
 	return node->parent;
 }
 
 mat4f local(FkContext *context, Node* node) {
-	return *context->tform(node);
+	return *node->local;
 }
 
 mat4f world(FkContext *context, Node* node) {
@@ -223,7 +217,7 @@ mat4f world(FkContext *context, Node* node) {
 	}
 }
 
-void* userData(FkContext *context, Node* node) {
+void* userData(Node* node) {
 	return node->userData;
 }
 
