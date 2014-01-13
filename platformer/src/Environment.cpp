@@ -21,7 +21,7 @@ void Environment::init(AssetBundle* assets, CollisionSystem* collisions) {
 
 }
 
-void Environment::draw(SpriteBatch* spriteBatch) {
+void Environment::draw(SpritePlotter* spriteBatch) {
 
 	// temp: hard-coded
 	drawImage(spriteBatch, bg, vec(4,CANVAS_HEIGHT));

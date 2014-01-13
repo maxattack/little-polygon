@@ -28,7 +28,7 @@ struct Environment {
 	TilemapAsset *tmap;
 
 	void init(AssetBundle* assets, CollisionSystem* collisions);
-	void draw(SpriteBatch* batch);
+	void draw(SpritePlotter* batch);
 
 };
 
@@ -54,7 +54,7 @@ struct Hero {
 
 	void init(AssetBundle* assets, CollisionSystem* collisions);
 	void tick(PlayerInput* input, CollisionSystem* collisions, float dt);
-	void draw(SpriteBatch* batch);
+	void draw(SpritePlotter* batch);
 };
 
 struct Kitten {
@@ -72,5 +72,5 @@ struct Kitten {
 	bool flipped;
 
 	void init(AssetBundle* assets, CollisionSystem* collisions);
-	void draw(SpriteBatch* batch);
+	void draw(SpritePlotter* batch);
 };

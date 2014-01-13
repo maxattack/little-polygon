@@ -22,7 +22,7 @@
 // in a batch instead of emitting lots of individual draw-calls.  Useable on
 // it's own or in conjunction with the fk display tree via the go module.
 //
-// TODO: generic frame-based "animators"
+// TODO: generic frame-based "animators" ?
 
 struct SpriteContext;
 typedef uint32_t SPRITE;
@@ -53,5 +53,5 @@ void *userData(SpriteContext *context, SPRITE sprite);
 
 // batch methods
 // void advanceAnimations(SpriteContext *context, float dt);
-void drawLayer(SpriteContext *context, int layerIdx, SpriteBatch *batch);
-void draw(SpriteContext *context, SpriteBatch *batch);
+void drawLayer(SpriteContext *context, int layerIdx, SpritePlotter *r);
+void draw(SpriteContext *context, SpritePlotter *r);

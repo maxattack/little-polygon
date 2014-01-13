@@ -7,7 +7,7 @@ LIBRARY_OBJ_FILES =     \
 	obj/LinePlotter.o   \
 	obj/SampleAsset.o   \
 	obj/SplinePlotter.o \
-	obj/SpriteBatch.o   \
+	obj/SpritePlotter.o \
 	obj/SpriteContext.o \
 	obj/TextureAsset.o  \
 	obj/TilemapAsset.o  \
@@ -54,8 +54,8 @@ CFLAGS += -DDEBUG
 CFLAGS += -arch i386
 AFLAGS = 32
 
-stest: bin/squids
-	bin/squids
+# stest: bin/squids
+# 	bin/squids
 
 test : bin/platformer bin/platformer.bin
 	cp platformer/assets/song.mid bin/song.mid

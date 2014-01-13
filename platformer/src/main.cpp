@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
 
 	// initialize lp systems
 	auto assets = createAssetBundle("platformer.bin");
-	auto batch = createSpriteBatch();
+	auto batch = createSpritePlotter();
 	auto plotter = createLinePlotter();
 	auto splines = createSplinePlotter();
 

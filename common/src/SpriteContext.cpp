@@ -59,8 +59,8 @@ struct SpriteContext {
 
 	Sprite *lookup(SPRITE s) {
 		auto i = SPRITE_INDEX(s);
-		ASSERT(allocationMask[i]);
 		auto result = getSprite(i);
+		ASSERT(allocationMask[i]);
 		ASSERT(result->handle == s);
 		return result;
 	}
@@ -124,14 +124,14 @@ void destroy(SpriteContext *context) {
 	LITTLE_POLYGON_FREE(context);
 }
 
-void drawLayer(SpriteContext *context, int layerIdx, SpriteBatch *batch) {
+void drawLayer(SpriteContext *context, int layerIdx, SpritePlotter *renderer) {
 	auto layer = context->getLayer(layerIdx);
 	for(int j=0; j<layer->count; ++j) {
 		auto drawCall = layer->get(j);
 		// todo: clipping?
 		if (drawCall->isVisible()) {
 			drawImage(
-				batch,
+				renderer,
 				drawCall->image, 
 				drawCall->position, 
 				drawCall->frame, 
@@ -141,9 +141,9 @@ void drawLayer(SpriteContext *context, int layerIdx, SpriteBatch *batch) {
 	}
 }
 
-void draw(SpriteContext *context, SpriteBatch *batch) {
+void draw(SpriteContext *context, SpritePlotter *renderer) {
 	for(int i=0; i<context->numLayers; ++i) {
-		drawLayer(context, i, batch);
+		drawLayer(context, i, renderer);
 	}
 }
 
@@ -204,9 +204,8 @@ static void removeFromLayer(SpriteContext *context, Sprite *sprite) {
 void destroy(SpriteContext *context, SPRITE hSprite) {
 	auto sprite = context->lookup(hSprite);
 	removeFromLayer(context, sprite);
-
-	// dealloc
 	context->allocationMask.clear(SPRITE_INDEX(hSprite));
+	sprite->handle += 0x10000; // fingerprint handle
 }
 
 void setImage(SpriteContext *context, SPRITE sprite, ImageAsset *image) {

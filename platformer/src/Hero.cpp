@@ -115,7 +115,7 @@ void Hero::tick(PlayerInput* input, CollisionSystem* collisions, float dt) {
 
 }
 
-void Hero::draw(SpriteBatch* spriteBatch) {
+void Hero::draw(SpritePlotter* spriteBatch) {
 	drawImageScaled(
 		spriteBatch, 
 		image, 

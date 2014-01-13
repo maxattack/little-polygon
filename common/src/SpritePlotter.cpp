@@ -45,7 +45,7 @@ void main() {
 #endif
 )GLSL";
 
-struct SpriteBatch {
+struct SpritePlotter {
 	vec2 canvasSize;
 	vec2 canvasScroll;
 	int capacity;
@@ -85,22 +85,22 @@ struct SpriteBatch {
 
 // private helper methods
 
-void setTextureAtlas(SpriteBatch* context, TextureAsset* texture);
-void commitBatch(SpriteBatch* context);
-void plotGlyph(SpriteBatch* context, const GlyphAsset& g, float x, float y, float h, Color c);
+void setTextureAtlas(SpritePlotter* context, TextureAsset* texture);
+void commitBatch(SpritePlotter* context);
+void plotGlyph(SpritePlotter* context, const GlyphAsset& g, float x, float y, float h, Color c);
 
-static SpriteBatch *allocSpriteBatch(int capacity) {
-	return (SpriteBatch*) LITTLE_POLYGON_MALLOC(
-		sizeof(SpriteBatch) + 
-		sizeof(SpriteBatch::Vertex) * 4 * capacity
+static SpritePlotter *allocSpritePlotter(int capacity) {
+	return (SpritePlotter*) LITTLE_POLYGON_MALLOC(
+		sizeof(SpritePlotter) + 
+		sizeof(SpritePlotter::Vertex) * 4 * capacity
 	);
 }
 
-static void dealloc(SpriteBatch *context) {
+static void dealloc(SpritePlotter *context) {
 	LITTLE_POLYGON_FREE(context);
 }
 
-static void initialize(SpriteBatch* context, int capacity) {
+static void initialize(SpritePlotter* context, int capacity) {
 	context->capacity = capacity;
 	context->count = -1;
 	context->workingTexture = 0;
@@ -134,7 +134,7 @@ static void initialize(SpriteBatch* context, int capacity) {
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-static void release(SpriteBatch* context) {
+static void release(SpritePlotter* context) {
 	glDeleteBuffers(2, &context->elementBuf); 
 	glDeleteProgram(context->prog);
 	glDeleteShader(context->vert);
@@ -142,18 +142,18 @@ static void release(SpriteBatch* context) {
 }
 
 
-SpriteBatch *createSpriteBatch(int capacity) {
-	auto result = allocSpriteBatch(capacity);
+SpritePlotter *createSpritePlotter(int capacity) {
+	auto result = allocSpritePlotter(capacity);
 	initialize(result, capacity);
 	return result;
 }
 
-void destroy(SpriteBatch *context) {
+void destroy(SpritePlotter *context) {
 	release(context);
 	dealloc(context);
 }
 
-void begin(SpriteBatch* context, vec2 aCanvasSize, vec2 aCanvasOffset) {
+void begin(SpritePlotter* context, vec2 aCanvasSize, vec2 aCanvasOffset) {
 	ASSERT(context->count == -1);
 	context->count = 0;
 
@@ -171,15 +171,15 @@ void begin(SpriteBatch* context, vec2 aCanvasSize, vec2 aCanvasOffset) {
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, context->elementBuf);
 	glBindBuffer(GL_ARRAY_BUFFER, context->arrayBuf);
 
-	glVertexAttribPointer(context->aPosition, 2, GL_FLOAT, GL_FALSE, sizeof(SpriteBatch::Vertex), (GLvoid*)0);
-	glVertexAttribPointer(context->aUV, 2, GL_FLOAT, GL_FALSE, sizeof(SpriteBatch::Vertex), (GLvoid*)8);
-	glVertexAttribPointer(context->aColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(SpriteBatch::Vertex), (GLvoid*)16);	
+	glVertexAttribPointer(context->aPosition, 2, GL_FLOAT, GL_FALSE, sizeof(SpritePlotter::Vertex), (GLvoid*)0);
+	glVertexAttribPointer(context->aUV, 2, GL_FLOAT, GL_FALSE, sizeof(SpritePlotter::Vertex), (GLvoid*)8);
+	glVertexAttribPointer(context->aColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(SpritePlotter::Vertex), (GLvoid*)16);	
 }
 
-void drawImage(SpriteBatch* context, ImageAsset *img, vec2 pos, int frame, Color c) {
+void drawImage(SpritePlotter* context, ImageAsset *img, vec2 pos, int frame, Color c) {
 	ASSERT(context->count >= 0);
 	setTextureAtlas(context, img->texture);
-	SpriteBatch::Vertex *slice = context->nextSlice();
+	SpritePlotter::Vertex *slice = context->nextSlice();
 	FrameAsset *fr = img->frame(frame);
 
 	pos -= vec(fr->px, fr->py);
@@ -192,10 +192,10 @@ void drawImage(SpriteBatch* context, ImageAsset *img, vec2 pos, int frame, Color
 	++context->count;
 }
 
-void drawImageTransformed(SpriteBatch* context, ImageAsset *img, vec2 pos, vec2 u, int frame, Color c) {
+void drawImageTransformed(SpritePlotter* context, ImageAsset *img, vec2 pos, vec2 u, int frame, Color c) {
 	ASSERT(context->count >= 0);
 	setTextureAtlas(context, img->texture);
-	SpriteBatch::Vertex *slice = context->nextSlice();
+	SpritePlotter::Vertex *slice = context->nextSlice();
 	FrameAsset *fr = img->frame(frame);
 
 	vec2 p0 = -vec(fr->px, fr->py);
@@ -211,14 +211,14 @@ void drawImageTransformed(SpriteBatch* context, ImageAsset *img, vec2 pos, vec2 
 	++context->count;
 }
 
-void drawImageRotated(SpriteBatch* context, ImageAsset *img, vec2 pos, float radians, int f, Color c) {
+void drawImageRotated(SpritePlotter* context, ImageAsset *img, vec2 pos, float radians, int f, Color c) {
 	drawImageTransformed(context, img, pos, polar(1, radians), f, c);
 }
 
-void drawImageScaled(SpriteBatch* context, ImageAsset *img, vec2 pos, vec2 k, int frame, Color c) {
+void drawImageScaled(SpritePlotter* context, ImageAsset *img, vec2 pos, vec2 k, int frame, Color c) {
 	ASSERT(context->count >= 0);
 	setTextureAtlas(context, img->texture);
-	SpriteBatch::Vertex *slice = context->nextSlice();
+	SpritePlotter::Vertex *slice = context->nextSlice();
 	FrameAsset *fr = img->frame(frame);
 
 	vec2 p0 = -vec(fr->px, fr->py);
@@ -237,12 +237,12 @@ void drawImageScaled(SpriteBatch* context, ImageAsset *img, vec2 pos, vec2 k, in
 
 #define UV_LABEL_SLOP (0.0001f)
 
-void plotGlyph(SpriteBatch* context, const GlyphAsset& g, float x, float y, float h, Color c) {
+void plotGlyph(SpritePlotter* context, const GlyphAsset& g, float x, float y, float h, Color c) {
 	if (context->count == context->capacity) {
 		commitBatch(context);
 	}
 
-	SpriteBatch::Vertex *slice = context->nextSlice();
+	SpritePlotter::Vertex *slice = context->nextSlice();
 	float k = 1.f / context->workingTexture->w;
 	vec2 uv = k * vec(g.x, g.y);
 	float du = k * (g.advance-UV_LABEL_SLOP);
@@ -256,7 +256,7 @@ void plotGlyph(SpriteBatch* context, const GlyphAsset& g, float x, float y, floa
 	++context->count;
 }
 
-void drawLabel(SpriteBatch* context, FontAsset *font, vec2 p, Color c, const char *msg) {
+void drawLabel(SpritePlotter* context, FontAsset *font, vec2 p, Color c, const char *msg) {
 	ASSERT(context->count >= 0);
 	setTextureAtlas(context, &(font->texture));
 
@@ -276,7 +276,7 @@ void drawLabel(SpriteBatch* context, FontAsset *font, vec2 p, Color c, const cha
 
 }
 
-void drawLabelCentered(SpriteBatch* context, FontAsset *font, vec2 p, Color c, const char *msg) {
+void drawLabelCentered(SpritePlotter* context, FontAsset *font, vec2 p, Color c, const char *msg) {
 	ASSERT(context->count >= 0);
 	setTextureAtlas( context, &(font->texture) );
 	float py = p.y;
@@ -299,7 +299,7 @@ void drawLabelCentered(SpriteBatch* context, FontAsset *font, vec2 p, Color c, c
 
 #define TILE_SLOP (0.001f)
 
-void drawTilemap(SpriteBatch* context, TilemapAsset *map, vec2 position) {
+void drawTilemap(SpritePlotter* context, TilemapAsset *map, vec2 position) {
 	ASSERT(context->count >= 0);
 
 	// make sure the map is initialized
@@ -338,7 +338,7 @@ void drawTilemap(SpriteBatch* context, TilemapAsset *map, vec2 position) {
 				vec2 uv = 
 					(vec(map->tw * coord.x, map->th * coord.y) + vec(TILE_SLOP, TILE_SLOP))
 					/ vec(map->tileAtlas.w, map->tileAtlas.h);
-				SpriteBatch::Vertex *slice = context->nextSlice();
+				SpritePlotter::Vertex *slice = context->nextSlice();
 
 				slice[0].set(p, uv, rgba(0));
 				slice[1].set(p+vec(0,th), uv+vec(0,uh), rgba(0));
@@ -353,14 +353,14 @@ void drawTilemap(SpriteBatch* context, TilemapAsset *map, vec2 position) {
 	}	
 }
 
-void flush(SpriteBatch* context) {
+void flush(SpritePlotter* context) {
 	ASSERT(context->count >= 0); 
 	if (context->count > 0) { 
 		commitBatch(context); 
 	}
 }
 
-void end(SpriteBatch* context) {
+void end(SpritePlotter* context) {
 	ASSERT(context->count >= 0);
 	flush(context);
 	context->count = -1;
@@ -374,14 +374,14 @@ void end(SpriteBatch* context) {
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void commitBatch(SpriteBatch* context) {
+void commitBatch(SpritePlotter* context) {
 	ASSERT(context->count > 0);
-	glBufferData(GL_ARRAY_BUFFER, 4 * context->count * sizeof(SpriteBatch::Vertex), context->workingBuffer(), GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, 4 * context->count * sizeof(SpritePlotter::Vertex), context->workingBuffer(), GL_DYNAMIC_DRAW);
 	glDrawElements(GL_TRIANGLES, 6 * context->count, GL_UNSIGNED_SHORT, 0);
 	context->count = 0;
 }
 
-void setTextureAtlas(SpriteBatch* context, TextureAsset *texture) {
+void setTextureAtlas(SpritePlotter* context, TextureAsset *texture) {
 
 	bool atlasChange = texture != context->workingTexture;
 	

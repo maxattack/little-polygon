@@ -25,7 +25,7 @@ void Kitten::init(AssetBundle* assets, CollisionSystem* collisions) {
 	collisions->move(collider, vec(0,0.2f));
 }
 
-void Kitten::draw(SpriteBatch* spriteBatch) {
+void Kitten::draw(SpritePlotter* spriteBatch) {
 	drawImageScaled(
 		spriteBatch, 
 		image, 
