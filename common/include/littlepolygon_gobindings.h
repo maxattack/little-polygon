@@ -18,11 +18,13 @@
 
 #include "littlepolygon_go.h"
 #include "littlepolygon_fk.h"
-#include "littlepolygon_graphics.h"
+#include "littlepolygon_sprites.h"
 
 // Binds various systems to the GO database, and declares assets for them
 // to be loaded from an asset bundle.
 // (and, gift idea, binds to lua... or squirrel...?)
+
+// VERY WIP !!
 
 #define COMPONENT_TYPE_NODE 0
 #define COMPONENT_TYPE_SPRITE 1
@@ -54,8 +56,6 @@ public:
 //------------------------------------------------------------------------------
 // NODE COMPONENT
 // Endows GOs with a position in space and a heirarchical structure.
-// ? Option to use contexts other than the FkContext 
-//   (e.g. Simple2D, IK, parametric, etc)
 //------------------------------------------------------------------------------
 
 class NodeRef {
@@ -108,61 +108,38 @@ inline NodeRef getNode(GoContext *context, GO go) {
 //------------------------------------------------------------------------------
 // SPRITE COMPONENT
 // Maintains a sprite batch and a draw queue that renders sprites with the 
-// node's position.
+// node's transformation.
 //------------------------------------------------------------------------------
-
-struct SpriteContext;
-struct Sprite;
 
 class SpriteRef {
 private:
 	SpriteContext *context;
-	Sprite *sprite;
-
-	SpriteRef(); // no default ctor
+	SPRITE sprite;
 
 public:
-	SpriteRef(SpriteContext *aContext, Sprite *aSprite) : 
-		context(aContext), 
-		sprite(aSprite) {}
+	SpriteRef(SpriteContext *aContext, SPRITE aSprite) : 
+		context(aContext), sprite(aSprite) {}
 
-	inline operator Sprite*() const { return sprite; }
+	GoComponent *component() { return (GoComponent*) userData(context, sprite); }
+	ImageAsset *image() { return ::image(context, sprite); }
+	int frame() { return ::frame(context, sprite); }
+	int layer() { return ::layer(context, sprite); }
+	bool visible() { return ::visible(context, sprite); }
+	Color color() { return ::color(context, sprite); }
 
-	bool visible();
-	GoComponent *component();
-	ImageAsset *image();
-	int frame();
-	int layer();
-	Color color();
+	void setImage(ImageAsset *image) { ::setImage(context, sprite, image); }
+	void setFrame(int frame) { ::setFrame(context, sprite, frame); }
+	void setLayer(int layer) { ::setLayer(context, sprite, layer); }
+	void setVisible(bool visible) { ::setVisible(context, sprite, visible); }
+	void setColor(Color c) { ::setColor(context, sprite, c); }
 
-	void setVisible(bool flag);
-	void setImage(ImageAsset *asset);
-	void setFrame(int frame);
-	void setLayer(int layer);
-	void setColor(Color c);
-
-	// todo: animation options
 };
 
 struct SpriteAsset {
 	uint32_t imageHash;
-	float x, y;
+	vec2 position;
 	Color color;
-	int visible;
-	int frame;
-	int layer;
 };
-
-// Create a new sprite context from a given capacity.
-SpriteContext *createSpriteContext(AssetBundle *assets, size_t numLayers=8, size_t layerCapacity=128);
-void destroy(SpriteContext *context);
-
-// Create a new sprite
-// batch methods
-void advanceAnimations(SpriteContext *context, float dt);
-void draw(SpriteContext *context, SpriteBatch *batch);
-
-// go methods
 
 GoComponentDef spriteDef(SpriteContext *context, AssetBundle *assets);
 
@@ -173,6 +150,7 @@ void addSprite(GoContext *context, GO go, const SpriteAsset *asset=0) {
 inline SpriteRef getSprite(GoContext *context, GO go) {
 	return SpriteRef(
 		(SpriteContext*) getContext(context, COMPONENT_TYPE_SPRITE),
-		(Sprite*) getComponent(context, go, COMPONENT_TYPE_SPRITE)->userData
+		(SPRITE) getComponent(context, go, COMPONENT_TYPE_SPRITE)->userData
 	);
 }
+
