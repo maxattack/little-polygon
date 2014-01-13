@@ -30,10 +30,10 @@ struct SpriteDraw {
 	ImageAsset *image;
 	vec2 position;
 	Color color;
-	uint32_t slot : 16;
-	uint32_t frame : 14;
+	uint32_t slot : 10;
+	uint32_t frame : 8;
 	uint32_t visible : 1;
-	// uint32_t enabled : 1;
+	uint32_t unused : 13;
 
 	bool isVisible() const { return image && visible; }
 };
@@ -222,23 +222,25 @@ void setLayer(SpriteContext *context, SPRITE sprite, int layerIdx) {
 	auto s = context->lookup(sprite);
 	
 	// make sure we actually *need* to change
-	if (s->layer == layerIdx) {
-		return;
+	if (s->layer != layerIdx) {
+
+		// save the draw call
+		auto cmd = *context->lookupDraw(sprite);
+
+		// remove from current layer
+		removeFromLayer(context, s);
+
+		// register with new layer
+		auto layer = context->getLayer(layerIdx);
+		ASSERT(layer->count < context->layerCapacity);
+		s->layer = layerIdx;
+		s->index = layer->count;
+		layer->count++;
+
+		// write the draw call
+		*layer->get(s->index) = cmd;
+
 	}
-
-	// save the draw call
-	auto cmd = *context->lookupDraw(sprite);
-
-	// remove from current layer
-	removeFromLayer(context, s);
-
-	// register with new layer
-	auto layer = context->getLayer(layerIdx);
-	ASSERT(layer->count < context->layerCapacity);
-	s->layer = layerIdx;
-	s->index = layer->count;
-	layer->count++;
-	*layer->get(s->index) = cmd;
 }
 
 void setVisible(SpriteContext *context, SPRITE sprite, bool visible) {
