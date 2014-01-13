@@ -104,7 +104,7 @@ void setScale(Sprite *sprite, float scale);
 
 void setImage(Sprite* sprite, ImageAsset *image);
 void setFrame(Sprite* sprite, int frame);
-void setVisible(Sprite* sprite, bool visible);
+void setVisible(SpriteBatch *context, Sprite* sprite, bool visible);
 void setColor(Sprite* sprite, Color c);
 void setUserData(Sprite* sprite, void *userData);
 
@@ -113,10 +113,11 @@ int layer(Sprite *sprite);
 AffineMatrix transform(Sprite *sprite);
 ImageAsset *image(Sprite* sprite);
 int frame(Sprite* sprite);
-bool visible(Sprite* sprite);
+bool visible(SpriteBatch *context, Sprite* sprite);
 Color color(Sprite* sprite);
 void *userData(Sprite* sprite);
 
 // batch methods
 // void advanceAnimations(SpriteBatch *context, float dt);
+void draw(Sprite *sprite, SpritePlotter *plotter);
 void draw(SpriteBatch *context, SpritePlotter *plotter);

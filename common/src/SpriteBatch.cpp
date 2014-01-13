@@ -22,12 +22,8 @@ struct SpriteDraw {
 	ImageAsset *image;
 	AffineMatrix xform;
 	Color color;
-	uint32_t slot : 10;
-	uint32_t frame : 8;
-	uint32_t visible : 1;
-	uint32_t unused : 13;
-
-	bool isVisible() const { return image && visible; }
+	uint16_t slot;
+	uint16_t frame;
 };
 
 struct Sprite {
@@ -41,6 +37,7 @@ struct SpriteBatch {
 	size_t bottomCount;
 	size_t topCount;
 	Bitset<1024> allocationMask;
+	Bitset<1024> visibleMask;
 
 	Sprite headSprite;
 
@@ -62,6 +59,22 @@ struct SpriteBatch {
 		SpriteDraw *headDraw = (SpriteDraw*) (&headSprite + capacity);
 		return headDraw + index;
 	}
+
+	void markVisible(SpriteDraw *draw) {
+		SpriteDraw *headDraw = (SpriteDraw*) (&headSprite + capacity);
+		visibleMask.mark(draw - headDraw);
+	}
+
+	void clearVisible(SpriteDraw *draw) {
+		SpriteDraw *headDraw = (SpriteDraw*) (&headSprite + capacity);
+		visibleMask.clear(draw - headDraw);
+	}
+
+	bool visible(SpriteDraw *draw) const {
+		SpriteDraw *headDraw = (SpriteDraw*) (&headSprite + capacity);
+		return visibleMask[ draw - headDraw ];
+	}
+
 };
 
 SpriteBatch *createSpriteBatch(size_t capacity) {
@@ -80,6 +93,7 @@ SpriteBatch *createSpriteBatch(size_t capacity) {
 	context->bottomCount = 0;
 	context->topCount =0 ;
 	context->allocationMask = Bitset<1024>();
+	context->visibleMask = Bitset<1024>();
 	return context;
 }
 
@@ -99,15 +113,21 @@ static void addToLayer(SpriteBatch *context, Sprite *sprite, int layer) {
 }
 
 static void removeFromLayer(SpriteBatch *context, Sprite *sprite) {
+	context->clearVisible(sprite->cmd);
 	if (sprite->layer == 0) {
 		// remove from bottom of the layer
 		int index = sprite->cmd - context->getDraw(0);
 		if (index != context->bottomCount-1) {
 			// swap with the last element
 			auto drawToMove = context->getDraw(context->bottomCount-1);
+			auto wasVisible = context->visible(drawToMove);
+			context->clearVisible(drawToMove);
 			auto spriteToMove = context->get(drawToMove->slot);
 			spriteToMove->cmd = sprite->cmd;
 			*(spriteToMove->cmd) = *drawToMove;
+			if (wasVisible) {
+				context->markVisible(spriteToMove->cmd);
+			}
 		}
 		--context->bottomCount;
 	} else {
@@ -116,9 +136,14 @@ static void removeFromLayer(SpriteBatch *context, Sprite *sprite) {
 		if (index != context->topCount-1) {
 			// swap with the first element
 			auto drawToMove = context->getDraw(context->capacity - (context->topCount-1));
+			auto wasVisible = context->visible(drawToMove);
+			context->clearVisible(drawToMove);
 			auto spriteToMove = context->get(drawToMove->slot);
 			spriteToMove->cmd = sprite->cmd;
 			*(spriteToMove->cmd) = *drawToMove;
+			if (wasVisible) {
+				context->markVisible(spriteToMove->cmd);
+			}			
 		}
 		--context->topCount;
 	}
@@ -150,7 +175,9 @@ Sprite* createSprite(
 	result->cmd->color = c;
 	result->cmd->image = image;
 	result->cmd->frame = frame;
-	result->cmd->visible = visible;
+	if (visible) {
+		context->markVisible(result->cmd);
+	}
 	
 	result->userData = userData;
 
@@ -159,6 +186,7 @@ Sprite* createSprite(
 
 void destroy(SpriteBatch *context, Sprite* sprite) {
 	ASSERT(context->owns(sprite));
+	context->clearVisible(sprite->cmd);
 	removeFromLayer(context, sprite);
 	context->allocationMask.clear(sprite - &context->headSprite);
 }
@@ -166,10 +194,17 @@ void destroy(SpriteBatch *context, Sprite* sprite) {
 void setLayer(SpriteBatch *context, Sprite* sprite, int layerIdx) {
 	ASSERT(context->owns(sprite));
 	if (sprite->layer != layerIdx) {
+		bool wasVisible = context->visible(sprite->cmd);
+		context->clearVisible(sprite->cmd);
+
 		auto cmd = *sprite->cmd;
 		removeFromLayer(context, sprite);
 		addToLayer(context, sprite, layerIdx);
+		
 		*sprite->cmd = cmd;
+		if (wasVisible) {
+			context->markVisible(sprite->cmd);
+		}
 	}
 }
 
@@ -206,8 +241,12 @@ void setFrame(Sprite* sprite, int frame) {
 	sprite->cmd->frame = frame;
 }
 
-void setVisible(Sprite* sprite, bool visible) {
-	sprite->cmd->visible = visible;
+void setVisible(SpriteBatch *context, Sprite* sprite, bool visible) {
+	if (visible) {
+		context->markVisible(sprite->cmd);
+	} else {
+		context->clearVisible(sprite->cmd);
+	}
 }
 
 void setColor(Sprite* sprite, Color c) {
@@ -234,8 +273,8 @@ int layer(Sprite* sprite) {
 	return sprite->layer;
 }
 
-bool visible(Sprite* sprite) {
-	return sprite->cmd->visible;
+bool visible(SpriteBatch *context, Sprite* sprite) {
+	return context->visible(sprite->cmd);
 }
 
 Color color(Sprite* sprite) {
@@ -246,18 +285,13 @@ void *userData(Sprite* sprite) {
 	return sprite->userData;
 }
 
-static void draw(SpriteDraw *cmd, SpritePlotter *renderer) {
-	if (cmd->isVisible()) {
-		drawImageTransformed(renderer, cmd->image, cmd->xform, cmd->frame, cmd->color);
-	}	
+void draw(SpriteDraw *cmd, SpritePlotter *renderer) {
+	drawImageTransformed(renderer, cmd->image, cmd->xform, cmd->frame, cmd->color);
 }
 
 void draw(SpriteBatch *context, SpritePlotter *renderer) {
-	for(int i=0; i<context->bottomCount; ++i) {
-		draw(context->getDraw(i), renderer);
+	unsigned idx;
+	for(auto iterator=context->visibleMask.listBits(); iterator.next(idx);) {
+		draw(context->getDraw(idx), renderer);
 	}
-	for(int i=0; i<context->topCount; ++i) {
-		draw(context->getDraw(context->capacity - (context->topCount-1) + i), renderer);
-	}
-
 }
