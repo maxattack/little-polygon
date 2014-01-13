@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+#include "littlepolygon_sprites.h"
 #include "littlepolygon_graphics.h"
 
 const GLchar* SPRITE_SHADER = R"GLSL(

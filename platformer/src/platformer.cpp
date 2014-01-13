@@ -53,8 +53,9 @@ int main(int argc, char *argv[]) {
 
 	// initialize lp systems
 	auto assets = createAssetBundle("platformer.bin");
-	auto batch = createSpritePlotter();
-	auto plotter = createLinePlotter();
+	auto batch = createSpriteBatch();
+	auto spritePlotter = createSpritePlotter();
+	auto linePlotter = createLinePlotter();
 	auto splines = createSplinePlotter();
 
 	// things with ctors
@@ -68,8 +69,8 @@ int main(int argc, char *argv[]) {
 	Kitten kitten;
 	
 	environment.init(assets, collisions);
-	hero.init(assets, collisions);
-	kitten.init(assets, collisions);
+	hero.init(assets, batch, collisions);
+	kitten.init(assets, batch, collisions);
 	
 	// start music
 	// Mix_Music *music = Mix_LoadMUS("song.mid");
@@ -90,18 +91,17 @@ int main(int argc, char *argv[]) {
 		auto scrolling = vec(0,0);
 		auto canvasSize = vec(CANVAS_WIDTH, CANVAS_HEIGHT);
 
-		begin(batch, canvasSize, scrolling);
-		environment.draw(batch);
-		hero.draw(batch);
-		kitten.draw(batch);
-		end(batch);
+		begin(spritePlotter, canvasSize, scrolling);
+		environment.draw(spritePlotter);
+		draw(batch, spritePlotter);
+		end(spritePlotter);
 
 		glDisable(GL_BLEND);
 
 		if (input.drawWireframe) {
-			begin(plotter, canvasSize, scrolling);
-			collisions->debugDraw(plotter, rgb(0xffff00));
-			end(plotter);
+			begin(linePlotter, canvasSize, scrolling);
+			collisions->debugDraw(linePlotter, rgb(0xffff00));
+			end(linePlotter);
 		}
 
 
@@ -123,8 +123,8 @@ int main(int argc, char *argv[]) {
 	}
 
 	delete collisions;
-	destroy(plotter);
-	destroy(batch);
+	destroy(linePlotter);
+	destroy(spritePlotter);
 	destroy(assets);
 	
 	return 0;

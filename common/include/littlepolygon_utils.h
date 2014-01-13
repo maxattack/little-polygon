@@ -189,6 +189,7 @@ struct AffineMatrix {
 };
 
 // helpers
+inline AffineMatrix affineIdentity() { return AffineMatrix(vec(1,0), vec(0,1), vec(0,0)); }
 inline AffineMatrix affineTranslation(vec2 t) { return AffineMatrix(vec(1,0), vec(0,1), t); }
 inline AffineMatrix affineRotation(float radians) { 
 	float s=sinf(radians); float c=cosf(radians); 

@@ -16,7 +16,7 @@ PLATFORMER_OBJ_FILES =     \
 	obj/Environment.o      \
 	obj/Hero.o             \
 	obj/Kitten.o           \
-	obj/main.o
+	obj/platformer.o
 
 squids_OBJ_FILES = \
     obj/squids.o

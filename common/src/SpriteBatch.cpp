@@ -173,6 +173,31 @@ void setLayer(SpriteBatch *context, Sprite* sprite, int layerIdx) {
 	}
 }
 
+void setTransform(Sprite *sprite, const AffineMatrix &matrix) {
+	sprite->cmd->xform = matrix;
+}
+
+void setPosition(Sprite *sprite, vec2 p) {
+	sprite->cmd->xform.t = p;
+}
+
+void setFlipped(Sprite *sprite, bool flipped) {
+	sprite->cmd->xform.u = vec(flipped ? -1 : 1, 0);
+}
+
+void setRotation(Sprite *sprite, float radians) {
+	float s = sinf(radians);
+	float c = cosf(radians);
+	sprite->cmd->xform.u = vec(c,s);
+	sprite->cmd->xform.v = vec(-s,c);
+}
+
+void setScale(Sprite *sprite, float scale) {
+	sprite->cmd->xform.u = vec(scale, 0);
+	sprite->cmd->xform.v = vec(0, scale);
+}
+
+
 void setImage(Sprite* sprite, ImageAsset *image) {
 	sprite->cmd->image = image;
 }
@@ -195,6 +220,10 @@ void setUserData(Sprite* sprite, void *userData) {
 
 ImageAsset *image(Sprite* sprite) {
 	return sprite->cmd->image;
+}
+
+AffineMatrix transform(Sprite *sprite) {
+	return sprite->cmd->xform;
 }
 
 int frame(Sprite* sprite) {

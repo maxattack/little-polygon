@@ -1,6 +1,8 @@
 #pragma once
 
 #include "CollisionSystem.h"
+#include <littlepolygon_sprites.h>
+
 
 #define CANVAS_WIDTH   320
 #define CANVAS_HEIGHT  115
@@ -44,17 +46,14 @@ struct Hero {
 	}
 
 	// rendering parameters
-	ImageAsset *image;
+	Sprite *sprite;
 	float framef;
-	int frame;
-	bool flipped;
 
 	SampleAsset *sfxJump;
 	SampleAsset *sfxFootfall;
 
-	void init(AssetBundle* assets, CollisionSystem* collisions);
+	void init(AssetBundle* assets, SpriteBatch *batch, CollisionSystem* collisions);
 	void tick(PlayerInput* input, CollisionSystem* collisions, float dt);
-	void draw(SpritePlotter* batch);
 };
 
 struct Kitten {
@@ -67,10 +66,7 @@ struct Kitten {
 	}
 
 	// rendering parameters
-	ImageAsset *image;
-	int frame;
-	bool flipped;
+	Sprite *sprite;
 
-	void init(AssetBundle* assets, CollisionSystem* collisions);
-	void draw(SpritePlotter* batch);
+	void init(AssetBundle* assets, SpriteBatch *batch, CollisionSystem* collisions);
 };

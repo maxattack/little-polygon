@@ -37,45 +37,6 @@ void setCanvas(GLuint uMVP, vec2 canvasSize, vec2 canvasOffset);
 bool compileShader(const GLchar* source, GLuint *outProg, GLuint *outVert, GLuint *outFrag);
 
 //------------------------------------------------------------------------------
-// SPRITE RENDERING
-//------------------------------------------------------------------------------
-
-// This object can render lots of sprites in a small number of batched draw calls
-// by coalescing adjacent draws into larger logical draws.
-// TODO: perform batch-level clipping?
-struct SpritePlotter;
-SpritePlotter *createSpritePlotter(int capacity=64);
-void destroy(SpritePlotter *context);
-
-// Call this method to initialize the graphics context state.  Coordinates are
-// set to a orthogonal projection matrix, and some basic settings like blending are
-// enabled.  Any additional state changes can be set *after* this function but *before*
-// issuing any draw calls.
-void begin(SpritePlotter* context, vec2 canvasSize, vec2 scrolling=vec(0,0));
-
-// Draw the given image.  Will potentially cause a draw call to actually be emitted
-// to the graphics device if: (i) the buffer has reached capacity or (ii) the texture 
-// atlas has changed.  Color transforms *can* be batched, because they are encoded
-// in the vertices, not in shader uniforms.
-void drawImage(SpritePlotter* context, ImageAsset *image, vec2 position, int frame=0, Color color=rgba(0));
-void drawImageTransformed(SpritePlotter* context, ImageAsset *image, vec2 position, vec2 attitude, int frame=0, Color color=rgba(0));
-void drawImageTransformed(SpritePlotter *context, ImageAsset *image, const AffineMatrix& xform, int frame=0, Color color=rgba(0));
-void drawImageTransformed(SpritePlotter *context, ImageAsset *image, const mat4f xform, int frame=0, Color color=rgba(0));
-void drawImageRotated(SpritePlotter* context, ImageAsset *image, vec2 position, float radians, int frame=0, Color color=rgba(0));
-void drawImageScaled(SpritePlotter* context, ImageAsset *image, vec2 position, vec2 k, int frame=0, Color color=rgba(0));
-void drawLabel(SpritePlotter* context, FontAsset *font, vec2 p, Color c, const char *msg);
-void drawLabelCentered(SpritePlotter* context, FontAsset *font, vec2 p, Color c, const char *msg);
-void drawTilemap(SpritePlotter* context, TilemapAsset *map, vec2 position=vec(0,0));
-
-// if you want to monkey with the global rendering state (e.g. change blending settings)
-// you need to flush the render queue first.
-void flush(SpritePlotter* context);
-
-// Commit the current draw queue and return the graphics context state to it's
-// canonical form, to play nice with other renderers.
-void end(SpritePlotter* context);
-
-//------------------------------------------------------------------------------
 // DEBUG LINE RENDERING
 //------------------------------------------------------------------------------
 
