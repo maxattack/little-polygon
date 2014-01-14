@@ -247,14 +247,6 @@ void* userData(Node* node) {
 	return node->userData;
 }
 
-FkChildIterator::FkChildIterator(FkContext *context, Node* parent) : 
-current(parent ? parent->firstChild : context->firstRoot) {
-}
-
-void FkChildIterator::next() {
-	current = current->nextSibling;
-}
-
 void cacheWorldTransforms(FkContext *context) {
 	// iterate non-recursively through the display tree like it's a
 	// foldout gui (children, then siblings, then ancestors)
@@ -270,5 +262,13 @@ void cacheWorldTransforms(FkContext *context) {
 			if (node) { node = node->nextSibling; }
 		}
 	}
+}
+
+FkChildIterator::FkChildIterator(FkContext *context, Node* parent) : 
+current(parent ? parent->firstChild : context->firstRoot) {
+}
+
+void FkChildIterator::next() {
+	current = current->nextSibling;
 }
 

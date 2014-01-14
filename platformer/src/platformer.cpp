@@ -34,12 +34,6 @@ static void handleKeyDown(PlayerInput& input, const SDL_KeyboardEvent& key) {
 	}
 }
 
-static vec2 mousePosition() {
-	int mx, my;
-	SDL_GetMouseState(&mx, &my);
-	return 0.25f * vec(mx, my);
-}
-
 int main(int argc, char *argv[]) {
 
 	auto window = initContext("A Girl and Her Cat", 4 * CANVAS_WIDTH, 4 * CANVAS_HEIGHT);
@@ -56,8 +50,6 @@ int main(int argc, char *argv[]) {
 	auto batch = createSpriteBatch();
 	auto spritePlotter = createSpritePlotter();
 	auto lines = createLinePlotter();
-	auto splines = createSplinePlotter();
-	auto circles = createCirclePlotter();
 
 	// things with ctors
 	Timer timer;
@@ -97,33 +89,14 @@ int main(int argc, char *argv[]) {
 		draw(batch, spritePlotter);
 		end(spritePlotter);
 
-		glDisable(GL_BLEND);
-
 		if (input.drawWireframe) {
+			glDisable(GL_BLEND);
 			begin(lines, canvasSize, scrolling);
 			collisions->debugDraw(lines, rgb(0xffff00));
 			end(lines);
+			glEnable(GL_BLEND);
 		}
-
-
-		auto p = mousePosition();
-
-		begin(splines, canvasSize, scrolling);
-		drawSpline(
-			splines, 
-			quadraticBezierMatrix(vec4f(0,0,0,0), vec4f(p.x, p.y, 0, 0), vec4f(canvasSize.x, canvasSize.y, 0, 0)), 
-			eccentricStroke(16, -15.75f, 16), 
-			rgb(0xff00ff)
-		);
-		end(splines);
-
-		begin(circles, canvasSize, scrolling);
-		plotFilled(circles, p, 8, rgb(0xffffaa));
-		plotArc(circles, p, 12, 16, rgb(0xffaaff));
-		end(circles);
-
-		glEnable(GL_BLEND);
-
+	
 		// present and wait for next frame
 		SDL_GL_SwapWindow(window);
 	}

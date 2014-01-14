@@ -54,8 +54,8 @@ CFLAGS += -arch i386
 AFLAGS = 32
 # AFLAGS = 64
 
-# stest: bin/squids
-# 	bin/squids
+stest: bin/squids
+	bin/squids
 
 test : bin/platformer bin/platformer.bin
 	cp platformer/assets/song.mid bin/song.mid
