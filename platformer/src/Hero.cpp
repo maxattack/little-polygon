@@ -30,8 +30,8 @@ void Hero::init(AssetBundle* assets, SpriteBatch *batch, CollisionSystem* collis
 	// init fx
 	sprite = createSprite(
 		batch, 
-		affineTranslation(PIXELS_PER_METER * position()), 
-		assets->image("hero")
+		assets->image("hero"),
+		affineTranslation(PIXELS_PER_METER * position())
 	);
 	framef = 0;
 

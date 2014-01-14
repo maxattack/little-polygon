@@ -151,8 +151,9 @@ static void removeFromLayer(SpriteBatch *context, Sprite *sprite) {
 
 Sprite* createSprite(
 	SpriteBatch *context, 
+	ImageAsset *image, 
 	const AffineMatrix& xform,
-	ImageAsset *image, int frame, Color c, bool visible, bool onTop, 
+	int frame, Color c, bool visible, bool onTop, 
 	void *userData
 ) {
 	ASSERT(context->count() < context->capacity);

@@ -22,8 +22,8 @@ void Kitten::init(AssetBundle* assets, SpriteBatch *batch, CollisionSystem* coll
 	// init fx
 	sprite = createSprite(
 		batch,
-		affineTranslation(PIXELS_PER_METER * position()),
-		assets->image("kitten")
+		assets->image("kitten"),
+		affineTranslation(PIXELS_PER_METER * position())
 	);
 	setFlipped(sprite, true);
 
