@@ -55,8 +55,9 @@ int main(int argc, char *argv[]) {
 	auto assets = createAssetBundle("platformer.bin");
 	auto batch = createSpriteBatch();
 	auto spritePlotter = createSpritePlotter();
-	auto linePlotter = createLinePlotter();
+	auto lines = createLinePlotter();
 	auto splines = createSplinePlotter();
+	auto circles = createCirclePlotter();
 
 	// things with ctors
 	Timer timer;
@@ -99,9 +100,9 @@ int main(int argc, char *argv[]) {
 		glDisable(GL_BLEND);
 
 		if (input.drawWireframe) {
-			begin(linePlotter, canvasSize, scrolling);
-			collisions->debugDraw(linePlotter, rgb(0xffff00));
-			end(linePlotter);
+			begin(lines, canvasSize, scrolling);
+			collisions->debugDraw(lines, rgb(0xffff00));
+			end(lines);
 		}
 
 
@@ -116,6 +117,11 @@ int main(int argc, char *argv[]) {
 		);
 		end(splines);
 
+		begin(circles, canvasSize, scrolling);
+		plotFilled(circles, p, 8, rgb(0xffffaa));
+		plotArc(circles, p, 12, 16, rgb(0xffaaff));
+		end(circles);
+
 		glEnable(GL_BLEND);
 
 		// present and wait for next frame
@@ -123,7 +129,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	delete collisions;
-	destroy(linePlotter);
+	destroy(lines);
 	destroy(spritePlotter);
 	destroy(assets);
 	

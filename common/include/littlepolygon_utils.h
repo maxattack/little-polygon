@@ -186,6 +186,17 @@ struct AffineMatrix {
 		*this = inverse();
 	}
 
+
+
+	vec2 invRigidTransformVector(const vec2 &w) const {
+		return vec(a * w.x + d * w.y,
+			       b * w.x + e * w.y);
+	}
+
+	vec2 invRigidTransformPoint(const vec2& p) const {
+		return invRigidTransformVector(p - t);
+	}
+
 };
 
 // helpers
@@ -221,6 +232,7 @@ inline vec2 cdiv(vec2 u, vec2 v) {
 }
 
 // polar -> linear conversion
+
 inline vec2 polar(float radius, float radians) { return radius * vec2(cosf(radians), sinf(radians)); }
 
 // easing functions

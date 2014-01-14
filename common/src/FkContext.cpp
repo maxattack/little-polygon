@@ -36,7 +36,7 @@ struct Node {
 	Node *firstChild;
 	Node *nextSibling;
 	Node *prevSibling;
-	mat4f *local;
+	AffineMatrix local;
 	void *userData;
 };
 
@@ -46,10 +46,9 @@ struct FkContext {
 	Bitset<1024> allocationMask;
 	Node *firstRoot;
 	
-	mat4f first; // really just a hack to make sure SIMD alignment is OK :P
+	Node first;
 
-	inline mat4f *tformBuf() { return &first; }
-	inline Node *nodeBuf() { return (Node*)(tformBuf() + capacity); }
+	inline Node *nodeBuf() { return &first; }
 
 	bool owns(Node *node) {
 		auto index = node - nodeBuf();
@@ -69,7 +68,7 @@ FkContext *createFkContext(size_t capacity) {
 	// allocate memory
 	auto context = (FkContext*) LITTLE_POLYGON_MALLOC(
 		sizeof(FkContext) + 
-		(capacity-1) * sizeof(mat4f) + 
+		(capacity-1) * sizeof(AffineMatrix) + 
 		(capacity) * sizeof(Node)
 	);
 	context->capacity = capacity;
@@ -98,10 +97,8 @@ Node* createNode(FkContext *context, Node* parent, void *userData) {
 	result->firstChild = 0;
 	result->nextSibling = 0;
 	result->prevSibling = 0;
-	result->local = context->tformBuf() + index;
+	result->local = affineIdentity();
 	result->userData = userData;
-
-	*result->local = mat4f::identity();
 
 	if (parent) {
 		setParent(context, result, parent);
@@ -189,15 +186,15 @@ void setUserData(Node* node, void *userData) {
 	node->userData = userData;
 }
 
-void setLocal(FkContext *context, Node* node, mat4f transform) {
-	*(node->local) = transform;
+void setLocal(FkContext *context, Node* node, AffineMatrix transform) {
+	node->local = transform;
 }
 
-void setWorld(FkContext *context, Node* node, mat4f transform) {
+void setWorld(FkContext *context, Node* node, AffineMatrix transform) {
 	if (node->parent) {
-		*node->local = transform * inverse(world(context, node->parent));
+		node->local = transform * world(context, node->parent).inverse();
 	} else {
-		*node->local = transform;
+		node->local = transform;
 	}
 }
 
@@ -205,13 +202,13 @@ Node* parent(Node* node) {
 	return node->parent;
 }
 
-mat4f local(FkContext *context, Node* node) {
-	return *node->local;
+AffineMatrix local(FkContext *context, Node* node) {
+	return node->local;
 }
 
-mat4f world(FkContext *context, Node* node) {
+AffineMatrix world(FkContext *context, Node* node) {
 	if (node->parent) {
-		return local(context, node) * world(context, node->parent);
+		return world(context, node->parent) * local(context, node);
 	} else {
 		return local(context, node);
 	}

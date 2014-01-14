@@ -39,7 +39,8 @@ Runtime Dependencies (native)
 
 Modules
 * littlepolygon_assets - a simple system for packaging and loading compressed game assets
-* littlepolygon_graphics - fast batching sprite and spline renderers
+* littlepolygon_graphics - efficient spline and vector renderers
+* littlepolygon_sprites - batching sprite renderer
 * littlepolygon_templates - a collection of slim-and-handy C++ collection templates
 * littlepolygon_go - a simple entity-component / "GameObject" metadata system
 * littlepolygon_fk - portable forward-kinematic display tree

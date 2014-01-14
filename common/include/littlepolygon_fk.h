@@ -18,7 +18,7 @@
 
 // this dependency is only required for the go bindings; the system is
 // useable without it.
-#include "littlepolygon_base.h"
+#include "littlepolygon_utils.h"
 
 // A Generic Forward-Kinematic (FK) system for creating display-trees
 // like in flash.  While this is was implemented with the intention of
@@ -64,14 +64,14 @@ void detachChildren(FkContext *context, Node* parent, bool preserveTransforms=fa
 void setUserData(Node* node, void *userData);
 
 // actually set the transform of the node
-void setLocal(FkContext *context, Node* node, mat4f transform);
-void setWorld(FkContext *context, Node* node, mat4f transform);
+void setLocal(FkContext *context, Node* node, AffineMatrix transform);
+void setWorld(FkContext *context, Node* node, AffineMatrix transform);
 // TODO: specialized versions (e.g. setPosition, setRotation, setScale, etc?)
 
 // getters
 Node* parent(Node* node);
-mat4f local(FkContext *context, Node* node);
-mat4f world(FkContext *context, Node* node);
+AffineMatrix local(FkContext *context, Node* node);
+AffineMatrix world(FkContext *context, Node* node);
 void* userData(Node* node);
 
 // iterators

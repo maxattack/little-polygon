@@ -40,15 +40,27 @@ bool compileShader(const GLchar* source, GLuint *outProg, GLuint *outVert, GLuin
 // DEBUG LINE RENDERING
 //------------------------------------------------------------------------------
 
-// This is mainly a debugging tool for things like b2DebugDraw and diagnostics,
-// so it's not exactly ninja'd for performance.
 struct LinePlotter;
 LinePlotter *createLinePlotter();
-void destroy(LinePlotter *plotter);
+void destroy(LinePlotter *context);
 
 void begin(LinePlotter* context, vec2 canvasSize, vec2 canvasOffset=vec(0,0));
 void plot(LinePlotter* context, vec2 p0, vec2 p1, Color c);
 void end(LinePlotter* context);
+
+//------------------------------------------------------------------------------
+// CIRCLE RENDERING
+//------------------------------------------------------------------------------
+
+struct CirclePlotter;
+CirclePlotter *createCirclePlotter(size_t resolution=128);
+void destroy(CirclePlotter *context);
+
+void begin(CirclePlotter *context, vec2 canvasSize, vec2 canvasOffset=vec(0,0));
+void plotFilled(CirclePlotter *context, vec2 p, float r, Color c, float a1=0, float a2=M_TAU);
+void plotArc(CirclePlotter *context, vec2 p, float r1, float r2, Color c, float a1=0, float a2=M_TAU);
+void end(CirclePlotter *context);
+
 
 //------------------------------------------------------------------------------
 // SPLINE REDNERING

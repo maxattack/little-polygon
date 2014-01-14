@@ -186,7 +186,6 @@ Sprite* createSprite(
 
 void destroy(SpriteBatch *context, Sprite* sprite) {
 	ASSERT(context->owns(sprite));
-	context->clearVisible(sprite->cmd);
 	removeFromLayer(context, sprite);
 	context->allocationMask.clear(sprite - &context->headSprite);
 }
