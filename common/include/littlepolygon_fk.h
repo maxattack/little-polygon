@@ -50,42 +50,87 @@ Node* createNode(FkContext *context, Node* parent=0, void *userData=0);
 // need to know who's being destroyed - invoked in leaf->root order).
 void destroy(FkContext *context, Node* node);
 
+//------------------------------------------------------------------------------
+// HEIRARCHY
+//------------------------------------------------------------------------------
+
 // Attach the given child to the given parent, detach from it's current
 // parent if necessary.
-void setParent(FkContext *context, Node* child, Node* parent=0);
+void setParent(Node* child, Node* parent=0);
 
 // like addChild, but preserves the localToWorld transform of the child.
-void reparent(FkContext *context, Node* child, Node* parent=0);
+void reparent(Node* child, Node* parent=0);
 
 // if we have any children, detach them all, preserving their local transforms.
-void detachChildren(FkContext *context, Node* parent, bool preserveTransforms=false);
+void detachChildren(Node* parent, bool preserveTransforms=false);
+
+//------------------------------------------------------------------------------
+// SETTERS
+//------------------------------------------------------------------------------
 
 // Change the userdata for the given node.
 void setUserData(Node* node, void *userData);
 
 // actually set the transform of the node
-void setLocal(FkContext *context, Node* node, AffineMatrix transform);
-void setLocalPosition(FkContext *context, Node* node, vec2 position);
-void setLocalAttitude(FkContext *context, Node *node, vec2 attitude);
-void setLocalRotation(FkContext *context, Node* node, float radians);
-void setLocalScale(FkContext *context, Node* node, vec2 scale);
-void setWorld(FkContext *context, Node* node, AffineMatrix transform);
-// TODO: specialized versions (e.g. setPosition, setRotation, setScale, etc?)
+void setLocal(Node* node, AffineMatrix transform);
+void setPosition(Node* node, vec2 position);
+void setAttitude(Node *node, vec2 attitude);
+void setRotation(Node* node, float radians);
+void setScale(Node* node, vec2 scale);
+void setWorld(Node* node, AffineMatrix transform);
 
-// getters
+//------------------------------------------------------------------------------
+// GETTERS
+//------------------------------------------------------------------------------
+
 Node* parent(const Node* node);
 void* userData(const Node* node);
 AffineMatrix local(const Node* node);
-AffineMatrix world(FkContext *context, Node* node);
+AffineMatrix world(Node* node);
+
+//------------------------------------------------------------------------------
+// BATCH METHODS
+//------------------------------------------------------------------------------
 
 void cacheWorldTransforms(FkContext *context);
 
-// iterators
+//------------------------------------------------------------------------------
+// ITERATORS (redo c++11 style?)
+//------------------------------------------------------------------------------
+
+struct FkRootIterator {
+	Node *current;
+
+	// just root nodes
+	FkRootIterator(const FkContext *context);
+	inline bool finished() const { return current == 0; }
+	void next();
+};
 
 struct FkChildIterator {
 	Node* current;
 
-	FkChildIterator(const FkContext *context, const Node* parent=0);
+	// just one level of child nodes
+	FkChildIterator(const Node* parent);
+	inline bool finished() const { return current == 0; }
+	void next();
+};
+
+struct FkIterator {
+	Node *current;
+
+	// all nodes, in DAG order
+	FkIterator(const FkContext *context);
+	inline bool finished() const { return current == 0; }
+	void next();
+};
+
+struct FkSubtreeIterator {
+	const Node *parent;
+	Node *current;
+
+	// subtree DAG traversal
+	FkSubtreeIterator(const Node *parent);
 	inline bool finished() const { return current == 0; }
 	void next();
 };

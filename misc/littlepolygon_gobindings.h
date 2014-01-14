@@ -58,33 +58,6 @@ public:
 // Endows GOs with a position in space and a heirarchical structure.
 //------------------------------------------------------------------------------
 
-class NodeRef {
-private:
-	FkContext *context;
-	Node* node;
-
-	NodeRef(); // no default ctor
-
-public:
-	NodeRef(FkContext *aContext, Node* aNode) : 
-		context(aContext), node(aNode) {}
-
-	operator Node*() { return node; }
-
-	GoComponent *component() { return (GoComponent*) userData(context, node); }
-	NodeRef parent() { return NodeRef(context, ::parent(context, node)); }
-	mat4f localToParent() { return local(context, node); }
-	mat4f localToWorld() { return world(context, node); }
-
-	void addChild(NodeRef child) { setParent(context, child.node, node); }
-	void reparentTo(NodeRef parent) { reparent(context, node, parent.node); }
-	void unparent() { setParent(context, node, 0); }
-	void detachChildren() { ::detachChildren(context, node); }
-
-	void setLocal(mat4f tform) { ::setLocal(context, node, tform); }
-	void setWorld(mat4f tform) { ::setWorld(context, node, tform); }
-};
-
 struct NodeAsset {
 	// parent?
 	float matrix[16];

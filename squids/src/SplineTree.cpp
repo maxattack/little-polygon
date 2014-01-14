@@ -28,8 +28,8 @@ void SplineTree::removeSegment(Node *start, Node *end) {
 void SplineTree::draw(SplinePlotter *splines, Color c) {
 	cacheWorldTransforms(mDisplayTree);
 	for(auto s=mSegments; s<mSegments+mCount; ++s) {
-		auto w0 = world(mDisplayTree, s->start);
-		auto w1 = world(mDisplayTree, s->end);
+		auto w0 = world(s->start);
+		auto w1 = world(s->end);
 		drawSpline(
 			splines, 
 			hermiteMatrix(

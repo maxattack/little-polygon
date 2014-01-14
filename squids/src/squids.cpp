@@ -32,20 +32,20 @@ int main(int argc, char *argv[]) {
 	auto tree = new SplineTree();
 
 	auto n0 = createNode(tree->displayTree());
-	setLocalPosition(tree->displayTree(), n0, vec(100, 400));
-	setLocalAttitude(tree->displayTree(), n0, vec(10, 800));
+	setPosition(n0, vec(100, 400));
+	setAttitude(n0, vec(10, 800));
 
 	auto n1 = createNode(tree->displayTree());
-	setLocalPosition(tree->displayTree(), n1, vec(700, 400));
-	setLocalAttitude(tree->displayTree(), n1, vec(10, 800));
+	setPosition(n1, vec(700, 400));
+	setAttitude(n1, vec(10, 800));
 
 	auto n2 = createNode(tree->displayTree());
-	setLocalPosition(tree->displayTree(), n2, vec(400, 600));
-	setLocalAttitude(tree->displayTree(), n2, vec(-600, -100));
+	setPosition(n2, vec(400, 600));
+	setAttitude(n2, vec(-600, -100));
 
 	auto n3 = createNode(tree->displayTree());
-	setLocalPosition(tree->displayTree(), n3, vec(400, 200));
-	setLocalAttitude(tree->displayTree(), n3, vec(-500, 100));
+	setPosition(n3, vec(400, 200));
+	setAttitude(n3, vec(-500, 100));
 
 	tree->addSegment(n0, n1);
 	tree->addSegment(n1, n2);
