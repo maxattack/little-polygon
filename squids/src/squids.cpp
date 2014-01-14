@@ -34,6 +34,9 @@ int main(int argc, char *argv[]) {
 
 	auto root = createNode(nodes);
 	auto rotor = createNode(nodes, root);
+	auto rotor2 = createNode(nodes, root);
+	auto rotor2a = createNode(nodes, rotor2);
+	setPosition(rotor2a, vec(80, 0));
 
 	auto n0 = createNode(nodes, rotor);
 	setPosition(n0, vec(300, 0));
@@ -43,11 +46,11 @@ int main(int argc, char *argv[]) {
 	setPosition(n1, vec(-300, 0));
 	setAttitude(n1, vec(10, 400));
 
-	auto n2 = createNode(nodes, root);
+	auto n2 = createNode(nodes, rotor2a);
 	setPosition(n2, vec(0, -200));
 	setAttitude(n2, vec(-600, -100));
 
-	auto n3 = createNode(nodes, root);
+	auto n3 = createNode(nodes, rotor2a);
 	setPosition(n3, vec(0, 200));
 	setAttitude(n3, vec(-500, 100));
 
@@ -74,6 +77,7 @@ int main(int argc, char *argv[]) {
 
 		setPosition(root, p);
 		setRotation(rotor, M_TAU * timer.scaledTime);
+		setRotation(rotor2, -0.2f * M_TAU * timer.scaledTime);
 		cacheWorldTransforms(nodes);
 
 		auto canvasSize = vec(800, 800);
