@@ -19,7 +19,8 @@ PLATFORMER_OBJ_FILES =     \
 	obj/Kitten.o           \
 	obj/platformer.o
 
-squids_OBJ_FILES = \
+squids_OBJ_FILES =   \
+	obj/SplineTree.o \
     obj/squids.o
 
 # COMPILER

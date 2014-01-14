@@ -98,23 +98,28 @@ Node* createNode(FkContext *context, Node* parent, void *userData) {
 	auto result = context->nodeBuf() + index;
 
 	// intialize fields
-	result->parent = 0;
+	result->parent = parent;
 	result->firstChild = 0;
-	result->nextSibling = 0;
 	result->prevSibling = 0;
 	result->local = affineIdentity();
-	result->world = affineIdentity();
 	result->userData = userData;
 
 	if (parent) {
-		setParent(context, result, parent);
+		
+		result->nextSibling = parent->firstChild;
+		if (parent->firstChild) { parent->firstChild->prevSibling = result; }
+		parent->firstChild = result;
+
 	} else {
+
 		// attach to the root list
 		result->nextSibling = context->firstRoot;
 		if (context->firstRoot) { context->firstRoot->prevSibling = result; }
 		context->firstRoot = result;
+
 	}
 
+	context->markDirty(result);
 	++context->count;
 	return result;
 }
@@ -169,9 +174,9 @@ void setParent(FkContext *context, Node* child, Node* parent) {
 
 void reparent(FkContext *context, Node* child, Node* parent) {
 	if (child->parent != parent) {
-		auto worldTransform = world(child);
+		auto worldTransform = world(context, child);
 		setParent(context, child, parent);
-		setWorld(child, worldTransform);	
+		setWorld(context, child, worldTransform);	
 	}
 }
 
@@ -193,6 +198,31 @@ void setUserData(Node* node, void *userData) {
 
 void setLocal(FkContext *context, Node* node, AffineMatrix transform) {
 	node->local = transform;
+	context->markDirty(node);
+}
+
+void setLocalPosition(FkContext *context, Node* node, vec2 position) {
+	node->local.t = position;
+	context->markDirty(node);
+}
+
+void setLocalAttitude(FkContext *context, Node *node, vec2 attitude) {
+	node->local.u = attitude;
+	node->local.v = vec(-attitude.y, attitude.x);
+	context->markDirty(node);
+}
+
+void setLocalRotation(FkContext *context, Node* node, float radians) {
+	float s = sinf(radians);
+	float c = cosf(radians);
+	node->local.u = vec(c, s);
+	node->local.v = vec(-s, c);
+	context->markDirty(node);
+}
+
+void setLocalScale(FkContext *context, Node* node, vec2 scale) {
+	node->local.u = vec(scale.x, 0);
+	node->local.v = vec(0, scale.y);
 	context->markDirty(node);
 }
 
@@ -228,11 +258,15 @@ void setWorld(FkContext *context, Node* node, AffineMatrix transform) {
 	}
 }
 
-Node* parent(Node* node) {
+Node* parent(const Node* node) {
 	return node->parent;
 }
 
-AffineMatrix local(Node* node) {
+void* userData(const Node* node) {
+	return node->userData;
+}
+
+AffineMatrix local(const Node* node) {
 	return node->local;
 }
 
@@ -241,10 +275,6 @@ AffineMatrix world(FkContext *context, Node* node) {
 		cacheWorld(context, node);
 	}
 	return node->world;
-}
-
-void* userData(Node* node) {
-	return node->userData;
 }
 
 void cacheWorldTransforms(FkContext *context) {
@@ -264,7 +294,7 @@ void cacheWorldTransforms(FkContext *context) {
 	}
 }
 
-FkChildIterator::FkChildIterator(FkContext *context, Node* parent) : 
+FkChildIterator::FkChildIterator(const FkContext *context, const Node* parent) : 
 current(parent ? parent->firstChild : context->firstRoot) {
 }
 

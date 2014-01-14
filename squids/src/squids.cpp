@@ -1,5 +1,4 @@
-#include <littlepolygon_fk.h>
-#include <littlepolygon_graphics.h>
+#include "SplineTree.h"
 
 static void handleKeyDown(const SDL_KeyboardEvent& key, bool *outDone) {
 	switch(key.keysym.sym) {
@@ -28,12 +27,31 @@ static void handleEvents(bool *outDone) {
 
 int main(int argc, char *argv[]) {
 	auto window = initContext("GameObject Demo", 800, 800);
-
-	// auto goContext = createGoContext(0, 0);
-	// createGameObject(goContext, "Squid");
-	//auto lines = createLinePlotter();
 	auto splines = createSplinePlotter();
 	auto circles = createCirclePlotter();
+	auto tree = new SplineTree();
+
+	auto n0 = createNode(tree->displayTree());
+	setLocalPosition(tree->displayTree(), n0, vec(100, 400));
+	setLocalAttitude(tree->displayTree(), n0, vec(10, 800));
+
+	auto n1 = createNode(tree->displayTree());
+	setLocalPosition(tree->displayTree(), n1, vec(700, 400));
+	setLocalAttitude(tree->displayTree(), n1, vec(10, 800));
+
+	auto n2 = createNode(tree->displayTree());
+	setLocalPosition(tree->displayTree(), n2, vec(400, 600));
+	setLocalAttitude(tree->displayTree(), n2, vec(-600, -100));
+
+	auto n3 = createNode(tree->displayTree());
+	setLocalPosition(tree->displayTree(), n3, vec(400, 200));
+	setLocalAttitude(tree->displayTree(), n3, vec(-500, 100));
+
+	tree->addSegment(n0, n1);
+	tree->addSegment(n1, n2);
+	tree->addSegment(n2, n3);
+	tree->addSegment(n3, n0);
+
 	
 	auto color = rgb(0x95b5a2);
 	glClearColor(color.red(), color.green(), color.blue(), 0.0f);
@@ -56,6 +74,9 @@ int main(int argc, char *argv[]) {
 			eccentricStroke(32, -30, 32), 
 			rgb(0xff00ff)
 		);
+
+		tree->draw(splines, rgb(0xff00ff));
+
 		end(splines);
 
 		begin(circles, canvasSize, scrolling);
@@ -65,4 +86,8 @@ int main(int argc, char *argv[]) {
 
 		SDL_GL_SwapWindow(window);
 	}
+
+	delete tree;
+	destroy(splines);
+	destroy(circles);
 }

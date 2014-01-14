@@ -64,15 +64,19 @@ void detachChildren(FkContext *context, Node* parent, bool preserveTransforms=fa
 void setUserData(Node* node, void *userData);
 
 // actually set the transform of the node
-void setLocal(Node* node, AffineMatrix transform);
-void setWorld(Node* node, AffineMatrix transform);
+void setLocal(FkContext *context, Node* node, AffineMatrix transform);
+void setLocalPosition(FkContext *context, Node* node, vec2 position);
+void setLocalAttitude(FkContext *context, Node *node, vec2 attitude);
+void setLocalRotation(FkContext *context, Node* node, float radians);
+void setLocalScale(FkContext *context, Node* node, vec2 scale);
+void setWorld(FkContext *context, Node* node, AffineMatrix transform);
 // TODO: specialized versions (e.g. setPosition, setRotation, setScale, etc?)
 
 // getters
-Node* parent(Node* node);
-AffineMatrix local(Node* node);
-AffineMatrix world(Node* node);
-void* userData(Node* node);
+Node* parent(const Node* node);
+void* userData(const Node* node);
+AffineMatrix local(const Node* node);
+AffineMatrix world(FkContext *context, Node* node);
 
 void cacheWorldTransforms(FkContext *context);
 
@@ -81,7 +85,7 @@ void cacheWorldTransforms(FkContext *context);
 struct FkChildIterator {
 	Node* current;
 
-	FkChildIterator(FkContext *context, Node* parent=0);
+	FkChildIterator(const FkContext *context, const Node* parent=0);
 	inline bool finished() const { return current == 0; }
 	void next();
 };
