@@ -23,8 +23,7 @@ void Kitten::init(AssetBundle* assets, SpriteBatch *batch, CollisionSystem* coll
 	sprite = createSprite(
 		batch,
 		assets->image("kitten"),
-		affineTranslation(PIXELS_PER_METER * position())
+		AffineMatrix(vec(-1,0), vec(0,1), PIXELS_PER_METER * position())
 	);
-	setFlipped(sprite, true);
 
 }

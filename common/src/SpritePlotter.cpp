@@ -80,8 +80,10 @@ struct SpritePlotter {
 
 	};
 
-	Vertex *workingBuffer() const { return (Vertex*)(this+1); }
-	Vertex *nextSlice() const { return workingBuffer() + (4 * count); }
+	Vertex headVertex;
+
+	Vertex *workingBuffer() { return &headVertex; }
+	Vertex *nextSlice() { return &headVertex + (4 * count); }
 };
 
 // private helper methods
@@ -93,7 +95,7 @@ void plotGlyph(SpritePlotter* context, const GlyphAsset& g, float x, float y, fl
 static SpritePlotter *allocSpritePlotter(int capacity) {
 	return (SpritePlotter*) LITTLE_POLYGON_MALLOC(
 		sizeof(SpritePlotter) + 
-		sizeof(SpritePlotter::Vertex) * 4 * capacity
+		sizeof(SpritePlotter::Vertex) * (4 * capacity - 1)
 	);
 }
 

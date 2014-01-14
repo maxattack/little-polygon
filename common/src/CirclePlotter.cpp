@@ -102,15 +102,25 @@ void begin(CirclePlotter *context, vec2 canvasSize, vec2 canvasOffset) {
 	glVertexAttribPointer(context->aColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(CirclePlotter::Vertex), &context->headVert.color);	
 }
 
+// right now I'm just doing one draw call per plot.  if this proves to be a performance bottleneck
+// we can use degenerate triangles to combine multiple strips together.
+
 void plotFilled(CirclePlotter *context, vec2 p, float r, Color c, float a1, float a2) {
-	// haaaack :P
-	plotArc(context, p, 0, r, c, a1, a2);
+	// plot eet
+	vec2 curr = polar(1, a1);
+	float da = (a2 - a1) / float(context->resolution-1);
+	vec2 rotor = polar(1, da);
+	context->getVert(0)->set(p, c);
+	for(int i=0; i<context->resolution; ++i) {
+		context->getVert(i+1)->set(p + r * curr, c);
+		curr = cmul(curr, rotor);
+	}
+
+	// draw eet
+	glDrawArrays(GL_TRIANGLE_FAN, 0, context->resolution+1);
 }
 
 void plotArc(CirclePlotter *context, vec2 p, float r1, float r2, Color c, float a1, float a2) {
-	// right now I'm just doing one draw call per plot.  if this proves to be a performance bottleneck
-	// we can use degenerate triangles to combine multiple strips together.
-
 	// plot eet
 	vec2 curr = polar(1, a1);
 	float da = (a2 - a1) / float(context->resolution-1);
