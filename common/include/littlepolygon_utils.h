@@ -186,8 +186,6 @@ struct AffineMatrix {
 		*this = inverse();
 	}
 
-
-
 	vec2 invRigidTransformVector(const vec2 &w) const {
 		return vec(a * w.x + d * w.y,
 			       b * w.x + e * w.y);

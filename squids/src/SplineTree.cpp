@@ -1,14 +1,9 @@
 #include "SplineTree.h"
 
-SplineTree::SplineTree() : mCount(0) {
-	mDisplayTree = createFkContext();
+SplineTree::SplineTree(FkContext *context) : mDisplayTree(context), mCount(0) {
 }
 
-SplineTree::~SplineTree() {
-	destroy(mDisplayTree);
-}
-
-void SplineTree::addSegment(Node *start, Node *end) {
+void SplineTree::addSegment(FkNode *start, FkNode *end) {
 	ASSERT(mCount < SEGMENT_CAPACITY);
 	if (!find(start, end)) {
 		mSegments[mCount].start = start;
@@ -17,7 +12,7 @@ void SplineTree::addSegment(Node *start, Node *end) {
 	}
 }
 
-void SplineTree::removeSegment(Node *start, Node *end) {
+void SplineTree::removeSegment(FkNode *start, FkNode *end) {
 	auto s = find(start, end);
 	if (s) {
 		if (s != mSegments+(mCount-1)) { *s = mSegments[mCount-1]; }
@@ -26,10 +21,9 @@ void SplineTree::removeSegment(Node *start, Node *end) {
 }
 
 void SplineTree::draw(SplinePlotter *splines, Color c) {
-	cacheWorldTransforms(mDisplayTree);
 	for(auto s=mSegments; s<mSegments+mCount; ++s) {
-		auto w0 = world(s->start);
-		auto w1 = world(s->end);
+		auto w0 = fkWorld(s->start);
+		auto w1 = fkWorld(s->end);
 		drawSpline(
 			splines, 
 			hermiteMatrix(
@@ -38,13 +32,13 @@ void SplineTree::draw(SplinePlotter *splines, Color c) {
 				vec4f(w0.u.x, w0.u.y, 0, 0),
 				vec4f(w1.u.x, w1.u.y, 0, 0)
 			),
-			uniformStroke(16),//taperingStroke(w0.v.magnitude(), w1.v.magnitude()),
+			eccentricStroke(16, -12, 16),
 			c
 		);
 	}
 }
 
-SplineTree::Segment* SplineTree::find(Node *start, Node *end) {
+SplineTree::Segment* SplineTree::find(FkNode *start, FkNode *end) {
 	for(auto s=mSegments; s<mSegments+mCount; ++s) {
 		if ((s->start == start && s->end == end) ||
 		    (s->start == end && s->end == start)) {

@@ -33,22 +33,32 @@
 // I found a nice SIMD implementation on github :D
 
 struct FkContext;
-struct Node;
+struct FkNode;
+typedef uint32_t FkNodeID;
+
+//------------------------------------------------------------------------------
+// CONTEXT
+//------------------------------------------------------------------------------
 
 // Create a context.  Different contexts can be allocated withing a single
-// application, but Node*s from different contexts cannot directly
+// application, but FkNode*s from different contexts cannot directly
 // interact.
-FkContext *createFkContext(size_t nodeCapacity=1024);
+FkContext *createFkContext(size_t nodeCapacity=1024, uint16_t fingerprint=0);
 void destroy(FkContext *context);
 
 // Create a new node whose localToParent transform is initialized to
 // the identity matrix.  Optionally initialize with a specific parent
-// node and userdata.  
-Node* createNode(FkContext *context, Node* parent=0, void *userData=0);
+// node and userdata.  The ID field is only necessary for serialization
+// and network synchronization.
+FkNode* createNode(FkContext *context, FkNode* parent=0, void *userData=0, FkNodeID id=0);
+
+// FkNode IDs are useful for serialization
+FkNodeID getID(FkContext *context, FkNode *node);
+FkNode *getFkNode(FkContext *context, FkNodeID id);
 
 // Destroy this node and all it's children (with an optional callback if you
 // need to know who's being destroyed - invoked in leaf->root order).
-void destroy(FkContext *context, Node* node);
+void destroy(FkContext *context, FkNode* node);
 
 //------------------------------------------------------------------------------
 // HEIRARCHY
@@ -56,37 +66,35 @@ void destroy(FkContext *context, Node* node);
 
 // Attach the given child to the given parent, detach from it's current
 // parent if necessary.
-void setParent(Node* child, Node* parent=0);
+void setParent(FkNode* child, FkNode* parent=0);
 
 // like addChild, but preserves the localToWorld transform of the child.
-void reparent(Node* child, Node* parent=0);
+void reparent(FkNode* child, FkNode* parent=0);
 
 // if we have any children, detach them all, preserving their local transforms.
-void detachChildren(Node* parent, bool preserveTransforms=false);
+void detachChildren(FkNode* parent, bool preserveTransforms=false);
 
 //------------------------------------------------------------------------------
 // SETTERS
 //------------------------------------------------------------------------------
 
-// Change the userdata for the given node.
-void setUserData(Node* node, void *userData);
-
-// actually set the transform of the node
-void setLocal(Node* node, AffineMatrix transform);
-void setPosition(Node* node, vec2 position);
-void setAttitude(Node *node, vec2 attitude);
-void setRotation(Node* node, float radians);
-void setScale(Node* node, vec2 scale);
-void setWorld(Node* node, AffineMatrix transform);
+void setLocal(FkNode* node, const AffineMatrix& transform);
+void setPosition(FkNode* node, vec2 position);
+void setAttitude(FkNode *node, vec2 attitude);
+void setRotation(FkNode* node, float radians);
+void setScale(FkNode* node, vec2 scale);
+void setWorld(FkNode* node, const AffineMatrix& transform);
+void setUserData(FkNode* node, void *userData);
 
 //------------------------------------------------------------------------------
 // GETTERS
 //------------------------------------------------------------------------------
 
-Node* parent(const Node* node);
-void* userData(const Node* node);
-AffineMatrix local(const Node* node);
-AffineMatrix world(Node* node);
+FkContext *fkContext(const FkNode *node);
+FkNode* fkParent(const FkNode* node);
+void* fkUserData(const FkNode* node);
+AffineMatrix fkLocal(const FkNode* node);
+AffineMatrix fkWorld(FkNode* node);
 
 //------------------------------------------------------------------------------
 // BATCH METHODS
@@ -99,38 +107,34 @@ void cacheWorldTransforms(FkContext *context);
 //------------------------------------------------------------------------------
 
 struct FkRootIterator {
-	Node *current;
-
-	// just root nodes
+	// just top-level root nodes
+	FkNode *current;
 	FkRootIterator(const FkContext *context);
 	inline bool finished() const { return current == 0; }
 	void next();
 };
 
 struct FkChildIterator {
-	Node* current;
-
-	// just one level of child nodes
-	FkChildIterator(const Node* parent);
+	// just immediate child nodes
+	FkNode* current;
+	FkChildIterator(const FkNode* parent);
 	inline bool finished() const { return current == 0; }
 	void next();
 };
 
 struct FkIterator {
-	Node *current;
-
 	// all nodes, in DAG order
+	FkNode *current;
 	FkIterator(const FkContext *context);
 	inline bool finished() const { return current == 0; }
 	void next();
 };
 
 struct FkSubtreeIterator {
-	const Node *parent;
-	Node *current;
-
 	// subtree DAG traversal
-	FkSubtreeIterator(const Node *parent);
+	const FkNode *parent;
+	FkNode *current;
+	FkSubtreeIterator(const FkNode *parent);
 	inline bool finished() const { return current == 0; }
 	void next();
 };

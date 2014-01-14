@@ -5,25 +5,23 @@
 
 class SplineTree {
 public:
-	SplineTree();
-	~SplineTree();
+	SplineTree(FkContext *displayTree);
 
-	FkContext *displayTree() { return mDisplayTree; }
-	void addSegment(Node *start, Node *end);
-	void removeSegment(Node *start, Node *end);
+	void addSegment(FkNode *start, FkNode *end);
+	void removeSegment(FkNode *start, FkNode *end);
 	void draw(SplinePlotter *splines, Color c);
 
 private:
-	int mCount;
 	FkContext *mDisplayTree;
+	int mCount;
 
 	struct Segment {
-		Node *start;
-		Node *end;
+		FkNode *start;
+		FkNode *end;
 	};
 
 	Segment mSegments[SEGMENT_CAPACITY];
 
-	Segment* find(Node *start, Node *end);
+	Segment* find(FkNode *start, FkNode *end);
 };
 
