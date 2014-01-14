@@ -17,26 +17,13 @@
 #include "littlepolygon_fk.h"
 #include "littlepolygon_templates.h"
 
-// ? Is there value in caching the world transforms ?
-// -- save a "dirty mask" bitset
-// -- world() - check all parents' dirty bits (teehee)
-// -- ???
-// -- profit!
-
-// ? Is it worth is to store transforms in DAG order
-//   for batch-processing world transforms (e.g. in a
-//   multithreaded universe)
-// - Alternatively, we could write nodes out to a buffer
-//   in dag order during thread "sync" between physics
-//   and rendering.
-// * E.G. see positionSprites() in gobindings
-
 struct Node {
 	Node *parent;
 	Node *firstChild;
 	Node *nextSibling;
 	Node *prevSibling;
 	AffineMatrix local;
+	AffineMatrix world;
 	void *userData;
 };
 
@@ -44,6 +31,7 @@ struct FkContext {
 	size_t capacity;
 	size_t count;
 	Bitset<1024> allocationMask;
+	Bitset<1024> dirtyMask;
 	Node *firstRoot;
 	
 	Node first;
@@ -56,7 +44,23 @@ struct FkContext {
 	}
 
 	bool allocated(Node *node) {
-		return owns(node) && allocationMask[node - nodeBuf()];
+		ASSERT(owns(node));
+		return allocationMask[node - nodeBuf()];
+	}
+
+	bool dirty(Node *node) {
+		ASSERT(owns(node));
+		return dirtyMask[node - nodeBuf()];
+	}
+
+	void markDirty(Node *node) {
+		ASSERT(owns(node));
+		return dirtyMask.mark(node - nodeBuf());
+	}
+
+	void clearDirty(Node *node) {
+		ASSERT(owns(node));
+		return dirtyMask.clear(node - nodeBuf());
 	}
 
 };
@@ -74,6 +78,7 @@ FkContext *createFkContext(size_t capacity) {
 	context->capacity = capacity;
 	context->count = 0;
 	context->allocationMask = Bitset<1024>();
+	context->dirtyMask = Bitset<1024>();
 	return context;
 }
 
@@ -98,6 +103,7 @@ Node* createNode(FkContext *context, Node* parent, void *userData) {
 	result->nextSibling = 0;
 	result->prevSibling = 0;
 	result->local = affineIdentity();
+	result->world = affineIdentity();
 	result->userData = userData;
 
 	if (parent) {
@@ -126,47 +132,46 @@ void destroy(FkContext *context, Node* node) {
 
 	// prepend to free list
 	context->allocationMask.clear(node - context->nodeBuf());
+	context->dirtyMask.clear(node - context->nodeBuf());
 	--context->count;
 }
 
 void setParent(FkContext *context, Node* child, Node* parent) {
-	if (parent) {
-		// cleanup existing state
-		if (child->parent == parent) { return; }
-		if (child->parent) { setParent(context, child, 0); }
-
-		// remove from root list
-		if (child->nextSibling) { child->nextSibling->prevSibling = child->prevSibling; }
-		if (child->prevSibling) { child->prevSibling->nextSibling = child->nextSibling; }
+	// check for noop
+	if (child->parent == parent) { return; }
+	
+	// unlink
+	if (child->nextSibling) { child->nextSibling->prevSibling = child->prevSibling; }
+	if (child->prevSibling) { child->prevSibling->nextSibling = child->nextSibling; }
+	if (child->parent) {
+		if (child == child->parent->firstChild) { child->parent->firstChild = child->nextSibling; }
+	} else {
 		if (context->firstRoot == child) { context->firstRoot = child->nextSibling; }
+	}
 
+	if (parent) {
 		// add to parent list
 		child->nextSibling = parent->firstChild;
 		child->prevSibling = 0;
 		if (parent->firstChild) { parent->firstChild->prevSibling = child; }
 		parent->firstChild = child;
-		child->parent = parent;
 	} else {
-		if (child->parent == 0) { return; }
-		// remove from parent list
-		if (child->nextSibling) { child->nextSibling->prevSibling = child->prevSibling; }
-		if (child->prevSibling) { child->prevSibling->nextSibling = child->nextSibling; }
-		if (child == child->parent->firstChild) { child->parent->firstChild = child->nextSibling; }
-		child->parent = 0;
-
 		// add to root list
 		child->nextSibling = context->firstRoot;
 		child->prevSibling = 0;
 		if (context->firstRoot) { context->firstRoot->prevSibling = child; }
 		context->firstRoot = child;
 	}
+
+	child->parent = parent;
+	context->markDirty(child);
 }
 
 void reparent(FkContext *context, Node* child, Node* parent) {
 	if (child->parent != parent) {
-		auto worldTransform = world(context, child);
+		auto worldTransform = world(child);
 		setParent(context, child, parent);
-		setWorld(context, child, worldTransform);	
+		setWorld(child, worldTransform);	
 	}
 }
 
@@ -188,13 +193,38 @@ void setUserData(Node* node, void *userData) {
 
 void setLocal(FkContext *context, Node* node, AffineMatrix transform) {
 	node->local = transform;
+	context->markDirty(node);
+}
+
+static bool cacheWorld(FkContext *context, Node *node) {
+	if (node->parent) {
+		if (cacheWorld(context, node->parent) || context->dirty(node)) {
+			node->world = node->parent->world * node->local;
+			context->clearDirty(node);
+			return true;
+		} else {
+			return false;
+		}
+	} else if (context->dirty(node)) {
+		node->world = node->local;
+		context->clearDirty(node);
+		return true;
+	} else {
+		return false;
+	}
 }
 
 void setWorld(FkContext *context, Node* node, AffineMatrix transform) {
 	if (node->parent) {
-		node->local = transform * world(context, node->parent).inverse();
+		cacheWorld(context, node->parent);
+		node->local = transform * node->parent->world.inverse();
 	} else {
 		node->local = transform;
+	}
+	node->world = transform;
+	context->clearDirty(node);
+	for(auto child=node->firstChild; child; child=child->nextSibling) {
+		context->markDirty(child);
 	}
 }
 
@@ -202,16 +232,15 @@ Node* parent(Node* node) {
 	return node->parent;
 }
 
-AffineMatrix local(FkContext *context, Node* node) {
+AffineMatrix local(Node* node) {
 	return node->local;
 }
 
 AffineMatrix world(FkContext *context, Node* node) {
-	if (node->parent) {
-		return world(context, node->parent) * local(context, node);
-	} else {
-		return local(context, node);
+	if (!context->dirtyMask.empty()) {
+		cacheWorld(context, node);
 	}
+	return node->world;
 }
 
 void* userData(Node* node) {
@@ -224,5 +253,22 @@ current(parent ? parent->firstChild : context->firstRoot) {
 
 void FkChildIterator::next() {
 	current = current->nextSibling;
+}
+
+void cacheWorldTransforms(FkContext *context) {
+	// iterate non-recursively through the display tree like it's a
+	// foldout gui (children, then siblings, then ancestors)
+	auto node = context->firstRoot;
+	while(!context->dirtyMask.empty()) {
+		cacheWorld(context, node);
+		if (node->firstChild) {
+			node = node->firstChild;
+		} else if (node->nextSibling) {
+			node = node->nextSibling;
+		} else {
+			do { node = node->parent; } while (node && !node->nextSibling);
+			if (node) { node = node->nextSibling; }
+		}
+	}
 }
 

@@ -126,7 +126,6 @@ static void initialize(SpritePlotter* context, int capacity) {
 		indices[6*i+5] = 4*i+3;
 	}
 	glGenBuffers(2, &context->elementBuf); // also generates the arrayBuf
-	                                      // because it's adjacent
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, context->elementBuf);
 	glBufferData(
 		GL_ELEMENT_ARRAY_BUFFER, 

@@ -64,15 +64,17 @@ void detachChildren(FkContext *context, Node* parent, bool preserveTransforms=fa
 void setUserData(Node* node, void *userData);
 
 // actually set the transform of the node
-void setLocal(FkContext *context, Node* node, AffineMatrix transform);
-void setWorld(FkContext *context, Node* node, AffineMatrix transform);
+void setLocal(Node* node, AffineMatrix transform);
+void setWorld(Node* node, AffineMatrix transform);
 // TODO: specialized versions (e.g. setPosition, setRotation, setScale, etc?)
 
 // getters
 Node* parent(Node* node);
-AffineMatrix local(FkContext *context, Node* node);
-AffineMatrix world(FkContext *context, Node* node);
+AffineMatrix local(Node* node);
+AffineMatrix world(Node* node);
 void* userData(Node* node);
+
+void cacheWorldTransforms(FkContext *context);
 
 // iterators
 
