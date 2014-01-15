@@ -20,9 +20,8 @@
 #include "littlepolygon_fk.h"
 #include "littlepolygon_sprites.h"
 
-// Some reference implementations of some core GO systems.
+// Reset ID=1 for node, since it's pretty foundational
 #define LP_COMPONENT_TYPE_NODE    1
-#define LP_COMPONENT_TYPE_SPRITE  2
 
 //------------------------------------------------------------------------------
 // FK DISPLAY TREE SYSTEM
@@ -86,9 +85,8 @@ private:
 	SpriteBatch *batch;
 
 public:
-	SpriteSystem(AssetBundle *assets, SpriteBatch *aBatch) : 
-		GoSystem(LP_COMPONENT_TYPE_SPRITE),
-		batch(aBatch) {}
+	SpriteSystem(ComponentTypeID aType, AssetBundle *aAssets, SpriteBatch *aBatch) : 
+		GoSystem(aType), assets(aAssets), batch(aBatch) {}
 
 	// Create the Sprite
 	int onInit(GoComponent *component, const void *args);
