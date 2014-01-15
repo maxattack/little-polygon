@@ -236,19 +236,19 @@ void setUserData(Sprite* sprite, void *userData) {
 	sprite->userData = userData;
 }
 
-ImageAsset *image(Sprite* sprite) {
+ImageAsset *image(const Sprite* sprite) {
 	return sprite->cmd->image;
 }
 
-const AffineMatrix *transform(Sprite *sprite) {
+const AffineMatrix *transform(const Sprite *sprite) {
 	return sprite->cmd->xform;
 }
 
-int frame(Sprite* sprite) {
+int frame(const Sprite* sprite) {
 	return sprite->cmd->frame;
 }
 
-int layer(Sprite* sprite) {
+int layer(const Sprite* sprite) {
 	return sprite->layer;
 }
 
@@ -256,11 +256,11 @@ bool visible(SpriteBatch *context, Sprite* sprite) {
 	return context->visible(sprite->cmd);
 }
 
-Color color(Sprite* sprite) {
+Color color(const Sprite* sprite) {
 	return sprite->cmd->color;
 }
 
-void *userData(Sprite* sprite) {
+void *userData(const Sprite* sprite) {
 	return sprite->userData;
 }
 

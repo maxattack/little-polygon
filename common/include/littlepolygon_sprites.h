@@ -104,15 +104,51 @@ void setColor(Sprite* sprite, Color c);
 void setUserData(Sprite* sprite, void *userData);
 
 // getters
-int layer(Sprite *sprite);
-const AffineMatrix *transform(Sprite *sprite);
-ImageAsset *image(Sprite* sprite);
-int frame(Sprite* sprite);
+int layer(const Sprite *sprite);
+const AffineMatrix *transform(const Sprite *sprite);
+ImageAsset *image(const Sprite* sprite);
+int frame(const Sprite* sprite);
 bool visible(SpriteBatch *context, Sprite* sprite);
-Color color(Sprite* sprite);
-void *userData(Sprite* sprite);
+Color color(const Sprite* sprite);
+void *userData(const Sprite* sprite);
 
 // batch methods
 // void advanceAnimations(SpriteBatch *context, float dt);
 void draw(Sprite *sprite, SpritePlotter *plotter);
 void draw(SpriteBatch *context, SpritePlotter *plotter);
+
+//------------------------------------------------------------------------------
+// C++ INTERFACE
+//------------------------------------------------------------------------------
+
+class SpriteRef {
+private:
+	Sprite* sprite;
+
+public:
+	SpriteRef() {}
+	SpriteRef(Sprite *aSprite) : sprite(aSprite) {}
+
+	operator Sprite*() { return sprite; }
+	operator const Sprite*() { return sprite; }
+
+	// void setLayer(int layer) { ::setLayer(sprite, layer); }	
+	void setImage(ImageAsset *img) { ::setImage(sprite, img); }
+	void setTransform(const AffineMatrix* matrix) { ::setTransform(sprite, matrix); }
+	void setFrame(int frame) { ::setFrame(sprite, frame); }
+	// void setVisible(bool flag) { ::setVisible(sprite, flag); }
+	void setColor(Color c) { ::setColor(sprite, c); }
+	void setUserData(void *userData) { ::setUserData(sprite, userData); }
+	int layer() const { return ::layer(sprite); }
+	const AffineMatrix* transform() const { return ::transform(sprite); }
+	ImageAsset *image() const { return ::image(sprite); }
+	int frame() const { return ::frame(sprite); }
+	Color color() const { return ::color(sprite); }
+	void *userData() const { return ::userData(sprite); }
+
+	void draw(SpritePlotter *plotter) { ::draw(sprite, plotter); }
+
+};
+
+
+

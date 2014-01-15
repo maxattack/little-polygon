@@ -59,7 +59,7 @@ void destroy(FkContext *context);
 FkNode* createNode(FkContext *context, FkNode* parent=0, void *userData=0, FkNodeID id=0);
 
 // FkNode IDs are useful for serialization
-FkNodeID getID(FkContext *context, FkNode *node);
+FkNodeID getID(const FkNode *node);
 FkNode *getNode(FkContext *context, FkNodeID id);
 
 // Destroy this node and all it's children (with an optional callback if you
@@ -121,38 +121,92 @@ void cacheWorldTransforms(FkContext *context);
 const AffineMatrix *fkCachedTransform(FkNode *node);
 
 //------------------------------------------------------------------------------
+// C++ INTERFACE
+//------------------------------------------------------------------------------
+
+class FkNodeRef {
+private:
+	FkNode *node;
+
+public:
+	FkNodeRef() {}
+	FkNodeRef(FkNode *aNode) : node(aNode) {}
+
+	operator FkNode*() { return node; }
+	operator const FkNode*() { return node; }
+
+	FkNodeID id() const { return getID(node); }
+
+	void setParent(FkNodeRef parent=0) { ::setParent(node, parent); }
+	void reparent(FkNodeRef parent=0) { ::reparent(node, parent); }
+	void detachChildren(bool preserveTransforms=false) { ::detachChildren(node, preserveTransforms); }
+
+	void setLocal(const AffineMatrix& matrix) { ::setLocal(node, matrix); }
+	void setPosition(vec2 position) { ::setPosition(node, position); }
+	void setPosition(float x, float y) { ::setPosition(node, vec(x,y)); }
+	void setAttitude(vec2 attitude) { ::setAttitude(node, attitude); }
+	void setAttitude(float x, float y) { ::setAttitude(node, vec(x,y)); }
+	void setRotation(float radians) { ::setRotation(node, radians); }
+	void setScale(vec2 scale) { ::setScale(node, scale); }
+	void setScale(float x, float y) { ::setScale(node, vec(x,y)); }
+	void setWorld(const AffineMatrix& matrix) { ::setWorld(node, matrix); }
+	void setUserData(void *userData) { ::setUserData(node, userData); }
+
+	void apply(const AffineMatrix& matrix) { ::setLocal(node, fkLocal(node) * matrix); }
+
+	FkContext *context() const { return fkContext(node); }
+	FkNodeRef parent() const { return fkParent(node); }
+	void *userData() const { return fkUserData(node); }
+	AffineMatrix local() const { return fkLocal(node); }
+	vec2 position() const { return fkLocal(node).t; }
+	vec2 right() const { return fkLocal(node).u; }
+	vec2 up() const { return fkLocal(node).v; }
+	AffineMatrix world() const { return fkWorld(node); }
+};
+
+
+//------------------------------------------------------------------------------
 // ITERATORS (redo c++11 style?)
 //------------------------------------------------------------------------------
 
+// all nodes, in DAG order
+struct FkTreeIterator {
+	FkNode *current;
+
+	FkTreeIterator(const FkContext *context);
+	bool finished() const { return current == 0; }
+	FkNodeRef currentRef() { return current; }
+	void next();
+};
+
+// just top-level root nodes
 struct FkRootIterator {
-	// just top-level root nodes
 	FkNode *current;
+	
 	FkRootIterator(const FkContext *context);
-	inline bool finished() const { return current == 0; }
+	bool finished() const { return current == 0; }
+	FkNodeRef currentRef() { return current; }
 	void next();
 };
 
+// just immediate child nodes
 struct FkChildIterator {
-	// just immediate child nodes
-	FkNode* current;
-	FkChildIterator(const FkNode* parent);
-	inline bool finished() const { return current == 0; }
-	void next();
-};
-
-struct FkIterator {
-	// all nodes, in DAG order
 	FkNode *current;
-	FkIterator(const FkContext *context);
-	inline bool finished() const { return current == 0; }
+
+	FkChildIterator(const FkNode* parent);
+	bool finished() const { return current == 0; }
+	FkNodeRef currentRef() { return current; }
 	void next();
 };
 
+// subtree DAG traversal
 struct FkSubtreeIterator {
-	// subtree DAG traversal
 	const FkNode *parent;
 	FkNode *current;
+	
 	FkSubtreeIterator(const FkNode *parent);
-	inline bool finished() const { return current == 0; }
+	bool finished() const { return current == 0; }
+	FkNodeRef currentRef() { return current; }
 	void next();
 };
+

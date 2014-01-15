@@ -163,13 +163,9 @@ FkNode *getNode(FkContext *context, FkNodeID id) {
 	}
 }
 
-FkNodeID getID(FkContext *context, FkNode *node) {
-	if (node->context == context) {
-		uint32_t index = node - context->nodeBuf();
-		return context->fingerprint | index;
-	}  else {
-		return 0;
-	}
+FkNodeID getID(const FkNode *node) {
+	uint32_t index = node - node->context->nodeBuf();
+	return node->context->fingerprint | index;
 }
 
 void destroy(FkNode* node) {
@@ -432,11 +428,11 @@ void FkChildIterator::next() {
 	current = current->nextSibling;
 }
 
-FkIterator::FkIterator(const FkContext* context) : 
+FkTreeIterator::FkTreeIterator(const FkContext* context) : 
 current(context->firstRoot) {
 }
 
-void FkIterator::next() {
+void FkTreeIterator::next() {
 	if (current->firstChild) {
 		current = current->firstChild;
 	} else if (current->nextSibling) {

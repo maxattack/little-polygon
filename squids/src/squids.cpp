@@ -33,27 +33,27 @@ int main(int argc, char *argv[]) {
 	auto nodes = createFkContext();
 	auto tree = new SplineTree(nodes);
 
-	auto root = createNode(nodes);
-	auto rotor = createNode(nodes, root);
-	auto rotor2 = createNode(nodes, root);
-	auto rotor2a = createNode(nodes, rotor2);
-	setPosition(rotor2a, vec(80, 0));
+	FkNodeRef root = createNode(nodes);
+	FkNodeRef rotor = createNode(nodes, root);
+	FkNodeRef rotor2 = createNode(nodes, root);
+	FkNodeRef rotor2a = createNode(nodes, rotor2);
+	rotor2a.setPosition(80, 0);
 
-	auto n0 = createNode(nodes, rotor);
-	setPosition(n0, vec(300, 0));
-	setAttitude(n0, vec(10, 500));
+	FkNodeRef n0 = createNode(nodes, rotor);
+	n0.setPosition(300, 0);
+	n0.setAttitude(10, 500);
 
-	auto n1 = createNode(nodes, rotor);
-	setPosition(n1, vec(-300, 0));
-	setAttitude(n1, vec(10, 500));
+	FkNodeRef n1 = createNode(nodes, rotor);
+	n1.setPosition(-300, 0);
+	n1.setAttitude(10, 500);
 
-	auto n2 = createNode(nodes, rotor2a);
-	setPosition(n2, vec(0, -200));
-	setAttitude(n2, vec(-600, -100));
+	FkNodeRef n2 = createNode(nodes, rotor2a);
+	n2.setPosition(0, -200);
+	n2.setAttitude(-600, -100);
 
-	auto n3 = createNode(nodes, rotor2a);
-	setPosition(n3, vec(0, 200));
-	setAttitude(n3, vec(-500, 100));
+	FkNodeRef n3 = createNode(nodes, rotor2a);
+	n3.setPosition(0, 200);
+	n3.setAttitude(-500, 100);
 
 	tree->addSegment(fkCachedTransform(n0), fkCachedTransform(n1));
 	tree->addSegment(fkCachedTransform(n1), fkCachedTransform(n2));
@@ -89,15 +89,14 @@ int main(int argc, char *argv[]) {
 		timer.timeScale = 1.333 * yAmount;
 		timer.tick();
 
-		setPosition(root, easeTowards(fkLocal(root).t, p, 0.1f, timer.deltaSeconds()));
+		root.setPosition(easeTowards(root.position(), p, 0.1, timer.deltaSeconds()));
+		rotor.setRotation(M_TAU * timer.scaledTime);
+		rotor2.setRotation(-0.2 * M_TAU * timer.scaledTime);
 
-		setRotation(rotor, M_TAU * timer.scaledTime);
-		setRotation(rotor2, -0.2f * M_TAU * timer.scaledTime);
-
-		setLocal(n0, fkLocal(n0) * affineRotation(0.2 * M_TAU * timer.scaledDeltaTime));
-		setLocal(n1, fkLocal(n1) * affineRotation(0.333 * M_TAU * timer.scaledDeltaTime));
-		setLocal(n2, fkLocal(n2) * affineRotation(-0.1 * M_TAU * timer.scaledDeltaTime));
-		setLocal(n3, fkLocal(n3) * affineRotation(-0.4 * M_TAU * timer.scaledDeltaTime));
+		n0.apply(affineRotation(0.2 * M_TAU * timer.scaledDeltaTime));
+		n1.apply(affineRotation(0.333 * M_TAU * timer.scaledDeltaTime));
+		n2.apply(affineRotation(-0.1 * M_TAU * timer.scaledDeltaTime));
+		n3.apply(affineRotation(-0.4 * M_TAU * timer.scaledDeltaTime));
 		cacheWorldTransforms(nodes);
 
 		auto canvasSize = vec(w, h);

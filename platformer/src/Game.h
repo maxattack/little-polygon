@@ -47,7 +47,7 @@ struct Hero {
 
 	// rendering parameters
 	AffineMatrix xform;
-	Sprite *sprite;
+	SpriteRef sprite;
 	float framef;
 
 	SampleAsset *sfxJump;
@@ -68,7 +68,7 @@ struct Kitten {
 
 	// rendering parameters
 	AffineMatrix xform;
-	Sprite *sprite;
+	SpriteRef sprite;
 
 	void init(AssetBundle* assets, SpriteBatch *batch, CollisionSystem* collisions);
 };

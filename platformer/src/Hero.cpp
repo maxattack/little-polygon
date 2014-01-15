@@ -70,7 +70,7 @@ void Hero::tick(PlayerInput* input, CollisionSystem* collisions, float dt) {
 	if ((grounded = result.hitBottom)) {
 		speed.y = 0;
 		if (!wasGrounded) {
-			setFrame(sprite, 0);
+			sprite.setFrame(0);
 			framef = 0;			
 			play(sfxFootfall);
 		}
@@ -100,17 +100,17 @@ void Hero::tick(PlayerInput* input, CollisionSystem* collisions, float dt) {
             framef += WALK_ANIM_RATE * sx * dt;
             framef = fmodf(framef, 3.f);
             int fr = int(framef);
-            if (frame(sprite) != fr && fr == 2) {
+            if (sprite.frame() != fr && fr == 2) {
             	play(sfxFootfall);
             }
-            setFrame(sprite, fr);
+            sprite.setFrame(fr);
         } else {
             framef = 0;
-            setFrame(sprite, 0);
+            sprite.setFrame(0);
         }
     } else {
         framef = 0;
-        setFrame(sprite, 2);
+        sprite.setFrame(2);
     }    
 
 }
