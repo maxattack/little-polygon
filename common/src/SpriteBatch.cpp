@@ -253,8 +253,8 @@ int layer(const Sprite* sprite) {
 	return sprite->layer;
 }
 
-bool visible(SpriteBatch *context, Sprite* sprite) {
-	return context->visible(sprite->cmd);
+bool visible(const Sprite* sprite) {
+	return sprite->context->visible(sprite->cmd);
 }
 
 Color color(const Sprite* sprite) {

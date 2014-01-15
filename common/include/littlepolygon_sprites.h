@@ -108,7 +108,7 @@ int layer(const Sprite *sprite);
 const AffineMatrix *transform(const Sprite *sprite);
 ImageAsset *image(const Sprite* sprite);
 int frame(const Sprite* sprite);
-bool visible(SpriteBatch *context, Sprite* sprite);
+bool visible(const Sprite* sprite);
 Color color(const Sprite* sprite);
 void *userData(const Sprite* sprite);
 
