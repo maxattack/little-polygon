@@ -16,8 +16,6 @@
 
 #pragma once
 
-// this dependency is only required for the go bindings; the system is
-// useable without it.
 #include "littlepolygon_utils.h"
 
 // A Generic Forward-Kinematic (FK) system for creating display-trees
