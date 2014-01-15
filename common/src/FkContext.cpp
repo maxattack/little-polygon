@@ -15,7 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "littlepolygon_fk.h"
-#include "littlepolygon_templates.h"
+#include "littlepolygon_bitset.h"
 
 // compilation options
 #define FK_NO_RECURSION 1
@@ -119,7 +119,7 @@ FkNode* createNode(FkContext *context, FkNode* parent, void *userData, FkNodeID 
 			return 0;
 		}
 		// otherwise just pick the first available slot
-	} else if (!(~context->allocationMask).clearFirst(index)) {
+	} else if (!(~context->allocationMask).findFirst(index)) {
 		return 0;
 	}
 

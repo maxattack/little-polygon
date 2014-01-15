@@ -90,16 +90,16 @@ Sprite* createSprite(
 	bool onTop=0, 
 	void *userData=0
 );
-void destroy(SpriteBatch *context, Sprite* sprite);
+void destroy(Sprite* sprite);
 
 // setters
-void setLayer(SpriteBatch *context, Sprite* sprite, int layer);
+void setLayer(Sprite* sprite, int layer);
 
 // convenience transform methods (will squash existing values)
 void setImage(Sprite* sprite, ImageAsset *image);
 void setTransform(Sprite *sprite, const AffineMatrix *xform);
 void setFrame(Sprite* sprite, int frame);
-void setVisible(SpriteBatch *context, Sprite* sprite, bool visible);
+void setVisible(Sprite* sprite, bool visible);
 void setColor(Sprite* sprite, Color c);
 void setUserData(Sprite* sprite, void *userData);
 
@@ -136,7 +136,7 @@ public:
 	void setImage(ImageAsset *img) { ::setImage(sprite, img); }
 	void setTransform(const AffineMatrix* matrix) { ::setTransform(sprite, matrix); }
 	void setFrame(int frame) { ::setFrame(sprite, frame); }
-	// void setVisible(bool flag) { ::setVisible(sprite, flag); }
+	void setVisible(bool flag) { ::setVisible(sprite, flag); }
 	void setColor(Color c) { ::setColor(sprite, c); }
 	void setUserData(void *userData) { ::setUserData(sprite, userData); }
 	int layer() const { return ::layer(sprite); }
@@ -144,7 +144,9 @@ public:
 	ImageAsset *image() const { return ::image(sprite); }
 	int frame() const { return ::frame(sprite); }
 	Color color() const { return ::color(sprite); }
-	void *userData() const { return ::userData(sprite); }
+
+	template<typename T>
+	T* data() const { return (T*) ::userData(sprite); }
 
 	void draw(SpritePlotter *plotter) { ::draw(sprite, plotter); }
 

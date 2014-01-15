@@ -3,6 +3,8 @@ LIBRARY_OBJ_FILES =     \
 	obj/AssetBundle.o   \
 	obj/CirclePlotter.o \
 	obj/FkContext.o     \
+	obj/GoContext.o     \
+	obj/GoUtils.o       \
 	obj/LinePlotter.o   \
 	obj/SampleAsset.o   \
 	obj/SplinePlotter.o \

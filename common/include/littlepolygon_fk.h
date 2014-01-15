@@ -62,9 +62,7 @@ FkNode* createNode(FkContext *context, FkNode* parent=0, void *userData=0, FkNod
 FkNodeID getID(const FkNode *node);
 FkNode *getNode(FkContext *context, FkNodeID id);
 
-// Destroy this node and all it's children (with an optional callback if you
-// need to know who's being destroyed - invoked in leaf->root order).
-void destroy(FkContext *context, FkNode* node);
+void destroy(FkNode* node);
 
 //------------------------------------------------------------------------------
 // HEIRARCHY
@@ -133,7 +131,7 @@ public:
 	FkNodeRef(FkNode *aNode) : node(aNode) {}
 
 	operator FkNode*() { return node; }
-	operator const FkNode*() { return node; }
+	operator bool() const { return node != 0; }
 
 	FkNodeID id() const { return getID(node); }
 
@@ -156,12 +154,15 @@ public:
 
 	FkContext *context() const { return fkContext(node); }
 	FkNodeRef parent() const { return fkParent(node); }
-	void *userData() const { return fkUserData(node); }
 	const AffineMatrix& local() const { return fkLocal(node); }
 	vec2 position() const { return fkLocal(node).t; }
 	vec2 right() const { return fkLocal(node).u; }
 	vec2 up() const { return fkLocal(node).v; }
 	const AffineMatrix& world() const { return fkWorld(node); }
+
+	template<typename T>
+	T *data() const { return (T*) fkUserData(node); }
+
 };
 
 

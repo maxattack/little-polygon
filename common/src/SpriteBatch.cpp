@@ -15,8 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "littlepolygon_sprites.h"
-#include "littlepolygon_templates.h"
-
+#include "littlepolygon_bitset.h"
 
 struct SpriteDraw {
 	ImageAsset *image;
@@ -27,6 +26,7 @@ struct SpriteDraw {
 };
 
 struct Sprite {
+	SpriteBatch *context;
 	SpriteDraw *cmd;
 	void *userData;
 	uint32_t layer;
@@ -159,14 +159,14 @@ Sprite* createSprite(
 	ASSERT(context->count() < context->capacity);
 
 	unsigned slot;
-	if (!(~context->allocationMask).clearFirst(slot)) {
+	if (!(~context->allocationMask).findFirst(slot)) {
 		return 0;
 	}
 
 	// allocate
 	context->allocationMask.mark(slot);
 	auto result = context->get(slot);
-	
+
 	// setup layer
 	addToLayer(context, result, !!onTop);
 
@@ -180,19 +180,19 @@ Sprite* createSprite(
 		context->markVisible(result->cmd);
 	}
 	
+	result->context = context;
 	result->userData = userData;
 
 	return result;
 }
 
-void destroy(SpriteBatch *context, Sprite* sprite) {
-	ASSERT(context->owns(sprite));
-	removeFromLayer(context, sprite);
-	context->allocationMask.clear(sprite - &context->headSprite);
+void destroy(Sprite* sprite) {
+	removeFromLayer(sprite->context, sprite);
+	sprite->context->allocationMask.clear(sprite - &sprite->context->headSprite);
 }
 
-void setLayer(SpriteBatch *context, Sprite* sprite, int layerIdx) {
-	ASSERT(context->owns(sprite));
+void setLayer(Sprite* sprite, int layerIdx) {
+	auto context = sprite->context;
 	if (sprite->layer != layerIdx) {
 		bool wasVisible = context->visible(sprite->cmd);
 		context->clearVisible(sprite->cmd);
@@ -220,7 +220,8 @@ void setFrame(Sprite* sprite, int frame) {
 	sprite->cmd->frame = frame;
 }
 
-void setVisible(SpriteBatch *context, Sprite* sprite, bool visible) {
+void setVisible(Sprite* sprite, bool visible) {
+	auto context = sprite->context;
 	if (visible) {
 		context->markVisible(sprite->cmd);
 	} else {

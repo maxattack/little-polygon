@@ -42,27 +42,25 @@ struct FkNodeAsset {
 	AffineMatrix local;
 };
 
-class FkSystem : public GoComponentSystem {
+class FkSystem : public GoSystem {
 private:
 	FkContext *context;
 
 public:
-	FkSystem(FkContext *aContext) : context(aContext) {}
-
-	FkContext *displayTree() { return context; }
-
-	bool handles(ComponentTypeID type) { return type == LP_COMPONENT_TYPE_NODE; }
+	FkSystem(FkContext *aContext) : 
+		GoSystem(LP_COMPONENT_TYPE_NODE), 
+		context(aContext) {}
 
 	// Create a new FkNode
-	int onInit(GoContext *context, GoComponent *component, const void *args);
+	int onInit(GoComponent *component, const void *args);
 
 	// Forward these callbacks downtree
-	int onEnable(GoContext *context, GoComponent *component);
-	int onMessage(GoContext *context, GoComponent *component, int messageId, const void *args);
-	int onDisable(GoContext *context, GoComponent *component);
+	int onEnable(GoComponent *component);
+	int onMessage(GoComponent *component, int messageId, const void *args);
+	int onDisable(GoComponent *component);
 
 	// Destroy all gameobjects downtree
-	int onDestroy(GoContext *context, GoComponent *component);
+	int onDestroy(GoComponent *component);
 
 };
 
@@ -82,27 +80,25 @@ struct SpriteAsset {
 	Color color;
 };
 
-class SpriteSystem : public GoComponentSystem {
+class SpriteSystem : public GoSystem {
 private:
 	AssetBundle *assets;
 	SpriteBatch *batch;
 
 public:
-	SpriteSystem(AssetBundle *assets, SpriteBatch *aBatch) : batch(aBatch) {}
-
-	SpriteBatch *spriteBatch() { return batch; }
-
-	bool handles(ComponentTypeID type) { return type == LP_COMPONENT_TYPE_SPRITE; }
+	SpriteSystem(AssetBundle *assets, SpriteBatch *aBatch) : 
+		GoSystem(LP_COMPONENT_TYPE_SPRITE),
+		batch(aBatch) {}
 
 	// Create the Sprite
-	int onInit(GoContext *context, GoComponent *component, const void *args);
+	int onInit(GoComponent *component, const void *args);
 
 	// Show/Hide the Sprite
-	int onEnable(GoContext *context, GoComponent *component);
-	int onDisable(GoContext *context, GoComponent *component);
+	int onEnable(GoComponent *component);
+	int onDisable(GoComponent *component);
 
 	// Remove from the Batch
-	int onDestroy(GoContext *context, GoComponent *component);	
+	int onDestroy(GoComponent *component);	
 };
 
 //------------------------------------------------------------------------------
