@@ -39,6 +39,8 @@ typedef uint32_t ComponentTypeID;
 class GoComponentSystem {
 public:
 
+	virtual bool handles(ComponentTypeID type) = 0;
+
 	// Called when a component is added, before the handle is exposed
 	// for other components and scripts to query.
 	virtual int onInit(GoContext *context, GoComponent *component, const void *args) = 0;

@@ -22,8 +22,8 @@
 
 // Some reference implementations of some core GO systems.
 enum LPComponentType {
-	LP_COMPONENT_TYPE_NODE = 0,
-	LP_COMPONENT_TYPE_SPRITE = 1
+	LP_COMPONENT_TYPE_NODE = 1,
+	LP_COMPONENT_TYPE_SPRITE = 2
 };
 
 //------------------------------------------------------------------------------
@@ -50,6 +50,8 @@ public:
 	FkSystem(FkContext *aContext) : context(aContext) {}
 
 	FkContext *displayTree() { return context; }
+
+	bool handles(ComponentTypeID type) { return type == LP_COMPONENT_TYPE_NODE; }
 
 	// Create a new FkNode
 	int onInit(GoContext *context, GoComponent *component, const void *args);
@@ -89,6 +91,8 @@ public:
 	SpriteSystem(AssetBundle *assets, SpriteBatch *aBatch) : batch(aBatch) {}
 
 	SpriteBatch *spriteBatch() { return batch; }
+
+	bool handles(ComponentTypeID type) { return type == LP_COMPONENT_TYPE_SPRITE; }
 
 	// Create the Sprite
 	int onInit(GoContext *context, GoComponent *component, const void *args);
