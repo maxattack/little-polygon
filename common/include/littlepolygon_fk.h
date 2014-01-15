@@ -25,10 +25,6 @@
 // system).
 // When used with a GameObject the userData pointer is reserved by the
 // system.
-// Implements fully 3D math since even 2D games often have some element
-// of "2.5D" and besides, the performance isn't any different and the
-// hardware is geared for it anyway.  Writing math classes is boring, so
-// I found a nice SIMD implementation on github :D
 
 struct FkContext;
 struct FkNode;
