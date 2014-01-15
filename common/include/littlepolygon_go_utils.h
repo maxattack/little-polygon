@@ -21,10 +21,8 @@
 #include "littlepolygon_sprites.h"
 
 // Some reference implementations of some core GO systems.
-enum LPComponentType {
-	LP_COMPONENT_TYPE_NODE = 1,
-	LP_COMPONENT_TYPE_SPRITE = 2
-};
+#define LP_COMPONENT_TYPE_NODE    1
+#define LP_COMPONENT_TYPE_SPRITE  2
 
 //------------------------------------------------------------------------------
 // FK DISPLAY TREE SYSTEM
@@ -62,6 +60,8 @@ public:
 	// Destroy all gameobjects downtree
 	int onDestroy(GoComponent *component);
 
+private:
+	FkNodeRef coNode(GoComponent *c) { return (FkNode*) comData(c); }
 };
 
 //------------------------------------------------------------------------------
@@ -99,6 +99,10 @@ public:
 
 	// Remove from the Batch
 	int onDestroy(GoComponent *component);	
+
+private:
+	SpriteRef coSprite(GoComponent *c) { return (Sprite*) comData(c); }
+
 };
 
 //------------------------------------------------------------------------------

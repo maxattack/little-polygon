@@ -46,7 +46,7 @@ int FkSystem::onInit(GoComponent *component, const void *args) {
 int FkSystem::onEnable(GoComponent *component) {
 	
 	// enable downtree nodes
-	for(FkChildIterator i((FkNode*) comData(component)); !i.finished(); i.next()) {
+	for(FkChildIterator i(coNode(component)); !i.finished(); i.next()) {
 		GoComponentRef childComponent = i.ref().data<GoComponent>();
 		if (childComponent) {
 			GOSTATUS_CHECK( childComponent.gameObject().enable() );
@@ -59,7 +59,7 @@ int FkSystem::onEnable(GoComponent *component) {
 int FkSystem::onMessage(GoComponent *component, int messageId, const void *args) {
 	
 	// send message downtree
-	for(FkChildIterator i((FkNode*) comData(component)); !i.finished(); i.next()) {
+	for(FkChildIterator i(coNode(component)); !i.finished(); i.next()) {
 		GoComponentRef childComponent = i.ref().data<GoComponent>();
 		if (childComponent) {
 			GOSTATUS_CHECK( childComponent.gameObject().sendMessage(messageId, args) );
@@ -72,7 +72,7 @@ int FkSystem::onMessage(GoComponent *component, int messageId, const void *args)
 int FkSystem::onDisable(GoComponent *component) {
 	
 	// disable downtree nodes
-	for(FkChildIterator i((FkNode*) comData(component)); !i.finished(); i.next()) {
+	for(FkChildIterator i(coNode(component)); !i.finished(); i.next()) {
 		GoComponentRef childComponent = i.ref().data<GoComponent>();
 		if (childComponent) {
 			GOSTATUS_CHECK( childComponent.gameObject().disable() );
@@ -83,10 +83,9 @@ int FkSystem::onDisable(GoComponent *component) {
 }
 
 int FkSystem::onDestroy(GoComponent *component) {
-	auto node = (FkNode*) comData(component);
 
 	// destroy downtree game objects first
-	auto iter = FkChildIterator(node);
+	auto iter = FkChildIterator(coNode(component));
 	while(!iter.finished()) {
 		auto child = iter.ref();
 		iter.next();
@@ -97,7 +96,7 @@ int FkSystem::onDestroy(GoComponent *component) {
 	}
 
 	// now destroy meself
-	destroy(node);
+	destroy((FkNode*) comData(component));
 
 	return GOSTATUS_OK;
 }
@@ -140,12 +139,12 @@ int SpriteSystem::onInit(GoComponent *component, const void *args) {
 }
 
 int SpriteSystem::onEnable(GoComponent *component) {
-	setVisible((Sprite*) comData(component), 1);
+	coSprite(component).setVisible(1);
 	return GOSTATUS_OK;
 }
 
 int SpriteSystem::onDisable(GoComponent *component) {
-	setVisible((Sprite*) comData(component), 0);
+	coSprite(component).setVisible(0);
 	return GOSTATUS_OK;
 }
 
