@@ -73,6 +73,7 @@ void end(SpritePlotter* context);
 
 struct SpriteBatch;
 struct Sprite;
+//TODO: typedef uint32_t SpriteID;
 
 // Create a new sprite context from a given capacity.
 SpriteBatch *createSpriteBatch(size_t capacity=1024);
@@ -82,7 +83,7 @@ void destroy(SpriteBatch *context);
 Sprite* createSprite(
 	SpriteBatch *context, 
 	ImageAsset *image, 
-	const AffineMatrix& xform,
+	const AffineMatrix *xform,
 	int frame=0, 
 	Color c=rgba(0), 
 	bool visible=1, 
@@ -94,15 +95,9 @@ void destroy(SpriteBatch *context, Sprite* sprite);
 // setters
 void setLayer(SpriteBatch *context, Sprite* sprite, int layer);
 
-void setTransform(Sprite *sprite, const AffineMatrix &matrix);
-
 // convenience transform methods (will squash existing values)
-void setPosition(Sprite *sprite, vec2 p);
-void setFlipped(Sprite *sprite, bool flipped);
-void setRotation(Sprite *sprite, float radians);
-void setScale(Sprite *sprite, float scale);
-
 void setImage(Sprite* sprite, ImageAsset *image);
+void setTransform(Sprite *sprite, const AffineMatrix *xform);
 void setFrame(Sprite* sprite, int frame);
 void setVisible(SpriteBatch *context, Sprite* sprite, bool visible);
 void setColor(Sprite* sprite, Color c);
@@ -110,7 +105,7 @@ void setUserData(Sprite* sprite, void *userData);
 
 // getters
 int layer(Sprite *sprite);
-AffineMatrix transform(Sprite *sprite);
+const AffineMatrix *transform(Sprite *sprite);
 ImageAsset *image(Sprite* sprite);
 int frame(Sprite* sprite);
 bool visible(SpriteBatch *context, Sprite* sprite);

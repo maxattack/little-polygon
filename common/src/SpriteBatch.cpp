@@ -20,7 +20,7 @@
 
 struct SpriteDraw {
 	ImageAsset *image;
-	AffineMatrix xform;
+	const AffineMatrix *xform;
 	Color color;
 	uint16_t slot;
 	uint16_t frame;
@@ -152,7 +152,7 @@ static void removeFromLayer(SpriteBatch *context, Sprite *sprite) {
 Sprite* createSprite(
 	SpriteBatch *context, 
 	ImageAsset *image, 
-	const AffineMatrix& xform,
+	const AffineMatrix *xform,
 	int frame, Color c, bool visible, bool onTop, 
 	void *userData
 ) {
@@ -208,33 +208,12 @@ void setLayer(SpriteBatch *context, Sprite* sprite, int layerIdx) {
 	}
 }
 
-void setTransform(Sprite *sprite, const AffineMatrix &matrix) {
-	sprite->cmd->xform = matrix;
-}
-
-void setPosition(Sprite *sprite, vec2 p) {
-	sprite->cmd->xform.t = p;
-}
-
-void setFlipped(Sprite *sprite, bool flipped) {
-	sprite->cmd->xform.u = vec(flipped ? -1 : 1, 0);
-}
-
-void setRotation(Sprite *sprite, float radians) {
-	float s = sinf(radians);
-	float c = cosf(radians);
-	sprite->cmd->xform.u = vec(c,s);
-	sprite->cmd->xform.v = vec(-s,c);
-}
-
-void setScale(Sprite *sprite, float scale) {
-	sprite->cmd->xform.u = vec(scale, 0);
-	sprite->cmd->xform.v = vec(0, scale);
-}
-
-
 void setImage(Sprite* sprite, ImageAsset *image) {
 	sprite->cmd->image = image;
+}
+
+void setTransform(Sprite *sprite, const AffineMatrix *xform) {
+	sprite->cmd->xform = xform;
 }
 
 void setFrame(Sprite* sprite, int frame) {
@@ -261,7 +240,7 @@ ImageAsset *image(Sprite* sprite) {
 	return sprite->cmd->image;
 }
 
-AffineMatrix transform(Sprite *sprite) {
+const AffineMatrix *transform(Sprite *sprite) {
 	return sprite->cmd->xform;
 }
 
@@ -286,7 +265,7 @@ void *userData(Sprite* sprite) {
 }
 
 void draw(SpriteDraw *cmd, SpritePlotter *renderer) {
-	drawImageTransformed(renderer, cmd->image, cmd->xform, cmd->frame, cmd->color);
+	drawImageTransformed(renderer, cmd->image, *cmd->xform, cmd->frame, cmd->color);
 }
 
 void draw(SpriteBatch *context, SpritePlotter *renderer) {

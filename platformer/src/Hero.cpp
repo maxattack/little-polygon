@@ -28,11 +28,8 @@ void Hero::init(AssetBundle* assets, SpriteBatch *batch, CollisionSystem* collis
 	grounded = collision.hitBottom;
 
 	// init fx
-	sprite = createSprite(
-		batch, 
-		assets->image("hero"),
-		affineTranslation(PIXELS_PER_METER * position())
-	);
+	xform = affineTranslation(PIXELS_PER_METER * position());
+	sprite = createSprite(batch, assets->image("hero"), &xform);
 	framef = 0;
 
 	sfxJump = assets->sample("jump");
@@ -55,11 +52,11 @@ void Hero::tick(PlayerInput* input, CollisionSystem* collisions, float dt) {
 	switch(input->xdir()) {
 		case -1:
 			speed.x = easeTowards(speed.x, -MOVE_SPEED, MOVE_EASING, dt);
-			setFlipped(sprite, true);
+			xform.u.x = -1;
 			break;
 		case 1:
 			speed.x = easeTowards(speed.x, MOVE_SPEED, MOVE_EASING, dt);
-			setFlipped(sprite, false);
+			xform.u.x = 1;
 			break;
 		default:
 			speed.x = easeTowards(speed.x, 0, MOVE_EASING, dt);
@@ -81,7 +78,7 @@ void Hero::tick(PlayerInput* input, CollisionSystem* collisions, float dt) {
 	if (result.hitHorizontal) {
 		speed.x = 0;
 	}
-	setPosition(sprite, PIXELS_PER_METER * position());
+	xform.t = PIXELS_PER_METER * position();
 
 	// Trigger events[8];
 	// int nTriggers = collisions->queryTriggers(collider, arraysize(events), events);

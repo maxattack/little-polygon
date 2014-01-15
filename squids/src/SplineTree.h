@@ -12,7 +12,6 @@ public:
 	void draw(SplinePlotter *splines, Color c);
 
 private:
-	FkContext *mDisplayTree;
 	int mCount;
 
 	struct Segment {

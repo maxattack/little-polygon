@@ -20,10 +20,7 @@ void Kitten::init(AssetBundle* assets, SpriteBatch *batch, CollisionSystem* coll
 	collisions->move(collider, vec(0,0.2f));
 
 	// init fx
-	sprite = createSprite(
-		batch,
-		assets->image("kitten"),
-		AffineMatrix(vec(-1,0), vec(0,1), PIXELS_PER_METER * position())
-	);
+	xform = AffineMatrix(vec(-1,0), vec(0,1), PIXELS_PER_METER * position());
+	sprite = createSprite(batch, assets->image("kitten"), &xform);
 
 }

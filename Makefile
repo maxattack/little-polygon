@@ -32,7 +32,7 @@ CPP = clang++
 # as well.
 
 # BASE FLAGS
-CFLAGS = -Icommon/include -I/usr/local/include/ -g -Wall -ffast-math
+CFLAGS = -Icommon/include -I/usr/local/include/ -Wall -ffast-math
 CCFLAGS = -std=c++11  -fno-rtti -fno-exceptions
 LIBS = -Llib -L/usr/local/lib -framework OpenGL -framework Cocoa -llittlepolygon -lz
 
@@ -44,8 +44,8 @@ LIBS += -lSDL2 -lSDL2_mixer
 # VECTORIAL
 CFLAGS += -Ivectorial/include
 
-# CONFIG FLAGS
-CFLAGS += -DDEBUG
+# DEBUG FLAGS
+CFLAGS += -g -DDEBUG
 
 # OPTIMIZATION FLAGS
 # CFLAGS += -Os -flto 
@@ -55,8 +55,9 @@ CFLAGS += -arch i386
 AFLAGS = 32
 # AFLAGS = 64
 
-stest: bin/squids
-	bin/squids
+# stest: bin/squids
+# 	cp platformer/assets/song.mid bin/song.mid
+# 	bin/squids
 
 test : bin/platformer bin/platformer.bin
 	cp platformer/assets/song.mid bin/song.mid

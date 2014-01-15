@@ -26,7 +26,8 @@ static void handleEvents(bool *outDone) {
 }
 
 int main(int argc, char *argv[]) {
-	auto window = initContext("GameObject Demo", 800, 800);
+	int w=800, h=600;
+	auto window = initContext("GameObject Demo", w, h);
 	auto splines = createSplinePlotter();
 	auto circles = createCirclePlotter();
 	auto nodes = createFkContext();
@@ -40,11 +41,11 @@ int main(int argc, char *argv[]) {
 
 	auto n0 = createNode(nodes, rotor);
 	setPosition(n0, vec(300, 0));
-	setAttitude(n0, vec(10, 400));
+	setAttitude(n0, vec(10, 500));
 
 	auto n1 = createNode(nodes, rotor);
 	setPosition(n1, vec(-300, 0));
-	setAttitude(n1, vec(10, 400));
+	setAttitude(n1, vec(10, 500));
 
 	auto n2 = createNode(nodes, rotor2a);
 	setPosition(n2, vec(0, -200));
@@ -64,6 +65,9 @@ int main(int argc, char *argv[]) {
 	glClearColor(color.red(), color.green(), color.blue(), 0.0f);
 
 	Timer timer;
+	Mix_Music *music = Mix_LoadMUS("song.mid");
+	if(music) { Mix_FadeInMusic(music, -1, 5000); }
+	
 
 	bool done = false;
 	while(!done) {
@@ -80,7 +84,7 @@ int main(int argc, char *argv[]) {
 		setRotation(rotor2, -0.2f * M_TAU * timer.scaledTime);
 		cacheWorldTransforms(nodes);
 
-		auto canvasSize = vec(800, 800);
+		auto canvasSize = vec(w, h);
 		auto scrolling = vec(0,0);
 
 		begin(splines, canvasSize, scrolling);

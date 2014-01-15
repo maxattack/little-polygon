@@ -36,6 +36,12 @@ struct FkContext;
 struct FkNode;
 typedef uint32_t FkNodeID;
 
+// Gift Ideas:
+// (i) Shared Backing-Store for World Transforms?
+// (ii) Alternatively, support for copying a world tform buffer?  E.g.
+//      int fkWordlIndex(Node *node);
+//      void computeWorldTransforms(FkContext *context, AffineMatrix *outResult);
+
 //------------------------------------------------------------------------------
 // CONTEXT
 //------------------------------------------------------------------------------
@@ -95,6 +101,12 @@ FkNode* fkParent(const FkNode* node);
 void* fkUserData(const FkNode* node);
 AffineMatrix fkLocal(const FkNode* node);
 AffineMatrix fkWorld(FkNode* node);
+
+// This method is buyer-beware!  You can only really be sure that the whole 
+// trees world transforms are cached after a call to cacheWorldTransforms().
+// The idea is to get up to date, dispatch work to the renderer (e.g. within
+// a thread-sync), and then move on.
+const AffineMatrix *fkCachedWorld(FkNode *node);
 
 //------------------------------------------------------------------------------
 // BATCH METHODS

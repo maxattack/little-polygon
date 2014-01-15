@@ -1,6 +1,6 @@
 #include "SplineTree.h"
 
-SplineTree::SplineTree(FkContext *context) : mDisplayTree(context), mCount(0) {
+SplineTree::SplineTree(FkContext *context) : mCount(0) {
 }
 
 void SplineTree::addSegment(FkNode *start, FkNode *end) {
@@ -22,15 +22,15 @@ void SplineTree::removeSegment(FkNode *start, FkNode *end) {
 
 void SplineTree::draw(SplinePlotter *splines, Color c) {
 	for(auto s=mSegments; s<mSegments+mCount; ++s) {
-		auto w0 = fkWorld(s->start);
-		auto w1 = fkWorld(s->end);
+		auto w0 = fkCachedWorld(s->start);
+		auto w1 = fkCachedWorld(s->end);
 		drawSpline(
 			splines, 
 			hermiteMatrix(
-				vec4f(w0.t.x, w0.t.y, 0, 0),
-				vec4f(w1.t.x, w1.t.y, 0, 0),
-				vec4f(w0.u.x, w0.u.y, 0, 0),
-				vec4f(w1.u.x, w1.u.y, 0, 0)
+				vec4f(w0->t.x, w0->t.y, 0, 0),
+				vec4f(w1->t.x, w1->t.y, 0, 0),
+				vec4f(w0->u.x, w0->u.y, 0, 0),
+				vec4f(w1->u.x, w1->u.y, 0, 0)
 			),
 			eccentricStroke(16, -12, 16),
 			c
