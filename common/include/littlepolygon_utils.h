@@ -278,8 +278,8 @@ inline float parabola(float x) {
 }
 
 // // line-line intersection test
-// bool linearIntersection(vec2 u0, vec2 u1, vec2 v0, vec2 v1, float& u);
-// bool linearIntersection(vec2 u0, vec2 u1, vec2 v0, vec2 v1, float& u, float& v);
+bool linearIntersection(vec2 u0, vec2 u1, vec2 v0, vec2 v1, float& u);
+bool linearIntersection(vec2 u0, vec2 u1, vec2 v0, vec2 v1, float& u, float& v);
 
 // // some common curves
 // vec2 quadraticBezier(vec2 p0, vec2 p1, vec2 p2, float u);

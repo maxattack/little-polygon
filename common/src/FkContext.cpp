@@ -366,11 +366,11 @@ void* fkUserData(const FkNode* node) {
 	return node->userData;
 }
 
-AffineMatrix fkLocal(const FkNode* node) {
+const AffineMatrix& fkLocal(const FkNode* node) {
 	return node->local;
 }
 
-AffineMatrix fkWorld(FkNode* node) {
+const AffineMatrix& fkWorld(FkNode* node) {
 	if (!node->context->dirtyMask.empty()) {
 		cacheWorld(node);
 	}

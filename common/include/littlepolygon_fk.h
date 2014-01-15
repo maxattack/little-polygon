@@ -99,8 +99,8 @@ void setUserData(FkNode* node, void *userData);
 FkContext *fkContext(const FkNode *node);
 FkNode* fkParent(const FkNode* node);
 void* fkUserData(const FkNode* node);
-AffineMatrix fkLocal(const FkNode* node);
-AffineMatrix fkWorld(FkNode* node);
+const AffineMatrix& fkLocal(const FkNode* node);
+const AffineMatrix& fkWorld(FkNode* node);
 
 //------------------------------------------------------------------------------
 // CACHE METHODS
@@ -157,11 +157,11 @@ public:
 	FkContext *context() const { return fkContext(node); }
 	FkNodeRef parent() const { return fkParent(node); }
 	void *userData() const { return fkUserData(node); }
-	AffineMatrix local() const { return fkLocal(node); }
+	const AffineMatrix& local() const { return fkLocal(node); }
 	vec2 position() const { return fkLocal(node).t; }
 	vec2 right() const { return fkLocal(node).u; }
 	vec2 up() const { return fkLocal(node).v; }
-	AffineMatrix world() const { return fkWorld(node); }
+	const AffineMatrix& world() const { return fkWorld(node); }
 };
 
 
