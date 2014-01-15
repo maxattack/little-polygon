@@ -1,4 +1,5 @@
 #include "SplineTree.h"
+#include <littlepolygon_go_utils.h>
 
 static void handleKeyDown(const SDL_KeyboardEvent& key, bool *outDone) {
 	switch(key.keysym.sym) {
@@ -60,7 +61,6 @@ int main(int argc, char *argv[]) {
 	tree->addSegment(fkCachedTransform(n2), fkCachedTransform(n3));
 	tree->addSegment(fkCachedTransform(n3), fkCachedTransform(n0));
 
-	
 	auto color = rgb(0x4E9689);
 	float dim = 0.9f;
 	glClearColor(

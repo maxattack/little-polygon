@@ -175,7 +175,7 @@ struct FkTreeIterator {
 
 	FkTreeIterator(const FkContext *context);
 	bool finished() const { return current == 0; }
-	FkNodeRef currentRef() { return current; }
+	FkNodeRef ref() { return current; }
 	void next();
 };
 
@@ -185,7 +185,7 @@ struct FkRootIterator {
 	
 	FkRootIterator(const FkContext *context);
 	bool finished() const { return current == 0; }
-	FkNodeRef currentRef() { return current; }
+	FkNodeRef ref() { return current; }
 	void next();
 };
 
@@ -195,7 +195,7 @@ struct FkChildIterator {
 
 	FkChildIterator(const FkNode* parent);
 	bool finished() const { return current == 0; }
-	FkNodeRef currentRef() { return current; }
+	FkNodeRef ref() { return current; }
 	void next();
 };
 
@@ -206,7 +206,7 @@ struct FkSubtreeIterator {
 	
 	FkSubtreeIterator(const FkNode *parent);
 	bool finished() const { return current == 0; }
-	FkNodeRef currentRef() { return current; }
+	FkNodeRef ref() { return current; }
 	void next();
 };
 

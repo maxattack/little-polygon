@@ -23,13 +23,16 @@
 // Collections are maintained using an intrusive doubly-linked list between
 // pre-allocated slots - no dynamic memory after init.
 
-struct GoComponentSlot : GoComponent {
+struct GoComponent {
+	ComponentTypeID type; // logical type, for dynamic-casting
+	GameObject *go;       // logical go, for looking up siblings
+	void *userData;       // implementation associated with the component
 	GoComponentSlot *prev;
 	GoComponentSlot *next;
 };
 
 struct GoSlot {
-	GO go; // GO is a mangled-index to reduce ID dupping
+	
 	union {
 		uint32_t flags;
 		struct {
