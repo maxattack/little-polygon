@@ -2,7 +2,7 @@
 
 #include "CollisionSystem.h"
 #include <littlepolygon_sprites.h>
-
+#include <littlepolygon_utils.h>
 
 #define CANVAS_WIDTH   320
 #define CANVAS_HEIGHT  115

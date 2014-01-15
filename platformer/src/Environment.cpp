@@ -1,4 +1,4 @@
-#include "Game.h"
+#include "platformer.h"
 
 void Environment::init(AssetBundle* assets, CollisionSystem* collisions) {
 

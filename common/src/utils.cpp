@@ -15,6 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "littlepolygon_utils.h"
+#include "littlepolygon_math.h"
 #include <algorithm>
 
 
@@ -124,43 +125,43 @@ bool linearIntersection(vec2 u0, vec2 u1, vec2 v0, vec2 v1, float& u, float& v) 
   return true;  
 }
 
-// vec2 quadraticBezier(vec2 p0, vec2 p1, vec2 p2, float u) {
-//   return ((1.0f-u)*(1.0f-u))*p0 + (2.0f*(1.0f-u)*u)*p1 + (u*u)*p2;
-// }
+vec2 quadraticBezier(vec2 p0, vec2 p1, vec2 p2, float u) {
+  return ((1.0f-u)*(1.0f-u))*p0 + (2.0f*(1.0f-u)*u)*p1 + (u*u)*p2;
+}
     
-// vec2 quadraticBezierDeriv(vec2 p0, vec2 p1, vec2 p2, float u) {
-//   return (2.0f*(1.0f-u))*(p1-p0) + (2.0f*u)*(p2-p1);
-// }
+vec2 quadraticBezierDeriv(vec2 p0, vec2 p1, vec2 p2, float u) {
+  return (2.0f*(1.0f-u))*(p1-p0) + (2.0f*u)*(p2-p1);
+}
 
-// vec2 cubicBezier(vec2 p0, vec2 p1, vec2 p2, vec2 p3, float u) {
-//     return 
-//       ((1.0f-u) * (1.0f-u) * (1.0f-u)) * p0 +
-//       (3.0f * (1.0f-u) * (1.0f-u) * u) * p1 +
-//       (3.0f * (1.0f-u) * u * u) * p2 +
-//       (u * u * u) * p3;
-//   }
+vec2 cubicBezier(vec2 p0, vec2 p1, vec2 p2, vec2 p3, float u) {
+    return 
+      ((1.0f-u) * (1.0f-u) * (1.0f-u)) * p0 +
+      (3.0f * (1.0f-u) * (1.0f-u) * u) * p1 +
+      (3.0f * (1.0f-u) * u * u) * p2 +
+      (u * u * u) * p3;
+  }
   
-// vec2 cubicBezierDeriv(vec2 p0, vec2 p1, vec2 p2, vec2 p3, float u){
-//   return 3.0f * (
-//     (-(1.0f-u) * (1.0f-u)) * p0 +
-//     (1.0f - 4.0f * u + 3.0f * u * u) * p1 +
-//     (2.0f * u - 3.0f * u * u) * p2 +
-//     (u * u) * p3
-//   );
-// }
-// vec2 cubicHermite(vec2 p0, vec2 m0, vec2 p1, vec2 m1, float u) {
-//   return (2.f*u*u*u - 3.f*u*u + 1.f) * p0 + 
-//     (u*u*u - 2.f*u*u + u) * m0 + 
-//     (-2.f*u*u*u + 3.f *u*u) * p1 + 
-//     (u*u*u - u*u) * m1;
-// }
+vec2 cubicBezierDeriv(vec2 p0, vec2 p1, vec2 p2, vec2 p3, float u){
+  return 3.0f * (
+    (-(1.0f-u) * (1.0f-u)) * p0 +
+    (1.0f - 4.0f * u + 3.0f * u * u) * p1 +
+    (2.0f * u - 3.0f * u * u) * p2 +
+    (u * u) * p3
+  );
+}
+vec2 cubicHermite(vec2 p0, vec2 m0, vec2 p1, vec2 m1, float u) {
+  return (2.f*u*u*u - 3.f*u*u + 1.f) * p0 + 
+    (u*u*u - 2.f*u*u + u) * m0 + 
+    (-2.f*u*u*u + 3.f *u*u) * p1 + 
+    (u*u*u - u*u) * m1;
+}
 
-// vec2 CubicHermiteDeriv(vec2 p0, vec2 m0, vec2 p1, vec2 m1, float u) {
-//   return (6.f*(u*u - u)) * p0 + 
-//     (3.f*u*u - 4.f*u + 1.f) * m0 + 
-//     (6.f*(u - u*u)) * p1 + 
-//     (3.f*u*u - 2.f*u) * m1;
-// }
+vec2 CubicHermiteDeriv(vec2 p0, vec2 m0, vec2 p1, vec2 m1, float u) {
+  return (6.f*(u*u - u)) * p0 + 
+    (3.f*u*u - 4.f*u + 1.f) * m0 + 
+    (6.f*(u - u*u)) * p1 + 
+    (3.f*u*u - 2.f*u) * m1;
+}
 
 Color hsv(float h, float s, float v) {
   if(s > 0.001f) {

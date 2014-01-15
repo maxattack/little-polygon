@@ -17,7 +17,7 @@
 #pragma once
 
 #include "littlepolygon_assets.h"
-#include "littlepolygon_utils.h"
+#include "littlepolygon_math.h"
 
 //------------------------------------------------------------------------------
 // SPRITE PLOTTER

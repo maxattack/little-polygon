@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "littlepolygon_utils.h"
+#include "littlepolygon_math.h"
 
 // A Generic Forward-Kinematic (FK) system for creating display-trees
 // like in flash.  While this is was implemented with the intention of

@@ -1,4 +1,4 @@
-#include "Game.h"
+#include "platformer.h"
 
 static void handleEvents(PlayerInput& input);
 static void handleKeyDown(PlayerInput& input, const SDL_KeyboardEvent& key);

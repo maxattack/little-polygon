@@ -1,4 +1,4 @@
-#include "Game.h"
+#include "platformer.h"
 
 #define HALF_WIDTH      0.25f
 #define HALF_HEIGHT     0.25f

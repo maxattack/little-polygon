@@ -15,8 +15,8 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
-#include <littlepolygon_utils.h>
-#include <littlepolygon_templates.h>
+#include <littlepolygon_math.h>
+#include <littlepolygon_bitset.h>
 #include <littlepolygon_graphics.h>
 
 //------------------------------------------------------------------------------
