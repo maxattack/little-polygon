@@ -154,7 +154,7 @@ FkNode* createNode(FkContext *context, FkNode* parent, void *userData, FkNodeID 
 	return result;
 }
 
-FkNode *getFkNode(FkContext *context, FkNodeID id) {
+FkNode *getNode(FkContext *context, FkNodeID id) {
 	if ((0xffff0000 & id) == context->fingerprint) {
 		uint32_t index = 0xffff & id;
 		return context->allocationMask[index] ? context->nodeBuf() + index : 0;

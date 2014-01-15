@@ -20,7 +20,7 @@ void SplineTree::removeSegment(const AffineMatrix *t0, const AffineMatrix *t1) {
 	}
 }
 
-void SplineTree::draw(SplinePlotter *splines, Color c) {
+void SplineTree::draw(SplinePlotter *splines, Color c, float ss) {
 	for(auto s=mSegments; s<mSegments+mCount; ++s) {
 		drawSpline(
 			splines, 
@@ -30,7 +30,7 @@ void SplineTree::draw(SplinePlotter *splines, Color c) {
 				vec4f(s->t0->u.x, s->t0->u.y, 0, 0),
 				vec4f(s->t1->u.x, s->t1->u.y, 0, 0)
 			),
-			eccentricStroke(16, -12, 16),
+			eccentricStroke(ss * 12, ss * -6, ss * 12),
 			c
 		);
 	}

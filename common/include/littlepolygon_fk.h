@@ -60,7 +60,7 @@ FkNode* createNode(FkContext *context, FkNode* parent=0, void *userData=0, FkNod
 
 // FkNode IDs are useful for serialization
 FkNodeID getID(FkContext *context, FkNode *node);
-FkNode *getFkNode(FkContext *context, FkNodeID id);
+FkNode *getNode(FkContext *context, FkNodeID id);
 
 // Destroy this node and all it's children (with an optional callback if you
 // need to know who's being destroyed - invoked in leaf->root order).

@@ -9,7 +9,7 @@ public:
 
 	void addSegment(const AffineMatrix *t0, const AffineMatrix *t1);
 	void removeSegment(const AffineMatrix *t0, const AffineMatrix *t1);
-	void draw(SplinePlotter *splines, Color c);
+	void draw(SplinePlotter *splines, Color c, float strokeScale=1);
 
 private:
 	int mCount;
