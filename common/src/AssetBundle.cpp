@@ -35,12 +35,13 @@ AssetBundle* createAssetBundle(const char* path, uint32_t crc) {
 	uint8_t *bytes = (uint8_t*) result;
 	uint32_t offset;
 	while(SDL_RWread(file, &offset, sizeof(uint32_t), 1)) {
-		*reinterpret_cast<size_t*>(&bytes[offset]) += size_t(bytes);
+		*((ptrdiff_t*)(bytes + offset)) += ptrdiff_t(bytes);
 	}
 	SDL_RWclose(file);
 
 	bundle->assetCount = count;
 	bundle->headers = reinterpret_cast<AssetBundle::Header*>(result);
+	bundle->fallback = 0;
 	return bundle;
 }
 
@@ -63,7 +64,7 @@ void* AssetBundle::findHeader(uint32_t hash, uint32_t assetType) {
 			imax = i-1;
 		}
 	}
-	return 0;
+	return fallback ? fallback->findHeader(hash, assetType) : 0;
 }
 
 void initialize(AssetBundle* bundle) {

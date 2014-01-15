@@ -184,6 +184,9 @@ struct AssetBundle {
 		void* data;
 	};
 
+	// if we fail to find an asset, optionally check a fallback
+	// (for "pusinging" level content on top of shared content)
+	AssetBundle *fallback;
 	Header *headers;
 
 	// lookup assets by name
