@@ -7,20 +7,20 @@ class SplineTree {
 public:
 	SplineTree(FkContext *displayTree);
 
-	void addSegment(FkNode *start, FkNode *end);
-	void removeSegment(FkNode *start, FkNode *end);
+	void addSegment(const AffineMatrix *t0, const AffineMatrix *t1);
+	void removeSegment(const AffineMatrix *t0, const AffineMatrix *t1);
 	void draw(SplinePlotter *splines, Color c);
 
 private:
 	int mCount;
 
 	struct Segment {
-		FkNode *start;
-		FkNode *end;
+		const AffineMatrix *t0;
+		const AffineMatrix *t1;
 	};
 
 	Segment mSegments[SEGMENT_CAPACITY];
 
-	Segment* find(FkNode *start, FkNode *end);
+	Segment* find(const AffineMatrix *t0, const AffineMatrix *t1);
 };
 

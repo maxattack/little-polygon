@@ -55,10 +55,10 @@ int main(int argc, char *argv[]) {
 	setPosition(n3, vec(0, 200));
 	setAttitude(n3, vec(-500, 100));
 
-	tree->addSegment(n0, n1);
-	tree->addSegment(n1, n2);
-	tree->addSegment(n2, n3);
-	tree->addSegment(n3, n0);
+	tree->addSegment(fkCachedTransform(n0), fkCachedTransform(n1));
+	tree->addSegment(fkCachedTransform(n1), fkCachedTransform(n2));
+	tree->addSegment(fkCachedTransform(n2), fkCachedTransform(n3));
+	tree->addSegment(fkCachedTransform(n3), fkCachedTransform(n0));
 
 	
 	auto color = rgb(0xff77ff);

@@ -3,17 +3,17 @@
 SplineTree::SplineTree(FkContext *context) : mCount(0) {
 }
 
-void SplineTree::addSegment(FkNode *start, FkNode *end) {
+void SplineTree::addSegment(const AffineMatrix *t0, const AffineMatrix *t1) {
 	ASSERT(mCount < SEGMENT_CAPACITY);
-	if (!find(start, end)) {
-		mSegments[mCount].start = start;
-		mSegments[mCount].end = end;
+	if (!find(t0, t1)) {
+		mSegments[mCount].t0 = t0;
+		mSegments[mCount].t1 = t1;
 		++mCount;
 	}
 }
 
-void SplineTree::removeSegment(FkNode *start, FkNode *end) {
-	auto s = find(start, end);
+void SplineTree::removeSegment(const AffineMatrix *t0, const AffineMatrix *t1) {
+	auto s = find(t0, t1);
 	if (s) {
 		if (s != mSegments+(mCount-1)) { *s = mSegments[mCount-1]; }
 		--mCount;
@@ -22,15 +22,13 @@ void SplineTree::removeSegment(FkNode *start, FkNode *end) {
 
 void SplineTree::draw(SplinePlotter *splines, Color c) {
 	for(auto s=mSegments; s<mSegments+mCount; ++s) {
-		auto w0 = fkCachedWorld(s->start);
-		auto w1 = fkCachedWorld(s->end);
 		drawSpline(
 			splines, 
 			hermiteMatrix(
-				vec4f(w0->t.x, w0->t.y, 0, 0),
-				vec4f(w1->t.x, w1->t.y, 0, 0),
-				vec4f(w0->u.x, w0->u.y, 0, 0),
-				vec4f(w1->u.x, w1->u.y, 0, 0)
+				vec4f(s->t0->t.x, s->t0->t.y, 0, 0),
+				vec4f(s->t1->t.x, s->t1->t.y, 0, 0),
+				vec4f(s->t0->u.x, s->t0->u.y, 0, 0),
+				vec4f(s->t1->u.x, s->t1->u.y, 0, 0)
 			),
 			eccentricStroke(16, -12, 16),
 			c
@@ -38,10 +36,10 @@ void SplineTree::draw(SplinePlotter *splines, Color c) {
 	}
 }
 
-SplineTree::Segment* SplineTree::find(FkNode *start, FkNode *end) {
+SplineTree::Segment* SplineTree::find(const AffineMatrix *t0, const AffineMatrix *t1) {
 	for(auto s=mSegments; s<mSegments+mCount; ++s) {
-		if ((s->start == start && s->end == end) ||
-		    (s->start == end && s->end == start)) {
+		if ((s->t0 == t0 && s->t1 == t1) ||
+		    (s->t0 == t1 && s->t1 == t0)) {
 			return s;
 		}
 	}

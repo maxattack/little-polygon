@@ -102,17 +102,23 @@ void* fkUserData(const FkNode* node);
 AffineMatrix fkLocal(const FkNode* node);
 AffineMatrix fkWorld(FkNode* node);
 
-// This method is buyer-beware!  You can only really be sure that the whole 
-// trees world transforms are cached after a call to cacheWorldTransforms().
-// The idea is to get up to date, dispatch work to the renderer (e.g. within
-// a thread-sync), and then move on.
-const AffineMatrix *fkCachedWorld(FkNode *node);
+//------------------------------------------------------------------------------
+// CACHE METHODS
+//------------------------------------------------------------------------------
 
-//------------------------------------------------------------------------------
-// BATCH METHODS
-//------------------------------------------------------------------------------
+//
+// Cached transforms are buyer-beware!  You can only really be sure that
+// world transforms are cached after a call to cacheWorldTransforms(), e.g:
+// 
+//    scene.entity.sprite = createSprite(batch, img, fkCachedWorld(node));
+//    ...
+//    scene.tick();
+//    cacheWorldTransforms(nodes);
+//    scene.draw();
+//
 
 void cacheWorldTransforms(FkContext *context);
+const AffineMatrix *fkCachedTransform(FkNode *node);
 
 //------------------------------------------------------------------------------
 // ITERATORS (redo c++11 style?)

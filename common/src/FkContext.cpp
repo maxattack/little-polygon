@@ -381,10 +381,6 @@ AffineMatrix fkWorld(FkNode* node) {
 	return node->world;
 }
 
-const AffineMatrix *fkCachedWorld(FkNode *node) {
-	return &node->world;
-}
-
 //------------------------------------------------------------------------------
 // BATCH METHODS
 //------------------------------------------------------------------------------
@@ -410,6 +406,10 @@ void cacheWorldTransforms(FkContext *context) {
 			if (node) { node = node->nextSibling; }
 		}
 	}
+}
+
+const AffineMatrix *fkCachedTransform(FkNode *node) {
+	return &node->world;
 }
 
 //------------------------------------------------------------------------------
