@@ -51,13 +51,17 @@ void destroy(AssetBundle *bundle) {
 }
 
 void* AssetBundle::findHeader(uint32_t hash, uint32_t assetType) {
-	// headers are sorted on their hash, so we can binary search it
+	// headers are sorted on their hash, so we can binary search
 	int imin = 0;
 	int imax = assetCount-1;
 	while (imax >= imin) {
 		int i = (imin + imax) >> 1;
 		if (headers[i].hash == hash) {
-			return headers[i].type == assetType ? headers[i].data : 0;
+			if (headers[i].type == assetType) {
+				return headers[i].data;
+			} else {
+				break;
+			}
 		} else if (headers[i].hash < hash) {
 			imin = i+1;
 		} else {
