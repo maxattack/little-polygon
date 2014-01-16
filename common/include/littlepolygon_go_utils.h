@@ -69,9 +69,8 @@ private:
 // Requires a FkNode Component to be attached for positioning.
 //------------------------------------------------------------------------------
 
-// Init args, serializable in asset data.  All the content needs to come from 
-// one bundle, for now, but I can create an AssetBundleGroup, perhaps, for
-// searching for images from multiple sources.
+// Init args, serializable in asset data.  Be sure to unpack the nodes before
+// unpacking sprites as there's an init dependency there.
 
 struct SpriteAsset {
 	uint32_t imageHash;
