@@ -1,5 +1,5 @@
 #include "SplineTree.h"
-#include <littlepolygon_go_utils.h>
+#include <littlepolygon_go_core.h>
 #include <littlepolygon_utils.h>
 
 static void handleKeyDown(const SDL_KeyboardEvent& key, bool *outDone) {

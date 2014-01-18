@@ -4,7 +4,7 @@ LIBRARY_OBJ_FILES =     \
 	obj/CirclePlotter.o \
 	obj/FkContext.o     \
 	obj/GoContext.o     \
-	obj/GoUtils.o       \
+	obj/GoCore.o       \
 	obj/LinePlotter.o   \
 	obj/SampleAsset.o   \
 	obj/SplinePlotter.o \
@@ -57,9 +57,9 @@ CFLAGS += -arch i386
 AFLAGS = 32
 # AFLAGS = 64
 
-# stest: bin/squids
-# 	cp platformer/assets/song.mid bin/song.mid
-# 	bin/squids
+stest: bin/squids
+	cp platformer/assets/song.mid bin/song.mid
+	bin/squids
 
 test : bin/platformer bin/platformer.bin
 	cp platformer/assets/song.mid bin/song.mid

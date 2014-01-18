@@ -17,6 +17,16 @@ eyeColor: &ec
   g: 155
   b: 255
 
+
+template/squid:
+  description: a basic squid with an eye and three tentacles
+  enabled: Yes
+
+  
+
+
+    
+
 # A basic squid template with three tentacles and an eye. The "slash" syntax
 # is a compact type/name idiom.
 go/squid: 
