@@ -93,8 +93,16 @@ struct EditSkin {
 class EditSystem {
 public:
 	EditSystem(EditSkin *aSkin) : skin(aSkin) {}
+
+	// Retrieve an edit component for the given gameobject / adding one
+	// if none were found.
 	EditComponent *edit(GameObjectRef gameObject);
+
+	// If the edit system processed the event return true, otherwise the main
+	// thread can continue handling it.
 	bool handleEvents(SDL_Event *event);
+
+	// Draw the edit system UI in a batch.
 	void draw(SpritePlotter *plotter);
 
 private:

@@ -21,12 +21,17 @@
 #include <Box2D/Box2D.h>
 
 class BodyComponent : GoComponent {
-	b2Body *body;
+public:
+	b2Body body() { return pBody; }
 
 	int init();
 	int enable();
 	int disable();
 	int destroy();
+
+private:
+	PhysicsSystem *physics;
+	b2Body *pBody;
 };
 
 class PhysicsSystem {
@@ -40,6 +45,7 @@ public:
 	PhysicsSystem(b2World *aWorld, const AffineMatrix &aPhysicsToDisplay) : 
 		world(aWorld), physicsToDisplay(aPhysicsToDisplay) {}
 
+	// Create a new body and set it's userdata back-pointer to the component.
 	BodyComponent *addBody(GameObjectRef go, const b2BodyDef& params);
 
 	// b2Body transforms are copied to the FK heirarchy using setWorld(), so
