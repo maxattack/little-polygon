@@ -150,6 +150,7 @@ public:
 
 	void draw(SpritePlotter *plotter) { ::draw(sprite, plotter); }
 
+	void destroy() { ::destroy(sprite); }
 };
 
 

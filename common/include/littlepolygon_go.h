@@ -18,6 +18,7 @@
 
 #include "littlepolygon_base.h"
 #include "littlepolygon_bitset.h"
+#include "littlepolygon_fk.h"
 
 // Generic GameObject (GO) system for entity-component style assets.  The basic idea
 // is to model content as a database of GOs, each of which is assembled (by data) out of
@@ -31,24 +32,11 @@
 // directly or reference.
 
 struct GoContext;
-struct GameObject;
 struct GoComponent;
+struct GameObject;
 class GameObjectRef;
-class GoComponentRef;
 typedef Bitset<1024> GoSet;
 typedef uint32_t GameObjectID;
-
-//------------------------------------------------------------------------------
-// COMPONENT SYSTEM ADAPTOR INTERFACE
-//------------------------------------------------------------------------------
-
-// In principle, component systems should no know about the GO database at all,
-// but around "bound" by a third-party implementing this database.  We want to
-// be able to use Go only when it's helpful, but omit it when it's not.
-
-// Component Type ID 0 is "undefined"
-// Component Type IDs 1-N are valid
-typedef uint32_t ComponentTypeID;
 
 #define GOSTATUS_OK 0
 #if DEBUG
@@ -57,42 +45,35 @@ typedef uint32_t ComponentTypeID;
 #define GOSTATUS_CHECK(_expr)
 #endif
 
-class GoSystem {
-private:
-	ComponentTypeID type;
 
-public:
+struct GoComponent {
+	// the game object we're attached to
+	// (undefined until init)
+	GameObject *go;
 
-	GoSystem(ComponentTypeID aType) : type(aType) { ASSERT(type != 0); }
+	// components are attached using an intrusive linked-list
+	// (undefined until init)
+	GoComponent *prev;
+	GoComponent *next;
 
-	// The type of component that this interface handles.  One logical system can
-	// handle multiple component types by implementing multiple GoSystem adaptors
-	// with a shared backend, however multiple systems cannot handle the same
-	// component type ID.
-	ComponentTypeID comType() const { return type; }
+	// convenience getter
+	inline GameObjectRef gameObject();
 
-	// Called when a component is added, before the handle is exposed
-	// for other components and scripts to query.
-	virtual int onInit(GoComponent *component, const void *args) = 0;
+	// called after a component is attached to a GameObject
+	virtual int init() = 0;
 
-	// Called when a gameobject is enabled.  In the normal serialization
-	// flow a gameobject is full initialized with components before it's
-	// enabled, so this is where it's OK to look up sibling components.
-	virtual int onEnable(GoComponent *component) = 0;
+	// called when a gameObject is enabled, or immediately after
+	// begin attached to an active gameObject.
+	virtual int enable() = 0;
 
-	// Optional handler for custom messages.  These are for events which are "dispatched"
-	// to game objects but aren't necessarily aware of the receivers.
-	virtual int onMessage(GoComponent *component, int messageId, const void *args) { return 0; }
+	// Generic message handler
+	virtual int message(int messageId, const void *args) { return 0; }
 
-	// Called when a gameobject is disabled but not destroyed.  Useful for
-	// implementing common idioms like object pools and state machines.  May
-	// be interleaved with calls to onEnable.
-	virtual int onDisable(GoComponent *component) = 0;
+	// called when a gameObject is disabled.
+	virtual int disable() = 0;
 
-	// Called to destroy the object and release all resources associated
-	// with it.
-	virtual int onDestroy(GoComponent *component) = 0;
-
+	// called when a gameObject is destroyed.
+	virtual int destroy() = 0;
 };
 
 //------------------------------------------------------------------------------
@@ -102,16 +83,11 @@ public:
 // You can create multiple contexts, e.g. for handling different rooms or 
 // orthogonal views (e.g. HUD vs Scene), and synchronizing different remote
 // network contexts.  Contexts can share systems.
-GoContext *createGoContext(
-	size_t numSystems, GoSystem **systemBuf, size_t totalComponentTypes=32,
-	size_t goCapacity=1024, size_t componentCapacity=1024
-);
-
+GoContext *createGoContext(FkContext *fkContext, size_t capacity);
 void destroy(GoContext *context);
 
-GoSystem *getSystem(const GoContext *context, ComponentTypeID cid);
-GameObject *find(const GoContext *context, GameObjectID gid);
-GameObject* find(const GoContext *context, const char *name);
+GameObject *find(GoContext *context, GameObjectID gid);
+GameObject* find(GoContext *context, const char *name);
 
 //------------------------------------------------------------------------------
 // GAME OBJECTS
@@ -126,10 +102,10 @@ GameObject* createGameObject(GoContext *context, const char* name=0, GameObjectI
 void destroy(GameObject *go);
 
 // Getters
-GameObjectID goID(const GameObject *go);
 GoContext *goContext(const GameObject *go);
 bool goEnabled(const GameObject *go);
 const char* goName(const GameObject *go);
+FkNode* goNode(const GameObject *go);
 
 // Methods
 int enable(GameObject *go);
@@ -143,21 +119,10 @@ int sendMessage(GameObject *go, int messageId, const void *args=0);
 // Attach a component to the given game object, initialized with the given data.  CID 
 // corresponds to the index of the component message handler that the context was
 // intialized with.
-GoComponent *addComponent(GameObject *go, ComponentTypeID cid, const void *data=0);
+void addComponent(GameObject *go, GoComponent *component);
+GoComponent *firstComponent(GameObject *go);
 void destroy(GoComponent *component);
 
-
-// lookup a component by type.  Returns the first match.  For an exhaustive search
-// (in the event of multiple components of the same type), use the component iterator
-GoComponent *getComponent(GameObject *go, ComponentTypeID cid);
-
-// getters
-ComponentTypeID comType(const GoComponent *component);
-GameObject *comObject(const GoComponent *component);
-void *comData(const GoComponent *component);
-
-// setter
-void setComData(GoComponent *component, void *data);
 
 //------------------------------------------------------------------------------
 // C++ Interface
@@ -182,37 +147,27 @@ public:
 	int disable() { return ::disable(go); }
 	int sendMessage(int msg, const void *args) { return ::sendMessage(go, msg, args); }
 
-	inline GoComponentRef addComponent(ComponentTypeID cid, const void *data=0);
-	inline GoComponentRef getComponent(ComponentTypeID cid);
+	inline void addComponent(GoComponent *component) { ::addComponent(go, component); }
 
-};
+	FkNodeRef node() { return goNode(go); }
 
-class GoComponentRef {
-private:
-	GoComponent *com;
-
-public:
-	GoComponentRef() {}
-	GoComponentRef(GoComponent *aCom) : com(aCom) {}
-
-	operator GoComponent*() { return com; }
-	operator bool() const { return com != 0; }
-
-	ComponentTypeID componentType() const { return comType(com); }
-	GameObjectRef gameObject() const { return comObject(com); }
-
+	// lookup a component by type.  Returns the first match.  For an exhaustive search
+	// (in the event of multiple components of the same type), use the component iterator
 	template<typename T>
-	T* data() { return (T*)comData(com); }
+	T *getComponent() {
+		for(GoComponent *p=firstComponent(go); p; p=p->next) {
+			T *result = dynamic_cast<T*>(p);
+			if (result) { 
+				return result; 
+			}
+		}
+		return 0;
+	}
 
+	void destroy() { ::destroy(go); }
 };
 
-inline GoComponentRef GameObjectRef::addComponent(ComponentTypeID cid, const void *data) { 
-	return ::addComponent(go, cid, data); 
-}
-
-inline GoComponentRef GameObjectRef::getComponent(ComponentTypeID cid) { 
-	return ::getComponent(go, cid); 
-}
+inline GameObjectRef GoComponent::gameObject() { return go; }
 
 //------------------------------------------------------------------------------
 // ITERATORS
@@ -228,15 +183,3 @@ struct GoIterator {
 	
 	void next();
 };
-
-struct GoComponentIterator {
-	GoComponent *current;
-
-	GoComponentIterator(GameObject *go);
-	bool finished() const { return current == 0; }
-	GoComponentRef ref() { return current; }
-
-	void next();
-};
-
-

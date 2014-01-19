@@ -16,141 +16,32 @@
 
 #include "littlepolygon_go_core.h"
 
-//------------------------------------------------------------------------------
-// FK SYSTEM
-//------------------------------------------------------------------------------
+// SpriteComponent *SpriteSystem::addSprite(GameObjectRef gameObject, SpriteRef sprite) {
+// 	auto result = pool.alloc();
+// 	result->pSystem = this;
+// 	result->pSprite = sprite;
+// 	gameObject.addComponent(result);
+// 	return result;
+// }
 
-int FkSystem::onInit(GoComponent *component, const void *args) {
-	
-	// unpack args
-	auto asset = (const FkNodeAsset*) args;
-	FkNodeID id = asset ? asset->id : 0;
-	FkNode *parent = asset && asset->parent ? getNode(context, asset->parent) : 0;
+// int SpriteComponent::init() {
+// 	sprite().setTransform(gameObject().node().cachedTransform());
+// 	sprite().setVisible(0);
+// 	return GOSTATUS_OK;
+// }
 
-	// create node
-	FkNode* node = createNode(context, parent, component, id);
-	if (asset) {
-		setLocal(node, asset->local);
-	}
+// int SpriteComponent::enable() {
+// 	sprite().setVisible(1);
+// 	return GOSTATUS_OK;
+// }
 
-	if (!node) {
-		return -1;
-	}
+// int SpriteComponent::disable() {
+// 	sprite().setVisible(0);
+// 	return GOSTATUS_OK;
+// }
 
-	// save as backing store
-	setComData(component, node);
-
-	return GOSTATUS_OK;
-}
-
-int FkSystem::onEnable(GoComponent *component) {
-	
-	// enable downtree nodes
-	for(FkChildIterator i(coNode(component)); !i.finished(); i.next()) {
-		GoComponentRef childComponent = i.ref().data<GoComponent>();
-		if (childComponent) {
-			GOSTATUS_CHECK( childComponent.gameObject().enable() );
-		}
-	}
-	
-	return GOSTATUS_OK;
-}
-
-int FkSystem::onMessage(GoComponent *component, int messageId, const void *args) {
-	
-	// send message downtree
-	for(FkChildIterator i(coNode(component)); !i.finished(); i.next()) {
-		GoComponentRef childComponent = i.ref().data<GoComponent>();
-		if (childComponent) {
-			GOSTATUS_CHECK( childComponent.gameObject().sendMessage(messageId, args) );
-		}
-	}
-	
-	return GOSTATUS_OK;
-}
-
-int FkSystem::onDisable(GoComponent *component) {
-	
-	// disable downtree nodes
-	for(FkChildIterator i(coNode(component)); !i.finished(); i.next()) {
-		GoComponentRef childComponent = i.ref().data<GoComponent>();
-		if (childComponent) {
-			GOSTATUS_CHECK( childComponent.gameObject().disable() );
-		}
-	}
-
-	return GOSTATUS_OK;
-}
-
-int FkSystem::onDestroy(GoComponent *component) {
-
-	// destroy downtree game objects first
-	auto iter = FkChildIterator(coNode(component));
-	while(!iter.finished()) {
-		auto child = iter.ref();
-		iter.next();
-		auto childComponent = child.data<GoComponent>();
-		if (childComponent) {
-			destroy( comObject(childComponent) );
-		}
-	}
-
-	// now destroy meself
-	destroy((FkNode*) comData(component));
-
-	return GOSTATUS_OK;
-}
-
-//------------------------------------------------------------------------------
-// SPRITE SYSTEM
-//------------------------------------------------------------------------------
-
-int SpriteSystem::onInit(GoComponent *component, const void *args) {
-
-	// unpack args
-	auto asset = (const SpriteAsset *) args;
-	ImageAsset *img = asset ? assets->image(asset->imageHash) : 0;
-	int frame = asset ? asset->frame : 0;
-	Color color = asset ? asset->color : rgba(0);
-
-	// find my node
-	GoComponentRef nodeComponent = getComponent(
-		comObject(component), 
-		LP_COMPONENT_TYPE_NODE
-	);
-	if (!nodeComponent) {
-		return -1;
-	}
-
-	auto sprite = createSprite(
-		batch, img, 
-		fkCachedTransform(nodeComponent.data<FkNode>()),
-		frame, color, 0, 0, component
-	);
-
-	if (!sprite) {
-		return -2;
-	}
-
-	// save as backing store
-	setComData(component, sprite);
-
-	return GOSTATUS_OK;
-}
-
-int SpriteSystem::onEnable(GoComponent *component) {
-	coSprite(component).setVisible(1);
-	return GOSTATUS_OK;
-}
-
-int SpriteSystem::onDisable(GoComponent *component) {
-	coSprite(component).setVisible(0);
-	return GOSTATUS_OK;
-}
-
-int SpriteSystem::onDestroy(GoComponent *component) {
-	destroy( (Sprite*) comData(component) );
-	return GOSTATUS_OK;
-}
-
-
+// int SpriteComponent::destroy() {
+// 	sprite().destroy();
+// 	pSystem->pool.release(this);
+// 	return GOSTATUS_OK;
+// }

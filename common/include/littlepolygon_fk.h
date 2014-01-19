@@ -28,7 +28,6 @@
 
 struct FkContext;
 struct FkNode;
-typedef uint32_t FkNodeID;
 
 // Gift Ideas:
 // (i) Shared Backing-Store for World Transforms?
@@ -50,11 +49,7 @@ void destroy(FkContext *context);
 // the identity matrix.  Optionally initialize with a specific parent
 // node and userdata.  The ID field is only necessary for serialization
 // and network synchronization.
-FkNode* createNode(FkContext *context, FkNode* parent=0, void *userData=0, FkNodeID id=0);
-
-// FkNode IDs are useful for serialization
-FkNodeID getID(const FkNode *node);
-FkNode *getNode(FkContext *context, FkNodeID id);
+FkNode* createNode(FkContext *context, FkNode* parent=0, void *userData=0);
 
 void destroy(FkNode* node);
 
@@ -127,8 +122,6 @@ public:
 	operator FkNode*() { return node; }
 	operator bool() const { return node != 0; }
 
-	FkNodeID id() const { return getID(node); }
-
 	void setParent(FkNodeRef parent=0) { ::setParent(node, parent); }
 	void reparent(FkNodeRef parent=0) { ::reparent(node, parent); }
 	void detachChildren(bool preserveTransforms=false) { ::detachChildren(node, preserveTransforms); }
@@ -153,10 +146,12 @@ public:
 	vec2 right() const { return fkLocal(node).u; }
 	vec2 up() const { return fkLocal(node).v; }
 	const AffineMatrix& world() const { return fkWorld(node); }
+	const AffineMatrix* cachedTransform() const { return fkCachedTransform(node); }
 
 	template<typename T>
 	T *data() const { return (T*) fkUserData(node); }
 
+	void destroy() { ::destroy(node); }
 };
 
 

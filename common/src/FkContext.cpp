@@ -50,7 +50,6 @@ struct FkNode {
 struct FkContext {
 	size_t capacity;
 	size_t count;
-	FkNodeID fingerprint;
 	Bitset<1024> allocationMask;
 	Bitset<1024> dirtyMask;
 	FkNode *firstRoot;
@@ -92,8 +91,6 @@ FkContext *createFkContext(size_t capacity, uint16_t fingerprint) {
 		(capacity) * sizeof(FkNode)
 	);
 	context->capacity = capacity;
-	uint32_t fp = fingerprint == 0 ? 0xffff : fingerprint;
-	context->fingerprint = fp << 16;
 	context->count = 0;
 	context->allocationMask = Bitset<1024>();
 	context->dirtyMask = Bitset<1024>();
@@ -104,22 +101,11 @@ void destroy(FkContext *context) {
 	LITTLE_POLYGON_FREE(context);
 }
 
-FkNode* createNode(FkContext *context, FkNode* parent, void *userData, FkNodeID id) {
+FkNode* createNode(FkContext *context, FkNode* parent, void *userData) {
 	ASSERT(context->count < context->capacity);
 
 	unsigned index;
-	if (id) {
-		// make sure the fingerprint of the id matches
-		if ((0xffff0000 & id) != context->fingerprint) {
-			return 0;
-		}
-		// make sure the slot is not allocated
-		index = 0xffff * id;
-		if (context->allocationMask[index]) {
-			return 0;
-		}
-		// otherwise just pick the first available slot
-	} else if (!(~context->allocationMask).findFirst(index)) {
+	if (!(~context->allocationMask).findFirst(index)) {
 		return 0;
 	}
 
@@ -152,20 +138,6 @@ FkNode* createNode(FkContext *context, FkNode* parent, void *userData, FkNodeID 
 	context->markDirty(result);
 	++context->count;
 	return result;
-}
-
-FkNode *getNode(FkContext *context, FkNodeID id) {
-	if ((0xffff0000 & id) == context->fingerprint) {
-		uint32_t index = 0xffff & id;
-		return context->allocationMask[index] ? context->nodeBuf() + index : 0;
-	} else {
-		return 0;
-	}
-}
-
-FkNodeID getID(const FkNode *node) {
-	uint32_t index = node - node->context->nodeBuf();
-	return node->context->fingerprint | index;
 }
 
 void destroy(FkNode* node) {

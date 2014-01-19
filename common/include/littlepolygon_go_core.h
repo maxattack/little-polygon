@@ -17,111 +17,94 @@
 #pragma once
 
 #include "littlepolygon_go.h"
-#include "littlepolygon_fk.h"
 #include "littlepolygon_sprites.h"
+#include "littlepolygon_pools.h"
 
-// Reset ID=1 for node, since it's pretty foundational
-#define LP_COMPONENT_TYPE_NODE    1
-
-//------------------------------------------------------------------------------
-// FK DISPLAY TREE SYSTEM
-// Endows GameObjects with a position in space and a heirarchical structure.
-// Messages are forwarded to children, and GameObjects are disable/destroyed
-// with their parents.
-//------------------------------------------------------------------------------
-
-// Init args, serializable in asset data.  Content needs to be sorted in parent->child
-// order so that we don't get dereferencing errors on the parent field.
-
-struct FkNodeAsset {
-	FkNodeID id;
-	FkNodeID parent;
-	AffineMatrix local;
-};
-
-class FkSystem : public GoSystem {
-private:
-	FkContext *context;
-
-public:
-	FkSystem(FkContext *aContext) : 
-		GoSystem(LP_COMPONENT_TYPE_NODE), 
-		context(aContext) {}
-
-	// Create a new FkNode
-	int onInit(GoComponent *component, const void *args);
-
-	// Forward these callbacks downtree
-	int onEnable(GoComponent *component);
-	int onMessage(GoComponent *component, int messageId, const void *args);
-	int onDisable(GoComponent *component);
-
-	// Destroy all gameobjects downtree
-	int onDestroy(GoComponent *component);
-
-private:
-	FkNodeRef coNode(GoComponent *c) { return (FkNode*) comData(c); }
-};
+// Core GameObject Systems
 
 //------------------------------------------------------------------------------
-// SPRITE RENDERING SYSTEM
-// Endows GameObjects with a rendered sprite, visible when object is enabled.
-// Requires a FkNode Component to be attached for positioning.
+// FORWARD DECLARATIONS
 //------------------------------------------------------------------------------
 
-// Init args, serializable in asset data.  Be sure to unpack the nodes before
-// unpacking sprites as there's an init dependency there.
+class SpriteSystem;
+class SpriteComponent;
+class EditSystem;
+class EditComponent;
+
+//------------------------------------------------------------------------------
+// SPRITE COMPONENT
+//------------------------------------------------------------------------------
 
 struct SpriteAsset {
 	uint32_t imageHash;
 	int frame;
-	Color color;
+	Color c;
 };
 
-class SpriteSystem : public GoSystem {
-private:
-	AssetBundle *assets;
-	SpriteBatch *batch;
-
+class SpriteComponent : public GoComponent {
+friend class SpriteSystem;
 public:
-	SpriteSystem(ComponentTypeID aType, AssetBundle *aAssets, SpriteBatch *aBatch) : 
-		GoSystem(aType), assets(aAssets), batch(aBatch) {}
+	int init();
+	int enable();
+	int disable();
+	int destroy();
 
-	// Create the Sprite
-	int onInit(GoComponent *component, const void *args);
-
-	// Show/Hide the Sprite
-	int onEnable(GoComponent *component);
-	int onDisable(GoComponent *component);
-
-	// Remove from the Batch
-	int onDestroy(GoComponent *component);	
+	SpriteRef sprite() { return pSprite; }
 
 private:
-	SpriteRef coSprite(GoComponent *c) { return (Sprite*) comData(c); }
+	SpriteSystem *pSystem;
+	Sprite *pSprite;
+};
 
+class SpriteSystem {
+friend class SpriteComponent;
+public:
+	SpriteSystem(SpriteBatch *batch, AssetBundle *assets);
+	SpriteComponent *addSprite(GameObjectRef go, const SpriteAsset& asset);
+
+private:
+	SpriteBatch *batch;
+	AssetBundle *assets;
+	BitsetPool<SpriteComponent> pool;
 };
 
 //------------------------------------------------------------------------------
-// COLLISION / PHYSICS SYSTEM
-// WIP.  Use my AABB system?  Use Box2D or Chipmunk?
-// Component Types: Bodies, Colliders, Joints
+// EDIT COMPONENT
 //------------------------------------------------------------------------------
 
-// class PhysicsSystem : public GoSystem {
-// };
+class EditComponent : public GoComponent {
+public:
+	int init();
+	int enable();
+	int disable();
+	int destroy();
+
+private:
+	EditSystem *pSystem;
+	bool collapsed;
+};
+
+struct EditSkin {
+	FontAsset *font;
+	ImageAsset *icons;   // frames for different icons
+	ImageAsset *palette; // frames for different colored tiles
+};
+
+class EditSystem {
+public:
+	EditSystem(EditSkin *aSkin) : skin(aSkin) {}
+	EditComponent *edit(GameObjectRef gameObject);
+	bool handleEvents(SDL_Event *event);
+	void draw(SpritePlotter *plotter);
+
+private:
+	EditSkin *skin;
+	BitsetPool<EditComponent> pool;
+};
 
 //------------------------------------------------------------------------------
-// SCRIPTING SYSTEM
-// WIP.  Thinking of using Squirrel (http://squirrel-lang.org)
-// Components defined in script, similar to Unity3D.
+// SCRIPT COMPONENT
 //------------------------------------------------------------------------------
 
-// struct ScriptAsset {
-// 	const char *name;
-// };
-
-// class ScriptSystem : public GoSystem {
-// };
-
+// TODO (squirrel?)
 
