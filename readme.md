@@ -43,7 +43,7 @@ Modules
 * littlepolygon_fk - portable forward-kinematic display tree
 * littlepolygon_graphics - efficient spline and vector renderers
 * littlepolygon_math - common geometry stuff
-* littlepolygon_physics - bindings to between box2f and littlepolygon_fk
+* littlepolygon_physics - async bindings to between box2d and littlepolygon_fk
 * littlepolygon_pools - a few common object-pool templates
 * littlepolygon_sprites - batching sprite renderer
 
