@@ -16,23 +16,9 @@
 
 #pragma once
 
-#include "littlepolygon_go.h"
-#include "littlepolygon_pools.h"
 #include <Box2D/Box2D.h>
-
-class BodyComponent : GoComponent {
-public:
-	b2Body body() { return pBody; }
-
-	int init();
-	int enable();
-	int disable();
-	int destroy();
-
-private:
-	PhysicsSystem *physics;
-	b2Body *pBody;
-};
+#include "littlepolygon_fk.h"
+#include "littlepolygon_pools.h"
 
 class PhysicsSystem {
 public:
@@ -45,8 +31,14 @@ public:
 	PhysicsSystem(b2World *aWorld, const AffineMatrix &aPhysicsToDisplay) : 
 		world(aWorld), physicsToDisplay(aPhysicsToDisplay) {}
 
-	// Create a new body and set it's userdata back-pointer to the component.
-	BodyComponent *addBody(GameObjectRef go, const b2BodyDef& params);
+	// Adds the body to the processing buffer and set's it's userData pointer
+	// to the given node.  Returns null if the userData reference is already
+	// in use
+	int addBody(FkNodeRef node, b2Body* body);
+
+	// removes this body from the processing buffer and releases it's userdata
+	// reference
+	int removeBody(b2Body *body);
 
 	// b2Body transforms are copied to the FK heirarchy using setWorld(), so
 	// it's generally best to attach physics bodies to root nodes.  Node xforms
@@ -57,8 +49,7 @@ public:
 private:
 
 	AffineMatrix physicsToDisplay;
-	b2World *world;
-	BitsetPool<BodyComponent> pool;
+	CompactPool<b2Body*> bindings;
 };
 
 // TODO: Collider components?

@@ -35,25 +35,25 @@ int main(int argc, char *argv[]) {
 	auto nodes = createFkContext();
 	auto tree = new SplineTree(nodes);
 
-	FkNodeRef root = createNode(nodes);
-	FkNodeRef rotor = createNode(nodes, root);
-	FkNodeRef rotor2 = createNode(nodes, root);
-	FkNodeRef rotor2a = createNode(nodes, rotor2);
+	FkNodeRef root = createNode(nodes, 0, (void*)"root");
+	FkNodeRef rotor = createNode(nodes, root, (void*)"rotor");
+	FkNodeRef rotor2 = createNode(nodes, root, (void*)"rotor2");
+	FkNodeRef rotor2a = createNode(nodes, rotor2, (void*)"rotor2a");
 	rotor2a.setPosition(80, 0);
 
-	FkNodeRef n0 = createNode(nodes, rotor);
+	FkNodeRef n0 = createNode(nodes, rotor, (void*)"n0");
 	n0.setPosition(300, 0);
 	n0.setAttitude(10, 500);
 
-	FkNodeRef n1 = createNode(nodes, rotor);
+	FkNodeRef n1 = createNode(nodes, rotor, (void*)"n1");
 	n1.setPosition(-300, 0);
 	n1.setAttitude(10, 500);
 
-	FkNodeRef n2 = createNode(nodes, rotor2a);
+	FkNodeRef n2 = createNode(nodes, rotor2a, (void*)"n2");
 	n2.setPosition(0, -200);
 	n2.setAttitude(-600, -100);
 
-	FkNodeRef n3 = createNode(nodes, rotor2a);
+	FkNodeRef n3 = createNode(nodes, rotor2a, (void*)"n3");
 	n3.setPosition(0, 200);
 	n3.setAttitude(-500, 100);
 

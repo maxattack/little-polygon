@@ -16,58 +16,37 @@
 
 #pragma once
 
-#include "littlepolygon_go.h"
-#include "littlepolygon_sprites.h"
+#include <littlepolygon_go_core.h>
+#include <littlepolygon_pools.h>
 
-
-// Extent Core systems with Go Bindsings
-
-struct SpriteAsset {
-	uint32_t image;
-	int frame;
-	Color color;
-	int layer;
+struct EditComponent {
+	bool expanded;
 };
 
-class SpriteComponentType : public GoComponentType {
-public:
+struct EditSkin {
+	FontAsset *font;
+	ImageAsset *icons;
+	ImageAsset *palette;
+};
 
-	SpriteComponentType(SpriteBatch *aBatch, AssetBundle *aAssets) : 
-		batch(aBatch), assets(aAssets) {}
+class EditSystem : GoComponentType {
+public:
+	EditSystem(GoContext *aContext, const EditSkin& aSkin) : 
+		context(aContext), skin(aSkin) {}
+	virtual ~EditSystem() {}
 
 	int init(GoComponent* component, const void *args=0);
 	int enable(GoComponent* component);
 	int disable(GoComponent* component);
 	int release(GoComponent* component);
 
+	bool handleEvents(SDL_Event *event);
+	void draw(SpritePlotter *batch);
+
 private:
-	SpriteBatch *batch;
-	AssetBundle *assets;
+	GoContext *context;
+	EditSkin skin;
+	FreelistPool<EditComponent> pool;
+
+	EditComponent *getEditor(GameObjectRef go);
 };
-
-struct GoCore {
-	AssetBundle *assets;
-	FkContext *nodes;
-	SpritePlotter *plotter;
-	SpriteBatch *batch;
-	GoContext *go;
-	SpriteComponentType spriteComponent;
-
-	GoCore(const char *assetPath) : 
-		assets(createAssetBundle(assetPath)),
-		nodes(createFkContext()),
-		plotter(createSpritePlotter()),
-		batch(createSpriteBatch()),
-		go(createGoContext(nodes)),
-		spriteComponent(batch, assets) 
-		{}
-
-	~GoCore() {
-		destroy(go);
-		destroy(batch);
-		destroy(plotter);
-		destroy(nodes);
-		destroy(assets);		
-	}
-};
-

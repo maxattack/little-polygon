@@ -26,6 +26,10 @@
 // When used with a GameObject the userData pointer is reserved by the
 // system.
 
+#ifndef FK_CAPACITY
+#define FK_CAPACITY 1024
+#endif
+
 struct FkContext;
 struct FkNode;
 
@@ -42,7 +46,7 @@ struct FkNode;
 // Create a context.  Different contexts can be allocated withing a single
 // application, but FkNode*s from different contexts cannot directly
 // interact.
-FkContext *createFkContext(size_t nodeCapacity=1024, uint16_t fingerprint=0);
+FkContext *createFkContext();
 void destroy(FkContext *context);
 
 // Create a new node whose localToParent transform is initialized to
@@ -86,6 +90,7 @@ void setUserData(FkNode* node, void *userData);
 FkContext *fkContext(const FkNode *node);
 FkNode* fkParent(const FkNode* node);
 void* fkUserData(const FkNode* node);
+int fkLevel(const FkNode *node);
 const AffineMatrix& fkLocal(const FkNode* node);
 const AffineMatrix& fkWorld(FkNode* node);
 
@@ -141,6 +146,7 @@ public:
 
 	FkContext *context() const { return fkContext(node); }
 	FkNodeRef parent() const { return fkParent(node); }
+	int level() const { return fkLevel(node); }
 	const AffineMatrix& local() const { return fkLocal(node); }
 	vec2 position() const { return fkLocal(node).t; }
 	vec2 right() const { return fkLocal(node).u; }
@@ -199,4 +205,27 @@ struct FkSubtreeIterator {
 	FkNodeRef ref() { return current; }
 	void next();
 };
+
+// all nodes, in inverse-DAG order
+struct FkInvTreeIterator {
+	FkNode *current;
+
+	FkInvTreeIterator(const FkContext *context);
+	bool finished() const { return current == 0; }
+	FkNodeRef ref() { return current; }
+	void next();	
+};
+
+// subtree, inverse-DAG order
+struct FkInvSubtreeIterator {
+	const FkNode *parent;
+	FkNode *current;
+	
+	FkInvSubtreeIterator(const FkNode *parent);
+	bool finished() const { return current == 0; }
+	FkNodeRef ref() { return current; }
+	void next();
+};
+
+
 

@@ -48,49 +48,37 @@ struct FkNode {
 };
 
 struct FkContext {
-	size_t capacity;
 	size_t count;
-	Bitset<1024> allocationMask;
-	Bitset<1024> dirtyMask;
-	FkNode *firstRoot;
-	
-	FkNode first;
-
-	inline FkNode *nodeBuf() { return &first; }
+	Bitset<FK_CAPACITY> allocationMask;
+	Bitset<FK_CAPACITY> dirtyMask;
+	FkNode *firstRoot;	
+	FkNode nodebuf[FK_CAPACITY];
 
 	bool allocated(FkNode *node) {
 		ASSERT(node->context == this);
-		return allocationMask[node - nodeBuf()];
+		return allocationMask[node - nodebuf];
 	}
 
 	bool dirty(FkNode *node) {
 		ASSERT(node->context == this);
-		return dirtyMask[node - nodeBuf()];
+		return dirtyMask[node - nodebuf];
 	}
 
 	void markDirty(FkNode *node) {
 		ASSERT(node->context == this);
-		return dirtyMask.mark(node - nodeBuf());
+		return dirtyMask.mark(node - nodebuf);
 	}
 
 	void clearDirty(FkNode *node) {
 		ASSERT(node->context == this);
-		return dirtyMask.clear(node - nodeBuf());
+		return dirtyMask.clear(node - nodebuf);
 	}
 
 };
 
-FkContext *createFkContext(size_t capacity, uint16_t fingerprint) {
-	// in case we wanna use a Bitset<1024> at some point
-	ASSERT(capacity <= 1024); 
-
+FkContext *createFkContext() {
 	// allocate memory
-	auto context = (FkContext*) LITTLE_POLYGON_MALLOC(
-		sizeof(FkContext) + 
-		(capacity-1) * sizeof(AffineMatrix) + 
-		(capacity) * sizeof(FkNode)
-	);
-	context->capacity = capacity;
+	auto context = (FkContext*) LITTLE_POLYGON_MALLOC(sizeof(FkContext));
 	context->count = 0;
 	context->allocationMask = Bitset<1024>();
 	context->dirtyMask = Bitset<1024>();
@@ -102,7 +90,7 @@ void destroy(FkContext *context) {
 }
 
 FkNode* createNode(FkContext *context, FkNode* parent, void *userData) {
-	ASSERT(context->count < context->capacity);
+	ASSERT(context->count < FK_CAPACITY);
 
 	unsigned index;
 	if (!(~context->allocationMask).findFirst(index)) {
@@ -110,7 +98,7 @@ FkNode* createNode(FkContext *context, FkNode* parent, void *userData) {
 	}
 
 	context->allocationMask.mark(index);
-	auto result = context->nodeBuf() + index;
+	auto result = context->nodebuf + index;
 
 	// intialize fields
 	result->context = context;
@@ -140,21 +128,35 @@ FkNode* createNode(FkContext *context, FkNode* parent, void *userData) {
 	return result;
 }
 
+static void doDestroy(FkNode *node) {
+	
+	// unlink
+	if (node->nextSibling) { node->nextSibling->prevSibling = node->prevSibling; }
+	if (node->prevSibling) { node->prevSibling->nextSibling = node->nextSibling; }
+	if (node->parent) {
+		if (node == node->parent->firstChild) { node->parent->firstChild = node->nextSibling; }
+	} else {
+		if (node->context->firstRoot == node) { node->context->firstRoot = node->nextSibling; }
+	}
+
+	// update context
+	node->context->allocationMask.clear(node - node->context->nodebuf);
+	node->context->dirtyMask.clear(node - node->context->nodebuf);
+	--node->context->count;	
+	
+}
+
 void destroy(FkNode* node) {
-	auto context = node->context;
 
-	// kill children
-	while (node->firstChild) {
-		destroy(node->firstChild);
-	}	
+	// kill children bottom->up (no recursive functions)
+	FkInvSubtreeIterator iter(node);
+	while(!iter.finished()) {
+		auto child = iter.current;
+		iter.next();
+		doDestroy(child);
+	}
 
-	// remove from parent
-	setParent(node, 0);
-
-	// prepend to free list
-	context->allocationMask.clear(node - context->nodeBuf());
-	context->dirtyMask.clear(node - context->nodeBuf());
-	--context->count;
+	doDestroy(node);
 }
 
 void setParent(FkNode* child, FkNode* parent) {
@@ -338,6 +340,15 @@ void* fkUserData(const FkNode* node) {
 	return node->userData;
 }
 
+int fkLevel(const FkNode *node) {
+	int level = 0;
+	while(node->parent) {
+		++level;
+		node = node->parent;
+	}
+	return level;
+}
+
 const AffineMatrix& fkLocal(const FkNode* node) {
 	return node->local;
 }
@@ -405,6 +416,7 @@ current(context->firstRoot) {
 }
 
 void FkTreeIterator::next() {
+	// first check children, then next siblings, then parents->nextSibling
 	if (current->firstChild) {
 		current = current->firstChild;
 	} else if (current->nextSibling) {
@@ -434,3 +446,53 @@ void FkSubtreeIterator::next() {
 	}
 }
 
+static FkNode *drillDown(FkNode *current) {
+	while(current->nextSibling || current->firstChild) {
+		if (current->nextSibling) {
+			current = current->nextSibling;
+		} else if (current->firstChild) {
+			current = current->firstChild;
+		}
+	}
+	return current;	
+}
+
+FkInvTreeIterator::FkInvTreeIterator(const FkContext *context) {
+	// start by drilling down as deep as we can
+	current = drillDown(context->firstRoot);
+}
+
+void FkInvTreeIterator::next() {
+	// we essetentially do the opposite of what the tree
+	// iterator does:
+	// first check prevSibling's->children, then prevSiblings, then parents
+	if (current->prevSibling) {
+		current = current->prevSibling;
+		if (current->firstChild) {
+			current = drillDown(current->firstChild);
+		}
+	} else if (current->parent) {
+		current = current->parent;
+	} else {
+		current = 0;
+	}
+}
+
+
+FkInvSubtreeIterator::FkInvSubtreeIterator(const FkNode *aParent) : 
+parent(aParent) {
+	current = drillDown((FkNode*)parent);
+}
+
+void FkInvSubtreeIterator::next() {
+	if (current->prevSibling) {
+		current = current->prevSibling;
+		if (current->firstChild) {
+			current = drillDown(current->firstChild);
+		}
+	} else if (current->parent != parent) {
+		current = current->parent;
+	} else {
+		current = 0;
+	}
+}

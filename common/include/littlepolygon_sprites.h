@@ -30,6 +30,9 @@ struct SpritePlotter;
 SpritePlotter *createSpritePlotter(int capacity=64);
 void destroy(SpritePlotter *context);
 
+vec2 canvasSize(SpritePlotter *context);
+vec2 canvasScroll(SpritePlotter *context);
+
 // Call this method to initialize the graphics context state.  Coordinates are
 // set to a orthogonal projection matrix, and some basic settings like blending are
 // enabled.  Any additional state changes can be set *after* this function but *before*
@@ -46,6 +49,7 @@ void drawImageTransformed(SpritePlotter *context, ImageAsset *image, const Affin
 void drawImageTransformed(SpritePlotter *context, ImageAsset *image, const mat4f& xform, int frame=0, Color color=rgba(0));
 void drawImageRotated(SpritePlotter* context, ImageAsset *image, vec2 position, float radians, int frame=0, Color color=rgba(0));
 void drawImageScaled(SpritePlotter* context, ImageAsset *image, vec2 position, vec2 k, int frame=0, Color color=rgba(0));
+void drawQuad(SpritePlotter* context, ImageAsset *image, vec2 p0, vec2 p1, vec2 p2, vec2 p3, int frame=0, Color color=rgba(0));
 void drawLabel(SpritePlotter* context, FontAsset *font, vec2 p, Color c, const char *msg);
 void drawLabelCentered(SpritePlotter* context, FontAsset *font, vec2 p, Color c, const char *msg);
 void drawTilemap(SpritePlotter* context, TilemapAsset *map, vec2 position=vec(0,0));

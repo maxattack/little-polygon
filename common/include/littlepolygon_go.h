@@ -27,16 +27,37 @@
 
 // TL;DR - very simple, portable metadata.
 
-// No other systems depend on this module, however a utils package is available with
-// reference bindings for other little polygon systems (fk, sprites) which you can use
-// directly or reference.
+// GIFT IDEAS:
+//   - generic uint32_t mask for each GO?
+
+//------------------------------------------------------------------------------
+// TYPES
+//------------------------------------------------------------------------------
+
+#ifndef GO_CAPACITY
+#define GO_CAPACITY 1024
+#endif
 
 struct GoContext;
 struct GoComponent;
 struct GameObject;
 class GameObjectRef;
-typedef Bitset<1024> GoSet;
+class GoComponentRef;
+typedef Bitset<GO_CAPACITY> GoSet;
 typedef uint32_t GameObjectID;
+
+class GoComponentType {
+public:
+	virtual int init(GoComponent* component, const void *args=0) = 0;
+	virtual int enable(GoComponent* component) = 0;
+	virtual int message(GoComponent* component, int messageId, const void *args=0) { return 0; }
+	virtual int disable(GoComponent* component) = 0;
+	virtual int release(GoComponent* component) = 0;
+};
+
+//------------------------------------------------------------------------------
+// HELPERS
+//------------------------------------------------------------------------------
 
 #define GOSTATUS_OK 0
 #if DEBUG
@@ -45,37 +66,6 @@ typedef uint32_t GameObjectID;
 #define GOSTATUS_CHECK(_expr)
 #endif
 
-
-struct GoComponent {
-	// the game object we're attached to
-	// (undefined until init)
-	GameObject *go;
-
-	// components are attached using an intrusive linked-list
-	// (undefined until init)
-	GoComponent *prev;
-	GoComponent *next;
-
-	// convenience getter
-	inline GameObjectRef gameObject();
-
-	// called after a component is attached to a GameObject
-	virtual int init() = 0;
-
-	// called when a gameObject is enabled, or immediately after
-	// begin attached to an active gameObject.
-	virtual int enable() = 0;
-
-	// Generic message handler
-	virtual int message(int messageId, const void *args) { return 0; }
-
-	// called when a gameObject is disabled.
-	virtual int disable() = 0;
-
-	// called when a gameObject is destroyed.
-	virtual int destroy() = 0;
-};
-
 //------------------------------------------------------------------------------
 // GO CONTEXT
 //------------------------------------------------------------------------------
@@ -83,8 +73,10 @@ struct GoComponent {
 // You can create multiple contexts, e.g. for handling different rooms or 
 // orthogonal views (e.g. HUD vs Scene), and synchronizing different remote
 // network contexts.  Contexts can share systems.
-GoContext *createGoContext(FkContext *fkContext, size_t capacity);
+GoContext *createGoContext(FkContext *fkContext, size_t coCapacity=4096);
 void destroy(GoContext *context);
+
+FkContext *fkContext(GoContext *context);
 
 GameObject *find(GoContext *context, GameObjectID gid);
 GameObject* find(GoContext *context, const char *name);
@@ -96,9 +88,7 @@ GameObject* find(GoContext *context, const char *name);
 // Explicit IDs are useful for deserialization and network syncronization.  Passing
 // 0 will just generate a new one.  IDs may conflict, which will cause this method to
 // fail.  Passing 1-N to a fresh context should work OK.
-GameObject* createGameObject(GoContext *context, const char* name=0, GameObjectID explicitId=0);
-
-// Destroying a GO also nukes all the components that are logically attached to it.
+GameObject* addGameObject(GoContext *context, const char* name="", GameObjectID explicitId=0);
 void destroy(GameObject *go);
 
 // Getters
@@ -106,6 +96,8 @@ GoContext *goContext(const GameObject *go);
 bool goEnabled(const GameObject *go);
 const char* goName(const GameObject *go);
 FkNode* goNode(const GameObject *go);
+GoComponent* goComponent(GameObject *go, GoComponentType* type);
+GameObject *goFromNode(FkNode *node);
 
 // Methods
 int enable(GameObject *go);
@@ -119,13 +111,42 @@ int sendMessage(GameObject *go, int messageId, const void *args=0);
 // Attach a component to the given game object, initialized with the given data.  CID 
 // corresponds to the index of the component message handler that the context was
 // intialized with.
-void addComponent(GameObject *go, GoComponent *component);
-GoComponent *firstComponent(GameObject *go);
+GoComponent* addComponent(GameObject *go, GoComponentType* type, const void* args=0);
 void destroy(GoComponent *component);
+
+// Methods
+GoComponentType* coType(GoComponent *component);
+void* coHandle(GoComponent *component);
+GameObject* coObject(GoComponent *component);
+
+void setHandle(GoComponent *component, void *handle);
+
+//------------------------------------------------------------------------------
+// ITERATORS
+//------------------------------------------------------------------------------
+
+// Iterates over all game objects
+struct GoIterator {
+	GameObject *current;
+	GoSet::iterator internal;
+
+	GoIterator(GoContext *context);
+	bool finished() const { return current == 0; }	
+	void next();
+};
+
+// Iterates over all components of a given game object
+struct GoComponentIterator {
+	GoComponent *current;
+
+	GoComponentIterator(GameObject *go);
+	bool finished() const { return current == 0; }
+	void next();
+};
 
 
 //------------------------------------------------------------------------------
-// C++ Interface
+// More Idomatic C++ Interface
 //------------------------------------------------------------------------------
 
 class GameObjectRef {
@@ -136,7 +157,7 @@ public:
 	GameObjectRef() {}
 	GameObjectRef(GameObject *aGo) : go(aGo) {}
 
-	operator GameObject*() { return go; }
+	operator GameObject*&() { return go; }
 	operator bool() const { return go != 0; }
 
 	GoContext *context() const { return goContext(go); }
@@ -147,39 +168,46 @@ public:
 	int disable() { return ::disable(go); }
 	int sendMessage(int msg, const void *args) { return ::sendMessage(go, msg, args); }
 
-	inline void addComponent(GoComponent *component) { ::addComponent(go, component); }
+	inline GoComponentRef addComponent(GoComponentType *type);
+
+	template<typename T>
+	inline GoComponentRef addComponent(GoComponentType *type, T* args);
+
+	inline GoComponentRef getComponent(GoComponentType *type);
 
 	FkNodeRef node() { return goNode(go); }
 
-	// lookup a component by type.  Returns the first match.  For an exhaustive search
-	// (in the event of multiple components of the same type), use the component iterator
+	void destroy() { ::destroy(go); go = 0; }
+};
+
+class GoComponentRef {
+private:
+	GoComponent *component;
+
+public:
+	GoComponentRef() {}
+	GoComponentRef(GoComponent *aComponent) : component(aComponent) {}
+
+	operator GoComponent*&() { return component; }
+	operator bool() const { return component != 0; }
+
+	GoComponentType* type() { return coType(component); }
+	GameObjectRef gameObject() { return coObject(component); }
+
 	template<typename T>
-	T *getComponent() {
-		for(GoComponent *p=firstComponent(go); p; p=p->next) {
-			T *result = dynamic_cast<T*>(p);
-			if (result) { 
-				return result; 
-			}
-		}
-		return 0;
-	}
+	T* get() { return (T*)coHandle(component); }
 
-	void destroy() { ::destroy(go); }
+	template<typename T>
+	void set(T* handle) { setHandle(component, (void*)handle); }
+
+	void destroy() { ::destroy(component); component=0; }
 };
 
-inline GameObjectRef GoComponent::gameObject() { return go; }
+inline GoComponentRef GameObjectRef::addComponent(GoComponentType *type) { return ::addComponent(go, type); }
+inline GoComponentRef GameObjectRef::getComponent(GoComponentType *type) { return ::goComponent(go, type); }
 
-//------------------------------------------------------------------------------
-// ITERATORS
-//------------------------------------------------------------------------------
+template<typename T>
+inline GoComponentRef GameObjectRef::addComponent(GoComponentType *type, T* args) {
+	return ::addComponent(go, type, (const void*) args);
+}
 
-struct GoIterator {
-	GameObject *current;
-	GoSet::iterator internal;
-
-	GoIterator(GoContext *context);
-	bool finished() const { return current == 0; }
-	GameObjectRef ref() { return current; }
-	
-	void next();
-};

@@ -16,32 +16,34 @@
 
 #include "littlepolygon_go_core.h"
 
-// SpriteComponent *SpriteSystem::addSprite(GameObjectRef gameObject, SpriteRef sprite) {
-// 	auto result = pool.alloc();
-// 	result->pSystem = this;
-// 	result->pSprite = sprite;
-// 	gameObject.addComponent(result);
-// 	return result;
-// }
+int SpriteComponentType::init(GoComponent* component, const void *args) {
+	auto *asset = (const SpriteAsset*) args;
+	auto sprite = createSprite(
+		batch, 
+		asset ? assets->image(asset->image) : 0,
+		fkCachedTransform(goNode(coObject(component))),
+		asset ? asset->frame : 0,
+		asset ? asset->color : rgba(0),
+		0,
+		asset ? asset->layer : 0,
+		(void*) component
+	);
+	if (!sprite) { return -1; }
+	setHandle(component, sprite);
+	return GOSTATUS_OK;
+}
 
-// int SpriteComponent::init() {
-// 	sprite().setTransform(gameObject().node().cachedTransform());
-// 	sprite().setVisible(0);
-// 	return GOSTATUS_OK;
-// }
+int SpriteComponentType::enable(GoComponent* component) {
+	setVisible((Sprite*) coHandle(component), 1);
+	return GOSTATUS_OK;
+}
 
-// int SpriteComponent::enable() {
-// 	sprite().setVisible(1);
-// 	return GOSTATUS_OK;
-// }
+int SpriteComponentType::disable(GoComponent* component) {
+	setVisible((Sprite*) coHandle(component), 0);
+	return GOSTATUS_OK;
+}
 
-// int SpriteComponent::disable() {
-// 	sprite().setVisible(0);
-// 	return GOSTATUS_OK;
-// }
-
-// int SpriteComponent::destroy() {
-// 	sprite().destroy();
-// 	pSystem->pool.release(this);
-// 	return GOSTATUS_OK;
-// }
+int SpriteComponentType::release(GoComponent* component) {
+	destroy((Sprite*)coHandle(component));
+	return GOSTATUS_OK;
+}

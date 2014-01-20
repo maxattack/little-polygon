@@ -22,10 +22,10 @@
 // Several different common/simple object pools that index into a linear
 // array of preallocated slots:
 //
-// * FreelistPool - Store unoccupied slots in a linked-list
+// * FreelistPool - Store unoccupied slots in a linked-list (no iteration)
 // * BitsetPool - Store a bitvector which identifies unoccuped slots (allows iteration)
 // * CompactPool - Use slots [0:count), swap-with last on release (fast iteration)
-//                 (only useable for "anonymous" objects, like particles)
+//                 (only useable for "anonymous" objects, like particles or bullets)
 //
 
 
@@ -135,6 +135,15 @@ public:
 		--count;
 		if (slot != slots+count) {
 			*slot = slots[count];
+		}
+	}
+
+	void releaseValue(T value) {
+		for(int i=0; i<count; ++i) {
+			if (slots[i] == value) {
+				release(slots + i);
+				return;
+			}
 		}
 	}
 

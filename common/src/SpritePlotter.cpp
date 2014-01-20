@@ -155,6 +155,14 @@ void destroy(SpritePlotter *context) {
 	dealloc(context);
 }
 
+vec2 canvasSize(SpritePlotter *context) {
+	return context->canvasSize;
+}
+
+vec2 canvasScroll(SpritePlotter *context) {
+	return context->canvasScroll;
+}
+
 void begin(SpritePlotter* context, vec2 aCanvasSize, vec2 aCanvasOffset) {
 	ASSERT(context->count == -1);
 	context->count = 0;
@@ -276,6 +284,19 @@ void drawImageScaled(SpritePlotter* context, ImageAsset *img, vec2 pos, vec2 k, 
 	++context->count;	
 }
 
+void drawQuad(SpritePlotter* context, ImageAsset *img, vec2 p0, vec2 p1, vec2 p2, vec2 p3, int frame, Color c) {
+	ASSERT(context->count >= 0);
+	setTextureAtlas(context, img->texture);
+	SpritePlotter::Vertex *slice = context->nextSlice();
+	FrameAsset *fr = img->frame(frame);
+
+	slice[0].set(p0, vec(fr->u0, fr->v0), c);
+	slice[1].set(p1, vec(fr->u1, fr->v1), c);
+	slice[2].set(p2, vec(fr->u2, fr->v2), c);
+	slice[3].set(p3, vec(fr->u3, fr->v3), c);
+
+	++context->count;	
+}
 
 #define UV_LABEL_SLOP (0.0001f)
 
