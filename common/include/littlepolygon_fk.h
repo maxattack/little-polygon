@@ -26,10 +26,6 @@
 // When used with a GameObject the userData pointer is reserved by the
 // system.
 
-#ifndef FK_CAPACITY
-#define FK_CAPACITY 1024
-#endif
-
 struct FkContext;
 struct FkNode;
 
@@ -46,7 +42,7 @@ struct FkNode;
 // Create a context.  Different contexts can be allocated withing a single
 // application, but FkNode*s from different contexts cannot directly
 // interact.
-FkContext *createFkContext();
+FkContext *createFkContext(size_t capacity=1024);
 void destroy(FkContext *context);
 
 // Create a new node whose localToParent transform is initialized to

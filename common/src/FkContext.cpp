@@ -31,7 +31,7 @@
 //      whole would could be balanced and amortized.
 // (iii) no cache - just write out to a world-buffer on-demand before other
 //       systems use the information.  All node getters would be completely
-//       on-demand.
+//       on-demand (separate FK tree for static stuff?)
 
 struct FkNode {
 	FkContext *context;
@@ -48,11 +48,12 @@ struct FkNode {
 };
 
 struct FkContext {
+	size_t capacity;
 	size_t count;
-	Bitset<FK_CAPACITY> allocationMask;
-	Bitset<FK_CAPACITY> dirtyMask;
+	Bitset<1024> allocationMask;
+	Bitset<1024> dirtyMask;
 	FkNode *firstRoot;	
-	FkNode nodebuf[FK_CAPACITY];
+	FkNode nodebuf[1];
 
 	bool allocated(FkNode *node) {
 		ASSERT(node->context == this);
@@ -76,9 +77,15 @@ struct FkContext {
 
 };
 
-FkContext *createFkContext() {
+FkContext *createFkContext(size_t capacity) {
+	ASSERT(capacity <= 1024); // because of the bitset mask
+
 	// allocate memory
-	auto context = (FkContext*) LITTLE_POLYGON_MALLOC(sizeof(FkContext));
+	auto context = (FkContext*) LITTLE_POLYGON_MALLOC(
+		sizeof(FkContext) + 
+		sizeof(FkNode) * (capacity-1)
+	);
+	context->capacity = capacity;
 	context->count = 0;
 	context->allocationMask = Bitset<1024>();
 	context->dirtyMask = Bitset<1024>();
@@ -90,7 +97,7 @@ void destroy(FkContext *context) {
 }
 
 FkNode* createNode(FkContext *context, FkNode* parent, void *userData) {
-	ASSERT(context->count < FK_CAPACITY);
+	ASSERT(context->count < context->capacity);
 
 	unsigned index;
 	if (!(~context->allocationMask).findFirst(index)) {
