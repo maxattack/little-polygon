@@ -20,7 +20,7 @@
 #include "littlepolygon_sprites.h"
 
 
-// Extent Core systems with Go Bindsings
+// GO bindings for "core" systems.
 
 struct SpriteAsset {
 	uint32_t image;
@@ -41,6 +41,7 @@ public:
 	int release(GoComponent* component);
 
 private:
+	
 	SpriteBatch *batch;
 	AssetBundle *assets;
 };
