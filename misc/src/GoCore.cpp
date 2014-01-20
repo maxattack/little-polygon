@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "littlepolygon_go_core.h"
+#include "littlepolygon_gocore.h"
 
 int SpriteComponentType::init(GoComponent* component, const void *args) {
 	auto *asset = (const SpriteAsset*) args;
