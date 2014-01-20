@@ -49,6 +49,7 @@ Modules
 
 Misc Modules (very WIP)
 * littlepolygon_go - an entity-component metadata system
+* littlepolgyon_gocore - go bindings for littlepolygon modules
 * littlepolygon_goedit - generic in-game editor based on go
 
 CODING STANDARDS
