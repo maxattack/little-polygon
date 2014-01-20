@@ -3,8 +3,6 @@ LIBRARY_OBJ_FILES =     \
 	obj/AssetBundle.o   \
 	obj/CirclePlotter.o \
 	obj/FkContext.o     \
-	obj/GoContext.o     \
-	obj/GoCore.o       \
 	obj/LinePlotter.o   \
 	obj/SampleAsset.o   \
 	obj/SplinePlotter.o \
@@ -16,7 +14,6 @@ LIBRARY_OBJ_FILES =     \
 
 PLATFORMER_OBJ_FILES =     \
 	obj/CollisionSystem.o  \
-	obj/EditSystem.o       \
 	obj/Environment.o      \
 	obj/Hero.o             \
 	obj/Kitten.o           \
