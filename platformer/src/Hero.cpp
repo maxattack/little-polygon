@@ -17,14 +17,9 @@ void Hero::init(AssetRef assets, SpriteBatchRef batch, CollisionSystemRef collis
 
 	auto pos = assets.userdata("hero.position")->as<vec2>() - vec(0,0.1f);
 	collider = collisions.addCollider(
-		aabb(
-			pos-vec(HALF_WIDTH, 2*HALF_HEIGHT),
-			pos+vec(HALF_WIDTH, 0)
-		), 
-		HERO_BIT, 
-		ENVIRONMENT_BIT, 
-		KITTEN_BIT, 
-		this
+		aabb(pos-vec(HALF_WIDTH, 2*HALF_HEIGHT),
+		     pos+vec(HALF_WIDTH, 0)), 
+		HERO_BIT, ENVIRONMENT_BIT, KITTEN_BIT, true, this
 	);
 	collider.setDelegate(&xform, vec(HALF_WIDTH, 2*HALF_HEIGHT));
 
