@@ -1,6 +1,6 @@
 #include "platformer.h"
 
-void Environment::init(AssetRef assets, CollisionSystem* collisions) {
+void Environment::init(AssetRef assets, CollisionSystemRef collisions) {
 
 	// lookup assets
 	tmap = assets.tilemap("test");
@@ -8,15 +8,15 @@ void Environment::init(AssetRef assets, CollisionSystem* collisions) {
 
 	// left/right walls
 	int th = int(CANVAS_HEIGHT * METERS_PER_PIXEL);
-	collisions->addCollider(aabb(-1,0,0,th));
-	collisions->addCollider(aabb(tmap->mw, 0, tmap->mw+1, th));
+	collisions.addCollider(aabb(-1,0,0,th));
+	collisions.addCollider(aabb(tmap->mw, 0, tmap->mw+1, th));
 
 	// content colliders
 	auto *cdata = assets.userdata("environment.colliders");
 	auto colliders = (AABB*) cdata->data();
 	auto ncolliders = cdata->size / sizeof(AABB);
 	for(int i=0; i<ncolliders; ++i) {
-		collisions->addCollider(colliders[i], ENVIRONMENT_BIT);
+		collisions.addCollider(colliders[i], ENVIRONMENT_BIT);
 	}
 
 }

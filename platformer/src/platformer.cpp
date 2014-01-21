@@ -54,7 +54,8 @@ int main(int argc, char *argv[]) {
 	// things with ctors
 	Timer timer;
 	PlayerInput input;
-	CollisionSystem* collisions = new CollisionSystem();
+	CollisionSystemRef collisions = createCollisionSystem();
+	collisions.setMetersToDisplay(PIXELS_PER_METER);
 
 	// scene entities
 	Environment environment;
@@ -77,7 +78,7 @@ int main(int argc, char *argv[]) {
 		// tick time
 		timer.tick();
 		handleEvents(input);
-		hero.tick(&input, collisions, timer.scaledDeltaTime);
+		hero.tick(&input, timer.scaledDeltaTime);
 		input.jumpPressed = false;
 
 		// render scene
@@ -92,7 +93,7 @@ int main(int argc, char *argv[]) {
 		if (input.drawWireframe) {
 			glDisable(GL_BLEND);
 			lines.begin(canvasSize, scrolling);
-			collisions->debugDraw(lines, rgb(0xffff00));
+			collisions.debugDraw(lines, rgb(0xffff00));
 			lines.end();
 			glEnable(GL_BLEND);
 		}
@@ -101,7 +102,7 @@ int main(int argc, char *argv[]) {
 		SDL_GL_SwapWindow(window);
 	}
 
-	delete collisions;
+	collisions.destroy();
 	lines.destroy();
 	spritePlotter.destroy();
 	batch.destroy();

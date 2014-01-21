@@ -2,6 +2,7 @@
 #include <littlepolygon_sprites.h>
 #include <littlepolygon_fk.h>
 #include <littlepolygon_utils.h>
+#include <littlepolygon_collisions.h>
 
 static void handleKeyDown(const SDL_KeyboardEvent& key, bool *outDone) {
 	switch(key.keysym.sym) {

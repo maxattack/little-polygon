@@ -9,11 +9,14 @@
 #define WALK_ANIM_RATE  5.0f
 #define REST_THRESHOLD  0.075f
 
-void Hero::init(AssetRef assets, SpriteBatchRef batch, CollisionSystem* collisions) {
+void Hero::init(AssetRef assets, SpriteBatchRef batch, CollisionSystemRef collisions) {
 	
 	// init physics
+	xform = affineIdentity();
+	speed = vec(0,0);
+
 	auto pos = assets.userdata("hero.position")->as<vec2>() - vec(0,0.1f);
-	collider = collisions->addCollider(
+	collider = collisions.addCollider(
 		aabb(
 			pos-vec(HALF_WIDTH, 2*HALF_HEIGHT),
 			pos+vec(HALF_WIDTH, 0)
@@ -23,12 +26,13 @@ void Hero::init(AssetRef assets, SpriteBatchRef batch, CollisionSystem* collisio
 		KITTEN_BIT, 
 		this
 	);
-	auto collision = collisions->move(collider, vec(0,0.2f));
-	speed = vec(0,0);
+	collider.setDelegate(&xform, vec(HALF_WIDTH, 2*HALF_HEIGHT));
+
+	// snap to ground
+	auto collision = collider.move(vec(0,0.2f));
 	grounded = collision.hitBottom;
 
 	// init fx
-	xform = affineTranslation(PIXELS_PER_METER * position());
 	sprite = batch.addSprite(assets.image("hero"), &xform);
 	framef = 0;
 
@@ -37,7 +41,7 @@ void Hero::init(AssetRef assets, SpriteBatchRef batch, CollisionSystem* collisio
 
 }
 
-void Hero::tick(PlayerInput* input, CollisionSystem* collisions, float dt) {
+void Hero::tick(PlayerInput* input, float dt) {
 
 	// jumping and freefall
 	if (grounded && input->jumpPressed) {
@@ -65,7 +69,7 @@ void Hero::tick(PlayerInput* input, CollisionSystem* collisions, float dt) {
 	}
 
 	// resolving collisions
-	auto result = collisions->move(collider, speed * dt);
+	auto result = collider.move(speed * dt);
 	bool wasGrounded = grounded;
 	if ((grounded = result.hitBottom)) {
 		speed.y = 0;
@@ -78,7 +82,6 @@ void Hero::tick(PlayerInput* input, CollisionSystem* collisions, float dt) {
 	if (result.hitHorizontal) {
 		speed.x = 0;
 	}
-	xform.t = PIXELS_PER_METER * position();
 
 	// Trigger events[8];
 	// int nTriggers = collisions->queryTriggers(collider, arraysize(events), events);

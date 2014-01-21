@@ -1,19 +1,19 @@
-LIBRARY_OBJ_FILES =     \
-	obj/glew.o          \
-	obj/AssetBundle.o   \
-	obj/CirclePlotter.o \
-	obj/FkContext.o     \
-	obj/LinePlotter.o   \
-	obj/SampleAsset.o   \
-	obj/SplinePlotter.o \
-	obj/SpriteBatch.o   \
-	obj/SpritePlotter.o \
-	obj/TextureAsset.o  \
-	obj/TilemapAsset.o  \
+LIBRARY_OBJ_FILES =        \
+	obj/glew.o             \
+	obj/AssetBundle.o      \
+	obj/CirclePlotter.o    \
+	obj/CollisionContext.o \
+	obj/FkContext.o        \
+	obj/LinePlotter.o      \
+	obj/SampleAsset.o      \
+	obj/SplinePlotter.o    \
+	obj/SpriteBatch.o      \
+	obj/SpritePlotter.o    \
+	obj/TextureAsset.o     \
+	obj/TilemapAsset.o     \
 	obj/utils.o         
 
 PLATFORMER_OBJ_FILES =     \
-	obj/CollisionSystem.o  \
 	obj/Environment.o      \
 	obj/Hero.o             \
 	obj/Kitten.o           \
@@ -55,8 +55,8 @@ CFLAGS += -arch i386
 AFLAGS = 32
 # AFLAGS = 64
 
-stest: bin/squids bin/squids.bin
-	bin/squids
+# stest: bin/squids bin/squids.bin
+# 	bin/squids
 
 test : bin/platformer bin/platformer.bin
 	cp platformer/assets/song.mid bin/song.mid

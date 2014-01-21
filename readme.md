@@ -40,6 +40,7 @@ Runtime Dependencies (native)
 Modules
 * littlepolygon_assets - a simple system for packaging and loading compressed game assets
 * littlepolygon_bitset - fast bitvector with intrinsic optimizations
+* littlepolygon_collisions - fast AABB collision hash
 * littlepolygon_fk - portable forward-kinematic display tree
 * littlepolygon_graphics - efficient spline and vector renderers
 * littlepolygon_math - common geometry stuff

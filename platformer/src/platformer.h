@@ -1,11 +1,14 @@
 #pragma once
 
-#include "CollisionSystem.h"
+#include <littlepolygon_collisions.h>
 #include <littlepolygon_sprites.h>
 #include <littlepolygon_utils.h>
 
 #define CANVAS_WIDTH   320
 #define CANVAS_HEIGHT  115
+
+#define PIXELS_PER_METER 16
+#define METERS_PER_PIXEL (1.0/16.0)
 
 #define ENVIRONMENT_BIT 0x00000001
 #define HERO_BIT        0x00000002
@@ -29,7 +32,7 @@ struct Environment {
 	ImageAsset *bg;
 	TilemapAsset *tmap;
 
-	void init(AssetRef assets, CollisionSystem* collisions);
+	void init(AssetRef assets, CollisionSystemRef collisions);
 	void draw(SpritePlotterRef plotter);
 
 };
@@ -37,13 +40,9 @@ struct Environment {
 struct Hero {
 
 	// physics parameters
-	Collider *collider;
+	ColliderRef collider;
 	vec2 speed;
 	bool grounded;
-
-	vec2 position() const {
-		return collider->box.bottomCenter();
-	}
 
 	// rendering parameters
 	AffineMatrix xform;
@@ -53,22 +52,18 @@ struct Hero {
 	SampleAsset *sfxJump;
 	SampleAsset *sfxFootfall;
 
-	void init(AssetRef assets, SpriteBatchRef batch, CollisionSystem* collisions);
-	void tick(PlayerInput* input, CollisionSystem* collisions, float dt);
+	void init(AssetRef assets, SpriteBatchRef batch, CollisionSystemRef collisions);
+	void tick(PlayerInput* input, float dt);
 };
 
 struct Kitten {
 
 	// physics parameters
-	Collider *collider;
-
-	vec2 position() const {
-		return collider->box.bottomCenter();
-	}
+	ColliderRef collider;
 
 	// rendering parameters
 	AffineMatrix xform;
 	SpriteRef sprite;
 
-	void init(AssetRef assets, SpriteBatchRef batch, CollisionSystem* collisions);
+	void init(AssetRef assets, SpriteBatchRef batch, CollisionSystemRef collisions);
 };
