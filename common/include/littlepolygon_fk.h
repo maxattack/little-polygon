@@ -63,7 +63,10 @@ public:
 	operator FkContext*() { return context; }
 	operator bool() const { return context != 0; }
 
-	FkNodeRef addNode(FkNode* parent=0, void *userData=0);
+	FkNodeRef addNode(void *userData=0);
+
+	template<typename T>
+	FkNodeRef addNode(T *data=0);
 
 	void cacheWorldTransforms();
 	void destroy();
@@ -83,6 +86,11 @@ public:
 
 	operator FkNode*() { return node; }
 	operator bool() const { return node != 0; }
+
+	FkNodeRef addNode(void *userData=0);
+
+	template<typename T>
+	FkNodeRef addNode(T *data=0) { return addNode((void*)data); }
 
 	void setParent(FkNodeRef parent=0);
 	void reparent(FkNodeRef parent=0);
@@ -113,14 +121,16 @@ public:
 	void *userData() const;
 
 	template<typename T>
-	T *data() const { return (T*) userData(); }
+	T *get() const { return (T*) userData(); }
 
 	template<typename T>
-	void setData(T* aData) { setUserData((void*)aData); }
+	void set(T* aData) { setUserData((void*)aData); }
 
 	void destroy();
 };
 
+template<typename T>
+FkNodeRef FkTreeRef::addNode(T *data) { return addNode((void*)data); }
 
 //------------------------------------------------------------------------------
 // ITERATORS (redo c++11 style?)

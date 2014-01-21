@@ -80,12 +80,9 @@ void SplineTree::drawKnots(LinePlotterRef lines, Color c) {
 
 		// plot tangent
 		lines.plot(p0, p0+u, c);
-
+		
+		// plot a little arrow
 		lines.plot(p0+u, p0 + u + 8*(u.clockwise()-u).normalized(), c);
 		lines.plot(p0+u, p0 + u + 8*(u.anticlockwise()-u).normalized(), c);
-		
-
-		// plot a little arrow
-
 	}
 }

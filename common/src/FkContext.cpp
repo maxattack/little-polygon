@@ -98,7 +98,7 @@ void FkTreeRef::destroy() {
 	LITTLE_POLYGON_FREE(context);
 }
 
-FkNodeRef FkTreeRef::addNode(FkNode* parent, void *userData) {
+FkNodeRef FkTreeRef::addNode(void *userData) {
 	ASSERT(context->count < context->capacity);
 
 	unsigned index;
@@ -111,26 +111,45 @@ FkNodeRef FkTreeRef::addNode(FkNode* parent, void *userData) {
 
 	// intialize fields
 	result->context = context;
-	result->parent = parent;
+	result->parent = 0;
 	result->firstChild = 0;
 	result->prevSibling = 0;
 	result->local = affineIdentity();
 	result->userData = userData;
 
-	if (parent) {
-		
-		result->nextSibling = parent->firstChild;
-		if (parent->firstChild) { parent->firstChild->prevSibling = result; }
-		parent->firstChild = result;
+	// attach to the root list
+	result->nextSibling = context->firstRoot;
+	if (context->firstRoot) { context->firstRoot->prevSibling = result; }
+	context->firstRoot = result;
 
-	} else {
+	context->markDirty(result);
+	++context->count;
+	return result;
+}
 
-		// attach to the root list
-		result->nextSibling = context->firstRoot;
-		if (context->firstRoot) { context->firstRoot->prevSibling = result; }
-		context->firstRoot = result;
+FkNodeRef FkNodeRef::addNode(void *userData) {
+	ASSERT(node->context->count < node->context->capacity);
+	auto context = node->context;
 
+	unsigned index;
+	if (!(~context->allocationMask).findFirst(index)) {
+		return 0;
 	}
+
+	context->allocationMask.mark(index);
+	auto result = context->nodebuf + index;
+
+	// intialize fields
+	result->context = context;
+	result->parent = node;
+	result->firstChild = 0;
+	result->prevSibling = 0;
+	result->local = affineIdentity();
+	result->userData = userData;
+
+	result->nextSibling = node->firstChild;
+	if (node->firstChild) { node->firstChild->prevSibling = result; }
+	node->firstChild = result;
 
 	context->markDirty(result);
 	++context->count;

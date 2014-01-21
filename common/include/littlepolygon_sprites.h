@@ -152,6 +152,7 @@ public:
 	void setVisible(bool flag);
 	void setColor(Color c);
 	void setUserData(void *userData);
+	
 	int layer() const;
 	const AffineMatrix* transform() const;
 	ImageAsset *image() const;
@@ -161,7 +162,7 @@ public:
 	void *userData() const;
 
 	template<typename T>
-	T* data() const { return (T*) userData(); }
+	T* get() const { return (T*) userData(); }
 };
 
 
