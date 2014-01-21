@@ -143,6 +143,8 @@ struct FkTreeIterator {
 	FkTreeIterator(const FkContext *context);
 	bool finished() const { return current == 0; }
 	void next();
+
+	FkNodeRef curr() { return FkNodeRef(current); }
 };
 
 // just top-level root nodes
@@ -152,6 +154,8 @@ struct FkRootIterator {
 	FkRootIterator(const FkContext *context);
 	bool finished() const { return current == 0; }
 	void next();
+
+	FkNodeRef curr() { return FkNodeRef(current); }
 };
 
 // just immediate child nodes
@@ -161,6 +165,8 @@ struct FkChildIterator {
 	FkChildIterator(const FkNode* parent);
 	bool finished() const { return current == 0; }
 	void next();
+
+	FkNodeRef curr() { return FkNodeRef(current); }
 };
 
 // subtree DAG traversal
@@ -171,6 +177,8 @@ struct FkSubtreeIterator {
 	FkSubtreeIterator(const FkNode *parent);
 	bool finished() const { return current == 0; }
 	void next();
+
+	FkNodeRef curr() { return FkNodeRef(current); }
 };
 
 // all nodes, in inverse-DAG order
@@ -180,6 +188,8 @@ struct FkInvTreeIterator {
 	FkInvTreeIterator(const FkContext *context);
 	bool finished() const { return current == 0; }
 	void next();	
+
+	FkNodeRef curr() { return FkNodeRef(current); }
 };
 
 // subtree, inverse-DAG order
@@ -190,7 +200,6 @@ struct FkInvSubtreeIterator {
 	FkInvSubtreeIterator(const FkNode *parent);
 	bool finished() const { return current == 0; }
 	void next();
+
+	FkNodeRef curr() { return FkNodeRef(current); }
 };
-
-
-
