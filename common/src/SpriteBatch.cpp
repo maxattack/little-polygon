@@ -97,7 +97,7 @@ SpriteBatch *createSpriteBatch(size_t capacity) {
 	return context;
 }
 
-void destroy(SpriteBatch *context) {
+void SpriteBatchRef::destroy() {
 	LITTLE_POLYGON_FREE(context);
 }
 
@@ -149,8 +149,7 @@ static void removeFromLayer(SpriteBatch *context, Sprite *sprite) {
 	}
 }
 
-Sprite* createSprite(
-	SpriteBatch *context, 
+Sprite* SpriteBatchRef::addSprite(
 	ImageAsset *image, 
 	const AffineMatrix *xform,
 	int frame, Color c, bool visible, bool onTop, 
@@ -186,12 +185,12 @@ Sprite* createSprite(
 	return result;
 }
 
-void destroy(Sprite* sprite) {
+void SpriteRef::destroy() {
 	removeFromLayer(sprite->context, sprite);
 	sprite->context->allocationMask.clear(sprite - &sprite->context->headSprite);
 }
 
-void setLayer(Sprite* sprite, int layerIdx) {
+void SpriteRef::setLayer(int layerIdx) {
 	auto context = sprite->context;
 	if (sprite->layer != layerIdx) {
 		bool wasVisible = context->visible(sprite->cmd);
@@ -208,19 +207,19 @@ void setLayer(Sprite* sprite, int layerIdx) {
 	}
 }
 
-void setImage(Sprite* sprite, ImageAsset *image) {
+void SpriteRef::setImage(ImageAsset *image) {
 	sprite->cmd->image = image;
 }
 
-void setTransform(Sprite *sprite, const AffineMatrix *xform) {
+void SpriteRef::setTransform(const AffineMatrix *xform) {
 	sprite->cmd->xform = xform;
 }
 
-void setFrame(Sprite* sprite, int frame) {
+void SpriteRef::setFrame(int frame) {
 	sprite->cmd->frame = frame;
 }
 
-void setVisible(Sprite* sprite, bool visible) {
+void SpriteRef::setVisible(bool visible) {
 	auto context = sprite->context;
 	if (visible) {
 		context->markVisible(sprite->cmd);
@@ -229,49 +228,46 @@ void setVisible(Sprite* sprite, bool visible) {
 	}
 }
 
-void setColor(Sprite* sprite, Color c) {
+void SpriteRef::setColor(Color c) {
 	sprite->cmd->color = c;
 }
 
-void setUserData(Sprite* sprite, void *userData) {
+void SpriteRef::setUserData(void *userData) {
 	sprite->userData = userData;
 }
 
-ImageAsset *image(const Sprite* sprite) {
+ImageAsset* SpriteRef::image() const {
 	return sprite->cmd->image;
 }
 
-const AffineMatrix *transform(const Sprite *sprite) {
+const AffineMatrix* SpriteRef::transform() const {
 	return sprite->cmd->xform;
 }
 
-int frame(const Sprite* sprite) {
+int SpriteRef::frame() const {
 	return sprite->cmd->frame;
 }
 
-int layer(const Sprite* sprite) {
+int SpriteRef::layer() const {
 	return sprite->layer;
 }
 
-bool visible(const Sprite* sprite) {
+bool SpriteRef::visible() const {
 	return sprite->context->visible(sprite->cmd);
 }
 
-Color color(const Sprite* sprite) {
+Color SpriteRef::color() const {
 	return sprite->cmd->color;
 }
 
-void *userData(const Sprite* sprite) {
+void* SpriteRef::userData() const {
 	return sprite->userData;
 }
 
-void draw(SpriteDraw *cmd, SpritePlotter *renderer) {
-	drawImageTransformed(renderer, cmd->image, *cmd->xform, cmd->frame, cmd->color);
-}
-
-void draw(SpriteBatch *context, SpritePlotter *renderer) {
+void SpriteBatchRef::draw(SpritePlotterRef renderer) {
 	unsigned idx;
 	for(auto iterator=context->visibleMask.listBits(); iterator.next(idx);) {
-		draw(context->getDraw(idx), renderer);
+		auto cmd = context->getDraw(idx);
+		renderer.drawImage(cmd->image, *cmd->xform, cmd->frame, cmd->color);
 	}
 }

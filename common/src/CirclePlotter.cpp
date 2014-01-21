@@ -84,14 +84,14 @@ CirclePlotter *createCirclePlotter(size_t resolution) {
 	return context;
 }
 
-void destroy(CirclePlotter *context) {
+void CirclePlotterRef::destroy() {
 	glDeleteProgram(context->prog);
 	glDeleteShader(context->vert);
 	glDeleteShader(context->frag);	
 	LITTLE_POLYGON_FREE(context);
 }
 
-void begin(CirclePlotter *context, vec2 canvasSize, vec2 canvasOffset) {
+void CirclePlotterRef::begin(vec2 canvasSize, vec2 canvasOffset) {
 	glUseProgram(context->prog);
 	setCanvas(context->uMVP, canvasSize, canvasOffset);
 
@@ -105,7 +105,7 @@ void begin(CirclePlotter *context, vec2 canvasSize, vec2 canvasOffset) {
 // right now I'm just doing one draw call per plot.  if this proves to be a performance bottleneck
 // we can use degenerate triangles to combine multiple strips together.
 
-void plotFilled(CirclePlotter *context, vec2 p, float r, Color c, float a1, float a2) {
+void CirclePlotterRef::plotFilled(vec2 p, float r, Color c, float a1, float a2) {
 	// plot eet
 	vec2 curr = polar(1, a1);
 	float da = (a2 - a1) / float(context->resolution-1);
@@ -120,7 +120,7 @@ void plotFilled(CirclePlotter *context, vec2 p, float r, Color c, float a1, floa
 	glDrawArrays(GL_TRIANGLE_FAN, 0, context->resolution+1);
 }
 
-void plotArc(CirclePlotter *context, vec2 p, float r1, float r2, Color c, float a1, float a2) {
+void CirclePlotterRef::plotArc(vec2 p, float r1, float r2, Color c, float a1, float a2) {
 	// plot eet
 	vec2 curr = polar(1, a1);
 	float da = (a2 - a1) / float(context->resolution-1);
@@ -136,7 +136,7 @@ void plotArc(CirclePlotter *context, vec2 p, float r1, float r2, Color c, float 
 
 }
 
-void end(CirclePlotter *context) {
+void CirclePlotterRef::end() {
 	glDisableVertexAttribArray(context->aPosition);
 	glDisableVertexAttribArray(context->aColor);
 	glUseProgram(0);

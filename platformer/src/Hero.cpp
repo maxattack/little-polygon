@@ -9,10 +9,10 @@
 #define WALK_ANIM_RATE  5.0f
 #define REST_THRESHOLD  0.075f
 
-void Hero::init(AssetBundle* assets, SpriteBatch *batch, CollisionSystem* collisions) {
+void Hero::init(AssetRef assets, SpriteBatchRef batch, CollisionSystem* collisions) {
 	
 	// init physics
-	auto pos = assets->userdata("hero.position")->as<vec2>() - vec(0,0.1f);
+	auto pos = assets.userdata("hero.position")->as<vec2>() - vec(0,0.1f);
 	collider = collisions->addCollider(
 		aabb(
 			pos-vec(HALF_WIDTH, 2*HALF_HEIGHT),
@@ -29,11 +29,11 @@ void Hero::init(AssetBundle* assets, SpriteBatch *batch, CollisionSystem* collis
 
 	// init fx
 	xform = affineTranslation(PIXELS_PER_METER * position());
-	sprite = createSprite(batch, assets->image("hero"), &xform);
+	sprite = batch.addSprite(assets.image("hero"), &xform);
 	framef = 0;
 
-	sfxJump = assets->sample("jump");
-	sfxFootfall = assets->sample("footfall");
+	sfxJump = assets.sample("jump");
+	sfxFootfall = assets.sample("footfall");
 
 }
 
@@ -41,7 +41,7 @@ void Hero::tick(PlayerInput* input, CollisionSystem* collisions, float dt) {
 
 	// jumping and freefall
 	if (grounded && input->jumpPressed) {
-		play(sfxJump);
+		sfxJump->play();
 		speed.y = - sqrtf(2.f * GRAVITY * JUMP_HEIGHT);
 		grounded = false;
 	} else {
@@ -72,7 +72,7 @@ void Hero::tick(PlayerInput* input, CollisionSystem* collisions, float dt) {
 		if (!wasGrounded) {
 			sprite.setFrame(0);
 			framef = 0;			
-			play(sfxFootfall);
+			sfxFootfall->play();
 		}
 	}
 	if (result.hitHorizontal) {
@@ -101,7 +101,7 @@ void Hero::tick(PlayerInput* input, CollisionSystem* collisions, float dt) {
             framef = fmodf(framef, 3.f);
             int fr = int(framef);
             if (sprite.frame() != fr && fr == 2) {
-            	play(sfxFootfall);
+            	sfxFootfall->play();
             }
             sprite.setFrame(fr);
         } else {

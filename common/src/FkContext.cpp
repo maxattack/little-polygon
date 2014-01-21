@@ -85,6 +85,8 @@ FkContext *createFkContext(size_t capacity) {
 		sizeof(FkContext) + 
 		sizeof(FkNode) * (capacity-1)
 	);
+
+	// intialize fields
 	context->capacity = capacity;
 	context->count = 0;
 	context->allocationMask = Bitset<1024>();
@@ -92,11 +94,11 @@ FkContext *createFkContext(size_t capacity) {
 	return context;
 }
 
-void destroy(FkContext *context) {
+void FkTreeRef::destroy() {
 	LITTLE_POLYGON_FREE(context);
 }
 
-FkNode* createNode(FkContext *context, FkNode* parent, void *userData) {
+FkNodeRef FkTreeRef::addNode(FkNode* parent, void *userData) {
 	ASSERT(context->count < context->capacity);
 
 	unsigned index;
@@ -153,7 +155,7 @@ static void doDestroy(FkNode *node) {
 	
 }
 
-void destroy(FkNode* node) {
+void FkNodeRef::destroy() {
 
 	// kill children bottom->up (no recursive functions)
 	FkInvSubtreeIterator iter(node);
@@ -166,8 +168,11 @@ void destroy(FkNode* node) {
 	doDestroy(node);
 }
 
-void setParent(FkNode* child, FkNode* parent) {
-	ASSERT(child->context == parent->context);
+
+void FkNodeRef::setParent(FkNodeRef aParent) {
+	FkNode *parent = aParent;
+	ASSERT(node->context == parent->context);
+	auto child = node;
 	auto context = child->context;
 
 	// check for noop
@@ -200,39 +205,39 @@ void setParent(FkNode* child, FkNode* parent) {
 	context->markDirty(child);
 }
 
-void detachChildren(FkNode* node, bool preserveTransforms) {
+void FkNodeRef::detachChildren(bool preserveTransforms) {
 	if (preserveTransforms) {
 		while(node->firstChild) {
-			reparent(node->firstChild, 0);
+			FkNodeRef(node->firstChild).reparent(0);
 		}
 	} else {
 		while(node->firstChild) {
-			setParent(node->firstChild, 0);
+			FkNodeRef(node->firstChild).setParent(0);
 		}
 	}
 }
 
-void setUserData(FkNode* node, void *userData) {
+void FkNodeRef::setUserData(void *userData) {
 	node->userData = userData;
 }
 
-void setLocal(FkNode* node, const AffineMatrix& transform) {
+void FkNodeRef::setLocal(const AffineMatrix& transform) {
 	node->local = transform;
 	node->context->markDirty(node);
 }
 
-void setPosition(FkNode* node, vec2 position) {
+void FkNodeRef::setPosition(vec2 position) {
 	node->local.t = position;
 	node->context->markDirty(node);
 }
 
-void setAttitude(FkNode *node, vec2 attitude) {
+void FkNodeRef::setAttitude(vec2 attitude) {
 	node->local.u = attitude;
 	node->local.v = vec(-attitude.y, attitude.x);
 	node->context->markDirty(node);
 }
 
-void setRotation(FkNode* node, float radians) {
+void FkNodeRef::setRotation(float radians) {
 	float s = sinf(radians);
 	float c = cosf(radians);
 	node->local.u = vec(c, s);
@@ -240,7 +245,7 @@ void setRotation(FkNode* node, float radians) {
 	node->context->markDirty(node);
 }
 
-void setScale(FkNode* node, vec2 scale) {
+void FkNodeRef::setScale(vec2 scale) {
 	node->local.u = vec(scale.x, 0);
 	node->local.v = vec(0, scale.y);
 	node->context->markDirty(node);
@@ -320,47 +325,61 @@ static void doSetWorld(FkNode *node, const AffineMatrix& transform, bool dirtyCh
 	node->context->clearDirty(node);
 }
 
-void reparent(FkNode* child, FkNode* parent) {
-	if (child->parent != parent) {
-		auto worldTransform = fkWorld(child);
-		setParent(child, parent);
-		doSetWorld(child, worldTransform, false);	
+void FkNodeRef::reparent(FkNodeRef aParent) {
+	FkNode *parent = aParent;
+	if (node->parent != parent) {
+		auto worldTransform = world();
+		setParent(parent);
+		doSetWorld(node, worldTransform, false);	
 	}
 }
 
-void setWorld(FkNode* node, const AffineMatrix& transform) {
+void FkNodeRef::setWorld(const AffineMatrix& transform) {
 	doSetWorld(node, transform, true);
 	for(auto child=node->firstChild; child; child=child->nextSibling) {
 		node->context->markDirty(child);
 	}	
 }
 
-FkContext *fkContext(const FkNode *node) {
+FkContext *FkNodeRef::context() const {
 	return node->context;
 }
 
-FkNode* fkParent(const FkNode* node) {
+FkNodeRef FkNodeRef::parent() const {
 	return node->parent;
 }
 
-void* fkUserData(const FkNode* node) {
+void* FkNodeRef::userData() const {
 	return node->userData;
 }
 
-int fkLevel(const FkNode *node) {
+int FkNodeRef::level() const {
 	int level = 0;
-	while(node->parent) {
+	auto n = node->parent;
+	while(n) {
 		++level;
-		node = node->parent;
+		n = n->parent;
 	}
 	return level;
 }
 
-const AffineMatrix& fkLocal(const FkNode* node) {
+const AffineMatrix& FkNodeRef::local() const {
 	return node->local;
 }
 
-const AffineMatrix& fkWorld(FkNode* node) {
+vec2 FkNodeRef::position() const {
+	return node->local.t;
+}
+
+vec2 FkNodeRef::right() const {
+	return node->local.u;
+}
+
+vec2 FkNodeRef::up() const {
+	return node->local.v;
+}
+
+const AffineMatrix& FkNodeRef::world() const {
 	if (!node->context->dirtyMask.empty()) {
 		cacheWorld(node);
 	}
@@ -371,7 +390,7 @@ const AffineMatrix& fkWorld(FkNode* node) {
 // BATCH METHODS
 //------------------------------------------------------------------------------
 
-void cacheWorldTransforms(FkContext *context) {
+void FkTreeRef::cacheWorldTransforms() {
 	// iterate non-recursively through the display tree like it's a
 	// foldout gui (children, then siblings, then ancestors)
 	auto node = context->firstRoot;
@@ -394,7 +413,7 @@ void cacheWorldTransforms(FkContext *context) {
 	}
 }
 
-const AffineMatrix *fkCachedTransform(FkNode *node) {
+const AffineMatrix *FkNodeRef::cachedTransform() const {
 	return &node->world;
 }
 

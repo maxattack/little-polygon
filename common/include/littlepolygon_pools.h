@@ -28,15 +28,17 @@
 //                 (only useable for "anonymous" objects, like particles or bullets)
 //
 
+//------------------------------------------------------------------------------
+// FREE-LIST POOL
+//------------------------------------------------------------------------------
 
-template<typename T, int N=1024>
+template<typename T, int N>
 class FreelistPool {
 private:
 	union Slot {
 		T record;
-		struct {
-			Slot *next;
-		};
+		Slot *next;
+		Slot() {}
 	};
 	Slot *firstFree;
 	Slot slots[N];
@@ -70,13 +72,19 @@ public:
 	}
 };
 
-template<typename T, int N=1024>
+//------------------------------------------------------------------------------
+// BITSET POOL
+//------------------------------------------------------------------------------
+
+template<typename T, int N>
 class BitsetPool {
 private:
 	Bitset<N> mask;
+	size_t capacity;
 	T slots[N];
 
 public:
+
 	T* alloc() {
 		unsigned index;
 		if (!(~mask).findFirst(index)) {
@@ -93,13 +101,16 @@ public:
 	}
 
 	class iterator {
-		const T *slots;
-		Bitset<64>::iterator biterator;
+	friend class BitsetPool<T,N>;
+	private:
+		T *slots;
+		typename Bitset<N>::iterator biterator;
 
-		iterator(const BitsetPool *pool) : slots(pool->slots), biterator(pool->mask) {
+		iterator(const BitsetPool *pool) : slots((T*)pool->slots), biterator(pool->mask) {
 		}
 
-		bool next(const T* &result) {
+	public:
+		bool next(T* &result) {
 			unsigned idx;
 			if (biterator.next(idx)) {
 				result = slots + idx;
@@ -109,9 +120,15 @@ public:
 			}
 		}
 	};
+
+	iterator listSlots() { return iterator(this); }
 };
 
-template<typename T, int N=1024>
+//------------------------------------------------------------------------------
+// COMPACT POOL
+//------------------------------------------------------------------------------
+
+template<typename T, int N>
 class CompactPool {
 private:
 	int count;
@@ -150,3 +167,5 @@ public:
 	T* begin() { return slots; }
 	T* end() { return slots + count; }
 };
+
+

@@ -46,40 +46,40 @@ struct WaveHeader {
 	}
 };
 
-void initialize(SampleAsset *sample) {
-	if (sample->chunk == 0) {
+void SampleAsset::init() {
+	if (chunk == 0) {
 		// Allocate a buffer for the RW_ops structure to read from 
-		Bytef *scratch = (Bytef*) LITTLE_POLYGON_MALLOC(sample->size + sizeof(WaveHeader));
+		Bytef *scratch = (Bytef*) LITTLE_POLYGON_MALLOC(size + sizeof(WaveHeader));
 		{
 		// Mixer expects a WAVE header on PCM data, so let's provide it :P
 		WaveHeader hdr = {{'R','I','F','F'},0,{'W','A','V','E'},{'f','m','t',' '},16,1,1,0,0,0,0,{'d','a','t','a'},0};
-		int sampleCount = sample->size / (sample->sampleWidth * sample->channelCount);
-		hdr.init(sample->channelCount, sample->frequency, sample->sampleWidth, sampleCount);
+		int sampleCount = size / (sampleWidth * channelCount);
+		hdr.init(channelCount, frequency, sampleWidth, sampleCount);
 		memcpy(scratch, &hdr, sizeof(WaveHeader));
 		}
 		// Now decompress the actual PCM data
-		uLongf sz = sample->size;
+		uLongf sz = size;
 		uncompress(
 			scratch + sizeof(WaveHeader), 
 			&sz, 
-			(const Bytef*)sample->compressedData, 
-			sample->compressedSize
+			(const Bytef*)compressedData, 
+			compressedSize
 		);
 		// load the chunk
-		sample->chunk = Mix_LoadWAV_RW(SDL_RWFromMem(scratch, sz+sizeof(WaveHeader)), 0);
-		ASSERT(sample->chunk);
+		chunk = Mix_LoadWAV_RW(SDL_RWFromMem(scratch, sz+sizeof(WaveHeader)), 0);
+		ASSERT(chunk);
 		LITTLE_POLYGON_FREE(scratch);
 	}
 }
 
-void release(SampleAsset *sample) {
-	if (sample->chunk) {
-		Mix_FreeChunk(sample->chunk);
-		sample->chunk = 0;
+void SampleAsset::release() {
+	if (chunk) {
+		Mix_FreeChunk(chunk);
+		chunk = 0;
 	}
 }
 
-void play(SampleAsset *sample) {
-	initialize(sample);
-	Mix_PlayChannel(-1, sample->chunk, 0);
+void SampleAsset::play() {
+	init();
+	Mix_PlayChannel(-1, chunk, 0);
 }

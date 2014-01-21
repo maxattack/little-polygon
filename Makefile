@@ -55,8 +55,7 @@ CFLAGS += -arch i386
 AFLAGS = 32
 # AFLAGS = 64
 
-stest: bin/squids
-	cp platformer/assets/song.mid bin/song.mid
+stest: bin/squids bin/squids.bin
 	bin/squids
 
 test : bin/platformer bin/platformer.bin
@@ -65,6 +64,10 @@ test : bin/platformer bin/platformer.bin
 
 bin/squids: lib/liblittlepolygon.a $(squids_OBJ_FILES) 
 	$(CPP) -o $@ $(CFLAGS) $(CCFLAGS) $(LIBS) $(squids_OBJ_FILES)
+
+bin/squids.bin: squids/assets/* common/tools/*.py
+	common/tools/export_asset_bin.py squids/assets/assets.yaml $@ $(AFLAGS)
+
 
 bin/platformer: lib/liblittlepolygon.a $(PLATFORMER_OBJ_FILES) 
 	$(CPP) -o $@ $(CFLAGS) $(CCFLAGS) $(LIBS) $(PLATFORMER_OBJ_FILES)

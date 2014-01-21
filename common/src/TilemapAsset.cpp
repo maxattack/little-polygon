@@ -17,21 +17,21 @@
 #include "littlepolygon_assets.h"
 #include <zlib.h>
 
-void initialize(TilemapAsset *map) {
-	initialize(&map->tileAtlas);
-	if (!map->data) {
-		uLongf size = sizeof(uint8_pair_t) * map->mw * map->mh;
-		map->data = (uint8_pair_t *) LITTLE_POLYGON_MALLOC( size );
-		int result = uncompress((Bytef*)map->data, &size, (const Bytef*)map->compressedData, map->compressedSize);
+void TilemapAsset::init() {
+	tileAtlas.init();
+	if (!data) {
+		uLongf size = sizeof(uint8_pair_t) * mw * mh;
+		data = (uint8_pair_t *) LITTLE_POLYGON_MALLOC( size );
+		int result = uncompress((Bytef*)data, &size, (const Bytef*)compressedData, compressedSize);
 		CHECK(result == Z_OK);
 	}
 
 }
 
-void release(TilemapAsset *map) {
-	release(&map->tileAtlas);
-	if (map->data) {
-		LITTLE_POLYGON_FREE(map->data);
-		map->data = 0;
+void TilemapAsset::release() {
+	tileAtlas.release();
+	if (data) {
+		LITTLE_POLYGON_FREE(data);
+		data = 0;
 	}
 }

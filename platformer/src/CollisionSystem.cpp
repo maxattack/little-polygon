@@ -300,14 +300,14 @@ void CollisionSystem::broadPhase(const AABB& sweep, ColliderSet& outResult) {
 
 }
 
-void CollisionSystem::debugDraw(LinePlotter* plotter, Color color) {
+void CollisionSystem::debugDraw(LinePlotterRef plotter, Color color) {
 	unsigned slot;
 	auto allocSlots = ~freeSlots;
 	for(auto i=allocSlots.listBits(); i.next(slot);) {
 		auto& c = slots[slot];
-		plot(plotter, PIXELS_PER_METER * c.box.topLeft(), PIXELS_PER_METER * c.box.topRight(), color);
-		plot(plotter, PIXELS_PER_METER * c.box.topRight(), PIXELS_PER_METER * c.box.bottomRight(), color);
-		plot(plotter, PIXELS_PER_METER * c.box.bottomRight(), PIXELS_PER_METER * c.box.bottomLeft(), color);
-		plot(plotter, PIXELS_PER_METER * c.box.bottomLeft(), PIXELS_PER_METER * c.box.topLeft(), color);
+		plotter.plot(PIXELS_PER_METER * c.box.topLeft(), PIXELS_PER_METER * c.box.topRight(), color);
+		plotter.plot(PIXELS_PER_METER * c.box.topRight(), PIXELS_PER_METER * c.box.bottomRight(), color);
+		plotter.plot(PIXELS_PER_METER * c.box.bottomRight(), PIXELS_PER_METER * c.box.bottomLeft(), color);
+		plotter.plot(PIXELS_PER_METER * c.box.bottomLeft(), PIXELS_PER_METER * c.box.topLeft(), color);
 	}
 }

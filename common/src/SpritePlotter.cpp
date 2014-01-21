@@ -80,10 +80,9 @@ struct SpritePlotter {
 
 	};
 
-	Vertex headVertex;
+	Vertex workingBuffer[0];
 
-	Vertex *workingBuffer() { return &headVertex; }
-	Vertex *nextSlice() { return &headVertex + (4 * count); }
+	Vertex *nextSlice() { return workingBuffer + (4 * count); }
 };
 
 // private helper methods
@@ -150,20 +149,24 @@ SpritePlotter *createSpritePlotter(int capacity) {
 	return result;
 }
 
-void destroy(SpritePlotter *context) {
+void SpritePlotterRef::destroy() {
 	release(context);
 	dealloc(context);
 }
 
-vec2 canvasSize(SpritePlotter *context) {
+bool SpritePlotterRef::bound() const { 
+	return context->count >= 0; 
+}
+
+vec2 SpritePlotterRef::canvasSize() const {
 	return context->canvasSize;
 }
 
-vec2 canvasScroll(SpritePlotter *context) {
+vec2 SpritePlotterRef::canvasScroll() const {
 	return context->canvasScroll;
 }
 
-void begin(SpritePlotter* context, vec2 aCanvasSize, vec2 aCanvasOffset) {
+void SpritePlotterRef::begin(vec2 aCanvasSize, vec2 aCanvasOffset) {
 	ASSERT(context->count == -1);
 	context->count = 0;
 
@@ -186,7 +189,7 @@ void begin(SpritePlotter* context, vec2 aCanvasSize, vec2 aCanvasOffset) {
 	glVertexAttribPointer(context->aColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(SpritePlotter::Vertex), (GLvoid*)16);	
 }
 
-void drawImage(SpritePlotter* context, ImageAsset *img, vec2 pos, int frame, Color c) {
+void SpritePlotterRef::drawImage(ImageAsset *img, vec2 pos, int frame, Color c) {
 	ASSERT(context->count >= 0);
 	setTextureAtlas(context, img->texture);
 	SpritePlotter::Vertex *slice = context->nextSlice();
@@ -202,7 +205,7 @@ void drawImage(SpritePlotter* context, ImageAsset *img, vec2 pos, int frame, Col
 	++context->count;
 }
 
-void drawImageTransformed(SpritePlotter* context, ImageAsset *img, vec2 pos, vec2 u, int frame, Color c) {
+void SpritePlotterRef::drawImage(ImageAsset *img, vec2 pos, vec2 u, int frame, Color c) {
 	ASSERT(context->count >= 0);
 	setTextureAtlas(context, img->texture);
 	SpritePlotter::Vertex *slice = context->nextSlice();
@@ -221,7 +224,7 @@ void drawImageTransformed(SpritePlotter* context, ImageAsset *img, vec2 pos, vec
 	++context->count;
 }
 
-void drawImageTransformed(SpritePlotter *context, ImageAsset *img, const AffineMatrix& xform, int frame, Color c) {
+void SpritePlotterRef::drawImage(ImageAsset *img, const AffineMatrix& xform, int frame, Color c) {
 	ASSERT(context->count >= 0);
 	setTextureAtlas(context, img->texture);
 	SpritePlotter::Vertex *slice = context->nextSlice();
@@ -242,7 +245,7 @@ void drawImageTransformed(SpritePlotter *context, ImageAsset *img, const AffineM
 	++context->count;	
 }
 
-void drawImageTransformed(SpritePlotter *context, ImageAsset *img, const mat4f& xform, int frame, Color c) {
+void SpritePlotterRef::drawImage(ImageAsset *img, const mat4f& xform, int frame, Color c) {
 	ASSERT(context->count >= 0);
 	setTextureAtlas(context, img->texture);
 	SpritePlotter::Vertex *slice = context->nextSlice();
@@ -261,30 +264,7 @@ void drawImageTransformed(SpritePlotter *context, ImageAsset *img, const mat4f& 
 	++context->count;	
 }
 
-void drawImageRotated(SpritePlotter* context, ImageAsset *img, vec2 pos, float radians, int f, Color c) {
-	drawImageTransformed(context, img, pos, polar(1, radians), f, c);
-}
-
-void drawImageScaled(SpritePlotter* context, ImageAsset *img, vec2 pos, vec2 k, int frame, Color c) {
-	ASSERT(context->count >= 0);
-	setTextureAtlas(context, img->texture);
-	SpritePlotter::Vertex *slice = context->nextSlice();
-	FrameAsset *fr = img->frame(frame);
-
-	vec2 p0 = -vec(fr->px, fr->py);
-	vec2 p1 = p0 + vec(0, fr->h);
-	vec2 p2 = p0 + vec(fr->w, 0);
-	vec2 p3 = p0 + vec(fr->w, fr->h);
-
-	slice[0].set(pos+k*p0, vec(fr->u0, fr->v0), c);
-	slice[1].set(pos+k*p1, vec(fr->u1, fr->v1), c);
-	slice[2].set(pos+k*p2, vec(fr->u2, fr->v2), c);
-	slice[3].set(pos+k*p3, vec(fr->u3, fr->v3), c);
-
-	++context->count;	
-}
-
-void drawQuad(SpritePlotter* context, ImageAsset *img, vec2 p0, vec2 p1, vec2 p2, vec2 p3, int frame, Color c) {
+void SpritePlotterRef::drawQuad(ImageAsset *img, vec2 p0, vec2 p1, vec2 p2, vec2 p3, int frame, Color c) {
 	ASSERT(context->count >= 0);
 	setTextureAtlas(context, img->texture);
 	SpritePlotter::Vertex *slice = context->nextSlice();
@@ -319,7 +299,7 @@ void plotGlyph(SpritePlotter* context, const GlyphAsset& g, float x, float y, fl
 	++context->count;
 }
 
-void drawLabel(SpritePlotter* context, FontAsset *font, vec2 p, Color c, const char *msg) {
+void SpritePlotterRef::drawLabel(FontAsset *font, vec2 p, Color c, const char *msg) {
 	ASSERT(context->count >= 0);
 	setTextureAtlas(context, &(font->texture));
 
@@ -339,7 +319,7 @@ void drawLabel(SpritePlotter* context, FontAsset *font, vec2 p, Color c, const c
 
 }
 
-void drawLabelCentered(SpritePlotter* context, FontAsset *font, vec2 p, Color c, const char *msg) {
+void SpritePlotterRef::drawLabelCentered(FontAsset *font, vec2 p, Color c, const char *msg) {
 	ASSERT(context->count >= 0);
 	setTextureAtlas( context, &(font->texture) );
 	float py = p.y;
@@ -362,11 +342,11 @@ void drawLabelCentered(SpritePlotter* context, FontAsset *font, vec2 p, Color c,
 
 #define TILE_SLOP (0.001f)
 
-void drawTilemap(SpritePlotter* context, TilemapAsset *map, vec2 position) {
+void SpritePlotterRef::drawTilemap(TilemapAsset *map, vec2 position) {
 	ASSERT(context->count >= 0);
 
 	// make sure the map is initialized
-	initialize(map);
+	map->init();
 
 	vec2 cs = context->canvasSize / vec(map->tw, map->th);	
 	int latticeW = ceilf(cs.x) + 1;
@@ -416,16 +396,16 @@ void drawTilemap(SpritePlotter* context, TilemapAsset *map, vec2 position) {
 	}	
 }
 
-void flush(SpritePlotter* context) {
+void SpritePlotterRef::flush() {
 	ASSERT(context->count >= 0); 
 	if (context->count > 0) { 
 		commitBatch(context); 
 	}
 }
 
-void end(SpritePlotter* context) {
+void SpritePlotterRef::end() {
 	ASSERT(context->count >= 0);
-	flush(context);
+	flush();
 	context->count = -1;
 	context->workingTexture = 0;
 	glDisableVertexAttribArray(context->aPosition);
@@ -439,7 +419,7 @@ void end(SpritePlotter* context) {
 
 void commitBatch(SpritePlotter* context) {
 	ASSERT(context->count > 0);
-	glBufferData(GL_ARRAY_BUFFER, 4 * context->count * sizeof(SpritePlotter::Vertex), context->workingBuffer(), GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, 4 * context->count * sizeof(SpritePlotter::Vertex), context->workingBuffer, GL_DYNAMIC_DRAW);
 	glDrawElements(GL_TRIANGLES, 6 * context->count, GL_UNSIGNED_SHORT, 0);
 	context->count = 0;
 }
@@ -456,7 +436,7 @@ void setTextureAtlas(SpritePlotter* context, TextureAsset *texture) {
 
 	// check if we need to bind a new texture
 	if (atlasChange) {
-		bind(texture);
+		texture->bind();
 		context->workingTexture = texture;		
 	}
 }

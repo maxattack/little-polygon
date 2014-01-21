@@ -46,10 +46,10 @@ int main(int argc, char *argv[]) {
 	glLineWidth(2);
 
 	// initialize lp systems
-	auto assets = createAssetBundle("platformer.bin");
-	auto batch = createSpriteBatch();
-	auto spritePlotter = createSpritePlotter();
-	auto lines = createLinePlotter();
+	AssetRef assets = loadAssets("platformer.bin");
+	SpriteBatchRef batch = createSpriteBatch();
+	SpritePlotterRef spritePlotter = createSpritePlotter();
+	LinePlotterRef lines = createLinePlotter();
 
 	// things with ctors
 	Timer timer;
@@ -84,16 +84,16 @@ int main(int argc, char *argv[]) {
 		auto scrolling = vec(0,0);
 		auto canvasSize = vec(CANVAS_WIDTH, CANVAS_HEIGHT);
 
-		begin(spritePlotter, canvasSize, scrolling);
+		spritePlotter.begin(canvasSize, scrolling);
 		environment.draw(spritePlotter);
-		draw(batch, spritePlotter);
-		end(spritePlotter);
+		batch.draw(spritePlotter);
+		spritePlotter.end();
 
 		if (input.drawWireframe) {
 			glDisable(GL_BLEND);
-			begin(lines, canvasSize, scrolling);
+			lines.begin(canvasSize, scrolling);
 			collisions->debugDraw(lines, rgb(0xffff00));
-			end(lines);
+			lines.end();
 			glEnable(GL_BLEND);
 		}
 	
@@ -102,9 +102,10 @@ int main(int argc, char *argv[]) {
 	}
 
 	delete collisions;
-	destroy(lines);
-	destroy(spritePlotter);
-	destroy(assets);
+	lines.destroy();
+	spritePlotter.destroy();
+	batch.destroy();
+	assets.destroy();
 	
 	return 0;
 

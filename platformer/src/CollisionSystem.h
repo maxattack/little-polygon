@@ -69,26 +69,6 @@ inline AABB aabb(vec2 p0, vec2 p1) {
 
 //------------------------------------------------------------------------------
 
-struct Collider {
-	AABB box;
-	uint32_t categoryMask;
-	uint32_t collisionMask;
-	uint32_t triggerMask;
-	void *userData;
-
-	inline bool collides(const Collider *c) const {
-		return (collisionMask & c->categoryMask) &&
-		       box.overlaps(c->box);
-	}
-
-	inline bool triggers(const Collider *c) const {
-		return (triggerMask & c->categoryMask) &&
-		       box.overlaps(c->box);
-	}
-};
-
-//------------------------------------------------------------------------------
-
 union Collision {
 	uint32_t hit;            // an AABB we can make this simplification)
 	struct {
@@ -114,6 +94,27 @@ struct Trigger {
 
 //------------------------------------------------------------------------------
 
+struct Collider {
+	AABB box;
+	uint32_t categoryMask;
+	uint32_t collisionMask;
+	uint32_t triggerMask;
+	void *userData;
+
+	inline bool collides(const Collider *c) const {
+		return (collisionMask & c->categoryMask) &&
+		       box.overlaps(c->box);
+	}
+
+	inline bool triggers(const Collider *c) const {
+		return (triggerMask & c->categoryMask) &&
+		       box.overlaps(c->box);
+	}
+};
+
+
+//------------------------------------------------------------------------------
+
 class CollisionSystem {
 public:
 
@@ -134,7 +135,7 @@ public:
 	int queryTriggers(Collider *c, int outCapacity, Trigger *resultBuf);
 	int queryColliders(const AABB& box, uint32_t mask, int outCapacity, Collider **resultBuf);
 
-	void debugDraw(LinePlotter* plotter, Color c);
+	void debugDraw(LinePlotterRef plotter, Color c);
 
 private:
 	typedef Bitset<COLLIDER_CAPACITY> ColliderSet;

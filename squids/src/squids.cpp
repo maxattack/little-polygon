@@ -1,4 +1,5 @@
 #include "SplineTree.h"
+#include <littlepolygon_sprites.h>
 #include <littlepolygon_fk.h>
 #include <littlepolygon_utils.h>
 
@@ -30,37 +31,45 @@ static void handleEvents(bool *outDone) {
 int main(int argc, char *argv[]) {
 	int w=1000, h=700;
 	auto window = initContext("GameObject Demo", w, h);
-	auto splines = createSplinePlotter();
-	auto circles = createCirclePlotter();
-	auto nodes = createFkContext();
-	auto tree = new SplineTree(nodes);
+	AssetRef assets = loadAssets("squids.bin");
+	SplinePlotterRef splines = createSplinePlotter();
+	SpritePlotterRef sprites = createSpritePlotter();
+	LinePlotterRef lines = createLinePlotter();
+	CirclePlotterRef circles = createCirclePlotter();
+	FkTreeRef nodes = createFkContext();
+	auto tree = new SplineTree();
 
-	FkNodeRef root = createNode(nodes, 0, (void*)"root");
-	FkNodeRef rotor = createNode(nodes, root, (void*)"rotor");
-	FkNodeRef rotor2 = createNode(nodes, root, (void*)"rotor2");
-	FkNodeRef rotor2a = createNode(nodes, rotor2, (void*)"rotor2a");
+	FkNodeRef root = nodes.addNode(0, (void*)"root");
+	FkNodeRef rotor = nodes.addNode(root, (void*)"rotor");
+	FkNodeRef rotor2 = nodes.addNode(root, (void*)"rotor2");
+	FkNodeRef rotor2a = nodes.addNode(rotor2, (void*)"rotor2a");
 	rotor2a.setPosition(80, 0);
 
-	FkNodeRef n0 = createNode(nodes, rotor, (void*)"n0");
+	FkNodeRef n0 = nodes.addNode(rotor, (void*)"n0");
 	n0.setPosition(300, 0);
-	n0.setAttitude(10, 500);
+	n0.setAttitude(0, 1);
 
-	FkNodeRef n1 = createNode(nodes, rotor, (void*)"n1");
+	FkNodeRef n1 = nodes.addNode(rotor, (void*)"n1");
 	n1.setPosition(-300, 0);
-	n1.setAttitude(10, 500);
+	n1.setAttitude(0, 1);
 
-	FkNodeRef n2 = createNode(nodes, rotor2a, (void*)"n2");
+	FkNodeRef n2 = nodes.addNode(rotor2a, (void*)"n2");
 	n2.setPosition(0, -200);
-	n2.setAttitude(-600, -100);
+	n2.setAttitude(-1, 0);
 
-	FkNodeRef n3 = createNode(nodes, rotor2a, (void*)"n3");
+	FkNodeRef n3 = nodes.addNode(rotor2a, (void*)"n3");
 	n3.setPosition(0, 200);
-	n3.setAttitude(-500, 100);
+	n3.setAttitude(-1, 0);
 
-	tree->addSegment(fkCachedTransform(n0), fkCachedTransform(n1));
-	tree->addSegment(fkCachedTransform(n1), fkCachedTransform(n2));
-	tree->addSegment(fkCachedTransform(n2), fkCachedTransform(n3));
-	tree->addSegment(fkCachedTransform(n3), fkCachedTransform(n0));
+	auto k0 = tree->addKnot(n0.cachedTransform(), vec(500,0));
+	auto k1 = tree->addKnot(n1.cachedTransform(), vec(500,0));
+	auto k2 = tree->addKnot(n2.cachedTransform(), vec(500,0));
+	auto k3 = tree->addKnot(n3.cachedTransform(), vec(500,0));
+
+	tree->addSegment(k0, k1);
+	tree->addSegment(k1, k2);
+	tree->addSegment(k2, k3);
+	tree->addSegment(k3, k0);
 
 	auto color = rgb(0x4E9689);
 	float dim = 0.9f;
@@ -72,12 +81,10 @@ int main(int argc, char *argv[]) {
 	);
 
 	Timer timer;
-	Mix_Music *music = Mix_LoadMUS("song.mid");
-	if(music) { Mix_FadeInMusic(music, -1, 5000); }
 	
 	bool done = false;
 
-	setPosition(root, 0.5f * vec(w,h));
+	root.setPosition(0.5f * vec(w,h));
 
 	while(!done) {
 		handleEvents(&done);
@@ -87,7 +94,7 @@ int main(int argc, char *argv[]) {
 		SDL_GetMouseState(&p.x, &p.y);
 		float yAmount = p.y / float(h);
 
-		timer.timeScale = 1.333 * yAmount;
+		timer.timeScale = 0.25 * 1.333 * yAmount;
 		timer.tick();
 
 		root.setPosition(easeTowards(root.position(), p, 0.1, timer.deltaSeconds()));
@@ -98,33 +105,47 @@ int main(int argc, char *argv[]) {
 		n1.apply(affineRotation(0.333 * M_TAU * timer.scaledDeltaTime));
 		n2.apply(affineRotation(-0.1 * M_TAU * timer.scaledDeltaTime));
 		n3.apply(affineRotation(-0.4 * M_TAU * timer.scaledDeltaTime));
-		cacheWorldTransforms(nodes);
+		nodes.cacheWorldTransforms();
 
 		auto canvasSize = vec(w, h);
 		auto scrolling = vec(0,0);
 
-		begin(splines, canvasSize, scrolling);
-		drawSpline(
-			splines, 
+		splines.begin(canvasSize, scrolling);
+		splines.plot(
 			quadraticBezierMatrix(vec4f(0,0,0,0), vec4f(p.x, p.y, 0, 0), vec4f(canvasSize.x, canvasSize.y, 0, 0)), 
 			eccentricStroke(32, -30, 32), 
 			rgb(0x4E9689)
 		);
 		tree->draw(splines, rgb(0x87D69B), 1.5f);
 		tree->draw(splines, rgb(0xC3FF68));
-		end(splines);
+		splines.end();
+
+		lines.begin(canvasSize, scrolling);
+		tree->drawKnots(lines, rgb(0x222255));
+		lines.end();
+
+		circles.begin(canvasSize, scrolling);
+		circles.plotFilled(p, 12, rgba(0xF4FCE844));
+		circles.plotArc(root.local().t, 24, 28, rgba(0x7ED0D644));
+		circles.end();
 
 		glEnable(GL_BLEND);
-		begin(circles, canvasSize, scrolling);
-		plotFilled(circles, p, 12, rgba(0xF4FCE844));
-		plotArc(circles, fkLocal(root).t, 24, 28, rgba(0x7ED0D644));
-		end(circles);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);		
+		
+		sprites.begin(canvasSize, scrolling);
+		sprites.drawImage(assets.image("max"), p);
+		sprites.drawLabel(assets.font("droid"), vec(4,4), rgba(0xffffff00), "Hello World!");
+		sprites.end();
+
 		glDisable(GL_BLEND);
 
 		SDL_GL_SwapWindow(window);
 	}
 
 	delete tree;
-	destroy(splines);
-	destroy(circles);
+	sprites.destroy();
+	splines.destroy();
+	circles.destroy();
 }
+
+

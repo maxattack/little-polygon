@@ -1,26 +1,34 @@
-#include <littlepolygon_fk.h>
 #include <littlepolygon_graphics.h>
+#include <littlepolygon_pools.h>
 
-#define SEGMENT_CAPACITY 1024
+struct Knot {
+	const AffineMatrix *tform;
+	vec2 attitude;
+};
 
 class SplineTree {
 public:
-	SplineTree(FkContext *displayTree);
+	SplineTree();
 
-	void addSegment(const AffineMatrix *t0, const AffineMatrix *t1);
-	void removeSegment(const AffineMatrix *t0, const AffineMatrix *t1);
-	void draw(SplinePlotter *splines, Color c, float strokeScale=1);
+	Knot* addKnot(const AffineMatrix *tform, vec2 attitude);
+	void removeKnot(Knot *knot);
+
+	void addSegment(const Knot *k0, const Knot *k1);
+	void removeSegment(const Knot *k0, const Knot *k1);
+	void draw(SplinePlotterRef splines, Color c, float strokeScale=1);
+	void drawKnots(LinePlotterRef lines, Color c);
 
 private:
-	int mCount;
-
 	struct Segment {
-		const AffineMatrix *t0;
-		const AffineMatrix *t1;
+		const Knot *k0;
+		const Knot *k1;
+
+		bool matches(const Knot *a0, const Knot *a1) const {
+			return (k0 == a0 && k1 == a1) || (k0 == a1 && k1 == a0);
+		}
 	};
 
-	Segment mSegments[SEGMENT_CAPACITY];
-
-	Segment* find(const AffineMatrix *t0, const AffineMatrix *t1);
+	BitsetPool<Knot, 256> knotPool;
+	CompactPool<Segment, 1024> segmentPool;
 };
 

@@ -16,7 +16,21 @@
 
 #include "littlepolygon_assets.h"
 
-AssetBundle* createAssetBundle(const char* path, uint32_t crc) {
+struct Header {
+	uint32_t hash, type;
+	void* data;
+};
+
+struct AssetBundle {
+	size_t assetCount;
+
+	// if we fail to find an asset, optionally check a fallback
+	// (for "pusinging" level content on top of shared content)
+	AssetBundle *fallback;
+	Header headers[1];
+};
+
+AssetBundle* loadAssets(const char* path, uint32_t crc) {
 	SDL_RWops* file = SDL_RWFromFile(path, "rb");
 	
 	// read length and count
@@ -24,8 +38,8 @@ AssetBundle* createAssetBundle(const char* path, uint32_t crc) {
 	int count = SDL_ReadLE32(file);
 
 	// read data
-	AssetBundle *bundle = (AssetBundle*) LITTLE_POLYGON_MALLOC(sizeof(AssetBundle) + length);
-	void *result = (bundle+1);
+	AssetBundle *bundle = (AssetBundle*) LITTLE_POLYGON_MALLOC(sizeof(AssetBundle)-sizeof(Header) + length);
+	void *result = &(bundle->headers);
 	if (SDL_RWread(file, result, length, 1) == -1) {
 		LITTLE_POLYGON_FREE(bundle);
 		return 0;
@@ -40,52 +54,51 @@ AssetBundle* createAssetBundle(const char* path, uint32_t crc) {
 	SDL_RWclose(file);
 
 	bundle->assetCount = count;
-	bundle->headers = reinterpret_cast<AssetBundle::Header*>(result);
 	bundle->fallback = 0;
 	return bundle;
 }
 
-void destroy(AssetBundle *bundle) {
-	release(bundle);
+void AssetRef::destroy() {
+	release();
 	LITTLE_POLYGON_FREE(bundle);
 }
 
-void* AssetBundle::findHeader(uint32_t hash, uint32_t assetType) {
+void* AssetRef::findHeader(uint32_t hash, uint32_t assetType) {
 	// headers are sorted on their hash, so we can binary search
 	int imin = 0;
-	int imax = assetCount-1;
+	int imax = bundle->assetCount-1;
 	while (imax >= imin) {
 		int i = (imin + imax) >> 1;
-		if (headers[i].hash == hash) {
-			if (headers[i].type == assetType) {
-				return headers[i].data;
+		if (bundle->headers[i].hash == hash) {
+			if (bundle->headers[i].type == assetType) {
+				return bundle->headers[i].data;
 			} else {
 				break;
 			}
-		} else if (headers[i].hash < hash) {
+		} else if (bundle->headers[i].hash < hash) {
 			imin = i+1;
 		} else {
 			imax = i-1;
 		}
 	}
-	return fallback ? fallback->findHeader(hash, assetType) : 0;
+	return bundle->fallback ? AssetRef(bundle->fallback).findHeader(hash, assetType) : 0;
 }
 
-void initialize(AssetBundle* bundle) {
+void AssetRef::init() {
 	if (bundle->assetCount) { 
 		for(int i=0; i<bundle->assetCount; ++i) {
 			switch(bundle->headers[i].type) {
 				case ASSET_TYPE_TEXTURE:
-					initialize( (TextureAsset*)bundle->headers[i].data );
+					((TextureAsset*)bundle->headers[i].data)->init();
 					break;
 				case ASSET_TYPE_FONT:
-					initialize( &(((FontAsset*)bundle->headers[i].data)->texture) );
+					(((FontAsset*)bundle->headers[i].data)->texture).init();
 					break;
 				case ASSET_TYPE_SAMPLE:
-					initialize( (SampleAsset*)bundle->headers[i].data );
+					((SampleAsset*)bundle->headers[i].data)->init();
 					break;
 				case ASSET_TYPE_TILEMAP:
-					initialize( (TilemapAsset*)bundle->headers[i].data );
+					((TilemapAsset*)bundle->headers[i].data)->init();
 					break;
 				default:
 					break;
@@ -94,21 +107,21 @@ void initialize(AssetBundle* bundle) {
 	}
 }
 
-void release(AssetBundle* bundle) {
+void AssetRef::release() {
 	if (bundle->assetCount) { 
 		for(int i=0; i<bundle->assetCount; ++i) {
 			switch(bundle->headers[i].type) {
 				case ASSET_TYPE_TEXTURE:
-					release( (TextureAsset*)bundle->headers[i].data );
+					((TextureAsset*)bundle->headers[i].data)->release();
 					break;
 				case ASSET_TYPE_FONT:
-					release( &(((FontAsset*)bundle->headers[i].data)->texture) );
+					(((FontAsset*)bundle->headers[i].data)->texture).release();
 					break;
 				case ASSET_TYPE_SAMPLE:
-					release( (SampleAsset*)bundle->headers[i].data );
+					((SampleAsset*)bundle->headers[i].data)->release();
 					break;
 				case ASSET_TYPE_TILEMAP:
-					release( (TilemapAsset*)bundle->headers[i].data );
+					((TilemapAsset*)bundle->headers[i].data)->release();
 					break;
 				default:
 					break;				

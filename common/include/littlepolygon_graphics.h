@@ -42,11 +42,24 @@ bool compileShader(const GLchar* source, GLuint *outProg, GLuint *outVert, GLuin
 
 struct LinePlotter;
 LinePlotter *createLinePlotter();
-void destroy(LinePlotter *context);
 
-void begin(LinePlotter* context, vec2 canvasSize, vec2 canvasOffset=vec(0,0));
-void plot(LinePlotter* context, vec2 p0, vec2 p1, Color c);
-void end(LinePlotter* context);
+class LinePlotterRef {
+private:
+	LinePlotter *context;
+
+public:
+	LinePlotterRef() {}
+	LinePlotterRef(LinePlotter *aContext) : context(aContext) {}
+
+	operator LinePlotter*() { return context; }
+	operator bool() const { return context; }
+
+	void destroy();
+
+	void begin(vec2 canvasSize, vec2 canvasOffset=vec(0,0));
+	void plot(vec2 p0, vec2 p1, Color c);
+	void end();
+};
 
 //------------------------------------------------------------------------------
 // CIRCLE RENDERING
@@ -54,13 +67,25 @@ void end(LinePlotter* context);
 
 struct CirclePlotter;
 CirclePlotter *createCirclePlotter(size_t resolution=128);
-void destroy(CirclePlotter *context);
 
-void begin(CirclePlotter *context, vec2 canvasSize, vec2 canvasOffset=vec(0,0));
-void plotFilled(CirclePlotter *context, vec2 p, float r, Color c, float a1=0, float a2=M_TAU);
-void plotArc(CirclePlotter *context, vec2 p, float r1, float r2, Color c, float a1=0, float a2=M_TAU);
-void end(CirclePlotter *context);
+class CirclePlotterRef {
+private:
+	CirclePlotter *context;
 
+public:
+	CirclePlotterRef() {}
+	CirclePlotterRef(CirclePlotter *aContext) : context(aContext) {}
+
+	operator CirclePlotter*() { return context; }
+	operator bool() const { return context; }
+
+	void destroy();
+
+	void begin(vec2 canvasSize, vec2 canvasOffset=vec(0,0));
+	void plotFilled(vec2 p, float r, Color c, float a1=0, float a2=M_TAU);
+	void plotArc(vec2 p, float r1, float r2, Color c, float a1=0, float a2=M_TAU);
+	void end();
+};
 
 //------------------------------------------------------------------------------
 // SPLINE REDNERING
@@ -73,9 +98,30 @@ void end(CirclePlotter *context);
 
 struct SplinePlotter;
 SplinePlotter *createSplinePlotter(int resolution=128);
-void destroy(SplinePlotter *context);
+
+class SplinePlotterRef {
+private:
+	SplinePlotter *context;
+
+public:
+	SplinePlotterRef() {}
+	SplinePlotterRef(SplinePlotter *aContext) : context(aContext) {}
+
+	operator SplinePlotter*() { return context; }
+	operator bool() const { return context; }
+
+	void destroy();
+
+	void begin(vec2 canvasSize, vec2 canvasOffset=vec(0,0));
+	void plot(mat4f positionMatrix, vec4f strokeVector, Color c);
+	void end();
+};
+
 
 // stroke vector helpers
+// The store is computed by taking the doc-product of these vectors
+// with a "cubic parameteric vector", e.g.:
+//   U = < u^3, u^2, u, 1 >,
 inline vec4f uniformStroke(float u) { return vec4f(0, 0, 0, u); }
 inline vec4f taperingStroke(float u, float v) { return vec4f(0, 0, v-u, u); }
 
@@ -91,8 +137,8 @@ inline vec4f quadraticBezierStroke(float t0, float t1, float t2) {
 // These compute hermite curves based on linear multiplication by
 // a "cubic parameteric vector", e.g.:
 //   U = < u^3, u^2, u, 1 >,
-#define XY_ROTATION_MATRIX (mat(0, -1, 0, 0, 1, 0, 0, 0))
 
+#define XY_ROTATION_MATRIX (mat(0, -1, 0, 0, 1, 0, 0, 0))
 
 inline mat4f derivativeMatrix(mat4f m) {
 	// Returns the derivative of the function encoded by the given
@@ -194,9 +240,3 @@ inline mat4f quadraticBezierDerivMatrix(vec4f p0, vec4f p1, vec4f p2) {
 		0, -2, 2, 0
 	});
 }
-
-void begin(SplinePlotter *context, vec2 canvasSize, vec2 canvasOffset=vec(0,0));
-void drawSpline(SplinePlotter *context, mat4f positionMatrix, vec4f strokeVector, Color c);
-void end(SplinePlotter *context);
-
-

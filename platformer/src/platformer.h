@@ -29,8 +29,8 @@ struct Environment {
 	ImageAsset *bg;
 	TilemapAsset *tmap;
 
-	void init(AssetBundle* assets, CollisionSystem* collisions);
-	void draw(SpritePlotter* batch);
+	void init(AssetRef assets, CollisionSystem* collisions);
+	void draw(SpritePlotterRef plotter);
 
 };
 
@@ -53,7 +53,7 @@ struct Hero {
 	SampleAsset *sfxJump;
 	SampleAsset *sfxFootfall;
 
-	void init(AssetBundle* assets, SpriteBatch *batch, CollisionSystem* collisions);
+	void init(AssetRef assets, SpriteBatchRef batch, CollisionSystem* collisions);
 	void tick(PlayerInput* input, CollisionSystem* collisions, float dt);
 };
 
@@ -70,5 +70,5 @@ struct Kitten {
 	AffineMatrix xform;
 	SpriteRef sprite;
 
-	void init(AssetBundle* assets, SpriteBatch *batch, CollisionSystem* collisions);
+	void init(AssetRef assets, SpriteBatchRef batch, CollisionSystem* collisions);
 };

@@ -99,12 +99,12 @@ LinePlotter *createLinePlotter() {
 	return result;
 }
 
-void destroy(LinePlotter *plotter) {
-	release(plotter);
-	dealloc(plotter);
+void LinePlotterRef::destroy() {
+	release(context);
+	dealloc(context);
 }
 
-void begin(LinePlotter* context, vec2 canvasSize, vec2 canvasOffset) {
+void LinePlotterRef::begin(vec2 canvasSize, vec2 canvasOffset) {
 	ASSERT(context->count == -1);
 	context->count = 0;
 
@@ -118,7 +118,7 @@ void begin(LinePlotter* context, vec2 canvasSize, vec2 canvasOffset) {
 	glVertexAttribPointer(context->aColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(LinePlotter::Vertex), &context->vertices[0].color);	
 }
 
-void plot(LinePlotter* context, vec2 p0, vec2 p1, Color c) {
+void LinePlotterRef::plot(vec2 p0, vec2 p1, Color c) {
 	ASSERT(context->count >= 0);
 	context->vertices[2*context->count  ].set(p0, c);
 	context->vertices[2*context->count+1].set(p1, c);
@@ -129,7 +129,7 @@ void plot(LinePlotter* context, vec2 p0, vec2 p1, Color c) {
 	}
 }
 
-void end(LinePlotter* context) {
+void LinePlotterRef::end() {
 	ASSERT(context->count >= 0);
 	if (context->count > 0) {
 		commitBatch(context);

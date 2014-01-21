@@ -143,12 +143,12 @@ SplinePlotter *createSplinePlotter(int resolution) {
 	return context;
 }
 
-void destroy(SplinePlotter *context) {
+void SplinePlotterRef::destroy() {
 	release(context);
 	dealloc(context);
 }
 
-void begin(SplinePlotter *context, vec2 canvasSize, vec2 canvasOffset) {
+void SplinePlotterRef::begin(vec2 canvasSize, vec2 canvasOffset) {
 	ASSERT(context->prog);
 	glUseProgram(context->prog);
 
@@ -163,7 +163,7 @@ void begin(SplinePlotter *context, vec2 canvasSize, vec2 canvasOffset) {
 	glVertexAttribPointer(context->aSide, 1, GL_FLOAT, GL_FALSE, sizeof(SplinePlotter::Vertex), (GLvoid*)16);
 }
 
-void drawSpline(SplinePlotter *context, mat4f positionMatrix, vec4f strokeVector, Color c) {
+void SplinePlotterRef::plot(mat4f positionMatrix, vec4f strokeVector, Color c) {
 	float buf[16];
 	positionMatrix.store(buf);
 	glUniformMatrix4fv(context->uPositionMatrix, 1, 0, buf);
@@ -175,7 +175,7 @@ void drawSpline(SplinePlotter *context, mat4f positionMatrix, vec4f strokeVector
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 2*context->resolution);
 }
 
-void end(SplinePlotter *context) {
+void SplinePlotterRef::end() {
 	glDisableVertexAttribArray(context->aParameter);
 	glDisableVertexAttribArray(context->aSide);
 	glUseProgram(0);

@@ -20,47 +20,68 @@
 #include "littlepolygon_math.h"
 
 //------------------------------------------------------------------------------
+// FORWARD DECLARATIONS
+//------------------------------------------------------------------------------
+
+struct SpritePlotter;
+struct SpriteBatch;
+struct Sprite;
+
+//------------------------------------------------------------------------------
 // SPRITE PLOTTER
 //------------------------------------------------------------------------------
 
 // This object can render lots of sprites in a small number of batched draw calls
 // by coalescing adjacent draws into larger logical draws.
 // TODO: perform batch-level clipping?
-struct SpritePlotter;
+
 SpritePlotter *createSpritePlotter(int capacity=64);
-void destroy(SpritePlotter *context);
 
-vec2 canvasSize(SpritePlotter *context);
-vec2 canvasScroll(SpritePlotter *context);
+class SpritePlotterRef {
+private:
+	SpritePlotter *context;
 
-// Call this method to initialize the graphics context state.  Coordinates are
-// set to a orthogonal projection matrix, and some basic settings like blending are
-// enabled.  Any additional state changes can be set *after* this function but *before*
-// issuing any draw calls.
-void begin(SpritePlotter* context, vec2 canvasSize, vec2 scrolling=vec(0,0));
+public:
+	SpritePlotterRef() {}
+	SpritePlotterRef(SpritePlotter *aContext) : context(aContext) {}
 
-// Draw the given image.  Will potentially cause a draw call to actually be emitted
-// to the graphics device if: (i) the buffer has reached capacity or (ii) the texture 
-// atlas has changed.  Color transforms *can* be batched, because they are encoded
-// in the vertices, not in shader uniforms.
-void drawImage(SpritePlotter* context, ImageAsset *image, vec2 position, int frame=0, Color color=rgba(0));
-void drawImageTransformed(SpritePlotter* context, ImageAsset *image, vec2 position, vec2 attitude, int frame=0, Color color=rgba(0));
-void drawImageTransformed(SpritePlotter *context, ImageAsset *image, const AffineMatrix& xform, int frame=0, Color color=rgba(0));
-void drawImageTransformed(SpritePlotter *context, ImageAsset *image, const mat4f& xform, int frame=0, Color color=rgba(0));
-void drawImageRotated(SpritePlotter* context, ImageAsset *image, vec2 position, float radians, int frame=0, Color color=rgba(0));
-void drawImageScaled(SpritePlotter* context, ImageAsset *image, vec2 position, vec2 k, int frame=0, Color color=rgba(0));
-void drawQuad(SpritePlotter* context, ImageAsset *image, vec2 p0, vec2 p1, vec2 p2, vec2 p3, int frame=0, Color color=rgba(0));
-void drawLabel(SpritePlotter* context, FontAsset *font, vec2 p, Color c, const char *msg);
-void drawLabelCentered(SpritePlotter* context, FontAsset *font, vec2 p, Color c, const char *msg);
-void drawTilemap(SpritePlotter* context, TilemapAsset *map, vec2 position=vec(0,0));
+	operator SpritePlotter*() { return context; }
+	operator bool() const { return context; }
 
-// if you want to monkey with the global rendering state (e.g. change blending settings)
-// you need to flush the render queue first.
-void flush(SpritePlotter* context);
+	void destroy();
 
-// Commit the current draw queue and return the graphics context state to it's
-// canonical form, to play nice with other renderers.
-void end(SpritePlotter* context);
+	bool bound() const;
+	vec2 canvasSize() const;
+	vec2 canvasScroll() const;
+
+	// Call this method to initialize the graphics context state.  Coordinates are
+	// set to a orthogonal projection matrix, and some basic settings like blending are
+	// enabled.  Any additional state changes can be set *after* this function but *before*
+	// issuing any draw calls.
+	void begin(vec2 canvasSize, vec2 scrolling=vec(0,0));
+
+	// Draw the given image.  Will potentially cause a draw call to actually be emitted
+	// to the graphics device if: (i) the buffer has reached capacity or (ii) the texture 
+	// atlas has changed.  Color transforms *can* be batched, because they are encoded
+	// in the vertices, not in shader uniforms.
+	void drawImage(ImageAsset *image, vec2 position, int frame=0, Color color=rgba(0));
+	void drawImage(ImageAsset *image, vec2 position, vec2 u, int frame=0, Color color=rgba(0));
+	void drawImage(ImageAsset *image, const AffineMatrix& xform, int frame=0, Color color=rgba(0));
+	void drawImage(ImageAsset *image, const mat4f& xform, int frame=0, Color color=rgba(0));
+	void drawQuad(ImageAsset *image, vec2 p0, vec2 p1, vec2 p2, vec2 p3, int frame=0, Color color=rgba(0));
+	void drawLabel(FontAsset *font, vec2 p, Color c, const char *msg);
+	void drawLabelCentered(FontAsset *font, vec2 p, Color c, const char *msg);
+	void drawTilemap(TilemapAsset *map, vec2 position=vec(0,0));	
+
+	// if you want to monkey with the global rendering state (e.g. change blending settings)
+	// you need to flush the render queue first.
+	void flush();
+
+	// Commit the current draw queue and return the graphics context state to it's
+	// canonical form, to play nice with other renderers.
+	void end();
+
+};
 
 //------------------------------------------------------------------------------
 // SPRITE BATCH - storage structure for saving a reuseable
@@ -75,54 +96,40 @@ void end(SpritePlotter* context);
 // ?? generic frame-based "animators" ??
 // ?? >2 multilayer ??
 
-struct SpriteBatch;
-struct Sprite;
 //TODO: typedef uint32_t SpriteID;
 
 // Create a new sprite context from a given capacity.
 SpriteBatch *createSpriteBatch(size_t capacity=1024);
-void destroy(SpriteBatch *context);
 
-// Create a new sprite
-Sprite* createSprite(
-	SpriteBatch *context, 
-	ImageAsset *image, 
-	const AffineMatrix *xform,
-	int frame=0, 
-	Color c=rgba(0), 
-	bool visible=1, 
-	bool onTop=0, 
-	void *userData=0
-);
-void destroy(Sprite* sprite);
+class SpriteBatchRef {
+private:
+	SpriteBatch *context;
 
-// setters
-void setLayer(Sprite* sprite, int layer);
+public:
+	SpriteBatchRef() {}
+	SpriteBatchRef(SpriteBatch *aContext) : context(aContext) {}
 
-// convenience transform methods (will squash existing values)
-void setImage(Sprite* sprite, ImageAsset *image);
-void setTransform(Sprite *sprite, const AffineMatrix *xform);
-void setFrame(Sprite* sprite, int frame);
-void setVisible(Sprite* sprite, bool visible);
-void setColor(Sprite* sprite, Color c);
-void setUserData(Sprite* sprite, void *userData);
+	operator SpriteBatch*() { return context; }
+	operator bool() const { return context; }
 
-// getters
-int layer(const Sprite *sprite);
-const AffineMatrix *transform(const Sprite *sprite);
-ImageAsset *image(const Sprite* sprite);
-int frame(const Sprite* sprite);
-bool visible(const Sprite* sprite);
-Color color(const Sprite* sprite);
-void *userData(const Sprite* sprite);
+	void destroy();
 
-// batch methods
-// void advanceAnimations(SpriteBatch *context, float dt);
-void draw(Sprite *sprite, SpritePlotter *plotter);
-void draw(SpriteBatch *context, SpritePlotter *plotter);
+	Sprite* addSprite(
+		ImageAsset *image, 
+		const AffineMatrix *xform,
+		int frame=0, 
+		Color c=rgba(0), 
+		bool visible=1, 
+		bool onTop=0, 
+		void *userData=0
+	);
+
+	void draw(SpritePlotterRef plotter);
+
+};
 
 //------------------------------------------------------------------------------
-// C++ INTERFACE
+// BATCHED SPRITE INSTANCE
 //------------------------------------------------------------------------------
 
 class SpriteRef {
@@ -134,27 +141,27 @@ public:
 	SpriteRef(Sprite *aSprite) : sprite(aSprite) {}
 
 	operator Sprite*() { return sprite; }
-	operator const Sprite*() { return sprite; }
+	operator bool() const { return sprite; }
 
-	// void setLayer(int layer) { ::setLayer(sprite, layer); }	
-	void setImage(ImageAsset *img) { ::setImage(sprite, img); }
-	void setTransform(const AffineMatrix* matrix) { ::setTransform(sprite, matrix); }
-	void setFrame(int frame) { ::setFrame(sprite, frame); }
-	void setVisible(bool flag) { ::setVisible(sprite, flag); }
-	void setColor(Color c) { ::setColor(sprite, c); }
-	void setUserData(void *userData) { ::setUserData(sprite, userData); }
-	int layer() const { return ::layer(sprite); }
-	const AffineMatrix* transform() const { return ::transform(sprite); }
-	ImageAsset *image() const { return ::image(sprite); }
-	int frame() const { return ::frame(sprite); }
-	Color color() const { return ::color(sprite); }
+	void destroy();
+
+	void setLayer(int layer);
+	void setImage(ImageAsset *img);
+	void setTransform(const AffineMatrix* matrix);
+	void setFrame(int frame);
+	void setVisible(bool flag);
+	void setColor(Color c);
+	void setUserData(void *userData);
+	int layer() const;
+	const AffineMatrix* transform() const;
+	ImageAsset *image() const;
+	bool visible() const;
+	int frame() const;
+	Color color() const;
+	void *userData() const;
 
 	template<typename T>
-	T* data() const { return (T*) ::userData(sprite); }
-
-	void draw(SpritePlotter *plotter) { ::draw(sprite, plotter); }
-
-	void destroy() { ::destroy(sprite); }
+	T* data() const { return (T*) userData(); }
 };
 
 

@@ -54,6 +54,10 @@ struct TextureAsset {
 	
 	inline bool initialized() const { return textureHandle != 0; }
 	inline int format() const { return GL_RGBA; }
+
+	void init();
+	void bind();
+	void release();
 };
 
 struct FrameAsset {
@@ -100,6 +104,9 @@ struct TilemapAsset {
 		ASSERT(y >= 0 && y < mh);
 		return data[y * mw + x];
 	}
+
+	void init();
+	void release();
 };
 
 struct GlyphAsset {
@@ -138,6 +145,10 @@ struct SampleAsset {
 	uint32_t size, compressedSize; // byte-length of the compressed data
 
 	inline bool initialized() const { return chunk != 0; }
+
+	void init();
+	void play();
+	void release();
 };
 
 struct UserdataAsset {
@@ -158,14 +169,22 @@ struct UserdataAsset {
 // MAIN INTERFACE
 //------------------------------------------------------------------------------
 
-#ifdef DEBUG
-#define ASSET_RESULT_VERIFY(expr) auto res = (expr); if (!res) { LOG(("ASSET UNDEFINED: %s\n", name)); } return res;
-#else
-#define ASSET_RESULT_VERIFY(expr) return expr;
-#endif
+struct AssetBundle;
 
-struct AssetBundle {
-	size_t assetCount;
+// Block allocate assets from the binary at the given SDL path.  Can optionally
+// pass a crc along to double-check it's a specific build.
+AssetBundle* loadAssets(const char* path, uint32_t crc=0);
+
+class AssetRef {
+private:
+	AssetBundle *bundle;
+
+public:
+	AssetRef() {}
+	AssetRef(AssetBundle *aBundle) : bundle(aBundle) {}
+
+	operator AssetBundle*() { return bundle; }
+	operator bool() const { return bundle; }
 
 	// Assets are keyed by name-hashes (fnv-1a)
 	// inlined so that the compiler can constant-fold over string literals :)
@@ -179,15 +198,12 @@ struct AssetBundle {
 	    return hval;
 	}
 
-	struct Header {
-		uint32_t hash, type;
-		void* data;
-	};
+	#ifdef DEBUG
+	#define ASSET_RESULT_VERIFY(expr) auto res = (expr); if (!res) { LOG(("ASSET UNDEFINED: %s\n", name)); } return res;
+	#else
+	#define ASSET_RESULT_VERIFY(expr) return expr;
+	#endif
 
-	// if we fail to find an asset, optionally check a fallback
-	// (for "pusinging" level content on top of shared content)
-	AssetBundle *fallback;
-	Header *headers;
 
 	// lookup assets by name
 	inline TextureAsset *texture(const char * name) { ASSET_RESULT_VERIFY(texture(hash(name))) }
@@ -205,37 +221,21 @@ struct AssetBundle {
 	inline SampleAsset *sample(uint32_t hash) { return (SampleAsset*) findHeader(hash, ASSET_TYPE_SAMPLE); }
 	inline UserdataAsset *userdata(uint32_t hash) { return (UserdataAsset*) findHeader(hash, ASSET_TYPE_USERDATA); }
 
+	#undef ASSET_RESULT_VERIFY
+
 	// headers are sorted by hash, so lookup is LOG(N)
 	void* findHeader(uint32_t hash, uint32_t assetType);
+	void setFallback(AssetRef fallback);
+
+	// by default assets are initialized lazily, but this method will eagerly initialize
+	// the whole asset bundle;
+	void init();
+
+	// release all intialized assets, but don't free the POD from memory
+	void release();
+
+	// release all assets and free POD from memory
+	void destroy();
 
 };
-
-#undef ASSET_RESULT_VERIFY
-
-// Block allocate assets from the binary at the given SDL path.  Can optionally
-// pass a crc along to double-check it's a specific build.
-AssetBundle* createAssetBundle(const char* path, uint32_t crc=0);
-void destroy(AssetBundle *bundle);
-
-// By default, resource handles for assets are initializes lazily, however
-// you can use these functions to initialize them eagerly. NOOP if this is just
-// an empty header.
-void initialize(AssetBundle* bundle);
-void release(AssetBundle* bundle);
-
-// Methods for decompressing textures and binding to opengl
-void initialize(TextureAsset *asset);
-void bind(TextureAsset *asset);
-void release(TextureAsset *asset);
-
-// Methods for decompressing tilemaps and initializing its
-// texture-atlas
-void initialize(TilemapAsset *asset);
-void release(TilemapAsset *asset);
-
-// Methods for decompressing audio samples bind to mixer
-void initialize(SampleAsset *asset);
-void play(SampleAsset *asset);
-void release(SampleAsset *asset);
-
 

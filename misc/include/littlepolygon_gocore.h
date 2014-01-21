@@ -70,5 +70,7 @@ struct GoCore {
 		destroy(nodes);
 		destroy(assets);		
 	}
+
+	SpriteComponentType *spriteType() { return &spriteComponent; }
 };
 

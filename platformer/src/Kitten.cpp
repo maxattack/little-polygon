@@ -3,10 +3,10 @@
 #define HALF_WIDTH      0.25f
 #define HALF_HEIGHT     0.25f
 
-void Kitten::init(AssetBundle* assets, SpriteBatch *batch, CollisionSystem* collisions) {
+void Kitten::init(AssetRef assets, SpriteBatchRef batch, CollisionSystem* collisions) {
 	
 	// init physics
-	auto pos = assets->userdata("kitten.position")->as<vec2>() - vec(0,0.1f);
+	auto pos = assets.userdata("kitten.position")->as<vec2>() - vec(0,0.1f);
 	collider = collisions->addCollider(
 		aabb(
 			pos-vec(HALF_WIDTH, 2*HALF_HEIGHT),
@@ -21,6 +21,6 @@ void Kitten::init(AssetBundle* assets, SpriteBatch *batch, CollisionSystem* coll
 
 	// init fx
 	xform = AffineMatrix(vec(-1,0), vec(0,1), PIXELS_PER_METER * position());
-	sprite = createSprite(batch, assets->image("kitten"), &xform);
+	sprite = batch.addSprite(assets.image("kitten"), &xform);
 
 }

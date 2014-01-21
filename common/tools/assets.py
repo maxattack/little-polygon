@@ -67,7 +67,7 @@ class Image:
 			frames = open_image_layers(path[:-2] )
 		elif path.lower().endswith('.gif'):
 			# animated gif
-			im = Image.open(path)
+			im = open_image(path)
 			curr_frame = 0
 			frames = []
 			while 1:

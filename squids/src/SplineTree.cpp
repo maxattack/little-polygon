@@ -1,34 +1,65 @@
 #include "SplineTree.h"
+#include <algorithm>
 
-SplineTree::SplineTree(FkContext *context) : mCount(0) {
+SplineTree::SplineTree() {
 }
 
-void SplineTree::addSegment(const AffineMatrix *t0, const AffineMatrix *t1) {
-	ASSERT(mCount < SEGMENT_CAPACITY);
-	if (!find(t0, t1)) {
-		mSegments[mCount].t0 = t0;
-		mSegments[mCount].t1 = t1;
-		++mCount;
+Knot* SplineTree::addKnot(const AffineMatrix *tform, vec2 attitude) {
+	auto result = knotPool.alloc();
+	result->tform = tform;
+	result->attitude = attitude;
+	return result;
+}
+
+void SplineTree::removeKnot(Knot *knot) {
+	// remove any segments that start or end with this
+	auto p = segmentPool.begin();
+	while(p != segmentPool.end()) {
+		if (p->k0 == knot || p->k1 == knot) {
+			segmentPool.release(p);
+		} else {
+			++p;
+		}
+	}
+	knotPool.release(knot);
+}
+
+void SplineTree::addSegment(const Knot *k0, const Knot *k1) {
+	auto p = std::find_if(
+		segmentPool.begin(), 
+		segmentPool.end(), 
+		[k0,k1](const Segment &s) { return s.matches(k0,k1); }
+	);
+	if (p == segmentPool.end()) {
+		auto s = segmentPool.alloc();
+		s->k0 = k0;
+		s->k1 = k1;
 	}
 }
 
-void SplineTree::removeSegment(const AffineMatrix *t0, const AffineMatrix *t1) {
-	auto s = find(t0, t1);
-	if (s) {
-		if (s != mSegments+(mCount-1)) { *s = mSegments[mCount-1]; }
-		--mCount;
+void SplineTree::removeSegment(const Knot *k0, const Knot *k1) {
+	auto p = std::find_if(
+		segmentPool.begin(), 
+		segmentPool.end(), 
+		[k0,k1](const Segment &s) { return s.matches(k0,k1); }
+	);
+	if (p != segmentPool.end()) {
+		segmentPool.release(p);
 	}
 }
 
-void SplineTree::draw(SplinePlotter *splines, Color c, float ss) {
-	for(auto s=mSegments; s<mSegments+mCount; ++s) {
-		drawSpline(
-			splines, 
+void SplineTree::draw(SplinePlotterRef splines, Color c, float ss) {
+	for (auto& s : segmentPool) {
+		auto p0 = s.k0->tform->t;
+		auto p1 = s.k1->tform->t;
+		auto u0 = s.k0->tform->transformVector(s.k0->attitude);
+		auto u1 = s.k1->tform->transformVector(s.k1->attitude);
+		splines.plot(
 			hermiteMatrix(
-				vec4f(s->t0->t.x, s->t0->t.y, 0, 0),
-				vec4f(s->t1->t.x, s->t1->t.y, 0, 0),
-				vec4f(s->t0->u.x, s->t0->u.y, 0, 0),
-				vec4f(s->t1->u.x, s->t1->u.y, 0, 0)
+				vec4f(p0.x, p0.y, 0, 0),
+				vec4f(p1.x, p1.y, 0, 0),
+				vec4f(u0.x, u0.y, 0, 0),
+				vec4f(u1.x, u1.y, 0, 0)
 			),
 			eccentricStroke(ss * 12, ss * -6, ss * 12),
 			c
@@ -36,12 +67,25 @@ void SplineTree::draw(SplinePlotter *splines, Color c, float ss) {
 	}
 }
 
-SplineTree::Segment* SplineTree::find(const AffineMatrix *t0, const AffineMatrix *t1) {
-	for(auto s=mSegments; s<mSegments+mCount; ++s) {
-		if ((s->t0 == t0 && s->t1 == t1) ||
-		    (s->t0 == t1 && s->t1 == t0)) {
-			return s;
-		}
+void SplineTree::drawKnots(LinePlotterRef lines, Color c) {
+	Knot *p;
+	for(auto i=knotPool.listSlots(); i.next(p);) {
+		auto p0 = p->tform->t;
+		auto u = 0.3333 * p->tform->transformVector(p->attitude);		
+		// plot a little square
+		lines.plot(p0+vec(-4,-4), p0+vec(4,-4), c);
+		lines.plot(p0+vec(4,-4), p0+vec(4,4), c);
+		lines.plot(p0+vec(4,4), p0+vec(-4,4), c);
+		lines.plot(p0+vec(-4,4), p0+vec(-4,-4), c);
+
+		// plot tangent
+		lines.plot(p0, p0+u, c);
+
+		lines.plot(p0+u, p0 + u + 8*(u.clockwise()-u).normalized(), c);
+		lines.plot(p0+u, p0 + u + 8*(u.anticlockwise()-u).normalized(), c);
+		
+
+		// plot a little arrow
+
 	}
-	return 0;
 }

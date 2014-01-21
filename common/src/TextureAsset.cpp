@@ -17,43 +17,43 @@
 #include "littlepolygon_assets.h"
 #include <zlib.h>
 
-void initialize(TextureAsset *asset) {
-	if(asset->textureHandle == 0) {
-		glGenTextures(1, &asset->textureHandle);
-		glBindTexture(GL_TEXTURE_2D, asset->textureHandle);
-		if (asset->flags & TEXTURE_FLAG_FILTER) {
+void TextureAsset::init() {
+	if(textureHandle == 0) {
+		glGenTextures(1, &textureHandle);
+		glBindTexture(GL_TEXTURE_2D, textureHandle);
+		if (flags & TEXTURE_FLAG_FILTER) {
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		} else {
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		}
-		if (asset->flags & TEXTURE_FLAG_REPEAT) {
+		if (flags & TEXTURE_FLAG_REPEAT) {
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 		} else {
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		}
-		uLongf size = 4 * asset->w * asset->h;
+		uLongf size = 4 * w * h;
 		Bytef *scratch = (Bytef *) LITTLE_POLYGON_MALLOC(size);
-		int result = uncompress(scratch, &size, (const Bytef*)asset->compressedData, asset->compressedSize);
+		int result = uncompress(scratch, &size, (const Bytef*)compressedData, compressedSize);
 		CHECK(result == Z_OK);
-		int fmt = asset->format();
-		glTexImage2D(GL_TEXTURE_2D, 0, fmt, asset->w, asset->h, 0, fmt, GL_UNSIGNED_BYTE, scratch);
+		int fmt = format();
+		glTexImage2D(GL_TEXTURE_2D, 0, fmt, w, h, 0, fmt, GL_UNSIGNED_BYTE, scratch);
 		LITTLE_POLYGON_FREE(scratch);
 	}
 }
 
-void release(TextureAsset *asset) {
-	if (asset->textureHandle) {
-		glDeleteTextures(1, &asset->textureHandle);
-		asset->textureHandle = 0;
+void TextureAsset::release() {
+	if (textureHandle) {
+		glDeleteTextures(1, &textureHandle);
+		textureHandle = 0;
 	}
 }
 
-void bind(TextureAsset *asset) {
-	initialize(asset);
-	glBindTexture(GL_TEXTURE_2D, asset->textureHandle);
+void TextureAsset::bind() {
+	init();
+	glBindTexture(GL_TEXTURE_2D, textureHandle);
 }
 
