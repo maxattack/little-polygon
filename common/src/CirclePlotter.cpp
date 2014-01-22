@@ -66,7 +66,7 @@ struct CirclePlotter {
 	Vertex *getVert(int i) { return &headVert + i; }
 };
 
-CirclePlotter *createCirclePlotter(size_t resolution) {
+CirclePlotterRef createCirclePlotter(size_t resolution) {
 	auto context = (CirclePlotter*) LITTLE_POLYGON_MALLOC(
 		sizeof(CirclePlotter) + 
 		sizeof(CirclePlotter::Vertex) * (2 * resolution-1));

@@ -137,7 +137,7 @@ static void release(SplinePlotter *context) {
 	glDeleteShader(context->frag);
 }
 
-SplinePlotter *createSplinePlotter(int resolution) {
+SplinePlotterRef createSplinePlotter(int resolution) {
 	auto context = allocSpline();
 	initialize(context, resolution);
 	return context;

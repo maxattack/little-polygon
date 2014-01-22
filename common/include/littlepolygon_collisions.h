@@ -145,7 +145,7 @@ enum TriggerType { ENTER, STAY, EXIT };
 // MAIN INTERFACE
 //------------------------------------------------------------------------------
 
-CollisionContext *createCollisionSystem(
+CollisionSystemRef createCollisionSystem(
 	size_t colliderCapacity=1024, 
 	size_t numBuckets=1024, 
 	size_t maxContacts=1024

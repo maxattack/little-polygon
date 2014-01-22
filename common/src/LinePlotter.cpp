@@ -93,7 +93,7 @@ static void release(LinePlotter* context) {
 	glDeleteShader(context->frag);
 }
 
-LinePlotter *createLinePlotter() {
+LinePlotterRef createLinePlotter() {
 	auto result = allocLinePlotter();
 	initialize(result);
 	return result;

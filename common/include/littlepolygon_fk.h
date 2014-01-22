@@ -50,7 +50,7 @@ class FkNodeRef;
 // Create a context.  Different contexts can be allocated withing a single
 // application, but FkNodeRefs from different contexts cannot directly
 // interact.
-FkContext *createFkContext(size_t capacity=1024);
+FkTreeRef createFkContext(size_t capacity=1024);
 
 class FkTreeRef {
 private:
@@ -109,7 +109,7 @@ public:
 
 	void apply(const AffineMatrix& matrix) { setLocal(matrix * local()); }
 
-	FkContext* context() const;
+	FkTreeRef context() const;
 	FkNodeRef parent() const;
 	int level() const;
 	const AffineMatrix& local() const;

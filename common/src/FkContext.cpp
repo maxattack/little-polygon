@@ -77,7 +77,7 @@ struct FkContext {
 
 };
 
-FkContext *createFkContext(size_t capacity) {
+FkTreeRef createFkContext(size_t capacity) {
 	ASSERT(capacity <= 1024); // because of the bitset mask
 
 	// allocate memory
@@ -360,7 +360,7 @@ void FkNodeRef::setWorld(const AffineMatrix& transform) {
 	}	
 }
 
-FkContext *FkNodeRef::context() const {
+FkTreeRef FkNodeRef::context() const {
 	return node->context;
 }
 

@@ -77,7 +77,7 @@ struct SpriteBatch {
 
 };
 
-SpriteBatch *createSpriteBatch(size_t capacity) {
+SpriteBatchRef createSpriteBatch(size_t capacity) {
 	// validate args
 	ASSERT(capacity <= 1024);
 
@@ -149,7 +149,7 @@ static void removeFromLayer(SpriteBatch *context, Sprite *sprite) {
 	}
 }
 
-Sprite* SpriteBatchRef::addSprite(
+SpriteRef SpriteBatchRef::addSprite(
 	ImageAsset *image, 
 	const AffineMatrix *xform,
 	int frame, Color c, bool visible, bool onTop, 
@@ -183,6 +183,10 @@ Sprite* SpriteBatchRef::addSprite(
 	result->userData = userData;
 
 	return result;
+}
+
+SpriteBatchRef SpriteRef::batch() {
+	return sprite->context;
 }
 
 void SpriteRef::destroy() {

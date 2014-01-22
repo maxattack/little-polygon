@@ -26,6 +26,9 @@
 struct SpritePlotter;
 struct SpriteBatch;
 struct Sprite;
+class SpritePlotterRef;
+class SpriteBatchRef;
+class SpriteRef;
 
 //------------------------------------------------------------------------------
 // SPRITE PLOTTER
@@ -35,7 +38,7 @@ struct Sprite;
 // by coalescing adjacent draws into larger logical draws.
 // TODO: perform batch-level clipping?
 
-SpritePlotter *createSpritePlotter(int capacity=64);
+SpritePlotterRef createSpritePlotter(int capacity=64);
 
 class SpritePlotterRef {
 private:
@@ -99,7 +102,7 @@ public:
 //TODO: typedef uint32_t SpriteID;
 
 // Create a new sprite context from a given capacity.
-SpriteBatch *createSpriteBatch(size_t capacity=1024);
+SpriteBatchRef createSpriteBatch(size_t capacity=1024);
 
 class SpriteBatchRef {
 private:
@@ -114,7 +117,7 @@ public:
 
 	void destroy();
 
-	Sprite* addSprite(
+	SpriteRef addSprite(
 		ImageAsset *image, 
 		const AffineMatrix *xform,
 		int frame=0, 
@@ -145,6 +148,8 @@ public:
 
 	void destroy();
 
+	SpriteBatchRef batch();
+	
 	void setLayer(int layer);
 	void setImage(ImageAsset *img);
 	void setTransform(const AffineMatrix* matrix);

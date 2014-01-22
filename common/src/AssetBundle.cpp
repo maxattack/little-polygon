@@ -30,7 +30,7 @@ struct AssetBundle {
 	Header headers[1];
 };
 
-AssetBundle* loadAssets(const char* path, uint32_t crc) {
+AssetRef loadAssets(const char* path, uint32_t crc) {
 	SDL_RWops* file = SDL_RWFromFile(path, "rb");
 	
 	// read length and count

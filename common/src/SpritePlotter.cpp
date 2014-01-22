@@ -143,7 +143,7 @@ static void release(SpritePlotter* context) {
 }
 
 
-SpritePlotter *createSpritePlotter(int capacity) {
+SpritePlotterRef createSpritePlotter(int capacity) {
 	auto result = allocSpritePlotter(capacity);
 	initialize(result, capacity);
 	return result;

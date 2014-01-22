@@ -17,6 +17,10 @@
 #pragma once
 #include "littlepolygon_base.h"
 
+
+struct AssetBundle;
+class AssetRef;
+
 //------------------------------------------------------------------------------
 // CONSTANTS
 //------------------------------------------------------------------------------
@@ -172,11 +176,9 @@ struct UserdataAsset {
 // MAIN INTERFACE
 //------------------------------------------------------------------------------
 
-struct AssetBundle;
-
 // Block allocate assets from the binary at the given SDL path.  Can optionally
 // pass a crc along to double-check it's a specific build.
-AssetBundle* loadAssets(const char* path, uint32_t crc=0);
+AssetRef loadAssets(const char* path, uint32_t crc=0);
 
 class AssetRef {
 private:

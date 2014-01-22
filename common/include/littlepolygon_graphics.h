@@ -41,7 +41,9 @@ bool compileShader(const GLchar* source, GLuint *outProg, GLuint *outVert, GLuin
 //------------------------------------------------------------------------------
 
 struct LinePlotter;
-LinePlotter *createLinePlotter();
+class LinePlotterRef;
+
+LinePlotterRef createLinePlotter();
 
 class LinePlotterRef {
 private:
@@ -66,7 +68,9 @@ public:
 //------------------------------------------------------------------------------
 
 struct CirclePlotter;
-CirclePlotter *createCirclePlotter(size_t resolution=128);
+class CirclePlotterRef;
+
+CirclePlotterRef createCirclePlotter(size_t resolution=128);
 
 class CirclePlotterRef {
 private:
@@ -97,7 +101,9 @@ public:
 // Non-uniform tapering as well for making things like tentacles :P
 
 struct SplinePlotter;
-SplinePlotter *createSplinePlotter(int resolution=128);
+class SplinePlotterRef;
+
+SplinePlotterRef createSplinePlotter(int resolution=128);
 
 class SplinePlotterRef {
 private:

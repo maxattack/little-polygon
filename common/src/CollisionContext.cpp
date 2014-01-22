@@ -125,7 +125,7 @@ float Ray::intersect(const AABB& box) const {
 // COLLISION CONTEXT METHODS
 //------------------------------------------------------------------------------
 
-CollisionContext *createCollisionSystem(size_t colliderCapacity, size_t numBuckets, size_t maxContacts) {
+CollisionSystemRef createCollisionSystem(size_t colliderCapacity, size_t numBuckets, size_t maxContacts) {
 	ASSERT(colliderCapacity <= 1024);
 	ASSERT(numBuckets <= 1024);
 	ASSERT(maxContacts <= 1024);
