@@ -29,10 +29,17 @@
 // Each component has dynamic properties which can be interrogated by other systems,
 // e.g. an in-game editor.
 
-// TL;DR - very simple, portable metadata.
+// GOs provide a simple way to specify level data in a portable/game-agnostic way without
+// having to roll a new binary schema, kind of like who PNGs relieve us of having to
+// roll some new image format or WAVs and MP3s free us from having to re-invent samples
+// and streaming music.  This implementation is intended to be paired with a reference
+// "content compiler" which simplifies specifying and loading components through a
+// designer-friendly "template-specialization" heirarchy, similar to CSS.
+
+// TL;DR - portable metadata.
 
 // GIFT IDEAS:
-//   - generic uint32_t mask for each GO?
+//   - GO Layers?
 
 //------------------------------------------------------------------------------
 // TYPES
@@ -85,15 +92,19 @@ public:
 
 	void destroy();
 
+	// Each context is backed by a display tree.  In principle this should actually
+	// be a component, but it's so common it might make sense to model it this way.
 	FkTreeRef displayTree();
 
+	// Game objects have serializable IDs
 	GameObjectRef find(GameObjectID gid);
 	GameObjectRef find(GoName name);
 
 	// Explicit IDs are useful for deserialization and network syncronization.  Passing
-	// 0 will just generate a new one.  IDs may conflict, which will cause this method to
-	// fail.  Passing 1-N to a fresh context should work OK.
-	GameObjectRef addObject(GoName="", GameObjectID explicitId=0);
+	// 0 will just generate a new unique ID.  IDs may conflict, because they encode
+	// storage, which will cause this method to fail.  Passing 1-N to a fresh context
+	// is guarenteed to succeed.
+	GameObjectRef addObject(GoName name="", GameObjectID explicitId=0);
 
 };
 
@@ -117,13 +128,22 @@ public:
 	GoName name() const;
 	FkNodeRef node();
 
+	// These methods are forwarded to components, and their response is based
+	// on runtime virtual-function dispatch.  They're required largely to support
+	// common game idioms: object pools and mode-based activation of content.
 	int enable();
 	int disable();
 	int sendMessage(int msg, const void *args=0);
 
+	// GOs typically only have one component of a given type; however in the event
+	// that they have more than one, you can find all instances by iterating over
+	// them.  Otherwise, these methods are common enough to have first-class
+	// status.
 	GoComponentRef addComponent(GoComponentType *type, const void *args=0);
 	GoComponentRef getComponent(GoComponentType *type);
 
+	// Nuking a game object also destroys all it's children, components, and 
+	// logical properties.
 	void destroy();
 };
 
@@ -133,10 +153,34 @@ public:
 
 class GoComponentType {
 public:
+
+	// Invoked when a component is added and before it's reference is publicized
+	// to code.  Due to order-of-initialization being generally undefined, you should
+	// not typically depend on sibling components here.
+	// Backing-store for components is implemented using the userData handle here
+	// as a Component->Implementation mapping.
+	// In principle, component backing store should work *without the component
+	// interface*.  This is just metadata, not an intrinsic part of the functionality
+	// of the underlying system.  Our role is as a matchmaker, not a man-in-the-middle.
 	virtual int init(GoComponentRef component, const void *args=0) = 0;
+
+	// Components are disabled by default and must be explicitly enabled here.  For 
+	// objects which don't support logicaly disabling, this is where they should
+	// actually be instantiated then.  Calls to enable() and disable() can be interleaved,
+	// but you won't get two enable() or disable() calls in a row.
+	// During deserialization, all components will be init()'d before any are enabled,
+	// so this is a good point for any initialization which depends on siblings.
 	virtual int enable(GoComponentRef component) = 0;
+
+	// Messages are the general mechanism for dispatching events which have an 
+	// "inverted flow of control" or "observer" characteristic.  I haven't thought
+	// about this too much, yet.  More to come.
 	virtual int message(GoComponentRef component, int messageId, const void *args=0) { return 0; }
+
+	// Disable the object but don't release it's resources.
 	virtual int disable(GoComponentRef component) = 0;
+
+	// Actually release resources - this GameObject is about to be nuked.
 	virtual int release(GoComponentRef component) = 0;
 };
 
@@ -158,7 +202,6 @@ public:
 	GoComponentType* type();
 	GameObjectRef gameObject();
 	void *userData();
-
 	void setUserData(void *data);
 
 	template<typename T>
@@ -180,7 +223,6 @@ enum GoPropertyType {
 	PROPERTY_UNDEFINED,
 	PROPERTY_INT,
 	PROPERTY_FLOAT,
-	PROPERTY_NAME,
 	PROPERTY_STRING,
 	PROPERTY_GO_REFERENCE
 };
@@ -208,7 +250,7 @@ enum GoPropertyType {
 //   positions[1].x = 0
 //   positions[1].x = 42
 //
-// This schema maps very cleanly into key-value stores and nosql databases
+// This schema maps very cleanly into key-value stores and nosql databases.
 
 class GoPropertyRef {
 private:
@@ -228,7 +270,6 @@ public:
 
 	int intValue() const;
 	float floatValue() const;
-	GoName nameValue() const;
 	GoString stringValue() const;
 	GameObjectRef refValue() const;
 
@@ -238,6 +279,9 @@ public:
 
 //------------------------------------------------------------------------------
 // ITERATORS
+// These are the basic work-horses of in-game editors, allowing for databse-like
+// "discovery" of object, components, and properties.  In principle, this should
+// be all that's required to build a display-tree or inspector view.
 //------------------------------------------------------------------------------
 
 // Iterates over all game objects
@@ -259,6 +303,7 @@ struct GoComponentIterator {
 	void next();
 };
 
+// Iterate over all properties of a given component
 struct GoPropertyIterator {
 	GoPropertyRef current;
 
