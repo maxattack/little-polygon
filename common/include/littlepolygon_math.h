@@ -179,12 +179,14 @@ struct AffineMatrix {
 // helpers
 inline AffineMatrix affineIdentity() { return AffineMatrix(vec(1,0), vec(0,1), vec(0,0)); }
 inline AffineMatrix affineTranslation(vec2 t) { return AffineMatrix(vec(1,0), vec(0,1), t); }
-inline AffineMatrix affineRotation(float radians) { 
-	float s=sinf(radians); float c=cosf(radians); 
-	return AffineMatrix(vec(c,s), vec(-s,c), vec(0,0)); 
-}
+inline AffineMatrix affineTranslation(float x, float y) { return affineTranslation(vec(x,y)); }
 inline AffineMatrix affineAttitude(vec2 dir) { return AffineMatrix(dir, vec(-dir.y,dir.x), vec(0,0)); }
+inline AffineMatrix affineAttitude(float x, float y) { return affineAttitude(vec(x,y)); }
+inline AffineMatrix affineRotation(float radians) { return affineAttitude(cosf(radians), sinf(radians)); }
+inline AffineMatrix affinePolar(float r, float radians) { return affineAttitude(r*cosf(radians), r*sinf(radians)); }
 inline AffineMatrix affineScale(vec2 s) { return AffineMatrix(vec(s.x,0), vec(0,s.y), vec(0,0)); }
+inline AffineMatrix affineScale(float x, float y) { return affineScale(vec(x,y)); }
+inline AffineMatrix affineScale(float k) { return affineScale(vec(k,k)); }
 inline AffineMatrix affineForeshortened(const mat4f& matrix) {
 	float buf[16];
 	matrix.store(buf);
@@ -194,6 +196,8 @@ inline AffineMatrix affineForeshortened(const mat4f& matrix) {
 		vec(buf[12], buf[13])
 	);
 }
+
+
 
 // linear range methods
 inline float clamp(float u, float lo=0.f, float hi=1.f) { return u<lo?lo:u>hi?hi:u; }

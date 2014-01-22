@@ -25,7 +25,7 @@ void Environment::draw(SpritePlotterRef plotter) {
 
 	// temp: hard-coded
 	plotter.drawImage(bg, vec(4,CANVAS_HEIGHT));
-	//plotter.drawImageScaled(bg, vec(CANVAS_WIDTH-8, CANVAS_HEIGHT-56), vec(-1,1));
+	plotter.drawImage(bg, affineTranslation(CANVAS_WIDTH-8, CANVAS_HEIGHT-56) * affineScale(-1,1));
 	
 	// actual tilemap
 	plotter.flush();
