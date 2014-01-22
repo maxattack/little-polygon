@@ -101,24 +101,24 @@ float Ray::intersect(const AABB& box) const {
 		// check left
 		float u = (box.p0.x - p0.x) / (p1.x - p0.x);
 		float y = p0.y + u * (p1.y - p0.y);
-		if (y > box.p0.y && y < box.p1.y) { result = u; }
+		if (y >= box.p0.y && y <= box.p1.y) { result = u; }
 	} else if (p0.x > box.p1.x && p1.x < box.p1.x) {
 		// check right
 		float u = (box.p1.x - p0.x) / (p1.x - p0.x);
 		float y = p0.y + u * (p1.y - p0.y);
-		if (y > box.p0.y && y < box.p1.y) { result = u; }
+		if (y >= box.p0.y && y <= box.p1.y) { result = u; }
 	}
 
 	if (p0.y < box.p0.y && p1.y > box.p0.y) {
 		// check top
 		float u = (box.p0.y - p0.y) / (p1.y - p0.y);
 		float x = p0.x + u * (p1.x - p0.x);
-		if (x > box.p0.x && x < box.p1.x) { result = result > 0 ? MIN(result,u) : u; }
+		if (x >= box.p0.x && x <= box.p1.x) { result = result > 0 ? MIN(result,u) : u; }
 	} else if (p0.y > box.p1.y && p1.y < box.p1.y) {
 		// check bottom
 		float u = (box.p1.y - p0.y) / (p1.y - p0.y);
 		float x = p0.x + u * (p1.x - p0.x);
-		if (x > box.p0.x && x < box.p1.x) { result = result > 0 ? MIN(result,u) : u; }
+		if (x >= box.p0.x && x <= box.p1.x) { result = result > 0 ? MIN(result,u) : u; }
 	}
 
 	return result;

@@ -97,6 +97,7 @@ int main(int argc, char *argv[]) {
 			lines.begin(canvasSize, scrolling);
 			collisions.debugDraw(lines, rgb(0xffff00));
 
+			// test raycasting
 			SDL_Point mouse;
 			SDL_GetMouseState(&mouse.x, &mouse.y);
 			auto ray = Ray(0.25f * canvasSize, 0.25f * vec2(mouse));
