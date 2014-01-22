@@ -91,6 +91,40 @@ struct CollisionContext {
 };
 
 //------------------------------------------------------------------------------
+// MAFFEMATICS
+//------------------------------------------------------------------------------
+
+float Ray::intersect(const AABB& box) const {
+	float result = -1;
+	
+	if (p0.x < box.p0.x && p1.x > box.p0.x) {
+		// check left
+		float u = (box.p0.x - p0.x) / (p1.x - p0.x);
+		float y = p0.y + u * (p1.y - p0.y);
+		if (y > box.p0.y && y < box.p1.y) { result = u; }
+	} else if (p0.x > box.p1.x && p1.x < box.p1.x) {
+		// check right
+		float u = (box.p1.x - p0.x) / (p1.x - p0.x);
+		float y = p0.y + u * (p1.y - p0.y);
+		if (y > box.p0.y && y < box.p1.y) { result = u; }
+	}
+
+	if (p0.y < box.p0.y && p1.y > box.p0.y) {
+		// check top
+		float u = (box.p0.y - p0.y) / (p1.y - p0.y);
+		float x = p0.x + u * (p1.x - p0.x);
+		if (x > box.p0.x && x < box.p1.x) { result = result > 0 ? MIN(result,u) : u; }
+	} else if (p0.y > box.p1.y && p1.y < box.p1.y) {
+		// check bottom
+		float u = (box.p1.y - p0.y) / (p1.y - p0.y);
+		float x = p0.x + u * (p1.x - p0.x);
+		if (x > box.p0.x && x < box.p1.x) { result = result > 0 ? MIN(result,u) : u; }
+	}
+
+	return result;
+}
+
+//------------------------------------------------------------------------------
 // COLLISION CONTEXT METHODS
 //------------------------------------------------------------------------------
 
@@ -236,6 +270,35 @@ int CollisionSystemRef::query(const AABB& box, uint32_t mask, int outCapacity, C
 		}
 	}
 	return nResults;	
+}
+
+float CollisionSystemRef::raycast(const Ray& ray, uint32_t mask, ColliderRef *result) {
+	// this impl is pretty naive - we just test the ray against all the boxes in it's
+	// bounding box.  Possible improvements:
+	//   - use smaller bounding boxes / sub-stepping?
+	//   - iterate through sectors bresenham-style?
+	ColliderSet candidates;
+	AABB box(
+		MIN(ray.p0.x, ray.p1.x),
+		MIN(ray.p0.y, ray.p1.y),
+		MAX(ray.p0.x, ray.p1.x),
+		MAX(ray.p0.y, ray.p1.y)
+	);
+	doBroadPhase(context, box, candidates);
+	unsigned slot;
+	float u = MAXFLOAT;
+	*result = 0;
+	for(auto i=candidates.listBits(); i.next(slot);) {
+		auto collider = context->slot(slot);
+		if (collider->categoryMask & mask) {
+			float v = ray.intersect(collider->box);
+			if (v > 0 && v < u) {
+				u = v;
+				*result = collider;
+			}
+		}
+	}
+	return (*result) ? u : -1;
 }
 
 void CollisionSystemRef::debugDraw(LinePlotterRef plotter, Color color) {

@@ -41,6 +41,8 @@
 
 // Wishlist:
 //   - one-way "platform"/"portal" line-colliders
+//   - raycast query
+//   - "iterator" style queries
 
 struct CollisionContext;
 struct Collider;
@@ -55,6 +57,10 @@ class ColliderRef;
 struct AABB {
 	vec2 p0; // min extent
 	vec2 p1; // max extent
+
+	AABB() {}
+	AABB(float x0, float y0, float x1, float y1) : p0(x0,y0), p1(x1,y1) {}
+	AABB(vec2 a0, vec2 a1) : p0(a0), p1(a1) {}
 
 	inline bool valid() const { return p0.x <= p1.x && p0.y <= p1.y; }
 
@@ -72,6 +78,11 @@ struct AABB {
 	inline float top() const { return p0.y; }
 	inline float bottom() const { return p1.y; }
 
+	inline bool contains(vec2 p) {
+		return p0.x <= p.x && p1.x >= p.x &&
+			p0.y <= p.y && p1.y >= p.y;
+	}
+
 	inline bool overlaps(const AABB& box) const {
 		return 
 			p0.x < box.p1.x && p1.x > box.p0.x &&
@@ -79,16 +90,26 @@ struct AABB {
 	}
 };
 
-inline AABB aabb(float x0, float y0, float x1, float y1) {
-	AABB result = { vec(x0,y0), vec(x1,y1) };
-	return result;
-}
 
-inline AABB aabb(vec2 p0, vec2 p1) {
-	AABB result = { p0, p1 };
-	return result;
-}
+//------------------------------------------------------------------------------
+// RAY TYPE
+//------------------------------------------------------------------------------
 
+struct Ray {
+	vec2 p0;
+	vec2 p1;
+
+	Ray() {}
+	Ray(float x0, float y0, float x1, float y1) : p0(x0,y0), p1(x1,y1) {}
+	Ray(vec2 a0, vec2 a1) : p0(a0), p1(a1) {}
+
+	vec2 offset() const { return p1 - p0; }
+	vec2 pointAt(float u) const { return p0 + u * (p1 - p0); }
+
+	// u >= 0  <-- intersection at p0 + u * (p1 - p0)
+	// u < -1  <-- no intersection
+	float intersect(const AABB& box) const;
+};
 
 //------------------------------------------------------------------------------
 // COLLISION RESULTS
@@ -119,7 +140,11 @@ union Collision {
 // MAIN INTERFACE
 //------------------------------------------------------------------------------
 
-CollisionContext *createCollisionSystem(size_t colliderCapacity=1024, size_t numBuckets=1024, size_t maxContacts=1024);
+CollisionContext *createCollisionSystem(
+	size_t colliderCapacity=1024, 
+	size_t numBuckets=1024, 
+	size_t maxContacts=1024
+);
 
 class CollisionSystemRef {
 private:
@@ -137,7 +162,9 @@ public:
 	// Set the unit conversion from physics to display
 	const AffineMatrix& metersToDisplay() const;
 	void setMetersToDisplay(const AffineMatrix& matrix);
-	inline void setMetersToDisplay(float k) { setMetersToDisplay(affineScale(vec(k,k))); }
+	inline void setMetersToDisplay(float k) { 
+		setMetersToDisplay(affineScale(vec(k,k))); 
+	}
 
 	Collider *addCollider(
 		const AABB& box, 
@@ -151,6 +178,10 @@ public:
 	// Utilize the broad-phase spatial hash to perform theoretically O(1) queries.
 	// Will only return enabled results, as disabled colliders are not hashed.
 	int query(const AABB& box, uint32_t mask, int outCapacity, ColliderRef *resultBuf);
+
+	// u >= 0 = hit
+	// u < 0 = miss
+	float raycast(const Ray& ray, uint32_t mask, ColliderRef *result);
 
 	// Is there a better interface here than buffers?  Some kind of iterator?
 	// Also, should we query *all triggers* and not just those relative to

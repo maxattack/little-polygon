@@ -8,8 +8,8 @@ void Environment::init(AssetRef assets, CollisionSystemRef collisions) {
 
 	// left/right walls
 	int th = int(CANVAS_HEIGHT * METERS_PER_PIXEL);
-	collisions.addCollider(aabb(-1,0,0,th));
-	collisions.addCollider(aabb(tmap->mw, 0, tmap->mw+1, th));
+	collisions.addCollider(AABB(-1,0,0,th));
+	collisions.addCollider(AABB(tmap->mw, 0, tmap->mw+1, th));
 
 	// content colliders
 	auto cdata = assets.userdata("environment.colliders");

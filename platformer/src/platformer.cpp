@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
 	// initialize lp systems
 	AssetRef assets = loadAssets("platformer.bin");
 	SpriteBatchRef batch = createSpriteBatch();
-	SpritePlotterRef spritePlotter = createSpritePlotter();
+	SpritePlotterRef sprites = createSpritePlotter();
 	LinePlotterRef lines = createLinePlotter();
 
 	// things with ctors
@@ -85,17 +85,33 @@ int main(int argc, char *argv[]) {
 		auto scrolling = vec(0,0);
 		auto canvasSize = vec(CANVAS_WIDTH, CANVAS_HEIGHT);
 
-		spritePlotter.begin(canvasSize, scrolling);
-		environment.draw(spritePlotter);
-		batch.draw(spritePlotter);
-		spritePlotter.end();
+		sprites.begin(canvasSize, scrolling);
+		environment.draw(sprites);
+		batch.draw(sprites);
+		sprites.end();
 
 		if (input.drawWireframe) {
+
+
 			glDisable(GL_BLEND);
 			lines.begin(canvasSize, scrolling);
 			collisions.debugDraw(lines, rgb(0xffff00));
+
+			SDL_Point mouse;
+			SDL_GetMouseState(&mouse.x, &mouse.y);
+			auto ray = Ray(0.25f * canvasSize, 0.25f * vec2(mouse));
+			auto physRay = Ray(METERS_PER_PIXEL * ray.p0, METERS_PER_PIXEL * ray.p1);
+			ColliderRef result;
+			auto u = collisions.raycast(physRay, 0xffffffff, &result);
+			if (u > 0) {
+				lines.plot(ray.p0, ray.pointAt(u), rgb(0x00ff00));
+			} else {
+				lines.plot(ray.p0, ray.p1, rgb(0xff0000));
+			}
+
 			lines.end();
 			glEnable(GL_BLEND);
+
 		}
 	
 		// present and wait for next frame
@@ -104,7 +120,7 @@ int main(int argc, char *argv[]) {
 
 	collisions.destroy();
 	lines.destroy();
-	spritePlotter.destroy();
+	sprites.destroy();
 	batch.destroy();
 	assets.destroy();
 	

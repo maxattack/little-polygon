@@ -9,7 +9,7 @@ void Kitten::init(AssetRef assets, SpriteBatchRef batch, CollisionSystemRef coll
 	xform = affineScale(vec(-1,1));
 	auto pos = assets.userdata("kitten.position")->get<vec2>() - vec(0,0.1f);
 	collider = collisions.addCollider(
-		aabb(pos-vec(HALF_WIDTH, 2*HALF_HEIGHT),
+		AABB(pos-vec(HALF_WIDTH, 2*HALF_HEIGHT),
 		     pos+vec(HALF_WIDTH, 0)), 
 		KITTEN_BIT, ENVIRONMENT_BIT, 0, true, this
 	);
