@@ -84,6 +84,10 @@ void* AssetRef::findHeader(uint32_t hash, uint32_t assetType) {
 	return bundle->fallback ? AssetRef(bundle->fallback).findHeader(hash, assetType) : 0;
 }
 
+void AssetRef::setFallback(AssetRef fallback) {
+	bundle->fallback = fallback;
+}
+
 void AssetRef::init() {
 	if (bundle->assetCount) { 
 		for(int i=0; i<bundle->assetCount; ++i) {
