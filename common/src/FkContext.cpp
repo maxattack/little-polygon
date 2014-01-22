@@ -89,8 +89,8 @@ FkContext *createFkContext(size_t capacity) {
 	// intialize fields
 	context->capacity = capacity;
 	context->count = 0;
-	context->allocationMask = Bitset<1024>();
-	context->dirtyMask = Bitset<1024>();
+	context->allocationMask.reset();
+	context->dirtyMask.reset();
 	return context;
 }
 

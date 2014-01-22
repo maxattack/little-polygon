@@ -92,8 +92,8 @@ SpriteBatch *createSpriteBatch(size_t capacity) {
 	context->capacity = capacity;
 	context->bottomCount = 0;
 	context->topCount =0 ;
-	context->allocationMask = Bitset<1024>();
-	context->visibleMask = Bitset<1024>();
+	context->allocationMask.reset();
+	context->visibleMask.reset();
 	return context;
 }
 

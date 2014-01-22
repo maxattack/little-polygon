@@ -114,12 +114,12 @@ CollisionContext *createCollisionSystem(size_t colliderCapacity, size_t numBucke
 	context->colliderCount = 0;
 	context->contactCount = 0;
 	context->metersToDisplay = affineIdentity();
-	context->alloc = ColliderSet();
+	context->alloc.reset();
 
 	// clear buckets
 	auto bucketBuf = context->buckets();
 	for(int i=0; i<numBuckets; ++i) {
-		bucketBuf[i].mask = ColliderSet();
+		bucketBuf[i].mask.reset();
 	}
 
 	return context;

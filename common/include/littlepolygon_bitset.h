@@ -42,6 +42,12 @@ public:
 	inline static unsigned size() { return tSize; }
 	inline bool empty() const { return nonzeroWords == 0; }
 
+	void reset() {
+		// return to an empty state, even if we're internally
+		// inconsistent (e.g. if we're allocated with malloc)
+		nonzeroWords = 0;
+		memset(words, 0, sizeof(uint32_t) * tSize / 32);
+	}
 
 	void mark(unsigned index) {
 		ASSERT(index < tSize);
