@@ -18,7 +18,7 @@
 
 #include "littlepolygon_go.h"
 #include "littlepolygon_sprites.h"
-
+#include "littlepolygon_collisions.h"
 
 // GO bindings for "core" systems.
 
@@ -29,30 +29,54 @@ struct SpriteAsset {
 	int layer;
 };
 
-class SpriteComponentType : public GoComponentType {
+class SpriteComponent : public GoComponentType {
 public:
 
-	SpriteComponentType(SpriteBatch *aBatch, AssetBundle *aAssets) : 
+	SpriteComponent(SpriteBatchRef aBatch, AssetRef aAssets) : 
 		batch(aBatch), assets(aAssets) {}
 
-	int init(GoComponent* component, const void *args=0);
-	int enable(GoComponent* component);
-	int disable(GoComponent* component);
-	int release(GoComponent* component);
+	int init(GoComponentRef component, const void *args=0);
+	int enable(GoComponentRef component);
+	int disable(GoComponentRef component);
+	int release(GoComponentRef component);
 
 private:
-	
-	SpriteBatch *batch;
-	AssetBundle *assets;
+	SpriteBatchRef batch;
+	AssetBundleRef assets;
+};
+
+struct ColliderAsset {
+	AABB box;
+	uint32_t categoryMask
+	uint32_t collisionMask;
+	uint32_t triggerMask;
+	vec2 pivot;
+};
+
+class ColliderComponent : public GoComponentType {
+public:
+
+	ColliderComponent(CollisionSystemRef aCollisions) : 
+		collisions(aCollisions) {}
+
+	int init(GoComponentRef component, const void *args=0);
+	int enable(GoComponentRef component);
+	int disable(GoComponentRef component);
+	int release(GoComponentRef component);
+
+private:
+	CollisionSystemRef collisions;
 };
 
 struct GoCore {
-	AssetBundle *assets;
-	FkContext *nodes;
-	SpritePlotter *plotter;
-	SpriteBatch *batch;
-	GoContext *go;
-	SpriteComponentType spriteComponent;
+	AssetsRef assets;
+	FkTreeRef nodes;
+	SpritePlotterRef plotter;
+	SpriteBatchRef batch;
+	CollisionSystemRef collisions;
+	GoContextRef go;
+	SpriteComponent spriteComponent;
+	ColliderComponent colliderComponent;
 
 	GoCore(const char *assetPath) : 
 		assets(createAssetBundle(assetPath)),
@@ -64,13 +88,12 @@ struct GoCore {
 		{}
 
 	~GoCore() {
-		destroy(go);
-		destroy(batch);
-		destroy(plotter);
-		destroy(nodes);
-		destroy(assets);		
-	}
-
-	SpriteComponentType *spriteType() { return &spriteComponent; }
+		go.destroy();
+		collisions.destroy();
+		batch.destroy();
+		plotter.destroy();
+		nodes.destroy();
+		assets.destroy();
+	}	
 };
 

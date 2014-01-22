@@ -15,9 +15,6 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "littlepolygon_collisions.h"
-#include "littlepolygon_bitset.h"
-
-typedef Bitset<1024> ColliderSet;
 
 #define DELEGATE_NONE    0
 #define DELEGATE_NODE    1
@@ -253,25 +250,6 @@ void doBroadPhase(CollisionContext *context, const AABB& sweep, ColliderSet& out
 
 }
 
-int CollisionSystemRef::query(const AABB& box, uint32_t mask, int outCapacity, ColliderRef *resultBuf) {
-	ASSERT(outCapacity > 0);
-	ColliderSet candidates;
-	doBroadPhase(context, box, candidates);
-	int nResults = 0;
-	unsigned slot;
-	for(auto i=candidates.listBits(); i.next(slot);) {
-		auto collider = context->slot(slot);
-		if ((collider->categoryMask & mask) != 0 && collider->box.overlaps(box)) {
-			resultBuf[nResults] = collider;
-			nResults++;
-			if (nResults == outCapacity) {
-				return nResults;
-			}
-		}
-	}
-	return nResults;	
-}
-
 float CollisionSystemRef::raycast(const Ray& ray, uint32_t mask, ColliderRef *result) {
 	// this impl is pretty naive - we just test the ray against all the boxes in it's
 	// bounding box.  Possible improvements:
@@ -482,11 +460,9 @@ void ColliderRef::setPosition(vec2 topLeft) {
 }
 
 
-int ColliderRef::queryTriggers(int outCapacity, TriggerEvent *resultBuf) {
-	ASSERT(outCapacity > 0);
+void ColliderRef::queryTriggers(TriggerEventCallback cb) {
 	auto context = collider->context;
 	Collider *c = collider;
-	int nResults = 0;
 
 	// identify the contacts that this collider participates in
 	ColliderSet contactSet;
@@ -507,12 +483,6 @@ int ColliderRef::queryTriggers(int outCapacity, TriggerEvent *resultBuf) {
 		return context->contactCount;
 	};
 
-	auto pushResult = [&nResults, resultBuf](TriggerEvent::TriggerType typ, Collider *trig) {
-		resultBuf[nResults].type = typ;
-		resultBuf[nResults].trigger = trig;
-		++nResults;
-	};
-
 	// identify overlapping triggers (ENTER and STAY)
 	ColliderSet candidates;
 	doBroadPhase(context, c->box, candidates);
@@ -523,17 +493,13 @@ int ColliderRef::queryTriggers(int outCapacity, TriggerEvent *resultBuf) {
 			int i = findContact(trigger);
 			contactSet.clear(i);
 			if (i < context->contactCount) {
-				// leave this out unless there's a compelling reason
-				// to include it - feels like unnecessary noise/copying
-				// pushResult(Trigger::STAY, trigger);
-				// if (nResults == outCapacity) { return nResults; }
+				if (cb) { cb(TriggerType::STAY, trigger); }
 			} else {
 				ASSERT(context->contactCount < context->contactCapacity);
 				context->contactCount++;
 				context->contact(i)->collider = c;
 				context->contact(i)->trigger = trigger;
-				pushResult(TriggerEvent::ENTER, trigger);
-				if (nResults == outCapacity) { return nResults; }
+				if (cb) { cb(TriggerType::ENTER, trigger); }
 			}
 		}
 	}
@@ -546,9 +512,9 @@ int ColliderRef::queryTriggers(int outCapacity, TriggerEvent *resultBuf) {
 
 	// identify non-ovelapping triggers (EXIT)
 	uint32_t contactIndex;
-	while(nResults < outCapacity && contactSet.clearFirst(contactIndex)) {
+	while(contactSet.clearFirst(contactIndex)) {
 		uint32_t actualIndex = oldToNewIndex[contactIndex];
-		pushResult(TriggerEvent::EXIT, context->contact(actualIndex)->trigger);
+		if (cb) { cb(TriggerType::EXIT, context->contact(actualIndex)->trigger); }
 		--context->contactCount;
 		if (actualIndex < context->contactCount) {
 			// swap last contact into empty slot
@@ -556,8 +522,6 @@ int ColliderRef::queryTriggers(int outCapacity, TriggerEvent *resultBuf) {
 			oldToNewIndex[context->contactCount] = actualIndex;
 		}
 	}
-
-	return nResults;	
 }
 
 
@@ -651,3 +615,25 @@ bool ColliderRef::triggers(const ColliderRef c) const {
 	return (collider->triggerMask & c.collider->categoryMask) &&
 		collider->box.overlaps(c.collider->box);
 }
+
+//------------------------------------------------------------------------------
+// COLLIDER METHODS
+//------------------------------------------------------------------------------
+
+QueryIterator::QueryIterator(CollisionContext *aContext, const AABB& aBox, uint32_t aMask) : 
+context(aContext), box(aBox), mask(aMask) {
+	doBroadPhase(context, box, candidates);
+}
+
+bool QueryIterator::next(ColliderRef& next) {
+	unsigned idx;
+	while (candidates.clearFirst(idx)) {
+		auto slot = context->slot(idx);
+		if ((slot->categoryMask & mask) && slot->box.overlaps(box)) {
+			next = context->slot(idx);
+			return true;
+		}
+	}
+	return false;
+}
+

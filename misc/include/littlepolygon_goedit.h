@@ -19,6 +19,7 @@
 #include <littlepolygon_gocore.h>
 
 struct GoEdit;
+class GoEditorRer;
 
 struct EditSkin {
 	FontAsset *font;
@@ -28,15 +29,27 @@ struct EditSkin {
 
 // Create a new editor.  Internally it creates some special editting components
 // that it will use to annotate various game objects with UI status, undo stacks, etc.
-GoEdit *createEditor(GoContext *goContext);
+GoEdit *createEditor(GoContextRef goContext);
 
-// Release the editor and all it's internal components.
-void destroy(GoEdit *edit);
+class GoEditorRef {
+private:
+	GoEdit *edit;
 
-// Call this method when editting is enabled (app-defined).  Will return true if it
-// handled the event with it's own internal UI.
-bool handleEvents(GoEdit *edit, SDL_Event *event);
+public:
+	GoEditorRef() {}
+	GoEditorRef(GoEdit *aEdit) : edit(aEdit) {}
 
-// Call this method when editting is enabled (app-defined) to draw the UI (right now it just
-// draws the FK heirarchy as a tree-widget on the left quarter of the screen)
-void draw(GoEdit *edit, const EditSkin *skin, SpritePlotter *plotter);
+	operator GoEdit*() { return edit; }
+	operator bool() const { return edit; }
+
+	void destroy();
+
+	// Call this function if in-game editting is active.
+	//   true - the editor UI handled the event
+	//   false - the editor UI did not handle this event
+	bool handleEvents(GoEdit *edit, SDL_Event *event);
+
+	// Draw the UI editor with the given skin.  By default, shows
+	// the property-tree for the scene.
+	void draw(const EditSkin& skin, SpritePlotterRef sprites);
+};

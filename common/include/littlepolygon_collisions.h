@@ -19,6 +19,7 @@
 #include "littlepolygon_math.h"
 #include "littlepolygon_graphics.h"
 #include "littlepolygon_fk.h"
+#include "littlepolygon_bitset.h"
 
 // A very simple bounding-box collision system, useable for simple 2D
 // games like platformers and top-down adventure games.  This is not a
@@ -41,14 +42,17 @@
 
 // Wishlist:
 //   - one-way "platform"/"portal" line-colliders
-//   - raycast query
-//   - "iterator" style queries
+//   - b2Body delegate
 
 struct CollisionContext;
 struct Collider;
 struct TriggerEvent;
 class CollisionSystemRef;
 class ColliderRef;
+class ColliderDelegate;
+class QueryIterator;
+
+typedef Bitset<1024> ColliderSet;
 
 //------------------------------------------------------------------------------
 // Axis-Aligned Bounding Box POD Type
@@ -135,6 +139,7 @@ union Collision {
 	Collision& operator|=(const Collision c) { hit |= c.hit; return *this; }
 };
 
+enum TriggerType { ENTER, STAY, EXIT };
 
 //------------------------------------------------------------------------------
 // MAIN INTERFACE
@@ -175,17 +180,9 @@ public:
 		void *userData = 0
 	);
 
-	// Utilize the broad-phase spatial hash to perform theoretically O(1) queries.
-	// Will only return enabled results, as disabled colliders are not hashed.
-	int query(const AABB& box, uint32_t mask, int outCapacity, ColliderRef *resultBuf);
-
-	// u >= 0 = hit
-	// u < 0 = miss
+	// u >= 0 := hit
+	// u < 0  := miss
 	float raycast(const Ray& ray, uint32_t mask, ColliderRef *result);
-
-	// Is there a better interface here than buffers?  Some kind of iterator?
-	// Also, should we query *all triggers* and not just those relative to
-	// one collider? (e.g have a separate updateContact() method...)
 
 	// Will use the metersToDisplay matrix for plotting
 	void debugDraw(LinePlotterRef plotter, Color c);
@@ -222,11 +219,13 @@ public:
 	// state; use with caution :P
 	void setPosition(vec2 topLeft);
 
-	// Find all triggers and compute deltas (ENTER, EXIT) based on the *last call to 
-	// queryTriggers, therefore you should call this every tick, even if you're not 
-	// handling the events.
-	int queryTriggers(int outCapacity, TriggerEvent *resultBuf);
-	// (see interface comments on CollisionSystemRef::query())
+	// Find all triggers and compute deltas (ENTER, STAY, EXIT) based on the 
+	// *last call to queryTriggers*, therefore you should call this every tick, 
+	// even if you're not handling the events.
+	typedef void (*TriggerEventCallback)(TriggerType, ColliderRef);
+	
+	void queryTriggers(TriggerEventCallback cb=0);
+	
 
 	// Retrieve bounds in world-meters space
 	AABB box() const;
@@ -279,17 +278,24 @@ public:
 	void set(T* data) { setUserData((void*)data); }
 
 	// Quick polling methods for 1:1 interactions.  For 1:N interactions,
-	// use the query methods on the CollisionSystemRef, not these, as
-	// they do not utilize the broad-phase spatial hash for filtering.
+	// use the QueryIterator to utilize the spatial hash for filtering.
 	bool collides(const ColliderRef other) const;
 	bool triggers(const ColliderRef other) const;
 
 };
 
-struct TriggerEvent {
-	enum TriggerType { ENTER, EXIT };
+//------------------------------------------------------------------------------
+// ITERATORS
+//------------------------------------------------------------------------------
 
-	TriggerType type;
-	ColliderRef trigger;
+class QueryIterator {
+private:
+	CollisionContext* context;
+	AABB box;
+	uint32_t mask;
+	ColliderSet candidates;
+
+public:
+	QueryIterator(CollisionContext *context, const AABB& box, uint32_t mask);
+	bool next(ColliderRef& next);
 };
-

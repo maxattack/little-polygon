@@ -19,11 +19,15 @@
 #include "littlepolygon_base.h"
 #include "littlepolygon_bitset.h"
 #include "littlepolygon_fk.h"
+#include <string>
 
 // Generic GameObject (GO) system for entity-component style assets.  The basic idea
 // is to model content as a database of GOs, each of which is assembled (by data) out of
 // a finite set of built-in (or scripted) components.  This contrasts with a typical
 // object-oriented architecture which makes different trade-ffs by utilizing inheritance.
+
+// Each component has dynamic properties which can be interrogated by other systems,
+// e.g. an in-game editor.
 
 // TL;DR - very simple, portable metadata.
 
@@ -34,30 +38,19 @@
 // TYPES
 //------------------------------------------------------------------------------
 
-#ifndef GO_CAPACITY
-#define GO_CAPACITY 1024
-#endif
-
 struct GoContext;
-struct GoComponent;
 struct GameObject;
+struct GoComponent;
+struct GoProperty;
+class GoContextRef;
 class GameObjectRef;
 class GoComponentRef;
+class GoPropertyRef;
+
 typedef Bitset<GO_CAPACITY> GoSet;
 typedef uint32_t GameObjectID;
-
-class GoComponentType {
-public:
-	virtual int init(GoComponent* component, const void *args=0) = 0;
-	virtual int enable(GoComponent* component) = 0;
-	virtual int message(GoComponent* component, int messageId, const void *args=0) { return 0; }
-	virtual int disable(GoComponent* component) = 0;
-	virtual int release(GoComponent* component) = 0;
-};
-
-//------------------------------------------------------------------------------
-// HELPERS
-//------------------------------------------------------------------------------
+typedef std::string GoName;
+typedef std::string GoString;
 
 #define GOSTATUS_OK 0
 #if DEBUG
@@ -73,80 +66,39 @@ public:
 // You can create multiple contexts, e.g. for handling different rooms or 
 // orthogonal views (e.g. HUD vs Scene), and synchronizing different remote
 // network contexts.  Contexts can share systems.
-GoContext *createGoContext(FkContext *fkContext, size_t coCapacity=4096);
-void destroy(GoContext *context);
+GoContext *createGoContext(
+	FkTreeRef fkTree, 
+	size_t goCapacity=1024, 
+	size_t coCapacity=4096
+);
 
-FkContext *fkContext(GoContext *context);
+class GoContextRef {
+private:
+	GoContext *context;
 
-GameObject *find(GoContext *context, GameObjectID gid);
-GameObject* find(GoContext *context, const char *name);
+public:
+	GoContextRef() {}
+	GoContextRef(GoContext *aContext) : context(aContext) {}
+
+	operator GoContext*() { return context; }
+	operator bool() const { return context; }
+
+	void destroy();
+
+	FkTreeRef displayTree();
+
+	GameObjectRef find(GameObjectID gid);
+	GameObjectRef find(GoName name);
+
+	// Explicit IDs are useful for deserialization and network syncronization.  Passing
+	// 0 will just generate a new one.  IDs may conflict, which will cause this method to
+	// fail.  Passing 1-N to a fresh context should work OK.
+	GameObjectRef addObject(GoName="", GameObjectID explicitId=0);
+
+};
 
 //------------------------------------------------------------------------------
 // GAME OBJECTS
-//------------------------------------------------------------------------------
-
-// Explicit IDs are useful for deserialization and network syncronization.  Passing
-// 0 will just generate a new one.  IDs may conflict, which will cause this method to
-// fail.  Passing 1-N to a fresh context should work OK.
-GameObject* addGameObject(GoContext *context, const char* name="", GameObjectID explicitId=0);
-void destroy(GameObject *go);
-
-// Getters
-GoContext *goContext(const GameObject *go);
-bool goEnabled(const GameObject *go);
-const char* goName(const GameObject *go);
-FkNode* goNode(const GameObject *go);
-GoComponent* goComponent(GameObject *go, GoComponentType* type);
-GameObject *goFromNode(FkNode *node);
-
-// Methods
-int enable(GameObject *go);
-int disable(GameObject *go);
-int sendMessage(GameObject *go, int messageId, const void *args=0);
-
-//------------------------------------------------------------------------------
-// GAME OBJECT COMPONENTS
-//------------------------------------------------------------------------------
-
-// Attach a component to the given game object, initialized with the given data.  CID 
-// corresponds to the index of the component message handler that the context was
-// intialized with.
-GoComponent* addComponent(GameObject *go, GoComponentType* type, const void* args=0);
-void destroy(GoComponent *component);
-
-// Methods
-GoComponentType* coType(GoComponent *component);
-void* coHandle(GoComponent *component);
-GameObject* coObject(GoComponent *component);
-
-void setHandle(GoComponent *component, void *handle);
-
-//------------------------------------------------------------------------------
-// ITERATORS
-//------------------------------------------------------------------------------
-
-// Iterates over all game objects
-struct GoIterator {
-	GameObject *current;
-	GoSet::iterator internal;
-
-	GoIterator(GoContext *context);
-	bool finished() const { return current == 0; }	
-	void next();
-};
-
-// Iterates over all components of a given game object
-struct GoComponentIterator {
-	GoComponent *current;
-
-	GoComponentIterator(GameObject *go);
-	bool finished() const { return current == 0; }
-	void next();
-};
-
-
-//------------------------------------------------------------------------------
-// More Idomatic C++ Interface
 //------------------------------------------------------------------------------
 
 class GameObjectRef {
@@ -157,28 +109,40 @@ public:
 	GameObjectRef() {}
 	GameObjectRef(GameObject *aGo) : go(aGo) {}
 
-	operator GameObject*&() { return go; }
+	operator GameObject*() { return go; }
 	operator bool() const { return go != 0; }
 
-	GoContext *context() const { return goContext(go); }
-	bool enabled() const { return goEnabled(go); }
-	const char* name() const { return goName(go); }
+	GoContextRef context() const;
+	bool enabled() const;
+	GoName name() const;
+	FkNodeRef node();
 
-	int enable() { return ::enable(go); }
-	int disable() { return ::disable(go); }
-	int sendMessage(int msg, const void *args) { return ::sendMessage(go, msg, args); }
+	int enable();
+	int disable();
+	int sendMessage(int msg, const void *args=0);
 
-	inline GoComponentRef addComponent(GoComponentType *type);
+	GoComponentRef addComponent(GoComponentType *type, const void *args=0);
+	GoComponentRef getComponent(GoComponentType *type);
 
-	template<typename T>
-	inline GoComponentRef addComponent(GoComponentType *type, T* args);
-
-	inline GoComponentRef getComponent(GoComponentType *type);
-
-	FkNodeRef node() { return goNode(go); }
-
-	void destroy() { ::destroy(go); go = 0; }
+	void destroy();
 };
+
+//------------------------------------------------------------------------------
+// COMPONENT TYPES
+//------------------------------------------------------------------------------
+
+class GoComponentType {
+public:
+	virtual int init(GoComponentRef component, const void *args=0) = 0;
+	virtual int enable(GoComponentRef component) = 0;
+	virtual int message(GoComponentRef component, int messageId, const void *args=0) { return 0; }
+	virtual int disable(GoComponentRef component) = 0;
+	virtual int release(GoComponentRef component) = 0;
+};
+
+//------------------------------------------------------------------------------
+// COMPONENT INSTANCES
+//------------------------------------------------------------------------------
 
 class GoComponentRef {
 private:
@@ -188,26 +152,119 @@ public:
 	GoComponentRef() {}
 	GoComponentRef(GoComponent *aComponent) : component(aComponent) {}
 
-	operator GoComponent*&() { return component; }
+	operator GoComponent*() { return component; }
 	operator bool() const { return component != 0; }
 
-	GoComponentType* type() { return coType(component); }
-	GameObjectRef gameObject() { return coObject(component); }
+	GoComponentType* type();
+	GameObjectRef gameObject();
+	void *userData();
+
+	void setUserData(void *data);
 
 	template<typename T>
-	T* get() { return (T*)coHandle(component); }
+	T* get() { return (T*)userData(); }
 
 	template<typename T>
-	void set(T* handle) { setHandle(component, (void*)handle); }
+	void set(T* handle) { setUserData((void*)handle); }
 
-	void destroy() { ::destroy(component); component=0; }
+	GoPropertyRef getProperty(GoName key);
+
+	void destroy();
 };
 
-inline GoComponentRef GameObjectRef::addComponent(GoComponentType *type) { return ::addComponent(go, type); }
-inline GoComponentRef GameObjectRef::getComponent(GoComponentType *type) { return ::goComponent(go, type); }
+//------------------------------------------------------------------------------
+// PROPERTIES
+//------------------------------------------------------------------------------
 
-template<typename T>
-inline GoComponentRef GameObjectRef::addComponent(GoComponentType *type, T* args) {
-	return ::addComponent(go, type, (const void*) args);
-}
+enum GoPropertyType {
+	PROPERTY_UNDEFINED,
+	PROPERTY_INT,
+	PROPERTY_FLOAT,
+	PROPERTY_NAME,
+	PROPERTY_STRING,
+	PROPERTY_GO_REFERENCE
+};
+
+// Compound properties are created using formatted keys. For dictionary
+// or struct-like properties, use dot-syntax, e.g.:
+//
+//   position.x = 314
+//   position.y = 271
+//   position.z = 0
+//
+// For arrays, use backet [] syntax, e.g.:
+//
+//   list[0] = 1
+//   list[1] = 1
+//   list[2] = 2
+//   list[3] = 3
+//   list[4] = 5
+// 
+// These syntaxes can be combined to produces lists-of-structs and 
+// structs-of-lists, e.g.:
+// 
+//   positions[0].x = 1
+//   positions[0].y = 2
+//   positions[1].x = 0
+//   positions[1].x = 42
+//
+// This schema maps very cleanly into key-value stores and nosql databases
+
+class GoPropertyRef {
+private:
+	GoProperty *prop;
+
+public:
+	GoPropertyRef() {}
+	GoPropertyRef(GoProperty *aProp) : prop(aProp) {}
+
+	operator GoProperty*() { return prop; }
+	operator bool() const { return prop; }
+
+	GoComponentRef component();
+
+	GoName key() const;
+	GoPropertyType type() const;
+
+	int intValue() const;
+	float floatValue() const;
+	GoName nameValue() const;
+	GoString stringValue() const;
+	GameObjectRef refValue() const;
+
+	void destroy();
+
+};
+
+//------------------------------------------------------------------------------
+// ITERATORS
+//------------------------------------------------------------------------------
+
+// Iterates over all game objects
+struct GoIterator {
+	GameObjectRef current;
+	GoSet::iterator internal;
+
+	GoIterator(GoContextRef context);
+	bool finished() const { return !current; }	
+	void next();
+};
+
+// Iterates over all components of a given game object
+struct GoComponentIterator {
+	GoComponentRef current;
+
+	GoComponentIterator(GameObjectRef go);
+	bool finished() const { return !current; }
+	void next();
+};
+
+struct GoPropertyIterator {
+	GoPropertyRef current;
+
+	GoPropertyIterator(GoComponentRef component);
+	bool finished() const { return !current; }
+	void next();
+};
+
 

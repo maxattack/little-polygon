@@ -132,6 +132,7 @@ public:
 		unsigned w, v;
 
 	public:
+		iterator() : remainder(0) {}
 		iterator(const Bitset<tSize>& aSet) : bs(&aSet) {
 			remainder = bs->nonzeroWords;
 			if (remainder) {
