@@ -219,84 +219,7 @@ void doBroadPhase(CollisionContext *context, const AABB& sweep, ColliderSet& out
 
 }
 
-int CollisionSystemRef::queryTriggers(ColliderRef collider, int outCapacity, TriggerEvent *resultBuf) {
-	ASSERT(outCapacity > 0);
-	Collider *c = collider;
-	int nResults = 0;
-
-	// identify the contacts that this collider participates in
-	ColliderSet contactSet;
-	for(int i=0; i<context->contactCount; ++i) {
-		if (context->contact(i)->collider == c) {
-			contactSet.mark(i);
-		}
-	}
-
-	// inner helper methods
-	auto findContact = [&](Collider *trig) {
-		unsigned contactIndex;
-		for(auto i=contactSet.listBits(); i.next(contactIndex);) {
-			if (context->contact(contactIndex)->trigger == trig) {
-				return int(contactIndex);
-			}
-		}
-		return context->contactCount;
-	};
-
-	auto pushResult = [&nResults, resultBuf](TriggerEvent::TriggerType typ, Collider *trig) {
-		resultBuf[nResults].type = typ;
-		resultBuf[nResults].trigger = trig;
-		++nResults;
-	};
-
-	// identify overlapping triggers (ENTER and STAY)
-	ColliderSet candidates;
-	doBroadPhase(context, c->box, candidates);
-	unsigned slot;
-	for(auto i=candidates.listBits(); i.next(slot);) {
-		auto trigger = context->slots + slot;
-		if (collider.triggers(trigger)) {
-			int i = findContact(trigger);
-			contactSet.clear(i);
-			if (i < context->contactCount) {
-				// leave this out unless there's a compelling reason
-				// to include it - feels like unnecessary noise/copying
-				// pushResult(Trigger::STAY, trigger);
-				// if (nResults == outCapacity) { return nResults; }
-			} else {
-				ASSERT(context->contactCount < context->contactCapacity);
-				context->contactCount++;
-				context->contact(i)->collider = c;
-				context->contact(i)->trigger = trigger;
-				pushResult(TriggerEvent::ENTER, trigger);
-				if (nResults == outCapacity) { return nResults; }
-			}
-		}
-	}
-
-	// contacts may be re-ordered in processing
-	uint32_t oldToNewIndex[context->contactCount]; 
-	for(int i=0; i<context->contactCount; ++i) {
-		oldToNewIndex[i] = i;
-	}
-
-	// identify non-ovelapping triggers (EXIT)
-	uint32_t contactIndex;
-	while(nResults < outCapacity && contactSet.clearFirst(contactIndex)) {
-		uint32_t actualIndex = oldToNewIndex[contactIndex];
-		pushResult(TriggerEvent::EXIT, context->contact(actualIndex)->trigger);
-		--context->contactCount;
-		if (actualIndex < context->contactCount) {
-			// swap last contact into empty slot
-			*context->contact(actualIndex) = *context->contact(context->contactCount);
-			oldToNewIndex[context->contactCount] = actualIndex;
-		}
-	}
-
-	return nResults;	
-}
-
-int CollisionSystemRef::queryColliders(const AABB& box, uint32_t mask, int outCapacity, ColliderRef *resultBuf) {
+int CollisionSystemRef::query(const AABB& box, uint32_t mask, int outCapacity, ColliderRef *resultBuf) {
 	ASSERT(outCapacity > 0);
 	ColliderSet candidates;
 	doBroadPhase(context, box, candidates);
@@ -494,6 +417,86 @@ void ColliderRef::setPosition(vec2 topLeft) {
 		doHash(collider);
 	}
 }
+
+
+int ColliderRef::queryTriggers(int outCapacity, TriggerEvent *resultBuf) {
+	ASSERT(outCapacity > 0);
+	auto context = collider->context;
+	Collider *c = collider;
+	int nResults = 0;
+
+	// identify the contacts that this collider participates in
+	ColliderSet contactSet;
+	for(int i=0; i<context->contactCount; ++i) {
+		if (context->contact(i)->collider == c) {
+			contactSet.mark(i);
+		}
+	}
+
+	// inner helper methods
+	auto findContact = [&](Collider *trig) {
+		unsigned contactIndex;
+		for(auto i=contactSet.listBits(); i.next(contactIndex);) {
+			if (context->contact(contactIndex)->trigger == trig) {
+				return int(contactIndex);
+			}
+		}
+		return context->contactCount;
+	};
+
+	auto pushResult = [&nResults, resultBuf](TriggerEvent::TriggerType typ, Collider *trig) {
+		resultBuf[nResults].type = typ;
+		resultBuf[nResults].trigger = trig;
+		++nResults;
+	};
+
+	// identify overlapping triggers (ENTER and STAY)
+	ColliderSet candidates;
+	doBroadPhase(context, c->box, candidates);
+	unsigned slot;
+	for(auto i=candidates.listBits(); i.next(slot);) {
+		auto trigger = context->slots + slot;
+		if (triggers(trigger)) {
+			int i = findContact(trigger);
+			contactSet.clear(i);
+			if (i < context->contactCount) {
+				// leave this out unless there's a compelling reason
+				// to include it - feels like unnecessary noise/copying
+				// pushResult(Trigger::STAY, trigger);
+				// if (nResults == outCapacity) { return nResults; }
+			} else {
+				ASSERT(context->contactCount < context->contactCapacity);
+				context->contactCount++;
+				context->contact(i)->collider = c;
+				context->contact(i)->trigger = trigger;
+				pushResult(TriggerEvent::ENTER, trigger);
+				if (nResults == outCapacity) { return nResults; }
+			}
+		}
+	}
+
+	// contacts may be re-ordered in processing
+	uint32_t oldToNewIndex[context->contactCount]; 
+	for(int i=0; i<context->contactCount; ++i) {
+		oldToNewIndex[i] = i;
+	}
+
+	// identify non-ovelapping triggers (EXIT)
+	uint32_t contactIndex;
+	while(nResults < outCapacity && contactSet.clearFirst(contactIndex)) {
+		uint32_t actualIndex = oldToNewIndex[contactIndex];
+		pushResult(TriggerEvent::EXIT, context->contact(actualIndex)->trigger);
+		--context->contactCount;
+		if (actualIndex < context->contactCount) {
+			// swap last contact into empty slot
+			*context->contact(actualIndex) = *context->contact(context->contactCount);
+			oldToNewIndex[context->contactCount] = actualIndex;
+		}
+	}
+
+	return nResults;	
+}
+
 
 AABB ColliderRef::box() const {
 	return collider->box;

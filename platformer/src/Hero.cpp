@@ -80,7 +80,7 @@ void Hero::tick(PlayerInput* input, float dt) {
 
 	// kitten should mew on trigger enter :P
 	TriggerEvent events[8];
-	int nTriggers = collider.context().queryTriggers(collider, arraysize(events), events);
+	int nTriggers = collider.queryTriggers(arraysize(events), events);
 	for(auto p=events; p != events+nTriggers; ++p) {
 		if(p->type == TriggerEvent::ENTER) {
 			p->trigger.get<Kitten>()->mew();

@@ -150,8 +150,7 @@ public:
 
 	// Utilize the broad-phase spatial hash to perform theoretically O(1) queries.
 	// Will only return enabled results, as disabled colliders are not hashed.
-	int queryTriggers(ColliderRef c, int outCapacity, TriggerEvent *resultBuf);
-	int queryColliders(const AABB& box, uint32_t mask, int outCapacity, ColliderRef *resultBuf);
+	int query(const AABB& box, uint32_t mask, int outCapacity, ColliderRef *resultBuf);
 
 	// Is there a better interface here than buffers?  Some kind of iterator?
 	// Also, should we query *all triggers* and not just those relative to
@@ -191,6 +190,12 @@ public:
 	// warning: this method may put the box into an inconsistent
 	// state; use with caution :P
 	void setPosition(vec2 topLeft);
+
+	// Find all triggers and compute deltas (ENTER, EXIT) based on the *last call to 
+	// queryTriggers, therefore you should call this every tick, even if you're not 
+	// handling the events.
+	int queryTriggers(int outCapacity, TriggerEvent *resultBuf);
+	// (see interface comments on CollisionSystemRef::query())
 
 	// Retrieve bounds in world-meters space
 	AABB box() const;
