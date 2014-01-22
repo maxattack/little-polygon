@@ -162,7 +162,10 @@ struct UserdataAsset {
 	inline void *data() const { return (void*)(this+1); }
 
 	template<typename T> 
-	T& as() { ASSERT(size == sizeof(T)); return *((T*)(this+1)); }
+	const T* as() { return (T*)(this+1); }
+
+	template<typename T> 
+	const T& get() { ASSERT(size == sizeof(T)); return *((T*)(this+1)); }
 };
 
 //------------------------------------------------------------------------------

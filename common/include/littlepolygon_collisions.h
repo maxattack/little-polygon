@@ -179,6 +179,8 @@ public:
 
 	void destroy();
 
+	CollisionSystemRef context();
+
 	// Try to move by offset.  May be clipped to preserve overlapping constraints,
 	// in which case the result will reflect on which side this happens.  Constraints
 	// are solved for the X/Y axis separately, so you will still fit "snuggly" into 

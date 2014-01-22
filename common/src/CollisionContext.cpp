@@ -346,6 +346,10 @@ void CollisionSystemRef::debugDraw(LinePlotterRef plotter, Color color) {
 // COLLIDER METHODS
 //------------------------------------------------------------------------------
 
+CollisionSystemRef ColliderRef::context() {
+	return collider->context;
+}
+
 void ColliderRef::destroy() {
 	auto context = collider->context;
 	unsigned slot = collider - context->slots;

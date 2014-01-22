@@ -66,4 +66,6 @@ struct Kitten {
 	SpriteRef sprite;
 
 	void init(AssetRef assets, SpriteBatchRef batch, CollisionSystemRef collisions);
+
+	void mew() { LOG_MSG("mew!"); }
 };

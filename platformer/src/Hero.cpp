@@ -15,15 +15,13 @@ void Hero::init(AssetRef assets, SpriteBatchRef batch, CollisionSystemRef collis
 	xform = affineIdentity();
 	speed = vec(0,0);
 
-	auto pos = assets.userdata("hero.position")->as<vec2>() - vec(0,0.1f);
+	auto pos = assets.userdata("hero.position")->get<vec2>() - vec(0,0.1f);
 	collider = collisions.addCollider(
 		aabb(pos-vec(HALF_WIDTH, 2*HALF_HEIGHT),
 		     pos+vec(HALF_WIDTH, 0)), 
 		HERO_BIT, ENVIRONMENT_BIT, KITTEN_BIT, true, this
 	);
 	collider.setDelegate(&xform, vec(HALF_WIDTH, 2*HALF_HEIGHT));
-
-	// snap to ground
 	auto collision = collider.move(vec(0,0.2f));
 	grounded = collision.hitBottom;
 
@@ -31,9 +29,11 @@ void Hero::init(AssetRef assets, SpriteBatchRef batch, CollisionSystemRef collis
 	sprite = batch.addSprite(assets.image("hero"), &xform);
 	framef = 0;
 
+	// init sfx
 	sfxJump = assets.sample("jump");
 	sfxFootfall = assets.sample("footfall");
-
+	sfxJump->init();
+	sfxFootfall->init();
 }
 
 void Hero::tick(PlayerInput* input, float dt) {
@@ -78,18 +78,14 @@ void Hero::tick(PlayerInput* input, float dt) {
 		speed.x = 0;
 	}
 
-	// Trigger events[8];
-	// int nTriggers = collisions->queryTriggers(collider, arraysize(events), events);
-	// for(int i=0; i<nTriggers; ++i) {
-	// 	switch(events[i].type) {
-	// 		case Trigger::ENTER:
-	// 			LOG_MSG("ENTER");
-	// 			break;
-	// 		case Trigger::EXIT:
-	// 			LOG_MSG("EXIT");
-	// 			break;
-	// 	}
-	// }
+	// kitten should mew on trigger enter :P
+	TriggerEvent events[8];
+	int nTriggers = collider.context().queryTriggers(collider, arraysize(events), events);
+	for(auto p=events; p != events+nTriggers; ++p) {
+		if(p->type == TriggerEvent::ENTER) {
+			p->trigger.get<Kitten>()->mew();
+		}
+	}
 
 	// update fx
  	if (grounded) {

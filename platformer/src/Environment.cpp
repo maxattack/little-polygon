@@ -12,8 +12,8 @@ void Environment::init(AssetRef assets, CollisionSystemRef collisions) {
 	collisions.addCollider(aabb(tmap->mw, 0, tmap->mw+1, th));
 
 	// content colliders
-	auto *cdata = assets.userdata("environment.colliders");
-	auto colliders = (AABB*) cdata->data();
+	auto cdata = assets.userdata("environment.colliders");
+	auto *colliders = cdata->as<AABB>();
 	auto ncolliders = cdata->size / sizeof(AABB);
 	for(int i=0; i<ncolliders; ++i) {
 		collisions.addCollider(colliders[i], ENVIRONMENT_BIT);
