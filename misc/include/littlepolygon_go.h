@@ -182,6 +182,11 @@ public:
 
 	// Actually release resources - this GameObject is about to be nuked.
 	virtual int release(GoComponentRef component) = 0;
+
+	// Property getter/setting bindings.  The basic idiom I'm imagining is that
+	// systems switch on the keyHash.
+	virtual int getProperty(GoPropertyRef property) = 0;
+	virtual int setProperty(GoPropertyRef property) = 0;
 };
 
 //------------------------------------------------------------------------------
@@ -266,6 +271,7 @@ public:
 	GoComponentRef component();
 
 	GoName key() const;
+	uint32_t keyHash() const;
 	GoPropertyType type() const;
 
 	int intValue() const;
