@@ -36,7 +36,7 @@ public:
 		STATIC_ASSERT(tSize > 0);
 		STATIC_ASSERT(tSize % 32 == 0);
 		STATIC_ASSERT(tSize <= 1024);
-		clear(); 
+		reset(); 
 	}
 
 	inline static unsigned size() { return tSize; }
