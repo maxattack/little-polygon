@@ -46,15 +46,15 @@ int main(int argc, char *argv[]) {
 	glLineWidth(2);
 
 	// initialize lp systems
-	AssetRef assets = loadAssets("platformer.bin");
-	SpriteBatchRef batch = createSpriteBatch();
-	SpritePlotterRef sprites = createSpritePlotter();
-	LinePlotterRef lines = createLinePlotter();
+	auto assets = loadAssets("platformer.bin");
+	auto batch = createSpriteBatch();
+	auto sprites = createSpritePlotter();
+	auto lines = createLinePlotter();
 
 	// things with ctors
 	Timer timer;
 	PlayerInput input;
-	CollisionSystemRef collisions = createCollisionSystem();
+	auto collisions = createCollisionSystem();
 	collisions.setMetersToDisplay(PIXELS_PER_METER);
 
 	// scene entities
