@@ -96,6 +96,8 @@ SDL_Window *initContext(const char *caption, int w, int h) {
   glEnable(GL_TEXTURE_2D);
   glActiveTexture(GL_TEXTURE0);
   glEnableClientState(GL_VERTEX_ARRAY);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   return pWindow;
 }

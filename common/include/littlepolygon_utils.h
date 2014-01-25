@@ -44,18 +44,15 @@ struct Timer {
 
 	// virtually scaled "seconds" since the timer started
 	double timeScale;
-	double scaledTime;
-	double scaledDeltaTime;
+	double seconds;
+	double deltaSeconds;
 
-	Timer(float aTimeScale=1) : timeScale(aTimeScale) {
-		reset();
-	}
-
-	void reset() {
+	void reset(double aTimeScale=1) {
+		timeScale = aTimeScale;
 		ticks = SDL_GetTicks();
 		deltaTicks = 0;
-		scaledTime = 0;
-		scaledDeltaTime = 0;
+		seconds = 0;
+		deltaSeconds = 0;
 	}
 
 	void skipTicks() {
@@ -65,13 +62,10 @@ struct Timer {
 
 	void tick() {
 		deltaTicks = SDL_GetTicks() - ticks;
-		scaledDeltaTime = timeScale * deltaSeconds();
+		deltaSeconds = timeScale * (0.001 * deltaTicks);
 		ticks += deltaTicks;
-		scaledTime += scaledDeltaTime;
+		seconds += deltaSeconds;
 	}
-
-	double seconds() const { return 0.001 * ticks; }
-	double deltaSeconds() const { return 0.001 * deltaTicks; }
 };
 
 inline int pingPong(int i, int n) {

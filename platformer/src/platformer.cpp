@@ -53,6 +53,7 @@ int main(int argc, char *argv[]) {
 
 	// things with ctors
 	Timer timer;
+	timer.reset();
 	PlayerInput input;
 	auto collisions = createCollisionSystem();
 	collisions.setMetersToDisplay(PIXELS_PER_METER);
@@ -78,7 +79,7 @@ int main(int argc, char *argv[]) {
 		// tick time
 		timer.tick();
 		handleEvents(input);
-		hero.tick(&input, timer.scaledDeltaTime);
+		hero.tick(&input, timer.deltaSeconds);
 		input.jumpPressed = false;
 
 		// render scene

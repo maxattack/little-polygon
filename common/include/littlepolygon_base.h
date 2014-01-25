@@ -34,13 +34,13 @@
 #include <cstring>
 #include <stdint.h>
 #include <limits.h>
-#include <SDL.h>
+#include <SDL2/SDL.h>
 #if !LITTLE_POLYGON_MOBILE
 #define GLEW_STATIC
 #include <glew.h>
-#include <SDL_opengl.h>
+#include <SDL2/SDL_opengl.h>
 #else
-#include <SDL_opengles2.h>
+#include <SDL2/SDL_opengles2.h>
 #endif
 #include <SDL2/SDL_mixer.h>
 

@@ -38,7 +38,6 @@ LIBS = -Llib -L/usr/local/lib -framework OpenGL -framework Cocoa -llittlepolygon
 
 # SDL2
 #CFLAGS += -D_THREAD_SAFE
-CFLAGS += -I/usr/local/include/SDL2
 LIBS += -lSDL2 -lSDL2_mixer
 
 # VECTORIAL
@@ -55,8 +54,8 @@ CFLAGS += -arch i386
 AFLAGS = 32
 # AFLAGS = 64
 
-# stest: bin/squids bin/squids.bin
-# 	bin/squids
+stest: bin/squids bin/squids.bin
+	bin/squids
 
 test : bin/platformer bin/platformer.bin
 	cp platformer/assets/song.mid bin/song.mid

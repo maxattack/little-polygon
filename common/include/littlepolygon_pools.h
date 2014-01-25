@@ -131,32 +131,32 @@ public:
 template<typename T, int N>
 class CompactPool {
 private:
-	int count;
+	int mCount;
 	T slots[N];
 
 public:
-	CompactPool() : count(0) {}
+	CompactPool() : mCount(0) {}
 
 	T* alloc() {
-		if (count >= N) {
+		if (mCount >= N) {
 			return 0;
 		} else {
-			++count;
-			return slots + (count-1);
+			++mCount;
+			return slots + (mCount-1);
 		}
 	}
 
 	void release(T* slot) {
-		ASSERT(slot - slots > 0);
-		ASSERT(slot - slots < count);
-		--count;
-		if (slot != slots+count) {
-			*slot = slots[count];
+		ASSERT(slot - slots >= 0);
+		ASSERT(slot - slots < mCount);
+		--mCount;
+		if (slot != slots+mCount) {
+			*slot = slots[mCount];
 		}
 	}
 
 	void releaseValue(T value) {
-		for(int i=0; i<count; ++i) {
+		for(int i=0; i<mCount; ++i) {
 			if (slots[i] == value) {
 				release(slots + i);
 				return;
@@ -164,8 +164,11 @@ public:
 		}
 	}
 
+	int count() const { return mCount; }
 	T* begin() { return slots; }
-	T* end() { return slots + count; }
+	T* end() { return slots + mCount; }
+
+	bool isFull() const { return mCount == N; }
 };
 
 

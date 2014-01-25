@@ -82,6 +82,7 @@ int main(int argc, char *argv[]) {
 	);
 
 	Timer timer;
+	timer.reset();
 	
 	bool done = false;
 
@@ -98,14 +99,15 @@ int main(int argc, char *argv[]) {
 		timer.timeScale = 0.25 * 1.333 * yAmount;
 		timer.tick();
 
-		root.setPosition(easeTowards(root.position(), p, 0.1, timer.deltaSeconds()));
-		rotor.setRotation(M_TAU * timer.scaledTime);
-		rotor2.setRotation(-0.2 * M_TAU * timer.scaledTime);
 
-		n0.apply(affineRotation(0.2 * M_TAU * timer.scaledDeltaTime));
-		n1.apply(affineRotation(0.333 * M_TAU * timer.scaledDeltaTime));
-		n2.apply(affineRotation(-0.1 * M_TAU * timer.scaledDeltaTime));
-		n3.apply(affineRotation(-0.4 * M_TAU * timer.scaledDeltaTime));
+		root.setPosition(easeTowards(root.position(), p, 0.1, 0.001 * timer.deltaTicks));
+		rotor.setRotation(M_TAU * timer.seconds);
+		rotor2.setRotation(-0.2 * M_TAU * timer.seconds);
+
+		n0.apply(affineRotation(0.2 * M_TAU * timer.deltaSeconds));
+		n1.apply(affineRotation(0.333 * M_TAU * timer.deltaSeconds));
+		n2.apply(affineRotation(-0.1 * M_TAU * timer.deltaSeconds));
+		n3.apply(affineRotation(-0.4 * M_TAU * timer.deltaSeconds));
 		nodes.cacheWorldTransforms();
 
 		auto canvasSize = vec(w, h);
