@@ -32,7 +32,7 @@ CPP = clang++
 # as well.
 
 # BASE FLAGS
-CFLAGS = -Icommon/include -Wall -ffast-math
+CFLAGS = -Iinclude -Wall -ffast-math
 CCFLAGS = -std=c++11  -fno-rtti -fno-exceptions
 LIBS = -Llib -framework OpenGL -framework Cocoa -llittlepolygon -lz
 
@@ -65,8 +65,8 @@ test : bin/platformer bin/platformer.bin
 bin/squids: lib/liblittlepolygon.a $(squids_OBJ_FILES) 
 	$(CPP) -o $@ $(CFLAGS) $(CCFLAGS) $(LIBS) $(squids_OBJ_FILES)
 
-bin/squids.bin: squids/assets/* common/tools/*.py
-	common/tools/export_asset_bin.py squids/assets/assets.yaml $@ $(AFLAGS)
+bin/squids.bin: squids/assets/* tools/*.py
+	tools/export_asset_bin.py squids/assets/assets.yaml $@ $(AFLAGS)
 
 
 bin/platformer: lib/liblittlepolygon.a $(PLATFORMER_OBJ_FILES) 
@@ -83,10 +83,10 @@ clean:
 lib/liblittlepolygon.a: $(LIBRARY_OBJ_FILES)
 	ar rcs $@ $^
 
-obj/%.o: common/src/%.c
+obj/%.o: src/%.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-obj/%.o: common/src/%.cpp common/include/*.h
+obj/%.o: src/%.cpp include/*.h
 	$(CPP) $(CFLAGS) $(CCFLAGS) -c -o $@ $<
 
 obj/%.o: platformer/src/%.cpp platformer/src/*.h
