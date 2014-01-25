@@ -32,13 +32,14 @@ CPP = clang++
 # as well.
 
 # BASE FLAGS
-CFLAGS = -Icommon/include -I/usr/local/include/ -Wall -ffast-math
+CFLAGS = -Icommon/include -Wall -ffast-math
 CCFLAGS = -std=c++11  -fno-rtti -fno-exceptions
-LIBS = -Llib -L/usr/local/lib -framework OpenGL -framework Cocoa -llittlepolygon -lz
+LIBS = -Llib -framework OpenGL -framework Cocoa -llittlepolygon -lz
 
 # SDL2
 #CFLAGS += -D_THREAD_SAFE
-LIBS += -lSDL2 -lSDL2_mixer
+
+LIBS += -framework SDL2 -framework SDL2_mixer
 
 # VECTORIAL
 CFLAGS += -Ivectorial/include
