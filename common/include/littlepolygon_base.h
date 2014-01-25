@@ -26,6 +26,10 @@
 	#endif
 #endif
 
+#if __APPLE__
+#define LITTLE_POLYGON_PLATFORM_MACOS 1
+#endif
+
 // standard includes
 #include <cstdio>
 #include <cstdlib>
@@ -42,7 +46,11 @@
 #else
 #include <SDL2/SDL_opengles2.h>
 #endif
+#if LITTLE_POLYGON_PLATFORM_MACOS
+#include <SDL2_mixer/SDL_mixer.h>
+#else
 #include <SDL2/SDL_mixer.h>
+#endif
 
 #include <vectorial/vectorial.h>
 using namespace vectorial;
