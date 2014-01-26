@@ -35,7 +35,7 @@ AssetRef loadAssets(const char* path, uint32_t crc) {
 	
 	// read length and count
 	int pointerWidth = SDL_ReadLE32(file);
-	if (pointerWidth != sizeof(void*)) {
+	if (pointerWidth != 8 * sizeof(void*)) {
 		LOG(("Asset Wordsize is wrong (%d)\n", pointerWidth));
 		SDL_RWclose(file);
 		return 0;
