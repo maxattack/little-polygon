@@ -19,15 +19,6 @@
 // determine platform
 
 
-#if __IPHONEOS__
-	#define LITTLE_POLYGON_MOBILE 1
-#else
-	#define LITTLE_POLYGON_MOBILE 0
-	#ifndef LITTLE_POLYGON_GL_CORE_PROFILE
-		#define LITTLE_POLYGON_GL_CORE_PROFILE 1
-	#endif
-#endif
-
 // standard includes
 #include <cstdio>
 #include <cstdlib>
@@ -37,17 +28,22 @@
 #include <stdint.h>
 #include <limits.h>
 #include <SDL2/SDL.h>
-#if !LITTLE_POLYGON_MOBILE
-#define GLEW_STATIC
-#include <glew.h>
-#include <SDL2/SDL_opengl.h>
+#if __IPHONEOS__
+	#include <SDL2/SDL_opengles2.h>
 #else
-#include <SDL2/SDL_opengles2.h>
+	#define GLEW_STATIC
+	#include <glew.h>
+	#include <SDL2/SDL_opengl.h>
 #endif
-#if __MACOSX__
-#include <SDL2_mixer/SDL_mixer.h>
-#else
 #include <SDL2/SDL_mixer.h>
+
+#if __IPHONEOS__
+	#define LITTLE_POLYGON_MOBILE 1
+#else
+	#define LITTLE_POLYGON_MOBILE 0
+	#ifndef LITTLE_POLYGON_GL_CORE_PROFILE
+		#define LITTLE_POLYGON_GL_CORE_PROFILE 1
+	#endif
 #endif
 
 #include <vectorial/vectorial.h>

@@ -39,7 +39,7 @@ void main() {
 uniform lowp sampler2D atlas;
 
 void main() {
-	vec4 baseColor = texture2D(atlas, uv);
+	lowp vec4 baseColor = texture2D(atlas, uv);
 	gl_FragColor = vec4(mix(baseColor.rgb, color.rgb, color.a), baseColor.a);
 }
 
