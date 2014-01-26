@@ -128,47 +128,60 @@ public:
 // COMPACT POOL
 //------------------------------------------------------------------------------
 
-template<typename T, int N>
+template<typename T>
 class CompactPool {
 private:
+	int mCapacity;
 	int mCount;
-	T slots[N];
+	T* mSlots;
 
 public:
-	CompactPool() : mCount(0) {}
+	CompactPool(int capacity, T*slots) : 
+		mCapacity(capacity), mCount(0), mSlots(slots) {
+		ASSERT(mCapacity > 0);
+	}
 
 	T* alloc() {
-		if (mCount >= N) {
-			return 0;
-		} else {
-			++mCount;
-			return slots + (mCount-1);
-		}
+		ASSERT (mCount < mCapacity);
+		++mCount;
+		return mSlots + (mCount-1);
+	}
+
+	bool active(T* slot) const {
+		return (slot - mSlots) >= 0 && (slot - mSlots) < mCount;
 	}
 
 	void release(T* slot) {
-		ASSERT(slot - slots >= 0);
-		ASSERT(slot - slots < mCount);
+		ASSERT(active(slot));
 		--mCount;
-		if (slot != slots+mCount) {
-			*slot = slots[mCount];
+		if (slot != mSlots+mCount) {
+			*slot = mSlots[mCount];
 		}
 	}
 
 	void releaseValue(T value) {
 		for(int i=0; i<mCount; ++i) {
-			if (slots[i] == value) {
-				release(slots + i);
+			if (mSlots[i] == value) {
+				release(mSlots + i);
 				return;
 			}
 		}
 	}
 
 	int count() const { return mCount; }
-	T* begin() { return slots; }
-	T* end() { return slots + mCount; }
+	T* begin() { return mSlots; }
+	T* end() { return mSlots + mCount; }
 
-	bool isFull() const { return mCount == N; }
+	bool isEmpty() const { return mCount == 0; }
+	bool isFull() const { return mCount == mCapacity; }
 };
 
+template<typename T, int N>
+class CompactPoolWithBuffer : public CompactPool<T> {
+private:
+	T slots[N];
+
+public:
+	CompactPoolWithBuffer() : CompactPool<T>(N, slots) {}
+};
 
