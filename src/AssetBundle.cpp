@@ -34,6 +34,13 @@ AssetRef loadAssets(const char* path, uint32_t crc) {
 	SDL_RWops* file = SDL_RWFromFile(path, "rb");
 	
 	// read length and count
+	int pointerWidth = SDL_ReadLE32(file);
+	if (pointerWidth != sizeof(void*)) {
+		LOG(("Asset Wordsize is wrong (%d)\n", pointerWidth));
+		SDL_RWclose(file);
+		return 0;
+	}
+
 	int length = SDL_ReadLE32(file);
 	int count = SDL_ReadLE32(file);
 
@@ -42,6 +49,7 @@ AssetRef loadAssets(const char* path, uint32_t crc) {
 	void *result = &(bundle->headers);
 	if (SDL_RWread(file, result, length, 1) == -1) {
 		LITTLE_POLYGON_FREE(bundle);
+		SDL_RWclose(file);
 		return 0;
 	}
 

@@ -260,7 +260,7 @@ def export_native_assets(assetGroup, outpath, bpp):
 	# WRITE FILE (sizes, payload, pointers)
 
 	with open(outpath, 'wb') as f : 
-		f.write(struct.pack('II', len(data), len(asset_header)))
+		f.write(struct.pack('III', bpp, len(data), len(asset_header)))
 		f.write(data)
 		f.write(pointers)
 
