@@ -1,6 +1,0 @@
-
-font/droid: { path: DroidSans-Bold.ttf, size: 16 }
-
-texture/sprites:
-  image/max: { path: _max.gif, pivot: center }
-

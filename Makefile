@@ -18,11 +18,6 @@ PLATFORMER_OBJ_FILES =     \
 	obj/Hero.o             \
 	obj/Kitten.o           \
 	obj/platformer.o
-
-squids_OBJ_FILES =   \
-	obj/SplineTree.o \
-    obj/squids.o
-
 # COMPILER
 CC = clang
 CPP = clang++
@@ -55,25 +50,17 @@ CFLAGS += -arch i386
 AFLAGS = 32
 # AFLAGS = 64
 
-# stest: bin/squids bin/squids.bin
-# 	bin/squids
-
 test : bin/platformer bin/platformer.bin
-	cp platformer/assets/song.mid bin/song.mid
+	cp demo/assets/song.mid bin/song.mid
 	bin/platformer
 
-bin/squids: lib/liblittlepolygon.a $(squids_OBJ_FILES) 
-	$(CPP) -o $@ $(CFLAGS) $(CCFLAGS) $(LIBS) $(squids_OBJ_FILES)
-
-bin/squids.bin: squids/assets/* tools/*.py
-	tools/export_asset_bin.py squids/assets/assets.yaml $@ $(AFLAGS)
-
-
 bin/platformer: lib/liblittlepolygon.a $(PLATFORMER_OBJ_FILES) 
+	mkdir -p bin
 	$(CPP) -o $@ $(CFLAGS) $(CCFLAGS) $(LIBS) $(PLATFORMER_OBJ_FILES)
 
-bin/platformer.bin: platformer/assets/* tools/*.py platformer/tools/*.py
-	platformer/tools/export_game_assets.py platformer/assets/assets.yaml $@ $(AFLAGS)
+bin/platformer.bin: demo/assets/* tools/*.py demo/tools/*.py
+	mkdir -p bin
+	demo/tools/export_game_assets.py demo/assets/assets.yaml $@ $(AFLAGS)
 
 clean:
 	rm -f lib/*
@@ -81,18 +68,18 @@ clean:
 	rm -f bin/*
 
 lib/liblittlepolygon.a: $(LIBRARY_OBJ_FILES)
+	mkdir -p lib
 	ar rcs $@ $^
 
 obj/%.o: src/%.c
+	mkdir -p obj
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 obj/%.o: src/%.cpp include/*.h
+	mkdir -p obj
 	$(CPP) $(CFLAGS) $(CCFLAGS) -c -o $@ $<
 
-obj/%.o: platformer/src/%.cpp platformer/src/*.h
+obj/%.o: demo/src/%.cpp demo/src/*.h
+	mkdir -p obj
 	$(CPP) $(CFLAGS) $(CCFLAGS) -c -o $@ $<
-
-obj/%.o: squids/src/%.cpp # squids/src/*.h
-	$(CPP) $(CFLAGS) $(CCFLAGS) -c -o $@ $<
-
 
