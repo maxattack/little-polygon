@@ -35,7 +35,7 @@ private:
 
 public:
 	Viewport();
-	Viewport(vec2 aSize, vec2 aOffset) :
+	Viewport(vec2 aSize, vec2 aOffset=vec(0,0)) :
 		mSize(aSize), mOffset(aOffset) {}
 
 	vec2 size() const { return mSize; }

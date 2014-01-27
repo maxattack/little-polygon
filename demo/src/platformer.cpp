@@ -38,6 +38,8 @@ int main(int argc, char *argv[]) {
 
 	auto window = initContext("A Girl and Her Cat", 4 * CANVAS_WIDTH, 4 * CANVAS_HEIGHT);
 
+	Viewport view(vec(CANVAS_WIDTH, CANVAS_HEIGHT));
+
 	auto color = rgb(0x95b5a2);
 	glClearColor(color.red(), color.green(), color.blue(), 0.0f);
 	
@@ -83,10 +85,8 @@ int main(int argc, char *argv[]) {
 		input.jumpPressed = false;
 
 		// render scene
-		auto scrolling = vec(100 * timer.seconds, 0);
-		auto canvasSize = vec(CANVAS_WIDTH, CANVAS_HEIGHT);
 
-		sprites.begin(canvasSize, scrolling);
+		sprites.begin(view);
 		environment.draw(sprites);
 		batch.draw(sprites);
 		sprites.end();
@@ -95,13 +95,11 @@ int main(int argc, char *argv[]) {
 
 
 			glDisable(GL_BLEND);
-			lines.begin(canvasSize, scrolling);
+			lines.begin(view);
 			collisions.debugDraw(lines, rgb(0xffff00));
 
 			// test raycasting
-			SDL_Point mouse;
-			SDL_GetMouseState(&mouse.x, &mouse.y);
-			auto ray = Ray(0.25f * canvasSize, 0.25f * vec2(mouse));
+			auto ray = Ray(0.25f * view.size(), view.mouse());
 			auto physRay = Ray(METERS_PER_PIXEL * ray.p0, METERS_PER_PIXEL * ray.p1);
 			ColliderRef result;
 			auto u = collisions.raycast(physRay, 0xffffffff, &result);
