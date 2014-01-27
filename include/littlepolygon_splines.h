@@ -46,7 +46,7 @@ public:
 
 	void destroy();
 
-	void begin(vec2 canvasSize, vec2 canvasOffset=vec(0,0));
+	void begin(const Viewport& viewport);
 	void plot(mat4f positionMatrix, vec4f strokeVector, Color c);
 	void end();
 };

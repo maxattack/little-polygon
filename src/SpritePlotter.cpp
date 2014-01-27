@@ -47,8 +47,7 @@ void main() {
 )GLSL";
 
 struct SpritePlotter {
-	vec2 canvasSize;
-	vec2 canvasScroll;
+	const Viewport *view;
 	int capacity;
 	int count;
 
@@ -158,15 +157,11 @@ bool SpritePlotterRef::bound() const {
 	return context->count >= 0; 
 }
 
-vec2 SpritePlotterRef::canvasSize() const {
-	return context->canvasSize;
+const Viewport* SpritePlotterRef::view() const {
+	return context->view;
 }
 
-vec2 SpritePlotterRef::canvasScroll() const {
-	return context->canvasScroll;
-}
-
-void SpritePlotterRef::begin(vec2 aCanvasSize, vec2 aCanvasOffset) {
+void SpritePlotterRef::begin(const Viewport& viewport) {
 	ASSERT(context->count == -1);
 	context->count = 0;
 
@@ -176,9 +171,8 @@ void SpritePlotterRef::begin(vec2 aCanvasSize, vec2 aCanvasOffset) {
 	glEnableVertexAttribArray(context->aUV);
 	glEnableVertexAttribArray(context->aColor);
 
-	context->canvasSize = aCanvasSize;
-	context->canvasScroll = aCanvasOffset;
-	setCanvas(context->uMVP, context->canvasSize, context->canvasScroll);
+	context->view = &viewport;
+	viewport.setMVP(context->uMVP);
 
 	// bind element buffer
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, context->elementBuf);
@@ -346,11 +340,11 @@ void SpritePlotterRef::drawTilemap(TilemapAsset *map, vec2 position) {
 	// make sure the map is initialized
 	map->init();
 
-	vec2 cs = context->canvasSize / vec(map->tw, map->th);	
+	vec2 cs = context->view->size() / vec(map->tw, map->th);
 	int latticeW = ceilf(cs.x) + 1;
 	int latticeH = ceilf(cs.y) + 1;
 
-	vec2 scroll = context->canvasScroll - position;
+	vec2 scroll = context->view->offset() - position;
 	
 
 	int vox = int(scroll.x/map->tw);
@@ -375,7 +369,7 @@ void SpritePlotterRef::drawTilemap(TilemapAsset *map, vec2 position) {
 			if (coord.x != 0xff) {
 				vec2 p = vec(x * map->tw, y * map->th) 
 					- vec(TILE_SLOP, TILE_SLOP) 
-					- rem + context->canvasScroll;
+					- rem + context->view->offset();
 				vec2 uv = 
 					(vec(map->tw * coord.x, map->th * coord.y) + vec(TILE_SLOP, TILE_SLOP))
 					/ vec(map->tileAtlas.w, map->tileAtlas.h);

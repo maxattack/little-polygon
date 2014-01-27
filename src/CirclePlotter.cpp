@@ -49,6 +49,7 @@ void main() {
 
 struct CirclePlotter {
 	size_t resolution;
+	const Viewport *view;
 	
 	GLuint prog;
 	GLuint vert;
@@ -59,6 +60,7 @@ struct CirclePlotter {
 	GLuint aColor;
 
 	GLuint fakeAntiAlias;
+	float fakeAntiAliasFactor;
 
 	struct Vertex {
 		vec2 position;
@@ -102,9 +104,19 @@ void CirclePlotterRef::destroy() {
 	LITTLE_POLYGON_FREE(context);
 }
 
-void CirclePlotterRef::begin(vec2 canvasSize, vec2 canvasOffset) {
+
+#define FAKE_ANTIALIAS_FACTOR (0.01f)
+
+void CirclePlotterRef::begin(const Viewport& viewport) {
+	
+	context->view = &viewport;
+	
+	int w,h;
+	SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &w, &h);
+	context->fakeAntiAliasFactor = FAKE_ANTIALIAS_FACTOR * float(w) / viewport.width();
+	
 	glUseProgram(context->prog);
-	setCanvas(context->uMVP, canvasSize, canvasOffset);
+	viewport.setMVP(context->uMVP);
 
 	glEnableVertexAttribArray(context->aPosition);
 	glEnableVertexAttribArray(context->aUV);
@@ -120,14 +132,12 @@ void CirclePlotterRef::begin(vec2 canvasSize, vec2 canvasOffset) {
 // right now I'm just doing one draw call per plot.  if this proves to be a performance bottleneck
 // we can use degenerate triangles to combine multiple strips together.
 
-#define FAKE_ANTIALIAS_FACTOR (0.01f)
-
 void CirclePlotterRef::plotFilled(vec2 p, float r, Color c, float a1, float a2) {
 	// plot eet
 	vec2 curr = polar(1, a1);
 	float da = (a2 - a1) / float(context->resolution-1);
 	vec2 rotor = polar(1, da);
-	float v = clamp(FAKE_ANTIALIAS_FACTOR * r);
+	float v = clamp(context->fakeAntiAliasFactor * r);
 	context->getVert(0)->set(p, vec(0.5, v), c);
 	for(int i=0; i<context->resolution; ++i) {
 		context->getVert(i+1)->set(p + r * curr, vec(1, v), c);
@@ -143,7 +153,7 @@ void CirclePlotterRef::plotArc(vec2 p, float r1, float r2, Color c, float a1, fl
 	vec2 curr = polar(1, a1);
 	float da = (a2 - a1) / float(context->resolution-1);
 	vec2 rotor = polar(1, da);
-	float v = clamp(FAKE_ANTIALIAS_FACTOR * 0.5 * fabsf(r2-r1));
+	float v = clamp(context->fakeAntiAliasFactor * 0.5 * fabsf(r2-r1));
 	for(int i=0; i<context->resolution; ++i) {
 		context->getVert(i+i)->set(p + r1 * curr, vec(0, v), c);
 		context->getVert(i+i+1)->set(p + r2 * curr, vec(1, v), c);

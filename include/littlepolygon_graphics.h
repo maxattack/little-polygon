@@ -28,8 +28,29 @@
 // to register teardown.
 SDL_Window *initContext(const char *caption, int w=0, int h=0);
 
-// uniform methods for setting orthographic cancas parameters
-void setCanvas(GLuint uMVP, vec2 canvasSize, vec2 canvasOffset);
+class Viewport {
+private:
+	vec2 mSize;
+	vec2 mOffset;
+
+public:
+	Viewport();
+	Viewport(vec2 aSize, vec2 aOffset) :
+		mSize(aSize), mOffset(aOffset) {}
+
+	vec2 size() const { return mSize; }
+	float width() const { return mSize.x; }
+	float height() const { return mSize.y; }
+
+	vec2 offset() const { return mOffset; }
+
+	vec2 windowToViewport(vec2 p) const;
+	vec2 viewportToWindow(vec2 vp) const;
+
+	vec2 mouse() const;
+
+	void setMVP(GLuint mvp) const;
+};
 
 // Dead-simple shader-compiler.  Easiest to just use C++11 raw string
 // literals to store the source, or else you could stash it in asset 
@@ -39,7 +60,6 @@ bool compileShader(const GLchar* source, GLuint *outProg, GLuint *outVert, GLuin
 
 typedef Color (*TextureGenerator)(double, double);
 GLuint generateTexture(TextureGenerator cb, int w=256, int h=256);
-
 GLuint getFakeAntialiasTexture();
 
 //------------------------------------------------------------------------------
@@ -64,7 +84,7 @@ public:
 
 	void destroy();
 
-	void begin(vec2 canvasSize, vec2 canvasOffset=vec(0,0));
+	void begin(const Viewport& viewport);
 	void plot(vec2 p0, vec2 p1, Color c);
 	void end();
 };
@@ -91,7 +111,7 @@ public:
 
 	void destroy();
 
-	void begin(vec2 canvasSize, vec2 canvasOffset=vec(0,0));
+	void begin(const Viewport& viewport);
 	void plotFilled(vec2 p, float r, Color c, float a1=0, float a2=M_TAU);
 	void plotArc(vec2 p, float r1, float r2, Color c, float a1=0, float a2=M_TAU);
 	void end();

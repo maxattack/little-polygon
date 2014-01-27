@@ -83,7 +83,7 @@ int main(int argc, char *argv[]) {
 		input.jumpPressed = false;
 
 		// render scene
-		auto scrolling = vec(0,0);
+		auto scrolling = vec(100 * timer.seconds, 0);
 		auto canvasSize = vec(CANVAS_WIDTH, CANVAS_HEIGHT);
 
 		sprites.begin(canvasSize, scrolling);

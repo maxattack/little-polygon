@@ -17,7 +17,7 @@
 #pragma once
 
 #include "littlepolygon_assets.h"
-#include "littlepolygon_math.h"
+#include "littlepolygon_graphics.h"
 
 //------------------------------------------------------------------------------
 // FORWARD DECLARATIONS
@@ -54,14 +54,13 @@ public:
 	void destroy();
 
 	bool bound() const;
-	vec2 canvasSize() const;
-	vec2 canvasScroll() const;
+	const Viewport *view() const;
 
 	// Call this method to initialize the graphics context state.  Coordinates are
 	// set to a orthogonal projection matrix, and some basic settings like blending are
 	// enabled.  Any additional state changes can be set *after* this function but *before*
 	// issuing any draw calls.
-	void begin(vec2 canvasSize, vec2 scrolling=vec(0,0));
+	void begin(const Viewport& viewport);
 
 	// Draw the given image.  Will potentially cause a draw call to actually be emitted
 	// to the graphics device if: (i) the buffer has reached capacity or (ii) the texture 

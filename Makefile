@@ -11,6 +11,7 @@ LIBRARY_OBJ_FILES =        \
 	obj/SpritePlotter.o    \
 	obj/TextureAsset.o     \
 	obj/TilemapAsset.o     \
+	obj/Viewport.o         \
 	obj/utils.o         
 
 PLATFORMER_OBJ_FILES =     \

@@ -56,8 +56,7 @@ void main() {
 
 struct SplinePlotter {
 	int resolution;
-	vec2 canvasSize;
-	vec2 canvasScroll;
+	const Viewport *view;
 
 	GLuint prog;
 	GLuint vert;
@@ -155,13 +154,12 @@ void SplinePlotterRef::destroy() {
 	dealloc(context);
 }
 
-void SplinePlotterRef::begin(vec2 canvasSize, vec2 canvasOffset) {
+void SplinePlotterRef::begin(const Viewport &viewport) {
 	ASSERT(context->prog);
 	glUseProgram(context->prog);
-
-	context->canvasSize = canvasSize;
-	context->canvasScroll = canvasOffset;
-	setCanvas(context->uMVP, context->canvasSize, context->canvasScroll);
+	
+	context->view = &viewport;
+	viewport.setMVP(context->uMVP);
 
 	glBindBuffer(GL_ARRAY_BUFFER, context->arrayBuf);
 	glEnableVertexAttribArray(context->aParameter);

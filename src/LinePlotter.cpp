@@ -104,12 +104,12 @@ void LinePlotterRef::destroy() {
 	dealloc(context);
 }
 
-void LinePlotterRef::begin(vec2 canvasSize, vec2 canvasOffset) {
+void LinePlotterRef::begin(const Viewport& viewport) {
 	ASSERT(context->count == -1);
 	context->count = 0;
 
 	glUseProgram(context->prog);
-	setCanvas(context->uMVP, canvasSize, canvasOffset);
+	viewport.setMVP(context->uMVP);
 
 	glEnableVertexAttribArray(context->aPosition);
 	glEnableVertexAttribArray(context->aColor);
