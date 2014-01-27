@@ -46,6 +46,10 @@ private:
 public:
 	FreelistPool() {
 		STATIC_ASSERT(N>1);
+		reset();
+	}
+
+	void reset() {
 		firstFree = slots;
 		for(int i=0; i<N-1; ++i) {
 			slots[i].next = slots + (i+1);
@@ -80,10 +84,13 @@ template<typename T, int N>
 class BitsetPool {
 private:
 	Bitset<N> mask;
-	size_t capacity;
 	T slots[N];
 
 public:
+
+	void reset() {
+		mask.reset();
+	}
 
 	T* alloc() {
 		unsigned index;
@@ -128,21 +135,22 @@ public:
 // COMPACT POOL
 //------------------------------------------------------------------------------
 
-template<typename T>
+template<typename T, int N>
 class CompactPool {
 private:
-	int mCapacity;
 	int mCount;
-	T* mSlots;
+	T mSlots[N];
 
 public:
-	CompactPool(int capacity, T*slots) : 
-		mCapacity(capacity), mCount(0), mSlots(slots) {
-		ASSERT(mCapacity > 0);
+	CompactPool() : mCount(0) {
+	}
+
+	void reset() {
+		mCount = 0;
 	}
 
 	T* alloc() {
-		ASSERT (mCount < mCapacity);
+		ASSERT (mCount < N);
 		++mCount;
 		return mSlots + (mCount-1);
 	}
@@ -173,15 +181,5 @@ public:
 	T* end() { return mSlots + mCount; }
 
 	bool isEmpty() const { return mCount == 0; }
-	bool isFull() const { return mCount == mCapacity; }
+	bool isFull() const { return mCount == N; }
 };
-
-template<typename T, int N>
-class CompactPoolWithBuffer : public CompactPool<T> {
-private:
-	T slots[N];
-
-public:
-	CompactPoolWithBuffer() : CompactPool<T>(N, slots) {}
-};
-
