@@ -40,6 +40,8 @@ struct vec2 {
 	operator b2Vec2() { return b2Vec2(x, y); }
 	#endif
 
+	operator vec4f() const { return vec4f(x,y,0,0); }
+
 	float real() const         { return x; }
 	float imag() const         { return y; }
 	float norm() const         { return x*x + y*y; }

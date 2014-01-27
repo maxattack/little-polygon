@@ -51,6 +51,7 @@ public:
 	void end();
 };
 
+namespace Spline {
 
 // stroke vector helpers
 // The store is computed by taking the doc-product of these vectors
@@ -173,4 +174,6 @@ inline mat4f quadraticBezierDerivMatrix(vec4f p0, vec4f p1, vec4f p2) {
 		0, 2, -4, 2,
 		0, -2, 2, 0
 	});
+}
+
 }

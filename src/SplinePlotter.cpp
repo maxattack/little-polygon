@@ -176,7 +176,7 @@ void SplinePlotterRef::plot(mat4f positionMatrix, vec4f strokeVector, Color c) {
 	float buf[16];
 	positionMatrix.store(buf);
 	glUniformMatrix4fv(context->uPositionMatrix, 1, 0, buf);
-	perpendicularMatrix(positionMatrix).store(buf);
+	Spline::perpendicularMatrix(positionMatrix).store(buf);
 	glUniformMatrix4fv(context->uStrokeMatrix, 1, 0, buf);
 	strokeVector.store(buf);
 	glUniform4fv(context->uStrokeVector, 1, buf);

@@ -91,6 +91,7 @@ FkTreeRef createFkContext(size_t capacity) {
 	context->count = 0;
 	context->allocationMask.reset();
 	context->dirtyMask.reset();
+	context->firstRoot = 0;
 	return context;
 }
 
