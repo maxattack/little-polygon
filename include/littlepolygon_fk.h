@@ -107,6 +107,17 @@ public:
 	void setWorld(const AffineMatrix& matrix);
 	void setUserData(void *userData);
 
+	// chainable initializers
+	FkNodeRef& local(const AffineMatrix& matrix) { setLocal(matrix); return *this; }
+	FkNodeRef& position(vec2 position) { setPosition(position); return *this; }
+	FkNodeRef& position(float x, float y) { position(vec(x,y)); return *this; }
+	FkNodeRef& attitude(vec2 attitude) { setAttitude(attitude); return *this; }
+	FkNodeRef& attitude(float x, float y) { setAttitude(vec(x,y)); return *this; }
+	FkNodeRef& rotation(float radians) { setRotation(radians); return *this; }
+	FkNodeRef& scale(vec2 scale) { setScale(scale); return *this; }
+	FkNodeRef& scale(float x, float y) { setScale(vec(x,y)); return *this; }
+	FkNodeRef& world(const AffineMatrix& matrix) { setWorld(matrix); return *this; }
+
 	void apply(const AffineMatrix& matrix) { setLocal(matrix * local()); }
 
 	FkTreeRef context() const;

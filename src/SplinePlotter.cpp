@@ -19,6 +19,9 @@
 
 // Gift-idea: Specify a texture "ramp"?
 const GLchar* SPLINE_SHADER = R"GLSL(
+
+varying mediump vec2 uv;
+
 #if VERTEX
 
 attribute mediump vec4 parameter;
@@ -30,21 +33,25 @@ uniform mediump mat4 strokeMatrix;
 uniform mediump vec4 strokeVector;
 
 void main() {
+	float radius = dot(strokeVector, parameter);
 	gl_Position = mvp * vec4((
 			(positionMatrix * parameter) + 
-			(dot(strokeVector, parameter) * side) * normalize(strokeMatrix * parameter)
+			(radius * side) * normalize(strokeMatrix * parameter)
 	).xyz, 1);
+	uv = vec2(0.5*(1.0+side), min(0.01 * radius, 1.0));
 }
 
 #else
 
 uniform lowp vec4 color;
+uniform lowp sampler2D texture;
 
 void main() {
-	gl_FragColor = color;
+	gl_FragColor = color * texture2D(texture, uv);
 }
 
 #endif
+
 )GLSL";
 
 struct SplinePlotter {
@@ -161,6 +168,8 @@ void SplinePlotterRef::begin(vec2 canvasSize, vec2 canvasOffset) {
 	glEnableVertexAttribArray(context->aSide);
 	glVertexAttribPointer(context->aParameter, 4, GL_FLOAT, GL_FALSE, sizeof(SplinePlotter::Vertex), (GLvoid*)0);
 	glVertexAttribPointer(context->aSide, 1, GL_FLOAT, GL_FALSE, sizeof(SplinePlotter::Vertex), (GLvoid*)16);
+	
+	glBindTexture(GL_TEXTURE_2D, getFakeAntialiasTexture());
 }
 
 void SplinePlotterRef::plot(mat4f positionMatrix, vec4f strokeVector, Color c) {
