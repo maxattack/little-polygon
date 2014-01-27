@@ -16,7 +16,7 @@
 
 #pragma once
 #include "littlepolygon_base.h"
-
+#include "littlepolygon_math.h"
 
 struct AssetBundle;
 class AssetRef;
@@ -39,7 +39,8 @@ class AssetRef;
 #define ASSET_TYPE_FONT      3
 #define ASSET_TYPE_SAMPLE    4
 #define ASSET_TYPE_TILEMAP   5
-#define ASSET_TYPE_USERDATA  6
+#define ASSET_TYPE_PALETTE   6
+#define ASSET_TYPE_USERDATA  7
 
 //------------------------------------------------------------------------------
 // ASSET RECORDS
@@ -56,8 +57,10 @@ struct TextureAsset {
 		textureHandle,      // handle to the initialized texture resource
 		flags;              // extra information (wrapping, format, etc)
 	
-	inline bool initialized() const { return textureHandle != 0; }
-	inline int format() const { return GL_RGBA; }
+	bool initialized() const { return textureHandle != 0; }
+	int format() const { return GL_RGBA; }
+
+	vec2 size() const { return vec(w,h); }
 
 	void init();
 	void bind();
@@ -65,13 +68,13 @@ struct TextureAsset {
 };
 
 struct FrameAsset {
-	float u0, v0,  // UV coordinates of the corners (necessary since the image
-		u1, v1,    // might have been transposed during packing)
-		u2, v2, 
-		u3, v3;
-
+	vec2 uv0, uv1, uv2, uv3;  // UV coordinates of the corners (necessary since the image
+	                          // might have been transposed during packing)
 	int32_t px, py, // post-trim pivot of the frame
 		w, h;	    // post-trim size of the frame
+
+	vec2 pivot() const { return vec(px,py); }
+	vec2 size() const { return vec(w,h); }
 };
 
 struct ImageAsset {
@@ -80,7 +83,10 @@ struct ImageAsset {
 		px, py,            // the logical pivot of the image
 		nframes;           // number of rendered frames
 
-	inline FrameAsset* frame(int i) {
+	vec2 size() const { return vec(w,h); }
+	vec2 pivot() const { return vec(px,py); }
+
+	FrameAsset* frame(int i) {
 		// frames are stored immediately after the image (correctly aligned)
 		ASSERT(i >= 0 && i < nframes);
 		return reinterpret_cast<FrameAsset*>(this+1) + i;
@@ -100,9 +106,12 @@ struct TilemapAsset {
 		compressedSize;     // the byte-length of the compressed buffer
 	TextureAsset tileAtlas; // a texture-atlas of all the tiles
 
-	inline bool intialized() const { return data != 0; }
+	bool intialized() const { return data != 0; }
 
-	inline uint8_pair_t tileAt(int x, int y) const {
+	vec2 tileSize() const { return vec(tw,th); }
+	vec2 mapSize() const { return vec(mw,mh); }
+
+	uint8_pair_t tileAt(int x, int y) const {
 		ASSERT(intialized());
 		ASSERT(x >= 0 && x < mw);
 		ASSERT(y >= 0 && y < mh);
@@ -148,11 +157,23 @@ struct SampleAsset {
 		frequency;                 // PCM samples per second
 	uint32_t size, compressedSize; // byte-length of the compressed data
 
-	inline bool initialized() const { return chunk != 0; }
+	bool initialized() const { return chunk != 0; }
 
 	void init();
 	void play();
 	void release();
+};
+
+struct PaletteAsset {
+	uint32_t count;
+
+	Color *colors() const { return (Color*)(this+1); }
+
+	Color getColor(int i) const {
+		ASSERT(i >= 0);
+		ASSERT(i < count);
+		return colors()[i];
+	}
 };
 
 struct UserdataAsset {
@@ -163,7 +184,7 @@ struct UserdataAsset {
 
 	size_t size; // length of the data, in bytes
 
-	inline void *data() const { return (void*)(this+1); }
+	void *data() const { return (void*)(this+1); }
 
 	template<typename T> 
 	const T* as() { return (T*)(this+1); }
@@ -211,20 +232,22 @@ public:
 
 
 	// lookup assets by name
-	inline TextureAsset *texture(const char * name) { ASSET_RESULT_VERIFY(texture(hash(name))) }
-	inline ImageAsset *image(const char * name) { ASSET_RESULT_VERIFY(image(hash(name))) }
-	inline TilemapAsset *tilemap(const char * name) { ASSET_RESULT_VERIFY(tilemap(hash(name))) }
-	inline FontAsset *font(const char * name) { ASSET_RESULT_VERIFY(font(hash(name))) }
-	inline SampleAsset *sample(const char * name) { ASSET_RESULT_VERIFY(sample(hash(name))) }
-	inline UserdataAsset *userdata(const char *name) { ASSET_RESULT_VERIFY(userdata(hash(name))) }
+	TextureAsset *texture(const char *name) { ASSET_RESULT_VERIFY(texture(hash(name))) }
+	ImageAsset *image(const char *name) { ASSET_RESULT_VERIFY(image(hash(name))) }
+	TilemapAsset *tilemap(const char *name) { ASSET_RESULT_VERIFY(tilemap(hash(name))) }
+	FontAsset *font(const char *name) { ASSET_RESULT_VERIFY(font(hash(name))) }
+	SampleAsset *sample(const char *name) { ASSET_RESULT_VERIFY(sample(hash(name))) }
+	PaletteAsset *palette(const char *name) { ASSET_RESULT_VERIFY(palette(hash(name))) }
+	UserdataAsset *userdata(const char *name) { ASSET_RESULT_VERIFY(userdata(hash(name))) }
 
 	// lookup assets by hash
-	inline TextureAsset *texture(uint32_t hash) { return (TextureAsset*) findHeader(hash, ASSET_TYPE_TEXTURE); }
-	inline ImageAsset *image(uint32_t hash) { return (ImageAsset*) findHeader(hash, ASSET_TYPE_IMAGE); }
-	inline TilemapAsset *tilemap(uint32_t hash) { return (TilemapAsset*) findHeader(hash, ASSET_TYPE_TILEMAP); }
-	inline FontAsset *font(uint32_t hash) { return (FontAsset*) findHeader(hash, ASSET_TYPE_FONT); }
-	inline SampleAsset *sample(uint32_t hash) { return (SampleAsset*) findHeader(hash, ASSET_TYPE_SAMPLE); }
-	inline UserdataAsset *userdata(uint32_t hash) { return (UserdataAsset*) findHeader(hash, ASSET_TYPE_USERDATA); }
+	TextureAsset *texture(uint32_t hash) { return (TextureAsset*) findHeader(hash, ASSET_TYPE_TEXTURE); }
+	ImageAsset *image(uint32_t hash) { return (ImageAsset*) findHeader(hash, ASSET_TYPE_IMAGE); }
+	TilemapAsset *tilemap(uint32_t hash) { return (TilemapAsset*) findHeader(hash, ASSET_TYPE_TILEMAP); }
+	FontAsset *font(uint32_t hash) { return (FontAsset*) findHeader(hash, ASSET_TYPE_FONT); }
+	SampleAsset *sample(uint32_t hash) { return (SampleAsset*) findHeader(hash, ASSET_TYPE_SAMPLE); }
+	PaletteAsset *palette(uint32_t hash) { return (PaletteAsset*) findHeader(hash, ASSET_TYPE_PALETTE); }
+	UserdataAsset *userdata(uint32_t hash) { return (UserdataAsset*) findHeader(hash, ASSET_TYPE_USERDATA); }
 
 	#undef ASSET_RESULT_VERIFY
 

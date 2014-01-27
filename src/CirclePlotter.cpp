@@ -19,22 +19,27 @@
 const GLchar* CIRCLE_SHADER = R"GLSL(
 
 varying mediump vec4 color;
+varying mediump vec2 uv;
 
 #if VERTEX
 
 uniform mediump mat4 mvp;
 attribute mediump vec2 aPosition;
+attribute mediump vec2 aUV;
 attribute mediump vec4 aColor;
 
 void main() {
 	gl_Position = mvp * vec4(aPosition, 0, 1);
 	color = aColor;
+	uv = aUV;
 }
 
 #else
 
+uniform lowp sampler2D texture;
+
 void main() {
-	gl_FragColor = color;
+	gl_FragColor = color * texture2D(texture, uv);
 }
 
 #endif
@@ -50,14 +55,19 @@ struct CirclePlotter {
 	GLuint frag;
 	GLuint uMVP;
 	GLuint aPosition;
+	GLuint aUV;
 	GLuint aColor;
+
+	GLuint fakeAntiAlias;
 
 	struct Vertex {
 		vec2 position;
+		vec2 uv;
 		Color color;
 
-		inline void set(vec2 p, Color c) { 
+		inline void set(vec2 p, vec2 u, Color c) { 
 			position = p; 
+			uv = u;
 			color = c; 
 		}		
 	};
@@ -79,8 +89,9 @@ CirclePlotterRef createCirclePlotter(size_t resolution) {
 	glUseProgram(context->prog);
 	context->uMVP = glGetUniformLocation(context->prog, "mvp");
 	context->aPosition = glGetAttribLocation(context->prog, "aPosition");
+	context->aUV = glGetAttribLocation(context->prog, "aUV");
 	context->aColor = glGetAttribLocation(context->prog, "aColor");
-
+	
 	return context;
 }
 
@@ -96,23 +107,30 @@ void CirclePlotterRef::begin(vec2 canvasSize, vec2 canvasOffset) {
 	setCanvas(context->uMVP, canvasSize, canvasOffset);
 
 	glEnableVertexAttribArray(context->aPosition);
+	glEnableVertexAttribArray(context->aUV);
 	glEnableVertexAttribArray(context->aColor);
 
 	glVertexAttribPointer(context->aPosition, 2, GL_FLOAT, GL_FALSE, sizeof(CirclePlotter::Vertex), &context->headVert.position);
-	glVertexAttribPointer(context->aColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(CirclePlotter::Vertex), &context->headVert.color);	
+	glVertexAttribPointer(context->aUV, 2, GL_FLOAT, GL_FALSE, sizeof(CirclePlotter::Vertex), &context->headVert.uv);
+	glVertexAttribPointer(context->aColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(CirclePlotter::Vertex), &context->headVert.color);
+	
+	glBindTexture(GL_TEXTURE_2D, getFakeAntialiasTexture());
 }
 
 // right now I'm just doing one draw call per plot.  if this proves to be a performance bottleneck
 // we can use degenerate triangles to combine multiple strips together.
+
+#define FAKE_ANTIALIAS_FACTOR (0.01f)
 
 void CirclePlotterRef::plotFilled(vec2 p, float r, Color c, float a1, float a2) {
 	// plot eet
 	vec2 curr = polar(1, a1);
 	float da = (a2 - a1) / float(context->resolution-1);
 	vec2 rotor = polar(1, da);
-	context->getVert(0)->set(p, c);
+	float v = clamp(FAKE_ANTIALIAS_FACTOR * r);
+	context->getVert(0)->set(p, vec(0.5, v), c);
 	for(int i=0; i<context->resolution; ++i) {
-		context->getVert(i+1)->set(p + r * curr, c);
+		context->getVert(i+1)->set(p + r * curr, vec(1, v), c);
 		curr = cmul(curr, rotor);
 	}
 
@@ -125,9 +143,10 @@ void CirclePlotterRef::plotArc(vec2 p, float r1, float r2, Color c, float a1, fl
 	vec2 curr = polar(1, a1);
 	float da = (a2 - a1) / float(context->resolution-1);
 	vec2 rotor = polar(1, da);
+	float v = clamp(FAKE_ANTIALIAS_FACTOR * 0.5 * fabsf(r2-r1));
 	for(int i=0; i<context->resolution; ++i) {
-		context->getVert(i+i)->set(p + r1 * curr, c);
-		context->getVert(i+i+1)->set(p + r2 * curr, c);
+		context->getVert(i+i)->set(p + r1 * curr, vec(0, v), c);
+		context->getVert(i+i+1)->set(p + r2 * curr, vec(1, v), c);
 		curr = cmul(curr, rotor);
 	}
 

@@ -42,16 +42,17 @@ Modules
 * littlepolygon_bitset - fast bitvector with intrinsic optimizations
 * littlepolygon_collisions - fast AABB collision hash
 * littlepolygon_fk - portable forward-kinematic display tree
-* littlepolygon_graphics - efficient spline and vector renderers
+* littlepolygon_graphics - opengl utilities
 * littlepolygon_math - common geometry stuff
-* littlepolygon_physics - async bindings to between box2d and littlepolygon_fk
 * littlepolygon_pools - a few common object-pool templates
+* littlepolygon_splines - efficient cubic spline drawing
 * littlepolygon_sprites - batching sprite renderer
 
 Misc Modules (very WIP)
 * littlepolygon_go - an entity-component metadata system
 * littlepolgyon_gocore - go bindings for littlepolygon modules
 * littlepolygon_goedit - generic in-game editor based on go
+* littlepolygon_physics - async bindings to between box2d and littlepolygon_fk
 
 CODING STANDARDS
 ----------------

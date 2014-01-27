@@ -16,6 +16,7 @@
 
 #include "littlepolygon_utils.h"
 #include "littlepolygon_math.h"
+#include "littlepolygon_graphics.h"
 #include <algorithm>
 
 
@@ -307,5 +308,44 @@ bool compileShader(const GLchar* source, GLuint *outProg, GLuint *outVert, GLuin
 	*outVert = vert;
 	*outFrag = frag;  
 	return true;
+}
+
+GLuint generateTexture(TextureGenerator cb, int w, int h) {
+	GLuint result;
+	glGenTextures(1, &result);
+	glBindTexture(GL_TEXTURE_2D, result);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	Color *scratch = (Color*) LITTLE_POLYGON_MALLOC( sizeof(Color) * w * h );
+	double dx = 1.0 / (w-1.0);
+	double dy = 1.0 / (h - 1.0);
+	for(int y=0; y<h; ++y)
+	for(int x=0; x<w; ++x) {
+		scratch[x + y * w] = cb(x*dx, y*dy);
+	}
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, scratch);	
+	LITTLE_POLYGON_FREE(scratch);
+	return result;
+}
+
+GLuint getFakeAntialiasTexture() {
+	static GLuint result = 0;
+	if (!result) {
+		result = generateTexture([](double x, double y) {
+			double distance = 2*fabs(x-0.5);
+			// might consider using a geometric function here to cover
+			// a larger range?
+			double threshold = 0.9 + 0.1 * sqrt(y);
+			if(distance < threshold) {
+				return rgb(0xffffff);
+			} else {
+				double u = (distance - threshold) / (1 - threshold);
+				return rgba(rgb(0xffffff), 1 - u*u);
+			}
+		});
+	}
+	return result;
 }
 

@@ -195,12 +195,12 @@ void SpritePlotterRef::drawImage(ImageAsset *img, vec2 pos, int frame, Color c) 
 	SpritePlotter::Vertex *slice = context->nextSlice();
 	FrameAsset *fr = img->frame(frame);
 
-	pos -= vec(fr->px, fr->py);
+	pos -= fr->pivot();
 	
-	slice[0].set(pos,                   vec(fr->u0, fr->v0), c);
-	slice[1].set(pos+vec(0,fr->h),      vec(fr->u1, fr->v1), c);
-	slice[2].set(pos+vec(fr->w, 0),     vec(fr->u2, fr->v2), c);
-	slice[3].set(pos+vec(fr->w, fr->h), vec(fr->u3, fr->v3), c);
+	slice[0].set(pos,               fr->uv0, c);
+	slice[1].set(pos+vec(0,fr->h),  fr->uv1, c);
+	slice[2].set(pos+vec(fr->w, 0), fr->uv2, c);
+	slice[3].set(pos+fr->size(),    fr->uv3, c);
 
 	++context->count;
 }
@@ -211,15 +211,15 @@ void SpritePlotterRef::drawImage(ImageAsset *img, vec2 pos, vec2 u, int frame, C
 	SpritePlotter::Vertex *slice = context->nextSlice();
 	FrameAsset *fr = img->frame(frame);
 
-	vec2 p0 = -vec(fr->px, fr->py);
+	vec2 p0 = -fr->pivot();
 	vec2 p1 = p0 + vec(0, fr->h);
 	vec2 p2 = p0 + vec(fr->w, 0);
-	vec2 p3 = p0 + vec(fr->w, fr->h);
+	vec2 p3 = p0 + fr->size();
 
-	slice[0].set(pos+cmul(p0,u), vec(fr->u0, fr->v0), c);
-	slice[1].set(pos+cmul(p1,u), vec(fr->u1, fr->v1), c);
-	slice[2].set(pos+cmul(p2,u), vec(fr->u2, fr->v2), c);
-	slice[3].set(pos+cmul(p3,u), vec(fr->u3, fr->v3), c);
+	slice[0].set(pos+cmul(p0,u), fr->uv0, c);
+	slice[1].set(pos+cmul(p1,u), fr->uv1, c);
+	slice[2].set(pos+cmul(p2,u), fr->uv2, c);
+	slice[3].set(pos+cmul(p3,u), fr->uv3, c);
 
 	++context->count;
 }
@@ -230,17 +230,15 @@ void SpritePlotterRef::drawImage(ImageAsset *img, const AffineMatrix& xform, int
 	SpritePlotter::Vertex *slice = context->nextSlice();
 	FrameAsset *fr = img->frame(frame);
 
-	vec2 p0 = -vec(fr->px, fr->py);
+	vec2 p0 = -fr->pivot();
 	vec2 p1 = p0 + vec(0, fr->h);
 	vec2 p2 = p0 + vec(fr->w, 0);
-	vec2 p3 = p0 + vec(fr->w, fr->h);
+	vec2 p3 = p0 + fr->size();
 
-
-
-	slice[0].set(xform.transformPoint(p0), vec(fr->u0, fr->v0), c);
-	slice[1].set(xform.transformPoint(p1), vec(fr->u1, fr->v1), c);
-	slice[2].set(xform.transformPoint(p2), vec(fr->u2, fr->v2), c);
-	slice[3].set(xform.transformPoint(p3), vec(fr->u3, fr->v3), c);
+	slice[0].set(xform.transformPoint(p0), fr->uv0, c);
+	slice[1].set(xform.transformPoint(p1), fr->uv1, c);
+	slice[2].set(xform.transformPoint(p2), fr->uv2, c);
+	slice[3].set(xform.transformPoint(p3), fr->uv3, c);
 
 	++context->count;	
 }
@@ -256,10 +254,10 @@ void SpritePlotterRef::drawImage(ImageAsset *img, const mat4f& xform, int frame,
 	vec3f p2 = p0 + vec3f(fr->w, 0, 0);
 	vec3f p3 = p0 + vec3f(fr->w, fr->h, 0);
 
-	slice[0].set(transformPoint(xform, p0).xy(), vec(fr->u0, fr->v0), c);
-	slice[1].set(transformPoint(xform, p1).xy(), vec(fr->u1, fr->v1), c);
-	slice[2].set(transformPoint(xform, p2).xy(), vec(fr->u2, fr->v2), c);
-	slice[3].set(transformPoint(xform, p3).xy(), vec(fr->u3, fr->v3), c);
+	slice[0].set(transformPoint(xform, p0).xy(), fr->uv0, c);
+	slice[1].set(transformPoint(xform, p1).xy(), fr->uv1, c);
+	slice[2].set(transformPoint(xform, p2).xy(), fr->uv2, c);
+	slice[3].set(transformPoint(xform, p3).xy(), fr->uv3, c);
 
 	++context->count;	
 }
@@ -270,10 +268,10 @@ void SpritePlotterRef::drawQuad(ImageAsset *img, vec2 p0, vec2 p1, vec2 p2, vec2
 	SpritePlotter::Vertex *slice = context->nextSlice();
 	FrameAsset *fr = img->frame(frame);
 
-	slice[0].set(p0, vec(fr->u0, fr->v0), c);
-	slice[1].set(p1, vec(fr->u1, fr->v1), c);
-	slice[2].set(p2, vec(fr->u2, fr->v2), c);
-	slice[3].set(p3, vec(fr->u3, fr->v3), c);
+	slice[0].set(p0, fr->uv0, c);
+	slice[1].set(p1, fr->uv1, c);
+	slice[2].set(p2, fr->uv2, c);
+	slice[3].set(p3, fr->uv3, c);
 
 	++context->count;	
 }

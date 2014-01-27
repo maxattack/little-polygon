@@ -46,7 +46,7 @@ TEXTURE_FLAG_LUM    = 0x04
 TEXTURE_FLAG_RGB    = 0x08
 
 ################################################################################
-# DATA MODEL
+# DATA MODELS
 ################################################################################
 
 class Texture:
@@ -57,6 +57,8 @@ class Texture:
 		self.images = images
 		self.flags = flags
 		self.data = zlib.compress(self.image.tostring(), 6)
+
+################################################################################
 
 class Image:
 	def __init__(self, id, path, pivot, num_frames):
@@ -143,11 +145,15 @@ class Image:
 			elif 'right' in pivot:
 				self.px = self.w
 
+################################################################################
+
 class Font:
 	def __init__(self, id, path, fontsize):
 		set_id(self, id)
 		self.texture, self.height, self.metrics = fontsheet.render_fontsheet(path, fontsize)
 		self.data = zlib.compress(self.texture.tostring(), 6)
+
+################################################################################
 
 class Sample:
 	def __init__(self, id, path):
@@ -160,6 +166,7 @@ class Sample:
 		self.uncompressed_size = len(self.pcm)
 		self.data = zlib.compress(self.pcm, 6)
 
+################################################################################
 
 class Tilemap:
 	def __init__(self, id, path):
@@ -196,10 +203,23 @@ class Tilemap:
 		self.atlasData = zlib.compress(self.atlasImg.tostring(), 6)
 		self.mapData = zlib.compress(mapArray.tostring(), 6)		
 
+################################################################################
+
+class Palette:
+	def __init__(self, id, colors):
+		set_id(self, id)
+		self.colors = colors
+
+################################################################################
+
 class Userdata:
 	def __init__(self, id, data):
 		set_id(self, id)
 		self.data = data
+
+################################################################################
+# DATA CONTAINER
+################################################################################
 
 class Assets:
 	def __init__(self, path):
@@ -218,15 +238,18 @@ class Assets:
 		self.fonts = [load_yaml_font(self, k, v) for k,v in list_items('font')]
 		self.samples = [load_yaml_sample(self, k, v) for k,v in list_items('sample')]
 		self.tilemaps = [load_yaml_tilemap(self, k, v) for k,v in list_items('tilemap')]
+		self.palettes = [load_yaml_palette(self, k, v) for k,v in list_items('palette')]
 		self.userdata = []
 
 		all_hashes = \
 			[ t.hash for t in self.textures ] + \
 			[ i.hash for t in self.textures for i in t.images ] + \
-			[ f.hash for f in self.fonts ] + \
-			[ s.hash for s in self.samples ] + \
+			[ f.hash for f in self.fonts ] +    \
+			[ s.hash for s in self.samples ] +  \
 			[ t.hash for t in self.tilemaps ] + \
+			[ p.hash for p in self.palettes ] + \
 			[ d.hash for d in self.userdata ]
+
 		self.hash_set = set(all_hashes)
 		assert len(all_hashes) == len(self.hash_set)
 
@@ -237,6 +260,10 @@ class Assets:
 
 	def addCompressedUserdata(self, id, data):
 		self.addUserdata(id, zlib.compress(data, 6))
+
+################################################################################
+# YAML LOADING METHODS
+################################################################################
 
 LoaderContext = collections.namedtuple('LoaderContext', ('dir', 'doc'))
 
@@ -274,6 +301,34 @@ def load_yaml_texture(context, id, params):
 		images = []
 		compositedImage = open_image(load_yaml_path(context, params))
 	return Texture(id, compositedImage, images, 0)
+
+def load_yaml_palette(context, id, params):
+	# gift ideas - palette images?
+	def sToC(s):
+		x = int(s,16)
+		return 0 if x < 0 else 255 if x > 255 else x
+	def toRGBA(s):
+		if s.startswith('rgb(') and s.endswith(')'):
+			s = s[4:-1]
+			assert len(s) == 6
+			return (
+				sToC(s[0:2]),
+				sToC(s[2:4]),
+				sToC(s[4:6]),
+				255
+			)
+		elif s.startswith('rgba(') and s.endswith(')'):
+			s = s[5:-1]
+			assert len(s) == 8
+			return (
+				sToC(s[0:2]),
+				sToC(s[2:4]),
+				sToC(s[4:6]),
+				sToC(s[6:8])
+			)
+		else:
+			raise "Bad Color Format: %s" % s
+	return Palette(id, map(toRGBA, params))
 
 def load_yaml_image(context, namespace_id, params):
 	t,id = namespace_id.split('/')

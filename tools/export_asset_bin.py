@@ -27,7 +27,8 @@ ASSET_TYPE_IMAGE = 2
 ASSET_TYPE_FONT = 3
 ASSET_TYPE_SAMPLE = 4
 ASSET_TYPE_TILEMAP = 5
-ASSET_TYPE_USERDATA = 6
+ASSET_TYPE_PALETTE = 6
+ASSET_TYPE_USERDATA = 7
 
 def export_native_assets(assetGroup, outpath, bpp):
 	print '-' * 80
@@ -38,6 +39,7 @@ def export_native_assets(assetGroup, outpath, bpp):
 	fonts = assetGroup.fonts
 	samples = assetGroup.samples
 	tilemaps = assetGroup.tilemaps
+	palettes = assetGroup.palettes
 	userdata = assetGroup.userdata
 
 	################################################################################
@@ -64,7 +66,13 @@ def export_native_assets(assetGroup, outpath, bpp):
 	# 
 	################################################################################
 
-	header_count = 1 + len(textures) + len(fonts) + len(tilemaps) + len(samples) + len(userdata)
+	header_count = 1  +\
+		len(textures) +\
+		len(fonts)    +\
+		len(tilemaps) +\
+		len(samples)  +\
+		len(palettes) +\
+		len(userdata)
 	for t in textures:
 		header_count += 2 * len(t.images) # one record for image, one record for frame[]
 
@@ -88,6 +96,9 @@ def export_native_assets(assetGroup, outpath, bpp):
 	for sample in samples:
 		asset_header.append((sample.hash, ASSET_TYPE_SAMPLE, record_count))
 		record_count += 1 # sample record
+	for palette in palettes:
+		asset_header.append((palette.hash, ASSET_TYPE_PALETTE, record_count))
+		record_count += 1 # palette record
 	for data in userdata:
 		asset_header.append((data.hash, ASSET_TYPE_USERDATA, record_count))
 		record_count += 1 # data header
@@ -230,6 +241,15 @@ def export_native_assets(assetGroup, outpath, bpp):
 			sample.uncompressed_size, 
 			len(sample.data)
 		)))
+
+	for palette in palettes:
+		print 'Writing Palette (%s)' % palette.id
+		# length : int
+		# colors : byte[] (RGBARGBA...)
+		records.append(bintools.Record(
+			'I' + 'B' * (4*len(palette.colors)),
+			(len(palette.colors),) + tuple(c for color in palette.colors for c in color)
+		))
 
 	for data in userdata:
 		print 'Writing Userdata (%s)' % data.id

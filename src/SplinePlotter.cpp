@@ -15,7 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "littlepolygon_graphics.h"
-
+#include "littlepolygon_splines.h"
 
 // Gift-idea: Specify a texture "ramp"?
 const GLchar* SPLINE_SHADER = R"GLSL(
