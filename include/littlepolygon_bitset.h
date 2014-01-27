@@ -133,7 +133,7 @@ public:
 
 	public:
 		iterator() : remainder(0) {}
-		iterator(const Bitset<tSize>& aSet) : bs(&aSet) {
+		iterator(const Bitset<tSize>* aSet) : bs(aSet) {
 			remainder = bs->nonzeroWords;
 			if (remainder) {
 				w = clz(remainder);
@@ -160,7 +160,7 @@ public:
 		}
 	};
 
-	iterator listBits() const { return iterator(*this); }
+	iterator listBits() const { return iterator(this); }
 
 	Bitset<tSize>& operator &= (const Bitset<tSize> &other) {
 

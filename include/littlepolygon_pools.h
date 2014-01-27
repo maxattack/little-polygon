@@ -113,7 +113,7 @@ public:
 		T *slots;
 		typename Bitset<N>::iterator biterator;
 
-		iterator(const BitsetPool *pool) : slots((T*)pool->slots), biterator(pool->mask) {
+		iterator(const BitsetPool *pool) : slots((T*)pool->slots), biterator(&pool->mask) {
 		}
 
 	public:
