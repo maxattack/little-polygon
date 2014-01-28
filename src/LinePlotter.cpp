@@ -129,6 +129,13 @@ void LinePlotterRef::plot(vec2 p0, vec2 p1, Color c) {
 	}
 }
 
+void LinePlotterRef::plotLittleBox(vec2 p, float r, Color c) {
+	plot(p+vec(-r,-r), p+vec(r,-r), c);
+	plot(p+vec(r,-r), p+vec(r,r), c);
+	plot(p+vec(r,r), p+vec(-r,r), c);
+	plot(p+vec(-r,r), p+vec(-r,-r), c);
+}
+
 void LinePlotterRef::end() {
 	ASSERT(context->count >= 0);
 	if (context->count > 0) {

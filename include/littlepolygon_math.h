@@ -216,7 +216,8 @@ inline vec2 cdiv(vec2 u, vec2 v) {
 
 // polar -> linear conversion
 
-inline vec2 polar(float radius, float radians) { return radius * vec2(cosf(radians), sinf(radians)); }
+inline vec2 polarVector(float radius, float radians) { return radius * vec2(cosf(radians), sinf(radians)); }
+inline vec2 unitVector(float radians) { return vec2(cosf(radians), sinf(radians)); }
 
 // easing functions
 inline float easeOut2(float u) {

@@ -134,9 +134,9 @@ void CirclePlotterRef::begin(const Viewport& viewport) {
 
 void CirclePlotterRef::plotFilled(vec2 p, float r, Color c, float a1, float a2) {
 	// plot eet
-	vec2 curr = polar(1, a1);
+	vec2 curr = unitVector(a1);
 	float da = (a2 - a1) / float(context->resolution-1);
-	vec2 rotor = polar(1, da);
+	vec2 rotor = unitVector(da);
 	float v = clamp(context->fakeAntiAliasFactor * r);
 	context->getVert(0)->set(p, vec(0.5, v), c);
 	for(int i=0; i<context->resolution; ++i) {
@@ -150,9 +150,9 @@ void CirclePlotterRef::plotFilled(vec2 p, float r, Color c, float a1, float a2) 
 
 void CirclePlotterRef::plotArc(vec2 p, float r1, float r2, Color c, float a1, float a2) {
 	// plot eet
-	vec2 curr = polar(1, a1);
+	vec2 curr = unitVector(a1);
 	float da = (a2 - a1) / float(context->resolution-1);
-	vec2 rotor = polar(1, da);
+	vec2 rotor = unitVector(da);
 	float v = clamp(context->fakeAntiAliasFactor * 0.5 * fabsf(r2-r1));
 	for(int i=0; i<context->resolution; ++i) {
 		context->getVert(i+i)->set(p + r1 * curr, vec(0, v), c);

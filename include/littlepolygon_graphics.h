@@ -86,6 +86,7 @@ public:
 
 	void begin(const Viewport& viewport);
 	void plot(vec2 p0, vec2 p1, Color c);
+	void plotLittleBox(vec2 p, float r, Color c);
 	void end();
 };
 
