@@ -31,6 +31,7 @@ uniform mediump mat4 mvp;
 uniform mediump mat4 positionMatrix;
 uniform mediump mat4 strokeMatrix;
 uniform mediump vec4 strokeVector;
+uniform mediump float fakeAntiAliasFactor;
 
 void main() {
 	float radius = dot(strokeVector, parameter);
@@ -38,7 +39,7 @@ void main() {
 			(positionMatrix * parameter) + 
 			(radius * side) * normalize(strokeMatrix * parameter)
 	).xyz, 1);
-	uv = vec2(0.5*(1.0+side), min(0.01 * radius, 1.0));
+	uv = vec2(0.5*(1.0+side), min(fakeAntiAliasFactor * radius, 1.0));
 }
 
 #else
@@ -70,6 +71,7 @@ struct SplinePlotter {
 	GLuint uStrokeMatrix;
 	GLuint uStrokeVector;
 	GLuint uColor;
+	GLuint uFakeAntiAliasFactor;
 
 	GLuint arrayBuf;
 
@@ -103,6 +105,7 @@ static void initialize(SplinePlotter *context, int resolution) {
 	context->uStrokeMatrix = glGetUniformLocation(context->prog, "strokeMatrix");
 	context->uStrokeVector = glGetUniformLocation(context->prog, "strokeVector");
 	context->uColor = glGetUniformLocation(context->prog, "color");
+	context->uFakeAntiAliasFactor = glGetUniformLocation(context->prog, "fakeAntiAliasFactor");
 	
 	context->aParameter = glGetAttribLocation(context->prog, "parameter");
 	context->aSide = glGetAttribLocation(context->prog, "side");
@@ -161,6 +164,12 @@ void SplinePlotterRef::begin(const Viewport &viewport) {
 	context->view = &viewport;
 	viewport.setMVP(context->uMVP);
 
+	int w,h;
+	SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &w, &h);
+	float fakeAntiAliasFactor = 0.01 * float(w) / viewport.width();
+	glUniform1f(context->uFakeAntiAliasFactor, fakeAntiAliasFactor);
+	
+	
 	glBindBuffer(GL_ARRAY_BUFFER, context->arrayBuf);
 	glEnableVertexAttribArray(context->aParameter);
 	glEnableVertexAttribArray(context->aSide);

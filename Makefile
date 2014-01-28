@@ -6,6 +6,7 @@ LIBRARY_OBJ_FILES =        \
 	obj/FkContext.o        \
 	obj/LinePlotter.o      \
 	obj/SampleAsset.o      \
+	obj/SimplexNoise.o     \
 	obj/SplinePlotter.o    \
 	obj/SpriteBatch.o      \
 	obj/SpritePlotter.o    \
