@@ -234,6 +234,7 @@ inline vec2 easeTowards(vec2 curr, vec2 target, float easing, float dt) { float 
 
 // random number functions
 inline int randInt(int x) { return rand() % x; }
+inline int randInt(int inclusiveMin, int exclusiveMax) { return inclusiveMin + randInt(exclusiveMax-inclusiveMin); }
 inline double randomValue() { return rand() / double(RAND_MAX); }
 inline double randomValue(double u, double v) { return u + randomValue() * (v - u); }
 inline double expovariate(double avgDuration) { return -avgDuration * log(1.0 - randomValue(0.0000001, 0.999999)); }
