@@ -43,6 +43,9 @@ public:
 	float height() const { return mSize.y; }
 
 	vec2 offset() const { return mOffset; }
+	
+	void setSize(vec2 sz) { mSize = sz; }
+	void setOffset(vec2 off) { mOffset = off; }
 
 	vec2 windowToViewport(vec2 p) const;
 	vec2 viewportToWindow(vec2 vp) const;
@@ -87,6 +90,7 @@ public:
 	void begin(const Viewport& viewport);
 	void plot(vec2 p0, vec2 p1, Color c);
 	void plotLittleBox(vec2 p, float r, Color c);
+	void plotArrow(vec2 p0, vec2 p1, float r, Color c);
 	void end();
 };
 

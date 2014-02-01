@@ -27,7 +27,7 @@ varying mediump vec2 uv;
 attribute mediump vec4 parameter;
 attribute mediump float side;
 
-uniform mediump mat4 mvp;
+uniform highp mat4 mvp;
 uniform mediump mat4 positionMatrix;
 uniform mediump mat4 strokeMatrix;
 uniform mediump vec4 strokeVector;

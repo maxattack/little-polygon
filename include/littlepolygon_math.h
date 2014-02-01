@@ -204,6 +204,7 @@ inline AffineMatrix affineForeshortened(const mat4f& matrix) {
 // linear range methods
 inline float clamp(float u, float lo=0.f, float hi=1.f) { return u<lo?lo:u>hi?hi:u; }
 inline float lerp(float u, float v, float t) { return u + t * (v-u); }
+inline float inverseLerp(float u, float v, float t) { return (t-u) / (v-u); }
 
 // complex multiplication
 inline vec2 cmul(vec2 u, vec2 v) { return vec2(u.x*v.x-u.y*v.y, u.x*v.y+u.y*v.x); }
