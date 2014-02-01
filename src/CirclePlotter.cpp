@@ -167,9 +167,9 @@ void CirclePlotterRef::plotArc(vec2 p, float r1, float r2, Color c, float a1, fl
 
 void CirclePlotterRef::end() {
 	glDisableVertexAttribArray(context->aPosition);
+	glDisableVertexAttribArray(context->aUV);
 	glDisableVertexAttribArray(context->aColor);
 	glUseProgram(0);
-
 }
 
 
