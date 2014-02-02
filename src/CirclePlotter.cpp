@@ -23,7 +23,7 @@ varying mediump vec2 uv;
 
 #if VERTEX
 
-uniform mediump mat4 mvp;
+uniform highp mat4 mvp;
 attribute mediump vec2 aPosition;
 attribute mediump vec2 aUV;
 attribute mediump vec4 aColor;

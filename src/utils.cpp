@@ -61,7 +61,11 @@ static void doTearDown() {
 }
 
 SDL_Window *initContext(const char *caption, int w, int h) {
+	#if LITTLE_POLYGON_MOBILE
 	SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO);
+	#else
+	SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO|SDL_INIT_JOYSTICK);
+	#endif
 	Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024);
 	atexit(doTearDown);
 

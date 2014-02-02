@@ -22,7 +22,7 @@ varying mediump vec4 color;
 
 #if VERTEX
 
-uniform mediump mat4 mvp;
+uniform highp mat4 mvp;
 attribute mediump vec2 aPosition;
 attribute mediump vec4 aColor;
 
@@ -114,8 +114,16 @@ void LinePlotterRef::begin(const Viewport& viewport) {
 	glEnableVertexAttribArray(context->aPosition);
 	glEnableVertexAttribArray(context->aColor);
 
-	glVertexAttribPointer(context->aPosition, 2, GL_FLOAT, GL_FALSE, sizeof(LinePlotter::Vertex), &context->vertices[0].position);
-	glVertexAttribPointer(context->aColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(LinePlotter::Vertex), &context->vertices[0].color);	
+	glVertexAttribPointer(
+		context->aPosition, 2, GL_FLOAT, GL_FALSE,
+		sizeof(LinePlotter::Vertex),
+		&context->vertices[0].position
+	);
+	glVertexAttribPointer(
+		context->aColor, 4, GL_UNSIGNED_BYTE, GL_TRUE,
+		sizeof(LinePlotter::Vertex),
+		&context->vertices[0].color
+	);
 }
 
 void LinePlotterRef::plot(vec2 p0, vec2 p1, Color c) {

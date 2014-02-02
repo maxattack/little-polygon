@@ -45,6 +45,8 @@ public:
 	vec2 offset() const { return mOffset; }
 	
 	void setSize(vec2 sz) { mSize = sz; }
+	void setSizeWithHeight(float h);
+	void setSizeWithWidth(float w);
 	void setOffset(vec2 off) { mOffset = off; }
 
 	vec2 windowToViewport(vec2 p) const;

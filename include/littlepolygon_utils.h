@@ -46,13 +46,15 @@ struct Timer {
 	double timeScale;
 	double seconds;
 	double deltaSeconds;
+	double maxDelta;
 
-	void reset(double aTimeScale=1) {
+	void reset(double aTimeScale=1, double aMaxDelta=-1) {
 		timeScale = aTimeScale;
 		ticks = SDL_GetTicks();
 		deltaTicks = 0;
 		seconds = 0;
 		deltaSeconds = 0;
+		maxDelta = aMaxDelta;
 	}
 
 	void skipTicks() {
@@ -63,6 +65,9 @@ struct Timer {
 	void tick() {
 		deltaTicks = SDL_GetTicks() - ticks;
 		deltaSeconds = timeScale * (0.001 * deltaTicks);
+		if (maxDelta > 0.0) {
+			deltaSeconds = MIN(maxDelta, deltaSeconds);
+		}
 		ticks += deltaTicks;
 		seconds += deltaSeconds;
 	}
