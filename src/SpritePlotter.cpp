@@ -113,7 +113,7 @@ static void initialize(SpritePlotter* context, int capacity) {
 	context->aUV = glGetAttribLocation(context->prog, "aUv");
 	context->aColor = glGetAttribLocation(context->prog, "aColor");
 
-	// setup element array buffer (should this be static?)
+	// setup element array buffer
 	uint16_t indices[6 * context->capacity];
 	for(int i=0; i<context->capacity; ++i) {
 		indices[6*i+0] = 4*i;
