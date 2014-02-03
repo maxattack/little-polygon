@@ -115,7 +115,7 @@ FkNodeRef FkTreeRef::addNode(void *userData) {
 	result->parent = 0;
 	result->firstChild = 0;
 	result->prevSibling = 0;
-	result->local = affineIdentity();
+	result->local = matIdentity();
 	result->userData = userData;
 
 	// attach to the root list
@@ -145,7 +145,7 @@ FkNodeRef FkNodeRef::addNode(void *userData) {
 	result->parent = node;
 	result->firstChild = 0;
 	result->prevSibling = 0;
-	result->local = affineIdentity();
+	result->local = matIdentity();
 	result->userData = userData;
 
 	result->nextSibling = node->firstChild;

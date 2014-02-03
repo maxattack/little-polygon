@@ -76,5 +76,30 @@ struct Timer {
 inline int pingPong(int i, int n) {
 	i  = i % (n + n - 2);
 	return i >= n ? 2 * (n-1) - i : i;
-}	
+}
+
+struct Timeout {
+	double current, target;
+	
+	Timeout() : current(0), target(0) {}
+	Timeout(double aTarget) : current(0), target(aTarget) {}
+	
+	double progress() const { return current / target; }
+	
+	void reset() { current = 0; }
+	void reset(double newTarget) { current = 0; target = newTarget; }
+	
+	bool tick(Timer& timer) {
+		current += timer.deltaSeconds;
+		if (current >= target) {
+			current = target;
+			return true;
+		} else {
+			return false;
+		}
+	}
+};
+
+
+
 

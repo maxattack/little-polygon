@@ -19,11 +19,12 @@
 #include "littlepolygon_graphics.h"
 #include <algorithm>
 
-Viewport::Viewport() : mOffset(0,0) {
+void Viewport::setFromWindow() {
 	SDL_Window *win = SDL_GL_GetCurrentWindow();
 	SDL_Point sz;
 	SDL_GetWindowSize(win, &sz.x, &sz.y);
 	mSize = sz;
+	mOffset = vec(0,0);
 }
 
 void Viewport::setSizeWithHeight(float h) {
@@ -59,17 +60,17 @@ vec2 Viewport::mouse() const {
 }
 
 void Viewport::setMVP(GLuint mvp) const {
-	float zfar = 128;
-	float znear = -128;
-	float fan = zfar + znear;
-	float fsn = zfar - znear;
+	double zfar = 128;
+	double znear = -128;
+	double fan = zfar + znear;
+	double fsn = zfar - znear;
 	vec2 cext = mOffset + mSize;
 	vec2 t = - (cext + mOffset) / mSize;
 	GLfloat orth[16] = {
-		2.f/mSize.x, 0, 0, 0,
-		0, -2.f/mSize.y, 0, 0,
-		0, 0, 2.f/fsn, 0,
-		t.x, -t.y, -fan/fsn, 1
+		float(2.0/mSize.x), 0, 0, 0,
+		0, -float(2.0/mSize.y), 0, 0,
+		0, 0, float(2.0/fsn), 0,
+		t.x, -t.y, -float(fan/fsn), 1
 	};
 	glUniformMatrix4fv(mvp, 1, 0, orth);
 }

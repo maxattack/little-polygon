@@ -168,7 +168,7 @@ public:
 	const AffineMatrix& metersToDisplay() const;
 	void setMetersToDisplay(const AffineMatrix& matrix);
 	inline void setMetersToDisplay(float k) { 
-		setMetersToDisplay(affineScale(vec(k,k))); 
+		setMetersToDisplay(matScale(vec(k,k))); 
 	}
 
 	Collider *addCollider(

@@ -50,12 +50,14 @@ TEXTURE_FLAG_RGB    = 0x08
 ################################################################################
 
 class Texture:
-	def __init__(self, id, compositedImage, images, flags):
+	def __init__(self, id, compositedImage, images, filter):
 		set_id(self, id)
 		self.image = compositedImage
 		cleanup_transparent_pixels(self.image)
 		self.images = images
-		self.flags = flags
+		self.flags = 0
+		if filter.lower() == 'linear':
+			self.flags |= TEXTURE_FLAG_FILTER
 		self.data = zlib.compress(self.image.tostring(), 6)
 
 ################################################################################
@@ -130,7 +132,9 @@ class Image:
 
 		# compute pivot
 		self.px, self.py = 0, 0
-		if ',' in pivot:
+		if type(pivot) == list:
+			self.px, self.py = map(int, pivot[:2])
+		elif ',' in pivot:
 			self.px, self.py = map(int, pivot.split(','))
 		else:
 			if 'center' in pivot:
@@ -294,13 +298,17 @@ def load_yaml_path(context, local_path):
 
 def load_yaml_texture(context, id, params):
 	if isinstance(params, dict):
-		images = [load_yaml_image(context, k, v)for k,v in params.iteritems()]
+		images = [
+			load_yaml_image(context, k, v)
+			for k,v in params.iteritems() 
+			if k.startswith('image/')
+		]
 		assert len(images) > 0
 		compositedImage = composite_texture(images)
 	else:
 		images = []
 		compositedImage = open_image(load_yaml_path(context, params))
-	return Texture(id, compositedImage, images, 0)
+	return Texture(id, compositedImage, images, params.get('filter', ''))
 
 def load_yaml_palette(context, id, params):
 	# gift ideas - palette images?

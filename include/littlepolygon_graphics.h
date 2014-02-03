@@ -34,7 +34,7 @@ private:
 	vec2 mOffset;
 
 public:
-	Viewport();
+	Viewport() {}
 	Viewport(vec2 aSize, vec2 aOffset=vec(0,0)) :
 		mSize(aSize), mOffset(aOffset) {}
 
@@ -44,6 +44,7 @@ public:
 
 	vec2 offset() const { return mOffset; }
 	
+	void setFromWindow();
 	void setSize(vec2 sz) { mSize = sz; }
 	void setSizeWithHeight(float h);
 	void setSizeWithWidth(float w);

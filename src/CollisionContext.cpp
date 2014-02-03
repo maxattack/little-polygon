@@ -144,7 +144,7 @@ CollisionSystemRef createCollisionSystem(size_t colliderCapacity, size_t numBuck
 	context->bucketCount = numBuckets;
 	context->colliderCount = 0;
 	context->contactCount = 0;
-	context->metersToDisplay = affineIdentity();
+	context->metersToDisplay = matIdentity();
 	context->alloc.reset();
 
 	// clear buckets

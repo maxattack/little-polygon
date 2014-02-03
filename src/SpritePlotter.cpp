@@ -228,7 +228,7 @@ void SpritePlotterRef::drawImage(ImageAsset *img, const AffineMatrix& xform, int
 	vec2 p1 = p0 + vec(0, fr->h);
 	vec2 p2 = p0 + vec(fr->w, 0);
 	vec2 p3 = p0 + fr->size();
-
+	
 	slice[0].set(xform.transformPoint(p0), fr->uv0, c);
 	slice[1].set(xform.transformPoint(p1), fr->uv1, c);
 	slice[2].set(xform.transformPoint(p2), fr->uv2, c);
