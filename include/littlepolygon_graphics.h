@@ -68,6 +68,29 @@ typedef Color (*TextureGenerator)(double, double);
 GLuint generateTexture(TextureGenerator cb, int w=256, int h=256);
 GLuint getFakeAntialiasTexture();
 
+int createRenderToTextureFramebuffer(GLsizei w, GLsizei h, GLuint *outTexture, GLuint *outFramebuffer);
+
+class PostProcessingFX {
+private:
+	GLuint dfb, fb, rt;    // framebuffer & rendertexture handles
+	GLuint prog, vsh, fsh; // shader handles
+	GLuint ap, auv;        // attribute locations
+	GLuint vbuf;           // vertex buffer handle
+	
+public:
+	PostProcessingFX(const GLchar *source);
+	~PostProcessingFX();
+	
+	// If the fx fail to initialize we'll just fallback on NOOP
+	bool valid() const { return fb != 0; }
+	
+	void release();
+	
+	void beginScene();
+	void endScene();
+	void draw();
+};
+
 //------------------------------------------------------------------------------
 // DEBUG LINE RENDERING
 //------------------------------------------------------------------------------

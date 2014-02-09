@@ -319,6 +319,8 @@ GLuint generateTexture(TextureGenerator cb, int w, int h) {
 
 GLuint getFakeAntialiasTexture() {
 	static GLuint result = 0;
+	// This is a pretty stupid impl right here, actually.  If the gl context is destroyed
+	// and a new-one created then this will contains a stale handle.
 	if (!result) {
 		result = generateTexture([](double x, double y) {
 			double distance = 2*fabs(x-0.5);
@@ -335,4 +337,41 @@ GLuint getFakeAntialiasTexture() {
 	}
 	return result;
 }
+
+int createRenderToTextureFramebuffer(GLsizei w, GLsizei h, GLuint *t, GLuint *f) {
+	glGenFramebuffers(1, f);
+	glGenTextures(1, t);
+	
+	glBindFramebuffer(GL_FRAMEBUFFER, *f);
+	glBindTexture(GL_TEXTURE_2D, *t);
+	
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, *t, 0);
+	
+//	GLuint depthBuffer;
+//	glGenRenderbuffers(1, &depthBuffer);
+//	glBindRenderbuffer(GL_RENDERBUFFER, depthBuffer);
+//	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, w, h);
+//	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthBuffer);
+	
+	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if (status != GL_FRAMEBUFFER_COMPLETE) {
+		LOG(("Framebuffer Status: %x\n", (int)status));
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glDeleteFramebuffers(1, f);
+		glDeleteTextures(1, t);
+		return 1;
+	} else {
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		return 0;
+	}
+	
+}
+
+
 
