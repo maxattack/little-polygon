@@ -34,19 +34,19 @@ Runtime Dependencies (native)
 * sdl2 - platform abstraction
 * sdl2_mixer - music and sound effects
 * vectorial - SIMD math
-* glew - desktop graphics feature discovery
 * zlib - asset decompression
 
 Modules
 * littlepolygon_assets - a simple system for packaging and loading compressed game assets
-* littlepolygon_bitset - fast bitvector with intrinsic optimizations
-* littlepolygon_collisions - fast AABB collision hash
+* littlepolygon_bitset - efficient bitvector with intrinsic optimizations
+* littlepolygon_collisions - efficient AABB collision hash
 * littlepolygon_fk - portable forward-kinematic display tree
 * littlepolygon_graphics - opengl utilities
 * littlepolygon_math - common geometry stuff
 * littlepolygon_pools - a few common object-pool templates
 * littlepolygon_splines - efficient cubic spline drawing
 * littlepolygon_sprites - batching sprite renderer
+* littlepolygon_trail - efficient trail renderer
 
 Misc Modules (very WIP)
 * littlepolygon_go - an entity-component metadata system
