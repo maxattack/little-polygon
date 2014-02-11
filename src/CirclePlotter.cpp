@@ -29,7 +29,7 @@ attribute mediump vec2 aUV;
 attribute mediump vec4 aColor;
 
 void main() {
-	gl_Position = mvp * vec4(aPosition, 0, 1);
+	gl_Position = mvp * vec4(aPosition, 0.0, 1.0);
 	color = aColor;
 	uv = aUV;
 }

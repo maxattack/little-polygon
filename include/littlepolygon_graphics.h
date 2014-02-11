@@ -37,7 +37,9 @@ public:
 	Viewport() {}
 	Viewport(vec2d aSize, vec2d aOffset=vec2d(0,0)) :
 		mSize(aSize), mOffset(aOffset) {}
-
+	Viewport(double w, double h, double x=0, double y=0) :
+		mSize(w,h), mOffset(x,y) {}
+	
 	vec2d size() const { return mSize; }
 	double width() const { return mSize.x; }
 	double height() const { return mSize.y; }

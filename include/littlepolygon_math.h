@@ -300,7 +300,7 @@ inline float easeOut4(float u) {
 	return 1.0f - u*u*u*u;
 }
 inline float easeInOutBack(float t, float s=1.70158f) { return (s+1.0f)*t*t*t - s*t*t; }
-
+inline float easeInOutQuad(float t) { return t<0.5f ? 2.0f*t*t : -1.0f+(4.0f-t-t)*t; }
 inline double easeOut2d(double u) {
 	u=1.0-u;
 	return 1.0 - u*u;
