@@ -157,25 +157,26 @@ def export_native_assets(assetGroup, outpath, bpp):
 				frame_image = image.frames[frame_index]
 				fw, fh = frame_image.size
 				trimx, trimy = frame_image.trim_offset
-				u0, v0 = atlas_image.x / float(w), atlas_image.y / float(h)
-				du, dv = fw / float(w), fh / float(h)
-				# vertex order: top left, bottom left, top right, bottom right
-				if atlas_image.transposed:
-					u1 = u0 + dv
-					v1 = v0
-					u2 = u0
-					v2 = v0 + du
-					u3 = u0 + dv
-					v3 = v0 + du
-				else:
-					u1 = u0
-					v1 = v0 + dv
-					u2 = u0 + du
-					v2 = v0
-					u3 = u0 + du
-					v3 = v0 + dv
+				# u0, v0 = atlas_image.x / float(w), atlas_image.y / float(h)
+				# du, dv = fw / float(w), fh / float(h)
+				# # vertex order: top left, bottom left, top right, bottom right
+				# if atlas_image.transposed:
+				# 	u1 = u0 + dv
+				# 	v1 = v0
+				# 	u2 = u0
+				# 	v2 = v0 + du
+				# 	u3 = u0 + dv
+				# 	v3 = v0 + du
+				# else:
+				# 	u1 = u0
+				# 	v1 = v0 + dv
+				# 	u2 = u0 + du
+				# 	v2 = v0
+				# 	u3 = u0 + du
+				# 	v3 = v0 + dv
 				parameters += (
-					u0, v0, u1, v1, u2, v2, u3, v3,
+					atlas_image.u0, atlas_image.v0, atlas_image.u1, atlas_image.v1, 
+					atlas_image.u2, atlas_image.v2, atlas_image.u3, atlas_image.v3,
 					image.px-trimx, image.py-trimy,
 					fw, fh
 				)

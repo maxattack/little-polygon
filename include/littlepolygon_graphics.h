@@ -30,30 +30,32 @@ SDL_Window *initContext(const char *caption, int w=0, int h=0);
 
 class Viewport {
 private:
-	vec2 mSize;
-	vec2 mOffset;
+	vec2d mSize;
+	vec2d mOffset;
 
 public:
 	Viewport() {}
-	Viewport(vec2 aSize, vec2 aOffset=vec(0,0)) :
+	Viewport(vec2d aSize, vec2d aOffset=vec2d(0,0)) :
 		mSize(aSize), mOffset(aOffset) {}
 
-	vec2 size() const { return mSize; }
-	float width() const { return mSize.x; }
-	float height() const { return mSize.y; }
+	vec2d size() const { return mSize; }
+	double width() const { return mSize.x; }
+	double height() const { return mSize.y; }
 
-	vec2 offset() const { return mOffset; }
+	vec2d offset() const { return mOffset; }
 	
 	void setFromWindow();
-	void setSize(vec2 sz) { mSize = sz; }
-	void setSizeWithHeight(float h);
-	void setSizeWithWidth(float w);
-	void setOffset(vec2 off) { mOffset = off; }
+	void setSize(vec2d sz) { mSize = sz; }
+	void setSize(double w, double h) { mSize.x=w; mSize.y=h; }
+	void setSizeWithHeight(double h);
+	void setSizeWithWidth(double w);
+	void setOffset(vec2d off) { mOffset = off; }
+	void setOffset(double x, double y) { mOffset.x=x; mOffset.y=y; }
 
-	vec2 windowToViewport(vec2 p) const;
-	vec2 viewportToWindow(vec2 vp) const;
+	vec2d windowToViewport(vec2d p) const;
+	vec2d viewportToWindow(vec2d vp) const;
 
-	vec2 mouse() const;
+	vec2d mouse() const;
 
 	void setMVP(GLuint mvp) const;
 };

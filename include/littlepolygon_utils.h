@@ -41,20 +41,34 @@ struct Timer {
 	// sdl ticks since the timer started
 	int ticks;
 	int deltaTicks;
-
+	
 	// virtually scaled "seconds" since the timer started
 	double timeScale;
 	double seconds;
+	double rawDeltaSeconds;
+	double smoothDeltaSeconds;
 	double deltaSeconds;
-	double maxDelta;
 
-	void reset(double aTimeScale=1, double aMaxDelta=-1) {
+	void reset(double aTimeScale=1) {
 		timeScale = aTimeScale;
 		ticks = SDL_GetTicks();
+		
 		deltaTicks = 0;
 		seconds = 0;
-		deltaSeconds = 0;
-		maxDelta = aMaxDelta;
+		rawDeltaSeconds = 0;
+		smoothDeltaSeconds = 0;
+		
+		SDL_DisplayMode dm;
+		SDL_GetWindowDisplayMode(SDL_GL_GetCurrentWindow(), &dm);
+		if (dm.refresh_rate) {
+			deltaSeconds = timeScale * 0.001 * dm.refresh_rate;
+		} else {
+#if __IPHONEOS__
+			deltaSeconds = timeScale/59.0; // anecdotally true
+#else
+			deltaSeconds = timeScale/60.0;
+#endif
+		}
 	}
 
 	void skipTicks() {
@@ -64,12 +78,12 @@ struct Timer {
 
 	void tick() {
 		deltaTicks = SDL_GetTicks() - ticks;
-		deltaSeconds = timeScale * (0.001 * deltaTicks);
-		if (maxDelta > 0.0) {
-			deltaSeconds = MIN(maxDelta, deltaSeconds);
-		}
 		ticks += deltaTicks;
-		seconds += deltaSeconds;
+		
+		
+		rawDeltaSeconds = timeScale * (0.001 * deltaTicks);
+		seconds += rawDeltaSeconds;
+		smoothDeltaSeconds = 0.95 * smoothDeltaSeconds + 0.05 * rawDeltaSeconds;
 	}
 };
 

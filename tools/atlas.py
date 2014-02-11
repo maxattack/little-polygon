@@ -98,12 +98,9 @@ def render_atlas(images):
 	# render result
 	result = Image.new('RGBA', (pitch,pitch))
 	for image in images:
-		result.paste(image.texels(), (image.x, image.y))
-		# padding unhack
-		image.w = image.w - 1
-		image.h = image.h - 1
-		image.w
-
+		image.computeUVs(pitch)
+		image.renderTo(result, pitch)
+	result.save("__proof.png")
 	return (result, images)
 
 class AtlasImage:
@@ -125,9 +122,10 @@ class AtlasImage:
 			self.w = w
 			self.h = h
 			self.transposed = False
-		# padding hack
-		self.w = self.w + 1
-		self.h = self.h + 1
+		# padding hack - we're going to double-up the pixels on the edge so that
+		# tiled images work out OK
+		self.w = self.w + 2
+		self.h = self.h + 2
 
 	def area(self): 
 		return self.w * self.h
@@ -140,6 +138,76 @@ class AtlasImage:
 
 	def texels(self):
 		return transpose(self.image) if self.transposed else self.image
+
+	def renderTo(self, result, pitch):
+		# draw the image itself
+		result.paste(self.texels(), (self.x, self.y))
+
+		# draw border-pixels (we double them up so that we don't
+		# get minor sampling artifacts at the edge)
+		px = result.load()
+
+		if not hasattr(self.image, 'wants_padding'):
+			return
+		
+		def plot(x,y,c):
+			if x >= 0 and x < pitch and y >= 0 and y < pitch:
+				px[x,y] = c
+
+		# double-up top/bottom
+		for x in xrange(self.w):
+			plot(self.x+x, self.y-1, px[self.x+x, self.y])
+			plot(self.x+x, self.y+self.h, px[self.x+x, self.y+self.h-1])
+
+		# double-up left/right
+		for y in xrange(self.h):
+			plot(self.x-1, self.y+y, px[self.x, self.y+y])
+			plot(self.x+self.w, self.y+y, px[self.x+self.w-1, self.y+y])
+
+		# double-up opposite corners (since the most common case with
+		# artifacts is tiling)
+
+		# top-left
+		plot(self.x-1, self.y-1, px[self.x, self.y])
+
+		# bottom-left
+		plot(self.x-1, self.y+self.h, px[self.x, self.y+self.h-1])
+
+		# top-right
+		plot(self.x+self.w, self.y-1, px[self.x+self.w-1, self.y])
+
+		# bottom-right
+		plot(self.x+self.w, self.y+self.h, px[self.x+self.w-1, self.y+self.h-1])
+
+	def computeUVs(self, pitch):
+		# a tiny bit that the UVs are "snuggled" in, to avoid
+		# begin right on the edge
+		ep = 0.0001
+		
+		# remove padding
+		self.w = self.w - 2
+		self.h = self.h - 2
+
+		# vertex order: top left, bottom left, top right, bottom right
+		k = 1.0/float(pitch)
+		self.u0, self.v0 = self.x * k + ep, self.y * k + ep
+		if self.transposed:
+			self.du, self.dv = self.h * k - ep - ep, self.w * k - ep - ep
+			self.u1 = self.u0 + self.dv
+			self.v1 = self.v0
+			self.u2 = self.u0
+			self.v2 = self.v0 + self.du
+			self.u3 = self.u0 + self.dv
+			self.v3 = self.v0 + self.du
+		else:
+			self.du, self.dv = self.w * k - ep - ep, self.h * k - ep - ep
+			self.u1 = self.u0
+			self.v1 = self.v0 + self.dv
+			self.u2 = self.u0 + self.du
+			self.v2 = self.v0
+			self.u3 = self.u0 + self.du
+			self.v3 = self.v0 + self.dv
+
 
 class ImagesDontFit:
 	def __init__(self, num_placed):

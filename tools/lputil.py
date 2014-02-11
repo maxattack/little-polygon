@@ -31,7 +31,7 @@ def _pad_left_top(im, left, top, sw, sh):
 	result.paste(im, (left, top))
 	return result
 
-def _rasterize_psd_layer(im, layer):
+def rasterize_psd_layer(im, layer):
 	x,y,_,_ = layer.bbox
 	return _pad_left_top(
 		_sanitize_rgba(layer.as_PIL()),
@@ -50,7 +50,7 @@ def open_image(path):
 
 def open_image_layers(path):
 	im = PSDImage.load(path)
-	return [_rasterize_psd_layer(im, layer) for layer in im.layers]
+	return [rasterize_psd_layer(im, layer) for layer in im.layers]
 
 def new_image(w,h):
 	return Image.new('RGBA', (w,h), (0,0,0,0))

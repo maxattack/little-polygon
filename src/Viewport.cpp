@@ -27,50 +27,50 @@ void Viewport::setFromWindow() {
 	mOffset = vec(0,0);
 }
 
-void Viewport::setSizeWithHeight(float h) {
+void Viewport::setSizeWithHeight(double h) {
 	int ww, wh;
 	SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &ww, &wh);
 	mSize = vec(h * float(ww) / float(wh), h);
 }
 
-void Viewport::setSizeWithWidth(float w) {
+void Viewport::setSizeWithWidth(double w) {
 	int ww, wh;
 	SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &ww, &wh);
 	mSize = vec(w, w * float(wh) / float(ww));
 }
 
-vec2 Viewport::windowToViewport(vec2 p) const {
+vec2d Viewport::windowToViewport(vec2d p) const {
 	SDL_Window *win = SDL_GL_GetCurrentWindow();
 	SDL_Point sz;
 	SDL_GetWindowSize(win, &sz.x, &sz.y);
 	return mSize * p / vec2(sz) + mOffset;
 }
 
-vec2 Viewport::viewportToWindow(vec2 vp) const {
+vec2d Viewport::viewportToWindow(vec2d vp) const {
 	SDL_Window *win = SDL_GL_GetCurrentWindow();
-	SDL_Point sz;
-	SDL_GetWindowSize(win, &sz.x, &sz.y);
-	return vec2(sz) / mSize * (vp - mOffset);
+	int w,h;
+	SDL_GetWindowSize(win, &w, &h);
+	return vec2d(w,h) / mSize * (vp - mOffset);
 }
 
-vec2 Viewport::mouse() const {
+vec2d Viewport::mouse() const {
 	SDL_Point mp;
 	SDL_GetMouseState(&mp.x, &mp.y);
 	return windowToViewport(mp);
 }
 
 void Viewport::setMVP(GLuint mvp) const {
-	double zfar = 128;
-	double znear = -128;
-	double fan = zfar + znear;
-	double fsn = zfar - znear;
-	vec2 cext = mOffset + mSize;
-	vec2 t = - (cext + mOffset) / mSize;
+	auto zfar = 128.0;
+	auto znear = -128.0;
+	auto fan = zfar + znear;
+	auto fsn = zfar - znear;
+	auto cext = mOffset + mSize;
+	auto t = - (cext + mOffset) / mSize;
 	GLfloat orth[16] = {
 		float(2.0/mSize.x), 0, 0, 0,
-		0, -float(2.0/mSize.y), 0, 0,
+		0, float(-2.0/mSize.y), 0, 0,
 		0, 0, float(2.0/fsn), 0,
-		t.x, -t.y, -float(fan/fsn), 1
+		float(t.x), float(-t.y), float(-fan/fsn), 1.0f
 	};
 	glUniformMatrix4fv(mvp, 1, 0, orth);
 }

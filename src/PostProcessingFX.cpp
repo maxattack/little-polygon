@@ -22,7 +22,7 @@
 
 PostProcessingFX::PostProcessingFX(const GLchar *source) : dfb(0), fb(0) {
 #if LITTLE_POLYGON_MOBILE
-	glGetIntegerv(GL_FRAMEBUFFER_BINDING, &dfb);
+	glGetIntegerv(GL_FRAMEBUFFER_BINDING, (GLint*)&dfb);
 #endif
 	if (source) {
 		int w, h;

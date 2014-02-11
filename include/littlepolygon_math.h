@@ -45,7 +45,7 @@ struct vec2 {
 	float real() const         { return x; }
 	float imag() const         { return y; }
 	float norm() const         { return x*x + y*y; }
-	float manhattan() const    { return fabs(x)+fabs(y); }
+	float manhattan() const    { return fabsf(x)+fabsf(y); }
 	float magnitude() const    { return sqrtf(norm()); }
 	vec2 conjugate() const     { return vec2(x,-y); }
 	float radians() const      { return atan2f(y,x); }
@@ -72,11 +72,12 @@ struct vec2 {
 	vec2 operator /=(float k) { x/=k; y/=k; return *this; }
 };
 
-// I hate all those 2s cluttering up math code :P	
+// I hate all those 2s cluttering up math code :P
 inline vec2 vec(float ax, float ay) { return vec2(ax, ay); }
 
 // vec2 helpers
 inline vec2 operator*(float k, vec2 q) { return vec2(k*q.x, k*q.y); }
+inline vec2 operator*(double k, vec2 q) { return vec2(k*q.x, k*q.y); }
 inline float dot(vec2 u, vec2 v) { return u.x*v.x + u.y*v.y; }
 inline float cross(vec2 u, vec2 v) { return u.x * v.y - v.x* u.y; }
 inline vec2 lerp(vec2 u, vec2 v, float t) { return u + t * (v - u); }
@@ -85,6 +86,64 @@ inline vec2 slerp(vec2 u, vec2 v, float t) {
 	float s = 1.f/sinf(theta);
 	return (sinf((1-t)*theta)*s)*u + (sinf(t*theta)*s)*v;
 }
+
+struct vec2d {
+	double x,y;
+	
+	vec2d() {}
+	vec2d(double ax, double ay) : x(ax), y(ay) {}
+	vec2d(vec2 v) : x(v.x), y(v.y) {}
+	vec2d(SDL_Point p) : x(p.x), y(p.y) {}
+	vec2d(vec2f u) : x(u.x()), y(u.y()) {}
+	
+#ifdef BOX2D_H
+	vec2d(b2Vec2 v) : x(v.x), y(v.y) {}
+	operator b2Vec2() { return b2Vec2(x, y); }
+#endif
+	
+	operator vec2() const { return vec2(x,y); }
+	operator vec4f() const { return vec4f(x,y,0,0); }
+	
+	double real() const         { return x; }
+	double imag() const         { return y; }
+	double norm() const         { return x*x + y*y; }
+	double manhattan() const    { return fabs(x)+fabs(y); }
+	double magnitude() const    { return sqrt(norm()); }
+	vec2d conjugate() const     { return vec2d(x,-y); }
+	double radians() const      { return atan2(y,x); }
+	vec2d reflection() const    { return vec2d(y,x); }
+	vec2d anticlockwise() const { return vec2d(-y, x); }
+	vec2d clockwise() const     { return vec2d(y, -x); }
+	vec2d normalized() const    { return (*this) / magnitude(); }
+	
+	vec2d operator+(vec2d q) const  { return vec2d(x+q.x, y+q.y); }
+	vec2d operator-(vec2d q) const  { return vec2d(x-q.x, y-q.y); }
+	vec2d operator*(vec2d q) const  { return vec2d(x*q.x, y*q.y); }
+	vec2d operator/(vec2d q) const  { return vec2d(x/q.x, y/q.y); }
+	
+	vec2d operator-() const        { return vec2d(-x, -y); }
+	vec2d operator*(double k) const { return vec2d(k*x, k*y); }
+	vec2d operator/(double k) const { return vec2d(x/k, y/k); }
+	
+	vec2d operator +=(vec2d u)  { x+=u.x; y+=u.y; return *this; }
+	vec2d operator -=(vec2d u)  { x-=u.x; y-=u.y; return *this; }
+	vec2d operator *=(vec2d u)  { x*=u.x; y*=u.y; return *this; }
+	vec2d operator /=(vec2d u)  { x/=u.x; y/=u.y; return *this; }
+	
+	vec2d operator *=(float k) { x*=k; y*=k; return *this; }
+	vec2d operator /=(float k) { x/=k; y/=k; return *this; }
+};
+
+inline vec2d operator*(double k, vec2d q) { return vec2d(k*q.x, k*q.y); }
+inline double dot(vec2d u, vec2d v) { return u.x*v.x + u.y*v.y; }
+inline double cross(vec2d u, vec2d v) { return u.x * v.y - v.x* u.y; }
+inline vec2d lerp(vec2d u, vec2d v, double t) { return u + t * (v - u); }
+inline vec2d slerp(vec2d u, vec2d v, double t) {
+	float theta = acosf(dot(u,v));
+	float s = 1.f/sinf(theta);
+	return (sin((1-t)*theta)*s)*u + (sin(t*theta)*s)*v;
+}
+
 
 // simple 2d affine transform
 struct AffineMatrix {
@@ -200,12 +259,16 @@ inline AffineMatrix matForeshortened(const mat4f& matrix) {
 
 // linear range methods
 inline float clamp(float u, float lo=0.f, float hi=1.f) { return u<lo?lo:u>hi?hi:u; }
-inline double clampd(double u, double lo=0.f, double hi=1.f) { return u<lo?lo:u>hi?hi:u; }
 inline float lerp(float u, float v, float t) { return u + t * (v-u); }
 inline float inverseLerp(float u, float v, float t) { return (t-u) / (v-u); }
 
+inline double clampd(double u, double lo=0.f, double hi=1.f) { return u<lo?lo:u>hi?hi:u; }
+inline double lerpd(double u, double v, double t) { return u + t * (v-u); }
+inline double inverseLerpd(double u, double v, double t) { return (t-u) / (v-u); }
+
 // complex multiplication
 inline vec2 cmul(vec2 u, vec2 v) { return vec2(u.x*v.x-u.y*v.y, u.x*v.y+u.y*v.x); }
+inline vec2d cmul(vec2d u, vec2d v) { return vec2d(u.x*v.x-u.y*v.y, u.x*v.y+u.y*v.x); }
 
 // complex division
 inline vec2 cdiv(vec2 u, vec2 v) {
@@ -213,23 +276,43 @@ inline vec2 cdiv(vec2 u, vec2 v) {
 	return vec2((u.x*v.x+u.y*v.y)*normInv, (v.x*u.y-u.x*v.y)*normInv);
 }
 
+inline vec2d cdiv(vec2d u, vec2d v) {
+	float normInv = 1.0f/v.norm();
+	return vec2d((u.x*v.x+u.y*v.y)*normInv, (v.x*u.y-u.x*v.y)*normInv);
+}
+
 // polar -> linear conversion
 
 inline vec2 polarVector(float radius, float radians) { return radius * vec2(cosf(radians), sinf(radians)); }
 inline vec2 unitVector(float radians) { return vec2(cosf(radians), sinf(radians)); }
 
+inline vec2d polarVectord(double radius, double radians) { return radius * vec2d(cos(radians), sin(radians)); }
+inline vec2d unitVectord(double radians) { return vec2d(cos(radians), sin(radians)); }
+
+
 // easing functions
 inline float easeOut2(float u) {
-	u=1.0-u;
+	u=1.0f-u;
 	return 1.0 - u*u;
 }
 inline float easeOut4(float u) {
+	u=1.0f-u;
+	return 1.0f - u*u*u*u;
+}
+inline float easeInOutBack(float t, float s=1.70158f) { return (s+1.0f)*t*t*t - s*t*t; }
+
+inline double easeOut2d(double u) {
+	u=1.0-u;
+	return 1.0 - u*u;
+}
+inline double easeOut4d(double u) {
 	u=1.0-u;
 	return 1.0 - u*u*u*u;
 }
-inline float easeInOutBack(float t, float s=1.70158f) { return (s+1)*t*t*t - s*t*t; }
-inline double easeTowards(double curr, double target, double easing, double dt) { return curr + pow(easing, 30.0*dt) * (target - curr); }
-inline vec2 easeTowards(vec2 curr, vec2 target, double easing, double dt) { double k = pow(easing, 30.0*dt); return curr + k * (target - curr); }
+inline double easeInOutBack(double t, double s=1.70158) { return (s+1.0)*t*t*t - s*t*t; }
+inline double easeTowards(double curr, double target, double easing, double dt) { return curr + pow(easing, 60*dt) * (target - curr); }
+inline vec2d easeTowards(vec2d curr, vec2d target, double easing, double dt) { double k = pow(easing, 60.0*dt); return curr + k * (target - curr); }
+
 
 // random number functions
 inline int randInt(int x) { return rand() % x; }
