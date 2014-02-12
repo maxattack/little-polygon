@@ -51,6 +51,12 @@ public:
 	void end();
 };
 
+class SplinePlotterHandle : public SplinePlotterRef {
+public:
+	SplinePlotterHandle(SplinePlotter* p) : SplinePlotterRef(p) {}
+	~SplinePlotterHandle() { if (*this) destroy(); }
+};
+
 namespace Spline {
 
 // stroke vector helpers

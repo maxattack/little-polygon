@@ -85,6 +85,12 @@ public:
 
 };
 
+class SpritePlotterHandle : public SpritePlotterRef {
+public:
+	SpritePlotterHandle(SpritePlotter *p) : SpritePlotterRef(p) {}
+	~SpritePlotterHandle() { if (*this) destroy(); }
+};
+
 //------------------------------------------------------------------------------
 // SPRITE BATCH - storage structure for saving a reuseable
 // command-buffer of draw calls (decoupled from plotter so that

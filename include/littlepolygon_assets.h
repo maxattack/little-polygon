@@ -267,3 +267,9 @@ public:
 
 };
 
+class AssetHandle : public AssetRef {
+public:
+	AssetHandle(AssetBundle *p) : AssetRef(p) {}
+	~AssetHandle() { if (*this) destroy(); }
+};
+

@@ -124,6 +124,12 @@ public:
 	void end();
 };
 
+class LinePlotterHandle : public LinePlotterRef {
+public:
+	LinePlotterHandle(LinePlotter *p) : LinePlotterRef(p) {}
+	~LinePlotterHandle() { if (*this) destroy(); }
+};
+
 //------------------------------------------------------------------------------
 // CIRCLE RENDERING
 //------------------------------------------------------------------------------
@@ -150,5 +156,11 @@ public:
 	void plotFilled(vec2 p, float r, Color c, float a1=0, float a2=M_TAU);
 	void plotArc(vec2 p, float r1, float r2, Color c, float a1=0, float a2=M_TAU);
 	void end();
+};
+
+class CirclePlotterHandle : public CirclePlotterRef {
+public:
+	CirclePlotterHandle(CirclePlotter *p) : CirclePlotterRef(p) {}
+	~CirclePlotterHandle() { if (*this) destroy(); }
 };
 
