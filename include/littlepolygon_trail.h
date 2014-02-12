@@ -32,6 +32,7 @@ public:
 	TrailBatchRef() {}
 	TrailBatchRef(TrailBatch *p) : context(p) {}
 	
+	operator bool() const { return context != 0; }
 	operator TrailBatch*() { return context; }
 	operator TrailBatch*() const { return context; }
 	
@@ -49,7 +50,14 @@ public:
 	void append(vec2 position, float stroke=1);
 	
 	void tick(float deltaSeconds);
+	
 	void draw(const Viewport &view);
 	
 	void destroy();
+};
+
+class TrailBatchHandle : public TrailBatchRef {
+public:
+	TrailBatchHandle(TrailBatch *p) : TrailBatchRef(p) {}
+	~TrailBatchHandle() { destroy(); }
 };

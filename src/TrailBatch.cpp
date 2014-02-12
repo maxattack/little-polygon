@@ -42,21 +42,22 @@ void main() {
 #endif
 )GLSL";
 
+// Shared shader handles (global variables == bad?)
+static int globalRefCount = 0;
+
+static GLuint prog;
+static GLuint vert;
+static GLuint frag;
+
+static GLuint mvp;
+static GLuint uColor;
+static GLuint uTime;
+static GLuint uFadeDurationInv;
+
+static GLuint aPosition;
+static GLuint aTime;
 
 struct TrailBatch {
-	// OpenGL handles
-	GLuint prog;
-	GLuint vert;
-	GLuint frag;
-	
-	GLuint mvp;
-	GLuint uColor;
-	GLuint uTime;
-	GLuint uFadeDurationInv;
-	
-	GLuint aPosition;
-	GLuint aTime;
-	
 	// Vertices are appended to the trail using a circle-buffer.
 	// If we overflow capacity, the we simply overwrite the oldest
 	// vertex.  Note that because we render the trail as a strip,
@@ -116,18 +117,18 @@ TrailBatch* createTrailBatch(size_t capacity) {
 		(2 * capacity) * sizeof(TrailBatch::Vertex)
 	);
 	
-	CHECK(
-		compileShader(TRAIL_SHADER, &result->prog, &result->vert, &result->frag)
-	);
-	
-	result->mvp = glGetUniformLocation(result->prog, "mvp");
-	result->uColor = glGetUniformLocation(result->prog, "uColor");
-	result->uTime = glGetUniformLocation(result->prog, "uTime");
-	result->uFadeDurationInv = glGetUniformLocation(result->prog, "uFadeDurationInv");
-	
-	result->aPosition = glGetAttribLocation(result->prog, "aPosition");
-	result->aTime = glGetAttribLocation(result->prog, "aTime");
-	
+	if (globalRefCount == 0) {
+		CHECK(compileShader(TRAIL_SHADER, &prog, &vert, &frag));
+		mvp = glGetUniformLocation(prog, "mvp");
+		uColor = glGetUniformLocation(prog, "uColor");
+		uTime = glGetUniformLocation(prog, "uTime");
+		uFadeDurationInv = glGetUniformLocation(prog, "uFadeDurationInv");
+		
+		aPosition = glGetAttribLocation(prog, "aPosition");
+		aTime = glGetAttribLocation(prog, "aTime");
+	}
+	globalRefCount += 1;
+
 	glGenBuffers(1, &result->vbuf); // assumes that ebuf is next
 
 	size_t len = sizeof(TrailBatch::Vertex) * (2*capacity+2);
@@ -153,12 +154,17 @@ TrailBatch* createTrailBatch(size_t capacity) {
 
 void TrailBatchRef::destroy() {
 	if (context) {
-		glDeleteBuffers(2, &context->vbuf);
-		glDeleteProgram(context->prog);
-		glDeleteShader(context->frag);
-		glDeleteShader(context->vert);
-		LITTLE_POLYGON_FREE(context);
-		context = 0;
+		globalRefCount -= 1;
+		if (globalRefCount == 0) {
+			glDeleteProgram(prog);
+			glDeleteShader(frag);
+			glDeleteShader(vert);
+		}
+		if (context) {
+			glDeleteBuffers(2, &context->vbuf);
+			LITTLE_POLYGON_FREE(context);
+			context = 0;
+		}
 	}
 }
 
@@ -202,8 +208,11 @@ void TrailBatchRef::clear() {
 
 void TrailBatchRef::append(vec2 position, float stroke) {
 	if (context->count == context->capacity) {
-		// TODO: something better than NOOP :P
-		return;
+		
+		// pop the oldest particles
+		context->first = (context->first + 2) % context->capacity;
+		context->count -= 2;
+		
 	}
 	
 	if (context->empty) {
@@ -215,7 +224,7 @@ void TrailBatchRef::append(vec2 position, float stroke) {
 	} else {
 		
 		vec2 offset = position - context->prevPosition;
-		if (offset.norm() < 0.1 * 0.1) {
+		if (offset.norm() < 0.05 * 0.05) {
 			// bail early if there isn't too much distance
 			return;
 		} else {
@@ -290,24 +299,24 @@ void TrailBatchRef::draw(const Viewport &view) {
 	// assumes that blending is already enabled if the application
 	// wants it
 	if (context->count > 2) {
-		glUseProgram(context->prog);
+		glUseProgram(prog);
 		glBindBuffer(GL_ARRAY_BUFFER, context->vbuf);
 		
-		view.setMVP(context->mvp);
+		view.setMVP(mvp);
 		glUniform4f(
-			context->uColor,
+			uColor,
 			context->color.red(),
 			context->color.green(),
 			context->color.blue(),
 			context->color.alpha()
 		);
-		glUniform1f(context->uTime, context->time);
-		glUniform1f(context->uFadeDurationInv, context->fadeDurationInv);
+		glUniform1f(uTime, context->time);
+		glUniform1f(uFadeDurationInv, context->fadeDurationInv);
 		
-		glEnableVertexAttribArray(context->aPosition);
-		glEnableVertexAttribArray(context->aTime);
-		glVertexAttribPointer(context->aPosition, 2, GL_FLOAT, GL_FALSE, sizeof(TrailBatch::Vertex), 0);
-		glVertexAttribPointer(context->aTime, 1, GL_FLOAT, GL_FALSE, sizeof(TrailBatch::Vertex), (void*)sizeof(vec2));
+		glEnableVertexAttribArray(aPosition);
+		glEnableVertexAttribArray(aTime);
+		glVertexAttribPointer(aPosition, 2, GL_FLOAT, GL_FALSE, sizeof(TrailBatch::Vertex), 0);
+		glVertexAttribPointer(aTime, 1, GL_FLOAT, GL_FALSE, sizeof(TrailBatch::Vertex), (void*)sizeof(vec2));
 		
 		// if we're currently wrapping around then we need to make two calls (being sure to
 		// omit two-vertex degenerate cases), otherwise it's just a simple single call
@@ -317,14 +326,14 @@ void TrailBatchRef::draw(const Viewport &view) {
 			if (firstLength > 2) {
 				glDrawArrays(GL_TRIANGLE_STRIP, context->first+2, firstLength);
 			}
-			if (context->count - firstLength > 2) {
-				glDrawArrays(GL_TRIANGLE_STRIP, 0, context->count - firstLength);
+			if (context->count - firstLength > 0) {
+				glDrawArrays(GL_TRIANGLE_STRIP, 0, context->count - firstLength+2);
 			}
 		} else {
 			glDrawArrays(GL_TRIANGLE_STRIP, context->first+2, context->count);
 		}
-		glDisableVertexAttribArray(context->aPosition);
-		glDisableVertexAttribArray(context->aTime);
+		glDisableVertexAttribArray(aPosition);
+		glDisableVertexAttribArray(aTime);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 }

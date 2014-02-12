@@ -16,6 +16,7 @@
 
 #pragma once
 #include "littlepolygon_base.h"
+#include "littlepolygon_math.h"
 
 // A garbage-bin of additional helpful utilities not necessarily required by LPAAT,
 // which I've accumulated and rolled over from project to project :P
@@ -46,9 +47,8 @@ struct Timer {
 	double timeScale;
 	double seconds;
 	double rawDeltaSeconds;
-	double smoothDeltaSeconds;
 	double deltaSeconds;
-
+	
 	void reset(double aTimeScale=1) {
 		timeScale = aTimeScale;
 		ticks = SDL_GetTicks();
@@ -56,18 +56,13 @@ struct Timer {
 		deltaTicks = 0;
 		seconds = 0;
 		rawDeltaSeconds = 0;
-		smoothDeltaSeconds = 0;
 		
 		SDL_DisplayMode dm;
 		SDL_GetWindowDisplayMode(SDL_GL_GetCurrentWindow(), &dm);
 		if (dm.refresh_rate) {
 			deltaSeconds = timeScale * 0.001 * dm.refresh_rate;
 		} else {
-#if __IPHONEOS__
-			deltaSeconds = timeScale/59.0; // anecdotally true
-#else
 			deltaSeconds = timeScale/60.0;
-#endif
 		}
 	}
 
@@ -83,7 +78,7 @@ struct Timer {
 		
 		rawDeltaSeconds = timeScale * (0.001 * deltaTicks);
 		seconds += rawDeltaSeconds;
-		smoothDeltaSeconds = 0.95 * smoothDeltaSeconds + 0.05 * rawDeltaSeconds;
+		deltaSeconds = lerpd(deltaSeconds , rawDeltaSeconds, 0.0001);
 	}
 };
 

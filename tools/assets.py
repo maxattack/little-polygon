@@ -219,10 +219,20 @@ def load_yaml_structured_image(context, namespace_id, param):
 	t,id = namespace_id.split('/')
 	path = load_yaml_path(context, param)
 	im = PSDImage.load(path)
-	anchorGroup = next( l for l in im.layers if l.name == u'anchors' )
 
 	def centerX(bbox): return 0.5*(bbox.x1+bbox.x2)
 	def centerY(bbox): return 0.5*(bbox.y1+bbox.y2)
+
+	locations = ( loc for l in im.layers if l.name == u'locations' for loc in l.layers )
+	for loc in locations:
+		x,y = centerX(loc.bbox), centerY(loc.bbox)
+		context.addUserdata(
+			"%s.%s" % (id, loc.name), 
+			struct.pack("ff", x, y)
+		)
+
+	anchorGroup = next( l for l in im.layers if l.name == u'anchors' )
+
 	def imageOf(name):
 		return rasterize_psd_layer(im, next( l for l in im.layers if l.name == name ))
 	def create_result(layer):
@@ -379,12 +389,13 @@ class Assets:
 					yield k[len(prefix):], v
 
 
+		self.userdata = []
+
 		self.textures = [load_yaml_texture(self, k, v) for k,v in list_items('texture')]
 		self.fonts = [load_yaml_font(self, k, v) for k,v in list_items('font')]
 		self.samples = [load_yaml_sample(self, k, v) for k,v in list_items('sample')]
 		self.tilemaps = [load_yaml_tilemap(self, k, v) for k,v in list_items('tilemap')]
 		self.palettes = [load_yaml_palette(self, k, v) for k,v in list_items('palette')]
-		self.userdata = []
 
 		all_hashes = \
 			[ t.hash for t in self.textures ] + \
@@ -399,8 +410,9 @@ class Assets:
 		assert len(all_hashes) == len(self.hash_set)
 
 	def addUserdata(self, id, data):
-		assert not id in self.hash_set
-		self.hash_set.add(id)
+		if hasattr(self, "hash_set"):
+			assert not id in self.hash_set
+			self.hash_set.add(id)
 		self.userdata.append(Userdata(id, data))
 
 	def addCompressedUserdata(self, id, data):

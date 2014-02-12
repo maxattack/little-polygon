@@ -61,8 +61,15 @@ struct SpritePlotter {
 	GLuint aColor;	
 
 	// invariant: these two fields need to be adjacent
-	GLuint elementBuf;
-	GLuint arrayBuf;
+	union {
+		GLuint buffers[4];
+		struct {
+			GLuint elementBuf;
+			GLuint arrayBuf[3]; // triple-buffer to reduce write-contention
+		};
+	};
+	
+	int workingArray; // the vertex array that we're currently writing to
 
 	TextureAsset *workingTexture;
 
@@ -82,6 +89,14 @@ struct SpritePlotter {
 	Vertex workingBuffer[0];
 
 	Vertex *nextSlice() { return workingBuffer + (4 * count); }
+	
+	void flipBuffers() {
+		glBindBuffer(GL_ARRAY_BUFFER, arrayBuf[workingArray]);
+		glVertexAttribPointer(aPosition, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)0);
+		glVertexAttribPointer(aUV, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)8);
+		glVertexAttribPointer(aColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Vertex), (GLvoid*)16);
+		workingArray = (workingArray + 1) % arraysize(arrayBuf);
+	}
 };
 
 // private helper methods
@@ -105,6 +120,7 @@ static void initialize(SpritePlotter* context, int capacity) {
 	context->capacity = capacity;
 	context->count = -1;
 	context->workingTexture = 0;
+	context->workingArray = 0;
 	CHECK(compileShader(SPRITE_SHADER, &context->prog, &context->vert, &context->frag));
 	glUseProgram(context->prog);
 	context->uMVP = glGetUniformLocation(context->prog, "mvp");
@@ -123,7 +139,7 @@ static void initialize(SpritePlotter* context, int capacity) {
 		indices[6*i+4] = 4*i+1;
 		indices[6*i+5] = 4*i+3;
 	}
-	glGenBuffers(2, &context->elementBuf); // also generates the arrayBuf
+	glGenBuffers(arraysize(context->buffers), context->buffers);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, context->elementBuf);
 	glBufferData(
 		GL_ELEMENT_ARRAY_BUFFER, 
@@ -132,6 +148,16 @@ static void initialize(SpritePlotter* context, int capacity) {
 		GL_STATIC_DRAW
 	);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	for(int i=0; i<arraysize(context->arrayBuf); ++i) {
+		glBindBuffer(GL_ARRAY_BUFFER, context->arrayBuf[i]);
+		glBufferData(
+			GL_ARRAY_BUFFER,
+			4 * context->capacity * sizeof(SpritePlotter::Vertex),
+			0, GL_DYNAMIC_DRAW
+		);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
+	
 }
 
 static void release(SpritePlotter* context) {
@@ -176,11 +202,6 @@ void SpritePlotterRef::begin(const Viewport& viewport) {
 
 	// bind element buffer
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, context->elementBuf);
-	glBindBuffer(GL_ARRAY_BUFFER, context->arrayBuf);
-
-	glVertexAttribPointer(context->aPosition, 2, GL_FLOAT, GL_FALSE, sizeof(SpritePlotter::Vertex), (GLvoid*)0);
-	glVertexAttribPointer(context->aUV, 2, GL_FLOAT, GL_FALSE, sizeof(SpritePlotter::Vertex), (GLvoid*)8);
-	glVertexAttribPointer(context->aColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(SpritePlotter::Vertex), (GLvoid*)16);	
 }
 
 void SpritePlotterRef::drawImage(ImageAsset *img, vec2 pos, int frame, Color c) {
@@ -411,7 +432,12 @@ void SpritePlotterRef::end() {
 
 void commitBatch(SpritePlotter* context) {
 	ASSERT(context->count > 0);
-	glBufferData(GL_ARRAY_BUFFER, 4 * context->count * sizeof(SpritePlotter::Vertex), context->workingBuffer, GL_DYNAMIC_DRAW);
+	context->flipBuffers();
+	glBufferSubData(
+		GL_ARRAY_BUFFER,
+		0, 4 * context->count * sizeof(SpritePlotter::Vertex),
+		context->workingBuffer
+	);
 	glDrawElements(GL_TRIANGLES, 6 * context->count, GL_UNSIGNED_SHORT, 0);
 	context->count = 0;
 }
