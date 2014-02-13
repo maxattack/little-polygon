@@ -90,8 +90,8 @@ struct TrailBatch {
 	float firstTime;
 	
 	float *times() { return &firstTime; }
-	float *getTime(int i) { return times() + (i>>1); }
-	float logicalTime(int i) { return times()[logicalToRaw(i)]; }
+	float setTime(int i, float t) { return times()[i>>1] = t; }
+	float getTime(int i) { return times()[logicalToRaw(i)>>1]; }
 	
 	bool wrapping() const { return first + count > capacity; }
 };
@@ -228,7 +228,7 @@ void TrailBatchRef::append(vec2 position, float stroke) {
 		v0[1].time = context->time;
 		
 		int ri = context->logicalToRaw(i);
-		*context->getTime(ri) = context->time;
+		context->setTime(ri, context->time);
 		
 		glBindBuffer(GL_ARRAY_BUFFER, context->vbuf);
 		glBufferSubData(
@@ -257,7 +257,7 @@ void TrailBatchRef::tick(float deltaSeconds) {
 		int removeCount = 0;
 		while(
 			removeCount < context->count &&
-			context->logicalTime(removeCount) + fadeDuration() < context->time
+			context->getTime(removeCount) + fadeDuration() < context->time
 		) {
 			removeCount+=2;
 		}
