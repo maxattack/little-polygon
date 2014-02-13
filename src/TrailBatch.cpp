@@ -82,39 +82,23 @@ struct TrailBatch {
 		float time;
 	};
 	
-	// we don't actually use these, but it makes bookkeeping easier :P
-	Vertex dup1, dup2;
-	Vertex *rawBuffer() { return &dup1; }
-	
-	Vertex *vertexBuffer() { return (&dup2)+1; }
-	
-	Vertex *rawVertex(int i) {
-		ASSERT(i >= 0 && i < capacity);
-		// the actual "headVertex" is a special "extra" dup
-		// of the last vertex
-		return vertexBuffer() + i;
-	}
-	
-	Vertex *tail() {
-		return rawVertex(capacity-1);
-	}
-	
 	int logicalToRaw(int i) {
 		ASSERT(i >= 0 && i < count);
 		return (first + i) % capacity;
 	}
 	
-	Vertex *logicalVertex(int i) {
-		return rawVertex(logicalToRaw(i));
-	}
+	float firstTime;
+	
+	float *times() { return &firstTime; }
+	float *getTime(int i) { return times() + (i>>1); }
+	float logicalTime(int i) { return times()[logicalToRaw(i)]; }
 	
 	bool wrapping() const { return first + count > capacity; }
 };
 
 TrailBatch* createTrailBatch(size_t capacity) {
 	auto result = (TrailBatch*) LITTLE_POLYGON_MALLOC(
-		sizeof(TrailBatch) +
-		(2 * capacity) * sizeof(TrailBatch::Vertex)
+		sizeof(TrailBatch) + capacity * sizeof(float)
 	);
 	
 	if (globalRefCount == 0) {
@@ -235,17 +219,16 @@ void TrailBatchRef::append(vec2 position, float stroke) {
 		context->count += 2;
 		auto rawStroke = stroke * context->stroke;
 		vec2 unit = rawStroke * offset.normalized().clockwise();
-
-		auto v0 = context->logicalVertex(i);
-		v0->position = position + unit;
-		v0->time = context->time;
 		
-		// this is OK because pairs of vertices will not fall on the
-		// cycle-boundary
+		TrailBatch::Vertex v0[2];
+		
+		v0[0].position = position + unit;
+		v0[0].time = context->time;
 		v0[1].position = position - unit;
 		v0[1].time = context->time;
 		
 		int ri = context->logicalToRaw(i);
+		*context->getTime(ri) = context->time;
 		
 		glBindBuffer(GL_ARRAY_BUFFER, context->vbuf);
 		glBufferSubData(
@@ -274,7 +257,7 @@ void TrailBatchRef::tick(float deltaSeconds) {
 		int removeCount = 0;
 		while(
 			removeCount < context->count &&
-			context->logicalVertex(removeCount)->time + fadeDuration() < context->time
+			context->logicalTime(removeCount) + fadeDuration() < context->time
 		) {
 			removeCount+=2;
 		}
