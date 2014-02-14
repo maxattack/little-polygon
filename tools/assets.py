@@ -331,32 +331,45 @@ class Tilemap:
 ################################################################################
 
 def load_yaml_palette(context, id, params):
-	# gift ideas - palette images?
-	def sToC(s):
-		x = int(s,16)
-		return 0 if x < 0 else 255 if x > 255 else x
-	def toRGBA(s):
-		if s.startswith('rgb(') and s.endswith(')'):
-			s = s[4:-1]
-			assert len(s) == 6
-			return (
-				sToC(s[0:2]),
-				sToC(s[2:4]),
-				sToC(s[4:6]),
-				255
-			)
-		elif s.startswith('rgba(') and s.endswith(')'):
-			s = s[5:-1]
-			assert len(s) == 8
-			return (
-				sToC(s[0:2]),
-				sToC(s[2:4]),
-				sToC(s[4:6]),
-				sToC(s[6:8])
-			)
-		else:
-			raise "Bad Color Format: %s" % s
-	return Palette(id, map(toRGBA, params))
+
+	if isinstance(params, list):
+		# color values are in the text of the asset
+		def sToC(s):
+			x = int(s,16)
+			return 0 if x < 0 else 255 if x > 255 else x
+		def toRGBA(s):
+			if s.startswith('rgb(') and s.endswith(')'):
+				s = s[4:-1]
+				assert len(s) == 6
+				return (
+					sToC(s[0:2]),
+					sToC(s[2:4]),
+					sToC(s[4:6]),
+					255
+				)
+			elif s.startswith('rgba(') and s.endswith(')'):
+				s = s[5:-1]
+				assert len(s) == 8
+				return (
+					sToC(s[0:2]),
+					sToC(s[2:4]),
+					sToC(s[4:6]),
+					sToC(s[6:8])
+				)
+			else:
+				raise "Bad Color Format: %s" % s
+		return Palette(id, map(toRGBA, params))
+
+	else:
+		# color values are in a horizontal-image strip
+		im = open_image(params)
+		px = im.load()
+		colors = [ px[0,0] ]
+		for x in xrange(im.size[0]):
+			next = px[x,0]
+			if next != colors[-1]:
+				colors.append(next)
+		return Palette(id, colors)
 
 class Palette:
 	def __init__(self, id, colors):

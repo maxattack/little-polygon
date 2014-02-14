@@ -154,6 +154,16 @@ public:
 		++mCount;
 		return mSlots + (mCount-1);
 	}
+	
+	template<typename... Args>
+	T* allocObject(Args&&... args) {
+		auto result = alloc();
+		if (result) {
+			return new(result) T(std::forward<Args>(args) ...);
+		} else {
+			return 0;
+		}
+	}
 
 	bool active(T* slot) const {
 		return (slot - mSlots) >= 0 && (slot - mSlots) < mCount;
@@ -174,6 +184,11 @@ public:
 				return;
 			}
 		}
+	}
+	
+	void releaseObject(T* p) {
+		p->~T();
+		release(p);
 	}
 
 	int count() const { return mCount; }
