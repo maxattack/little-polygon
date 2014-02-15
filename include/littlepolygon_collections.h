@@ -147,6 +147,15 @@ public:
 		n++;
 	}
 	
+	bool tryAppend(const T& val) {
+		if (n < N) {
+			append(val);
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
 	T& peekFirst() {
 		ASSERT(n > 0);
 		return slots[0].record;
