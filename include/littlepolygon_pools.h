@@ -100,10 +100,6 @@ private:
 
 public:
 
-	void reset() {
-		mask.reset();
-	}
-
 	template<typename... Args>
 	T* alloc(Args&&... args) {
 		unsigned index;
@@ -126,24 +122,121 @@ public:
 	friend class BitsetPool<T,N>;
 	private:
 		T *slots;
+		T *curr;
 		typename Bitset<N>::iterator biterator;
 
 		iterator(const BitsetPool *pool) : slots((T*)pool->slots), biterator(&pool->mask) {
 		}
 
 	public:
-		bool next(T* &result) {
+		bool next() {
 			unsigned idx;
 			if (biterator.next(idx)) {
-				result = slots + idx;
+				curr = slots + idx;
 				return true;
 			} else {
+				curr = 0;
 				return false;
 			}
 		}
+		
+		T* operator->() { return curr; }
+		operator T*() { return curr; }
+		
 	};
 
-	iterator listSlots() { return iterator(this); }
+	iterator list() { return iterator(this); }
+	
+	void reset() {
+		T* activeObject;
+		for(auto i=list(); i.next();) {
+			i->~T();
+		}
+		mask.reset();
+	}
+
+	
+};
+
+template<typename T>
+class BitsetPool32 {
+private:
+	uint32_t mask;
+	union Slot {
+		T record;
+		
+		Slot() {}
+		~Slot() {}
+	};
+	Slot slots[32];
+	
+	
+public:
+	
+	bool empty() const { return mask == 0; }
+	bool full() const { return mask == 0xffffffff; }
+	bool active(T* p) {
+		auto slot = (Slot*) p;
+		int i = slot - slots;
+		return (mask & (0x80000000>>i)) != 0;
+	}
+	
+	template<typename... Args>
+	T* alloc(Args&&... args) {
+		ASSERT(mask != 0xffffffff);
+		auto i = __builtin_clz(~mask);
+		mask |= (0x80000000>>i);
+		return new(&slots[i].record) T(std::forward<Args>(args) ...);
+	}
+	
+	void release(T* p) {
+		ASSERT(active(p));
+		p->~T();
+		auto slot = (Slot*) p;
+		int i = slot - slots;
+		mask ^= (0x80000000>>i);
+	}
+
+	void reset() {
+		while(mask) {
+			auto i = __builtin_clz(mask);
+			mask ^= (0x80000000>>i);
+			slots[i].record.~T();
+		}
+		mask = 0;
+	}
+
+	class iterator {
+	friend class BitsetPool32<T>;
+	private:
+		T *slots;
+		T* curr;
+		uint32_t remainder;
+
+		iterator(const BitsetPool32<T> *pool) : slots((T*)pool->slots), remainder(pool->mask) {
+		}
+
+	public:
+		bool next() {
+			if (remainder) {
+				auto i = __builtin_clz(remainder);
+				remainder ^= (0x80000000>>i);
+				curr = slots + i;
+				return true;
+			} else {
+				curr = 0;
+				return false;
+			}
+		}
+		
+		T* operator->() { return curr; }
+		operator T*() { return curr; }
+		
+	};
+
+	iterator list() { return iterator(this); }
+
+
 };
 
 //------------------------------------------------------------------------------
