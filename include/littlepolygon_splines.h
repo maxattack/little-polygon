@@ -16,8 +16,7 @@
 
 #pragma once
 
-#include "littlepolygon_assets.h"
-#include "littlepolygon_math.h"
+#include "littlepolygon_graphics.h"
 
 //------------------------------------------------------------------------------
 // SPLINE REDNERING
@@ -31,7 +30,7 @@
 struct SplinePlotter;
 class SplinePlotterRef;
 
-SplinePlotterRef createSplinePlotter(int resolution=128);
+SplinePlotterRef createSplinePlotter(int resolution=64);
 
 class SplinePlotterRef {
 private:

@@ -45,6 +45,11 @@ public:
 	double height() const { return mSize.y; }
 
 	vec2d offset() const { return mOffset; }
+	vec2d extent() const { return mOffset + mSize; }
+	double left() const { return mOffset.x; }
+	double right() const { return mOffset.x + mSize.x; }
+	double top() const { return mOffset.y; }
+	double bottom() const { return mOffset.y + mSize.y; }
 	
 	void setFromWindow();
 	void setSize(vec2d sz) { mSize = sz; }

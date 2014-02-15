@@ -28,6 +28,8 @@
 //                 (only useable for "anonymous" objects, like particles or bullets)
 //
 
+#include <utility>
+
 //------------------------------------------------------------------------------
 // FREE-LIST POOL
 //------------------------------------------------------------------------------
@@ -38,7 +40,9 @@ private:
 	union Slot {
 		T record;
 		Slot *next;
+
 		Slot() {}
+		~Slot() {}
 	};
 	Slot *firstFree;
 	Slot slots[N];
@@ -57,22 +61,24 @@ public:
 		slots[N-1].next = 0;
 	}
 
-	T* alloc() {
+	template<typename... Args>
+	T* alloc(Args&&... args) {
 		if (!firstFree) {
 			return 0;
 		} else {
 			auto result = firstFree;
 			firstFree = result->next;
-			return &(result->record);
-		}			
+			return new(&(result->record)) T(std::forward<Args>(args) ...);
+		}
 	}
 
-	void release(T* slot) {
-		Slot *p = (Slot*)slot;
-		ASSERT(p - slots >= 0);
-		ASSERT(p - slots < N);		
-		p->next = firstFree;
-		firstFree = p;
+	void release(T* p) {
+		Slot *slot = (Slot*)p;
+		ASSERT(slot - slots >= 0);
+		ASSERT(slot - slots < N);
+		p->~T();
+		slot->next = firstFree;
+		firstFree = slot;
 	}
 };
 
@@ -84,7 +90,13 @@ template<typename T, int N>
 class BitsetPool {
 private:
 	Bitset<N> mask;
-	T slots[N];
+	union Slot {
+		T record;
+		
+		Slot() {}
+		~Slot() {}
+	};
+	Slot slots[N];
 
 public:
 
@@ -92,18 +104,21 @@ public:
 		mask.reset();
 	}
 
-	T* alloc() {
+	template<typename... Args>
+	T* alloc(Args&&... args) {
 		unsigned index;
 		if (!(~mask).findFirst(index)) {
 			return 0;
 		}
 		mask.mark(index);
-		return slots + index;
+		return new(&slots[index].record) T(std::forward<Args>(args) ...);
 	}
 
-	void release(T* slot) {
+	void release(T* p) {
+		Slot *slot = (Slot*) p;
 		ASSERT(slot - slots >= 0);
 		ASSERT(slot - slots < N);
+		p->~T();
 		mask.clear(slot-slots);
 	}
 
@@ -139,61 +154,55 @@ template<typename T, int N>
 class CompactPool {
 private:
 	int mCount;
-	T mSlots[N];
+	union Slot {
+		T record;
+		
+		Slot() {}
+		~Slot() {}
+	};
+	Slot mSlots[N];
 
 public:
 	CompactPool() : mCount(0) {
 	}
 
 	void reset() {
+		for(int i=0; i<mCount; ++i) {
+			mSlots[i].record.~T();
+		}
 		mCount = 0;
 	}
 
-	T* alloc() {
+	template<typename... Args>
+	T* alloc(Args&&... args) {
 		ASSERT (mCount < N);
 		++mCount;
-		return mSlots + (mCount-1);
-	}
-	
-	template<typename... Args>
-	T* allocObject(Args&&... args) {
-		auto result = alloc();
-		if (result) {
-			return new(result) T(std::forward<Args>(args) ...);
-		} else {
-			return 0;
-		}
+		return new(&mSlots[mCount-1].record) T(std::forward<Args>(args) ...);
 	}
 
-	bool active(T* slot) const {
+	bool active(T* p) const {
+		auto slot = (Slot*)p;
 		return (slot - mSlots) >= 0 && (slot - mSlots) < mCount;
 	}
 
-	void release(T* slot) {
-		ASSERT(active(slot));
+	void release(T* p) {
+		ASSERT(active(p));
+		auto slot = (Slot*) p;
+		p->~T();
 		--mCount;
 		if (slot != mSlots+mCount) {
-			*slot = mSlots[mCount];
+			// Errr... this bit right here is super-derpy.  I guess classes
+			// should be using move semantics?  Like you "move" the object
+			// into the "slot" and then finalize "mSlots+mCount"?  That's kinda
+			// obnoxious, tho, since it means objects can be in this extra "hollowed-out"
+			// state... :P
+			memcpy(slot, mSlots+mCount, sizeof(Slot));
 		}
-	}
-
-	void releaseValue(T value) {
-		for(int i=0; i<mCount; ++i) {
-			if (mSlots[i] == value) {
-				release(mSlots + i);
-				return;
-			}
-		}
-	}
-	
-	void releaseObject(T* p) {
-		p->~T();
-		release(p);
 	}
 
 	int count() const { return mCount; }
-	T* begin() { return mSlots; }
-	T* end() { return mSlots + mCount; }
+	T* begin() { return (T*)mSlots; }
+	T* end() { return ((T*)mSlots) + mCount; }
 
 	bool isEmpty() const { return mCount == 0; }
 	bool isFull() const { return mCount == N; }

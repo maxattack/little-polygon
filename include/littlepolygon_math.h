@@ -267,7 +267,7 @@ inline double lerpd(double u, double v, double t) { return u + t * (v-u); }
 inline double inverseLerpd(double u, double v, double t) { return (t-u) / (v-u); }
 
 // complex multiplication
-inline vec2 cmul(vec2 u, vec2 v) { return vec2(u.x*v.x-u.y*v.y, u.x*v.y+u.y*v.x); }
+inline vec2  cmul(vec2  u, vec2  v) { return vec2 (u.x*v.x-u.y*v.y, u.x*v.y+u.y*v.x); }
 inline vec2d cmul(vec2d u, vec2d v) { return vec2d(u.x*v.x-u.y*v.y, u.x*v.y+u.y*v.x); }
 
 // complex division
