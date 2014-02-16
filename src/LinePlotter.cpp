@@ -160,7 +160,6 @@ void LinePlotterRef::end() {
 	context->count = -1;
 	glDisableVertexAttribArray(context->aPosition);
 	glDisableVertexAttribArray(context->aColor);
-	glUseProgram(0);
 }
 
 void commitBatch(LinePlotter* context) {

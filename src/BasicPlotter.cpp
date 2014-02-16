@@ -152,7 +152,6 @@ void BasicPlotterRef::end() {
 	glDisableVertexAttribArray(context->aPosition);
 	glDisableVertexAttribArray(context->aUV);
 	glDisableVertexAttribArray(context->aColor);
-	glUseProgram(0);
 }
 
 

@@ -81,7 +81,7 @@ void SplinePlotter::reserve(int numVertsRequired) {
 	
 }
 
-void SplinePlotter::plotCubic(mat4f posMat, vec4f strokeVec, Color c, int resolution) {
+void SplinePlotter::plotCubic(const mat4f& posMat, const vec4f& strokeVec, Color c, int resolution) {
 	ASSERT(isBound());
 	reserve(resolution << 1);
 	
@@ -115,23 +115,54 @@ void SplinePlotter::plotArc(vec2 p, float r1, float r2, Color c, float a1, float
 	ASSERT(isBound());
 	reserve(resolution<<1);
 	
-	// plot eet
-	vec2 curr = unitVector(a1);
-	float da = (a2 - a1) / float(resolution-1);
-	vec2 rotor = unitVector(da);
+	float da = a2 - a1;
 	float v = clamp(fakeAntiAliasFactor * fabsf(r2-r1));
-	
-	if (count > 0) {
-		auto tail = plotter.getVertex(count-1);
-		*nextVert() = *tail;
+	float wholeCircle = M_TAU-0.01;
+
+	if (da > wholeCircle || da < -wholeCircle) {
+		
+		// special case - plotting a closed loop
+		// (don't want gaps or overlapped faces)
+		vec2 curr = vec(1,0);
+		vec2 rotor = unitVector((M_TAU) / (resolution-1));
+		
+		vec2 p0 = p + r1 * curr;
+		vec2 p1 = p + r2 * curr;
+		
+		if (count > 0) {
+			auto tail = plotter.getVertex(count-1);
+			*nextVert() = *tail;
+			nextVert()->set(p0, vec(0,v), c);
+		}
+		nextVert()->set(p0, vec(0,v), c);
+		nextVert()->set(p1, vec(1,v), c);
+		for(int i=1; i<resolution-1; ++i) {
+			curr = cmul(curr, rotor);
+			nextVert()->set(p + r1 * curr, vec(0, v), c);
+			nextVert()->set(p + r2 * curr, vec(1, v), c);
+		}
+		nextVert()->set(p0, vec(0,v), c);
+		nextVert()->set(p1, vec(1,v), c);
+		
+	} else {
+		
+		// general case
+		vec2 curr = unitVector(a1);
+		vec2 rotor = unitVector(da / float(resolution-1));
+		
+		if (count > 0) {
+			auto tail = plotter.getVertex(count-1);
+			*nextVert() = *tail;
+			nextVert()->set(p + r1 * curr, vec(0,v), c);
+		}
 		nextVert()->set(p + r1 * curr, vec(0,v), c);
-	}
-	nextVert()->set(p + r1 * curr, vec(0,v), c);
-	nextVert()->set(p + r2 * curr, vec(1,v), c);
-	for(int i=1; i<resolution; ++i) {
-		curr = cmul(curr, rotor);
-		nextVert()->set(p + r1 * curr, vec(0, v), c);
-		nextVert()->set(p + r2 * curr, vec(1, v), c);
+		nextVert()->set(p + r2 * curr, vec(1,v), c);
+		for(int i=1; i<resolution; ++i) {
+			curr = cmul(curr, rotor);
+			nextVert()->set(p + r1 * curr, vec(1, v), c);
+			nextVert()->set(p + r2 * curr, vec(0, v), c);
+		}
+		
 	}
 	
 }
@@ -148,6 +179,5 @@ void SplinePlotter::end() {
 	ASSERT(isBound());
 	flush();
 	count = -1;
-	glBindTexture(GL_TEXTURE_2D, 0);
 	plotter.end();
 }

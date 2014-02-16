@@ -65,6 +65,13 @@ public:
 	vec2d mouse() const;
 
 	void setMVP(GLuint mvp) const;
+	
+	inline bool contains(vec2d p, double pad=0.0) const {
+		return p.x > mOffset.x - pad &&
+		       p.x < mOffset.x + mSize.x + pad &&
+		       p.y > mOffset.y - pad &&
+		       p.y < mOffset.y + mSize.y + pad;
+	}
 };
 
 

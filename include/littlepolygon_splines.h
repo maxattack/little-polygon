@@ -36,12 +36,12 @@ public:
 	BasicPlotterRef getPlotter() { return plotter; }
 	
 	void begin(const Viewport& viewport);
-	void plotCubic(mat4f positionMatrix, vec4f strokeVector, Color c, int resolution=10);
+	void plotCubic(const mat4f& positionMatrix, const vec4f& strokeVector, Color c, int resolution=10);
 	//void plot(mat4f positionMatrix, vec4f strokeVector, ImageAsset *img, int resolution=16);
 	
 	void plotArc(vec2 p, float r1, float r2, Color c, float a0=0, float a1=M_TAU, int resolution=32);
 	void plotCircle(vec2 p, float r, Color c, float a0=0, float a1=M_TAU, int resolution=32) {
-		plotArc(p, -0.0001, r, c, a0, a1, resolution);
+		plotArc(p, -0.01, r, c, a0, a1, resolution);
 	}
 	
 	void flush();

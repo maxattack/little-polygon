@@ -48,12 +48,11 @@ struct Timer {
 	double seconds;
 	double rawDeltaSeconds;
 	double deltaSeconds;
-	double smoothing;
 	
 	Timer(double aTimeScale=1) :
 	ticks(SDL_GetTicks()), deltaTicks(0),
 	timeScale(aTimeScale), seconds(0),
-	rawDeltaSeconds(0), smoothing(0.1) {
+	rawDeltaSeconds(0) {
 		SDL_DisplayMode dm;
 		SDL_GetWindowDisplayMode(SDL_GL_GetCurrentWindow(), &dm);
 		if (dm.refresh_rate) {
@@ -78,9 +77,7 @@ struct Timer {
 		ticks += deltaTicks;
 		rawDeltaSeconds = timeScale * (0.001 * deltaTicks);
 		seconds += rawDeltaSeconds;
-		deltaSeconds = lerpd(deltaSeconds , rawDeltaSeconds, smoothing);
-		smoothing *= 0.999;
-		smoothing = MAX(smoothing, 0.000001);
+		deltaSeconds = lerpd(deltaSeconds , rawDeltaSeconds, 0.025);
 	}
 };
 

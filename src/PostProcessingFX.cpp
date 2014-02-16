@@ -94,6 +94,5 @@ void PostProcessingFX::draw() {
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glDisableVertexAttribArray(ap);
 		glDisableVertexAttribArray(auv);
-		glUseProgram(0);
 	}
 }
