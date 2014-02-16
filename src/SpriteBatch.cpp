@@ -268,7 +268,7 @@ void* SpriteRef::userData() const {
 	return sprite->userData;
 }
 
-void SpriteBatchRef::draw(SpritePlotterRef renderer) {
+void SpriteBatchRef::draw(SpritePlotter& renderer) {
 	unsigned idx;
 	for(auto iterator=context->visibleMask.listBits(); iterator.next(idx);) {
 		auto cmd = context->getDraw(idx);

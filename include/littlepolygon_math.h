@@ -310,8 +310,8 @@ inline double easeOut4d(double u) {
 	return 1.0 - u*u*u*u;
 }
 inline double easeInOutBack(double t, double s=1.70158) { return (s+1.0)*t*t*t - s*t*t; }
-inline double easeTowards(double curr, double target, double easing, double dt) { return curr + pow(easing, 60*dt) * (target - curr); }
-inline vec2d easeTowards(vec2d curr, vec2d target, double easing, double dt) { double k = pow(easing, 60.0*dt); return curr + k * (target - curr); }
+inline double easeTowards(double curr, double target, double easing, double dt) { return curr + (target - curr) * pow(easing, clampd(1.0/(60.0*dt))); }
+inline vec2d easeTowards(vec2d curr, vec2d target, double easing, double dt)    { return curr + (target - curr) * pow(easing, clampd(1.0/(60.0*dt))); }
 
 
 // random number functions

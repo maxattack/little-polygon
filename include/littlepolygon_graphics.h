@@ -67,6 +67,8 @@ public:
 	void setMVP(GLuint mvp) const;
 };
 
+
+
 // Dead-simple shader-compiler.  Easiest to just use C++11 raw string
 // literals to store the source, or else you could stash it in asset 
 // userdata if it's configurable from content.  Uses a VERTEX conditional-
@@ -98,6 +100,58 @@ public:
 	void beginScene();
 	void endScene();
 	void draw();
+};
+
+//------------------------------------------------------------------------------
+// BASIC PLOTTER
+//------------------------------------------------------------------------------
+
+struct BasicPlotter;
+
+BasicPlotter *createBasicPlotter(size_t capacity);
+
+struct BasicVertex {
+	vec2 position;
+	vec2 uv;
+	Color color;
+	
+	inline void set(vec2 p, vec2 u, Color c) {
+		position = p;
+		uv = u;
+		color = c;
+	}
+};
+
+struct BasicPlotterRef {
+private:
+	BasicPlotter *context;
+	
+public:
+	BasicPlotterRef() {}
+	BasicPlotterRef(BasicPlotter *aContext) : context(aContext) {}
+	
+	operator BasicPlotter*() { return context; }
+	operator bool() const { return context; }
+	
+	void destroy();
+	
+	const Viewport* view() const;
+	BasicVertex *getVertex(int i);
+	bool isBound() const;
+	int capacity() const;
+	
+	void begin(const Viewport& view);
+	
+	void commit(int count);
+
+	void end();
+
+};
+
+class BasicPlotterHandle : public BasicPlotterRef {
+public:
+	BasicPlotterHandle(size_t capacity) : BasicPlotterRef(createBasicPlotter(capacity)) {}
+	~BasicPlotterHandle() { destroy(); }
 };
 
 //------------------------------------------------------------------------------
@@ -134,38 +188,3 @@ public:
 	LinePlotterHandle(LinePlotter *p) : LinePlotterRef(p) {}
 	~LinePlotterHandle() { if (*this) destroy(); }
 };
-
-//------------------------------------------------------------------------------
-// CIRCLE RENDERING
-//------------------------------------------------------------------------------
-
-struct CirclePlotter;
-class CirclePlotterRef;
-
-CirclePlotterRef createCirclePlotter(size_t resolution=128);
-
-class CirclePlotterRef {
-private:
-	CirclePlotter *context;
-
-public:
-	CirclePlotterRef() {}
-	CirclePlotterRef(CirclePlotter *aContext) : context(aContext) {}
-
-	operator CirclePlotter*() { return context; }
-	operator bool() const { return context; }
-
-	void destroy();
-
-	void begin(const Viewport& viewport);
-	void plotFilled(vec2 p, float r, Color c, float a1=0, float a2=M_TAU);
-	void plotArc(vec2 p, float r1, float r2, Color c, float a1=0, float a2=M_TAU);
-	void end();
-};
-
-class CirclePlotterHandle : public CirclePlotterRef {
-public:
-	CirclePlotterHandle(CirclePlotter *p) : CirclePlotterRef(p) {}
-	~CirclePlotterHandle() { if (*this) destroy(); }
-};
-

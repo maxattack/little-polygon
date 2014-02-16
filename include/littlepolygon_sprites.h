@@ -38,29 +38,28 @@ class SpriteRef;
 // by coalescing adjacent draws into larger logical draws.
 // TODO: perform batch-level clipping?
 
-SpritePlotterRef createSpritePlotter(int capacity=64);
-
-class SpritePlotterRef {
+class SpritePlotter {
 private:
-	SpritePlotter *context;
+	BasicPlotterRef plotter;
+	int capacity;
+	int count;
+	GLuint elementBuf;
+	TextureAsset *workingTexture;
 
 public:
-	SpritePlotterRef() {}
-	SpritePlotterRef(SpritePlotter *aContext) : context(aContext) {}
-
-	operator SpritePlotter*() { return context; }
-	operator bool() const { return context; }
+	SpritePlotter(BasicPlotterRef plotter);
+	~SpritePlotter();
 
 	void destroy();
 
-	bool bound() const;
-	const Viewport *view() const;
+	bool isBound() const { return count >= 0; }
+	BasicPlotterRef getPlotter() { return plotter; }
 
-	// Call this method to initialize the graphics context state.  Coordinates are
-	// set to a orthogonal projection matrix, and some basic settings like blending are
+	// Call this method to initialize the graphics context state.  Asserts that the plotter
+	// is already bound (in case you're coalescing with other plotters) and state e.g. blending are
 	// enabled.  Any additional state changes can be set *after* this function but *before*
 	// issuing any draw calls.
-	void begin(const Viewport& viewport);
+	void begin(const Viewport& view);
 
 	// Draw the given image.  Will potentially cause a draw call to actually be emitted
 	// to the graphics device if: (i) the buffer has reached capacity or (ii) the texture 
@@ -83,12 +82,12 @@ public:
 	// canonical form, to play nice with other renderers.
 	void end();
 
-};
+private:
+	BasicVertex *nextSlice() { return plotter.getVertex(count<<2); }
+	void setTextureAtlas(TextureAsset* texture);
+	void commitBatch();
+	void plotGlyph(const GlyphAsset& g, float x, float y, float h, Color c);
 
-class SpritePlotterHandle : public SpritePlotterRef {
-public:
-	SpritePlotterHandle(SpritePlotter *p) : SpritePlotterRef(p) {}
-	~SpritePlotterHandle() { if (*this) destroy(); }
 };
 
 //------------------------------------------------------------------------------
@@ -132,7 +131,7 @@ public:
 		void *userData=0
 	);
 
-	void draw(SpritePlotterRef plotter);
+	void draw(SpritePlotter& plotter);
 
 };
 

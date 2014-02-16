@@ -59,7 +59,7 @@ struct Timer {
 		if (dm.refresh_rate) {
 			deltaSeconds = timeScale * 0.001 * dm.refresh_rate;
 		} else {
-			deltaSeconds = timeScale/60.0;
+			deltaSeconds = timeScale * (1.0/60.0);
 		}
 	}
 	
@@ -79,7 +79,7 @@ struct Timer {
 		rawDeltaSeconds = timeScale * (0.001 * deltaTicks);
 		seconds += rawDeltaSeconds;
 		deltaSeconds = lerpd(deltaSeconds , rawDeltaSeconds, smoothing);
-		smoothing *= 0.99;
+		smoothing *= 0.999;
 		smoothing = MAX(smoothing, 0.000001);
 	}
 };
@@ -92,7 +92,7 @@ inline int pingPong(int i, int n) {
 struct Timeout {
 	double current, target;
 	
-	Timeout() : current(0), target(0) {}
+	Timeout() : current(0), target(1) {}
 	Timeout(double aTarget) : current(0), target(aTarget) {}
 	
 	double progress() const { return current / target; }
@@ -100,8 +100,8 @@ struct Timeout {
 	void reset() { current = 0; }
 	void reset(double newTarget) { current = 0; target = newTarget; }
 	
-	bool tick(Timer& timer) {
-		current += timer.deltaSeconds;
+	bool tick(double dt) {
+		current += dt;
 		if (current >= target) {
 			current = target;
 			return true;

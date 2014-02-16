@@ -22,38 +22,35 @@
 // SPLINE REDNERING
 //------------------------------------------------------------------------------
 
-// This is a handy way to render splines without uploading vertices.  A single
-// static vertex batch is buffered with "parametric coordinates" of the form
-// <x^3, x^2, x^1, 1> which are "programmed" by a unifrm hermite matrix.  Supports
-// Non-uniform tapering as well for making things like tentacles :P
-
-struct SplinePlotter;
-class SplinePlotterRef;
-
-SplinePlotterRef createSplinePlotter(int resolution=64);
-
-class SplinePlotterRef {
+class SplinePlotter {
 private:
-	SplinePlotter *context;
-
+	BasicPlotterRef plotter;
+	int count;
+	float fakeAntiAliasFactor;
+	
 public:
-	SplinePlotterRef() {}
-	SplinePlotterRef(SplinePlotter *aContext) : context(aContext) {}
-
-	operator SplinePlotter*() { return context; }
-	operator bool() const { return context; }
-
-	void destroy();
-
+	SplinePlotter(BasicPlotterRef aPlotter);
+	~SplinePlotter();
+	
+	bool isBound() const { return count >= 0; }
+	BasicPlotterRef getPlotter() { return plotter; }
+	
 	void begin(const Viewport& viewport);
-	void plot(mat4f positionMatrix, vec4f strokeVector, Color c);
+	void plotCubic(mat4f positionMatrix, vec4f strokeVector, Color c, int resolution=10);
+	//void plot(mat4f positionMatrix, vec4f strokeVector, ImageAsset *img, int resolution=16);
+	
+	void plotArc(vec2 p, float r1, float r2, Color c, float a0=0, float a1=M_TAU, int resolution=32);
+	void plotCircle(vec2 p, float r, Color c, float a0=0, float a1=M_TAU, int resolution=32) {
+		plotArc(p, -0.0001, r, c, a0, a1, resolution);
+	}
+	
+	void flush();
 	void end();
-};
-
-class SplinePlotterHandle : public SplinePlotterRef {
-public:
-	SplinePlotterHandle(SplinePlotter* p) : SplinePlotterRef(p) {}
-	~SplinePlotterHandle() { if (*this) destroy(); }
+	
+	
+private:
+	void reserve(int nverts);
+	BasicVertex* nextVert() { return plotter.getVertex(count++); }
 };
 
 namespace Spline {

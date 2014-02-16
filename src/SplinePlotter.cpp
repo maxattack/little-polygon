@@ -17,183 +17,137 @@
 #include "littlepolygon_graphics.h"
 #include "littlepolygon_splines.h"
 
-// Gift-idea: Specify a texture "ramp"?
-const GLchar* SPLINE_SHADER = R"GLSL(
-
-varying mediump vec2 uv;
-
-#if VERTEX
-
-attribute mediump vec4 parameter;
-attribute mediump float side;
-
-uniform highp mat4 mvp;
-uniform mediump mat4 positionMatrix;
-uniform mediump mat4 strokeMatrix;
-uniform mediump vec4 strokeVector;
-uniform mediump float fakeAntiAliasFactor;
-
-void main() {
-	float radius = dot(strokeVector, parameter);
-	gl_Position = mvp * vec4((
-			(positionMatrix * parameter) + 
-			(radius * side) * normalize(strokeMatrix * parameter)
-	).xyz, 1);
-	uv = vec2(0.5*(1.0+side), min(fakeAntiAliasFactor * radius, 1.0));
+SplinePlotter::SplinePlotter(BasicPlotterRef aPlotter) : plotter(aPlotter), count(-1) {
 }
 
-#else
-
-uniform lowp vec4 color;
-uniform lowp sampler2D texture;
-
-void main() {
-	gl_FragColor = color * texture2D(texture, uv);
+SplinePlotter::~SplinePlotter() {
 }
 
-#endif
-
-)GLSL";
-
-struct SplinePlotter {
-	int resolution;
-	const Viewport *view;
-
-	GLuint prog;
-	GLuint vert;
-	GLuint frag;
-
-	GLuint aParameter;
-	GLuint aSide;
-
-	GLuint uMVP;
-	GLuint uPositionMatrix;
-	GLuint uStrokeMatrix;
-	GLuint uStrokeVector;
-	GLuint uColor;
-	GLuint uFakeAntiAliasFactor;
-
-	GLuint arrayBuf;
-
-	struct Vertex {
-		float x, y, z, w, side;
-	};
-
-};
-
-// helper methods
-static SplinePlotter *allocSpline() {
-	return (SplinePlotter*) LITTLE_POLYGON_MALLOC(
-		sizeof(SplinePlotter)
-	);
-}
-
-static void dealloc(SplinePlotter *context) {
-	LITTLE_POLYGON_FREE(context);
-}
-
-static void initialize(SplinePlotter *context, int resolution) {
-	context->resolution = resolution;
-
-	// compile the shader
-	CHECK( 
-		compileShader(SPLINE_SHADER, &context->prog, &context->vert, &context->frag) 
-	);
-	glUseProgram(context->prog);
-	context->uMVP = glGetUniformLocation(context->prog, "mvp");
-	context->uPositionMatrix = glGetUniformLocation(context->prog, "positionMatrix");
-	context->uStrokeMatrix = glGetUniformLocation(context->prog, "strokeMatrix");
-	context->uStrokeVector = glGetUniformLocation(context->prog, "strokeVector");
-	context->uColor = glGetUniformLocation(context->prog, "color");
-	context->uFakeAntiAliasFactor = glGetUniformLocation(context->prog, "fakeAntiAliasFactor");
+void SplinePlotter::begin(const Viewport& viewport) {
+	ASSERT(!plotter.isBound());
+	ASSERT(!isBound());
+	count = 0;
+	plotter.begin(viewport);
 	
-	context->aParameter = glGetAttribLocation(context->prog, "parameter");
-	context->aSide = glGetAttribLocation(context->prog, "side");
-
-	// compute the static vertex buffer
-	glGenBuffers(1, &context->arrayBuf);
-	glBindBuffer(GL_ARRAY_BUFFER, context->arrayBuf);
-	auto buffer = (SplinePlotter::Vertex*) LITTLE_POLYGON_MALLOC( 
-		2 * resolution * sizeof(SplinePlotter::Vertex) 
-	);
-	for(int i=0; i<resolution; ++i) {
-		float u = float(i) / (resolution-1.0f);
-		buffer[i+i  ].x = u*u*u;
-		buffer[i+i  ].y = u*u;
-		buffer[i+i  ].z = u;
-		buffer[i+i  ].w = 1;
-		buffer[i+i  ].side = -1;
-		buffer[i+i+1].x = u*u*u;
-		buffer[i+i+1].y = u*u;
-		buffer[i+i+1].z = u;
-		buffer[i+i+1].w = 1;
-		buffer[i+i+1].side = 1;		
-	}
-	glBufferData(
-		GL_ARRAY_BUFFER, 
-		2 * resolution * sizeof(SplinePlotter::Vertex), 
-		buffer, 
-		GL_STATIC_DRAW
-	);
-	LITTLE_POLYGON_FREE(buffer);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-}
-
-static void release(SplinePlotter *context) {
-	glDeleteBuffers(1, &context->arrayBuf); 
-	glDeleteProgram(context->prog);
-	glDeleteShader(context->vert);
-	glDeleteShader(context->frag);
-}
-
-SplinePlotterRef createSplinePlotter(int resolution) {
-	auto context = allocSpline();
-	initialize(context, resolution);
-	return context;
-}
-
-void SplinePlotterRef::destroy() {
-	release(context);
-	dealloc(context);
-}
-
-void SplinePlotterRef::begin(const Viewport &viewport) {
-	ASSERT(context->prog);
-	glUseProgram(context->prog);
-	
-	context->view = &viewport;
-	viewport.setMVP(context->uMVP);
-
 	int w,h;
 	SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &w, &h);
-	float fakeAntiAliasFactor = 0.01 * float(w) / viewport.width();
-	glUniform1f(context->uFakeAntiAliasFactor, fakeAntiAliasFactor);
-	
-	
-	glBindBuffer(GL_ARRAY_BUFFER, context->arrayBuf);
-	glEnableVertexAttribArray(context->aParameter);
-	glEnableVertexAttribArray(context->aSide);
-	glVertexAttribPointer(context->aParameter, 4, GL_FLOAT, GL_FALSE, sizeof(SplinePlotter::Vertex), (GLvoid*)0);
-	glVertexAttribPointer(context->aSide, 1, GL_FLOAT, GL_FALSE, sizeof(SplinePlotter::Vertex), (GLvoid*)16);
-	
+	fakeAntiAliasFactor = 0.001 * float(w) / viewport.width();
 	glBindTexture(GL_TEXTURE_2D, getFakeAntialiasTexture());
 }
 
-void SplinePlotterRef::plot(mat4f positionMatrix, vec4f strokeVector, Color c) {
-	float buf[16];
-	positionMatrix.store(buf);
-	glUniformMatrix4fv(context->uPositionMatrix, 1, 0, buf);
-	Spline::perpendicularMatrix(positionMatrix).store(buf);
-	glUniformMatrix4fv(context->uStrokeMatrix, 1, 0, buf);
-	strokeVector.store(buf);
-	glUniform4fv(context->uStrokeVector, 1, buf);
-	glUniform4f(context->uColor, c.red(), c.green(), c.blue(), c.alpha());
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, 2*context->resolution);
+inline void computePRV(
+	
+	// in params
+	const mat4f& positionMatrix,
+	const mat4f& strokeMatrix,
+	const vec4f& strokeVector,
+	float u,
+	float faaf,
+
+	// out params
+	vec2& p,
+	vec2& r,
+	float& v
+
+) {
+	
+	// compute pos and stroke vector with fancy-pants SIMD tricks
+	vec4f param(u*u*u, u*u, u, 1);
+	vec4f centerPos = positionMatrix * param;
+	float radius = vectorial::dot(param, strokeVector);
+	vec4f stroke = radius * vectorial::normalize(strokeMatrix * param);
+	
+	// save out-params
+	p.x = centerPos.x();
+	p.y = centerPos.y();
+	r.x = stroke.x();
+	r.y = stroke.y();
+	v = clamp(0.01 * faaf * radius);
+
 }
 
-void SplinePlotterRef::end() {
-	glDisableVertexAttribArray(context->aParameter);
-	glDisableVertexAttribArray(context->aSide);
-	glUseProgram(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
+void SplinePlotter::reserve(int numVertsRequired) {
+	ASSERT(numVertsRequired <= plotter.capacity());
+	
+	// need to add "degenerate" triangles to separate the two splines
+	if (count > 0) {
+		numVertsRequired += 2;
+	}
+	
+	// flush if necessary
+	if (count > 0 && count + numVertsRequired > plotter.capacity()) {
+		flush();
+	}
+	
+}
+
+void SplinePlotter::plotCubic(mat4f posMat, vec4f strokeVec, Color c, int resolution) {
+	ASSERT(isBound());
+	reserve(resolution << 1);
+	
+	// point computation is done efficiently with matrix math
+	auto strokeMat = Spline::perpendicularMatrix(posMat);
+	vec2 p,r;
+	float v;
+	
+	// plot vertices
+	computePRV(posMat, strokeMat, strokeVec, 0, fakeAntiAliasFactor, p, r, v);
+	if (count > 0) {
+		// add degenerate triangle
+		auto tail = plotter.getVertex(count-1);
+		*nextVert() = *tail;
+		nextVert()->set(p-r, vec(0,v), c);
+	}
+	nextVert()->set(p-r, vec(0,v), c);
+	nextVert()->set(p+r, vec(1,v), c);
+	float du = 1.0 / (resolution-1.0);
+	float u = 0;
+	for(int i=1; i<resolution; ++i) {
+		u += du;
+		computePRV(posMat, strokeMat, strokeVec, u, fakeAntiAliasFactor, p, r, v);
+		nextVert()->set(p-r, vec(0,v), c);
+		nextVert()->set(p+r, vec(1,v), c);
+	}
+	
+}
+
+void SplinePlotter::plotArc(vec2 p, float r1, float r2, Color c, float a1, float a2, int resolution) {
+	ASSERT(isBound());
+	reserve(resolution<<1);
+	
+	// plot eet
+	vec2 curr = unitVector(a1);
+	float da = (a2 - a1) / float(resolution-1);
+	vec2 rotor = unitVector(da);
+	float v = clamp(fakeAntiAliasFactor * fabsf(r2-r1));
+	
+	if (count > 0) {
+		auto tail = plotter.getVertex(count-1);
+		*nextVert() = *tail;
+		nextVert()->set(p + r1 * curr, vec(0,v), c);
+	}
+	nextVert()->set(p + r1 * curr, vec(0,v), c);
+	nextVert()->set(p + r2 * curr, vec(1,v), c);
+	for(int i=1; i<resolution; ++i) {
+		curr = cmul(curr, rotor);
+		nextVert()->set(p + r1 * curr, vec(0, v), c);
+		nextVert()->set(p + r2 * curr, vec(1, v), c);
+	}
+	
+}
+
+void SplinePlotter::flush() {
+	if (count > 0) {
+		plotter.commit(count);
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, count);
+		count = 0;
+	}
+}
+
+void SplinePlotter::end() {
+	ASSERT(isBound());
+	flush();
+	count = -1;
+	glBindTexture(GL_TEXTURE_2D, 0);
+	plotter.end();
 }
