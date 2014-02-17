@@ -171,56 +171,94 @@ private:
 	Slot slots[32];
 	
 	
+	inline static uint32_t bit(int i) {
+		ASSERT(i >= 0);
+		ASSERT(i < 32);
+		return 0x80000000>>i;
+	}
+	
 public:
 	
 	bool empty() const { return mask == 0; }
 	bool full() const { return mask == 0xffffffff; }
+	
+	int indexOf(T* p) {
+		ASSERT(active(p));
+		return ((Slot*)p) - slots;
+	}
+	
 	bool active(T* p) {
-		auto slot = (Slot*) p;
-		int i = slot - slots;
-		return (mask & (0x80000000>>i)) != 0;
+		int i = ((Slot*)p) - slots;
+		return (mask & bit(i)) != 0;
 	}
 	
 	template<typename... Args>
 	T* alloc(Args&&... args) {
 		ASSERT(mask != 0xffffffff);
 		auto i = __builtin_clz(~mask);
-		mask |= (0x80000000>>i);
+		mask |= bit(i);
 		return new(&slots[i].record) T(std::forward<Args>(args) ...);
 	}
 	
 	void release(T* p) {
 		ASSERT(active(p));
 		p->~T();
-		auto slot = (Slot*) p;
-		int i = slot - slots;
-		mask ^= (0x80000000>>i);
+		int i = ((Slot*) p) - slots;
+		mask ^= bit(i);
 	}
 
 	void reset() {
 		while(mask) {
 			auto i = __builtin_clz(mask);
-			mask ^= (0x80000000>>i);
+			mask ^= bit(i);
 			slots[i].record.~T();
 		}
 		mask = 0;
 	}
+	
+	class Subset {
+	friend class BitsetPool32<T>;
+	private:
+		uint32_t mask;
+		
+		Subset(uint32_t aMask) : mask(aMask) {}
+		
+	public:
+		Subset() : mask(0) {}
+		
+		void add(int i) { mask |= bit(i); }
+		void remove(int i) { mask &= ~bit(i); }
+		void clear() { mask = 0; }
+		void fill() { mask = 0xffffffff; }
+		Subset intersect(Subset other) { return mask & other.mask; }
+		void cull(BitsetPool32<T> *p) { mask &= p->mask; }
+	};
+	
+	
 
 	class iterator {
 	friend class BitsetPool32<T>;
 	private:
 		T *slots;
-		T* curr;
+		T *curr;
 		uint32_t remainder;
 
-		iterator(const BitsetPool32<T> *pool) : slots((T*)pool->slots), remainder(pool->mask) {
+		iterator(const BitsetPool32<T> *pool) :
+		slots((T*)pool->slots),
+		remainder(pool->mask) {
 		}
+		
+		iterator(const BitsetPool32<T> *pool, Subset filter) :
+		slots((T*)pool->slots),
+		remainder(pool->mask & filter.mask) {
+		}
+		
 
 	public:
 		bool next() {
 			if (remainder) {
 				auto i = __builtin_clz(remainder);
-				remainder ^= (0x80000000>>i);
+				remainder ^= bit(i);
 				curr = slots + i;
 				return true;
 			} else {
@@ -235,6 +273,7 @@ public:
 	};
 
 	iterator list() { return iterator(this); }
+	iterator list(Subset filter) { return iterator(this, filter); }
 
 
 };
