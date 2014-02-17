@@ -47,7 +47,7 @@ public:
 	
 	void clear();
 	
-	void append(vec2 position, float stroke=1);
+	void append(vec2 position, float stroke=1, float minDist=0.05);
 	
 	void tick(float deltaSeconds);
 	

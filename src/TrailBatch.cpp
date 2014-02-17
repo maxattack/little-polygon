@@ -190,7 +190,7 @@ void TrailBatchRef::clear() {
 	}
 }
 
-void TrailBatchRef::append(vec2 position, float stroke) {
+void TrailBatchRef::append(vec2 position, float stroke, float minDist) {
 	if (context->count == context->capacity) {
 		
 		// pop the oldest particles
@@ -208,7 +208,7 @@ void TrailBatchRef::append(vec2 position, float stroke) {
 	} else {
 		
 		vec2 offset = position - context->prevPosition;
-		if (offset.norm() < 0.05 * 0.05) {
+		if (offset.norm() < minDist * minDist) {
 			// bail early if there isn't too much distance
 			return;
 		} else {
