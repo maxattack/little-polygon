@@ -207,6 +207,29 @@ void SpritePlotter::drawLabelCentered(FontAsset *font, vec2 p, Color c, const ch
 	}
 }
 
+void SpritePlotter::drawLabelRightJustified(FontAsset *font, vec2 p, Color c, const char *msg) {
+	ASSERT(isBound());
+	setTextureAtlas(&(font->texture) );
+	float py = p.y;
+	while(*msg) {
+		int length;
+		const char* next = font->measureLine(msg, &length);
+		float px = p.x - length;
+		while(msg != next) {
+			GlyphAsset g = font->getGlyph(*msg);
+			plotGlyph( g, px, py, font->height, c);
+			px += g.advance;
+			msg++;
+		}
+		if (*msg == '\n') {
+			py += font->height;
+			msg++;
+		}
+	}
+	
+}
+
+
 #define TILE_SLOP (0.001f)
 
 void SpritePlotter::drawTilemap(TilemapAsset *map, vec2 position) {

@@ -72,6 +72,7 @@ public:
 	void drawQuad(ImageAsset *image, vec2 p0, vec2 p1, vec2 p2, vec2 p3, int frame=0, Color color=rgba(0));
 	void drawLabel(FontAsset *font, vec2 p, Color c, const char *msg);
 	void drawLabelCentered(FontAsset *font, vec2 p, Color c, const char *msg);
+	void drawLabelRightJustified(FontAsset *font, vec2 p, Color c, const char *msg);
 	void drawTilemap(TilemapAsset *map, vec2 position=vec(0,0));	
 
 	// if you want to monkey with the global rendering state (e.g. change blending settings)
