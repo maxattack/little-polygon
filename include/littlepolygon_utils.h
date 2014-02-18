@@ -27,6 +27,7 @@
 
 #define COROUTINE_PARAMETER           int _line;
 #define COROUTINE_RESET               _line=0;
+#define COROUTINE_INIT                _line(0)
 #define COROUTINE_DISABLE             _line=-1;
 #define COROUTINE_ACTIVE              (_line!=-1)
 #define COROUTINE_BEGIN               switch(_line){case 0:;
