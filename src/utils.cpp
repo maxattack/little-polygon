@@ -70,45 +70,49 @@ SDL_Window *initContext(const char *caption, int w, int h) {
 	atexit(doTearDown);
 
 	#if LITTLE_POLYGON_MOBILE
-		SDL_SetEventFilter(handleAppEvents, 0);
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);		
-		SDL_Window *pWindow = SDL_CreateWindow(
-			"", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 0, 0,
-			SDL_WINDOW_OPENGL|SDL_WINDOW_FULLSCREEN|SDL_WINDOW_BORDERLESS|SDL_WINDOW_SHOWN
-		);
-
+	SDL_SetEventFilter(handleAppEvents, 0);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);		
+	SDL_Window *pWindow = SDL_CreateWindow(
+		"", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 0, 0,
+		SDL_WINDOW_OPENGL|SDL_WINDOW_FULLSCREEN|SDL_WINDOW_BORDERLESS|SDL_WINDOW_SHOWN
+	);
 	#else
 
-		#if LITTLE_POLYGON_GL_CORE_PROFILE
-			SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-			SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
-		#endif
-		if (w == 0) {
-			// iphone 5 resolution :P
-			w = 1136;
-			h = 640;
-		}
-		SDL_Window *pWindow = SDL_CreateWindow(
-			caption ? caption : "Little Polygon Context",
-			SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-			w, h, SDL_WINDOW_OPENGL
-		);
-
+	#if LITTLE_POLYGON_GL_CORE_PROFILE
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+	#endif
+	
+	uint32_t winFlags = 0;
+	if (w == 0) {
+		// iphone 5 resolution :P
+		w = 1136;
+		h = 640;
+	}
+	SDL_Window *pWindow = SDL_CreateWindow(
+		caption ? caption : "Little Polygon Context",
+		SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+		w, h, SDL_WINDOW_OPENGL|winFlags
+	);
+	
 	#endif
 
 	SDL_GL_CreateContext(pWindow);
+
 	#if !LITTLE_POLYGON_MOBILE
-		glewInit();
+	glewInit();
 	#endif
 
 	SDL_GetWindowSize(pWindow, &w, &h);
 	glViewport(0, 0, w, h);
 	glEnable(GL_TEXTURE_2D);
 	glActiveTexture(GL_TEXTURE0);
+	
 	#if !LITTLE_POLYGON_MOBILE
-		glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_VERTEX_ARRAY);
 	#endif
+	
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	
