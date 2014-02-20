@@ -43,6 +43,8 @@ public:
 	vec2d size() const { return mSize; }
 	double width() const { return mSize.x; }
 	double height() const { return mSize.y; }
+	
+	double aspect() const { return mSize.x / mSize.y; }
 
 	vec2d offset() const { return mOffset; }
 	vec2d extent() const { return mOffset + mSize; }
