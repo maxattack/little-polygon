@@ -59,7 +59,7 @@ public:
 	// is already bound (in case you're coalescing with other plotters) and state e.g. blending are
 	// enabled.  Any additional state changes can be set *after* this function but *before*
 	// issuing any draw calls.
-	void begin(const Viewport& view);
+	void begin(const Viewport& view, GLuint program=0);
 
 	// Draw the given image.  Will potentially cause a draw call to actually be emitted
 	// to the graphics device if: (i) the buffer has reached capacity or (ii) the texture 

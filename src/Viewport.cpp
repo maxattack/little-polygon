@@ -39,39 +39,45 @@ void Viewport::setSizeWithWidth(double w) {
 	mSize = vec(w, w * float(wh) / float(ww));
 }
 
-vec2d Viewport::windowToViewport(vec2d p) const {
+vec2 Viewport::windowToViewport(vec2 p) const {
 	SDL_Window *win = SDL_GL_GetCurrentWindow();
 	SDL_Point sz;
 	SDL_GetWindowSize(win, &sz.x, &sz.y);
 	return mSize * p / vec2(sz) + mOffset;
 }
 
-vec2d Viewport::viewportToWindow(vec2d vp) const {
+vec2 Viewport::viewportToWindow(vec2 vp) const {
 	SDL_Window *win = SDL_GL_GetCurrentWindow();
 	int w,h;
 	SDL_GetWindowSize(win, &w, &h);
-	return vec2d(w,h) / mSize * (vp - mOffset);
+	return vec2(w,h) / mSize * (vp - mOffset);
 }
 
-vec2d Viewport::mouse() const {
+vec2 Viewport::mouse() const {
 	SDL_Point mp;
 	SDL_GetMouseState(&mp.x, &mp.y);
 	return windowToViewport(mp);
 }
 
-void Viewport::setMVP(GLuint mvp) const {
-	auto zfar = 128.0;
-	auto znear = -128.0;
-	auto fan = zfar + znear;
-	auto fsn = zfar - znear;
-	auto cext = mOffset + mSize;
-	auto t = - (cext + mOffset) / mSize;
-	GLfloat orth[16] = {
-		float(2.0/mSize.x), 0, 0, 0,
-		0, float(-2.0/mSize.y), 0, 0,
-		0, 0, float(2.0/fsn), 0,
-		float(t.x), float(-t.y), float(-fan/fsn), 1.0f
-	};
-	glUniformMatrix4fv(mvp, 1, 0, orth);
+void Viewport::setMVP(GLuint amvp) const {
+	
+	mat4f mvp = mat4f::ortho(
+		mOffset.x, mOffset.x+mSize.x,
+		mOffset.y+mSize.y, mOffset.y,
+		128.0, -128.0
+	);
+	
+	
+//	if (mRotation < -0.0001 || mRotation > 0.0001) {
+//		auto half = (mOffset + 0.5 * mSize);
+//		mvp =
+//			mvp *
+//			mat4f::translation(vec3f(half.x, half.y, 0)) *
+//			mat4f::axisRotation(mRotation, vec3f(0,0,-1)) *
+//			mat4f::translation(vec3f(-half.x, -half.y, 0));
+//	}
+	GLfloat buf[16];
+	mvp.store(buf);
+	glUniformMatrix4fv(amvp, 1, 0, buf);
 }
 

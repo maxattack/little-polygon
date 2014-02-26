@@ -23,11 +23,11 @@ SplinePlotter::SplinePlotter(BasicPlotterRef aPlotter) : plotter(aPlotter), coun
 SplinePlotter::~SplinePlotter() {
 }
 
-void SplinePlotter::begin(const Viewport& viewport) {
+void SplinePlotter::begin(const Viewport& viewport, GLuint prog) {
 	ASSERT(!plotter.isBound());
 	ASSERT(!isBound());
 	count = 0;
-	plotter.begin(viewport);
+	plotter.begin(viewport, prog);
 	
 	int w,h;
 	SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &w, &h);
@@ -164,6 +164,30 @@ void SplinePlotter::plotArc(vec2 p, float r1, float r2, Color c, float a1, float
 		}
 		
 	}
+	
+}
+
+void SplinePlotter::plotCircle(vec2 p, float r, Color c, int resolution) {
+	ASSERT(isBound());
+	reserve(resolution<<1);
+	vec2 curr = vec(1,0);
+	vec2 rotor = unitVector(M_PI / (resolution-1));
+	
+	float v = clamp(fakeAntiAliasFactor * r * 0.7071067811865475f);
+	
+	if (count > 0) {
+		auto tail = plotter.getVertex(count-1);
+		*nextVert() = *tail;
+		nextVert()->set(p+vec(0,r), vec(0,v), c);
+	}
+	nextVert()->set(p+vec(0,r), vec(0,0), c);
+	nextVert()->set(p+vec(0,r), vec(0,0), c);
+	for(int i=1; i<resolution; ++i) {
+		curr = cmul(curr, rotor);
+		nextVert()->set(p + r * curr, vec(1, v), c);
+		nextVert()->set(p + r * curr.conjugate(), vec(0, v), c);
+	}
+	
 	
 }
 

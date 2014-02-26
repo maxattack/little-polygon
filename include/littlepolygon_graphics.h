@@ -30,45 +30,45 @@ SDL_Window *initContext(const char *caption, int w=0, int h=0);
 
 class Viewport {
 private:
-	vec2d mSize;
-	vec2d mOffset;
+	vec2 mSize;
+	vec2 mOffset;
 
 public:
 	Viewport() {}
-	Viewport(vec2d aSize, vec2d aOffset=vec2d(0,0)) :
+	Viewport(vec2 aSize, vec2 aOffset=vec2(0,0)) :
 		mSize(aSize), mOffset(aOffset) {}
-	Viewport(double w, double h, double x=0, double y=0) :
+	Viewport(float w, float h, float x=0, float y=0) :
 		mSize(w,h), mOffset(x,y) {}
 	
-	vec2d size() const { return mSize; }
-	double width() const { return mSize.x; }
-	double height() const { return mSize.y; }
+	vec2 size() const { return mSize; }
+	float width() const { return mSize.x; }
+	float height() const { return mSize.y; }
 	
-	double aspect() const { return mSize.x / mSize.y; }
+	float aspect() const { return mSize.x / mSize.y; }
 
-	vec2d offset() const { return mOffset; }
-	vec2d extent() const { return mOffset + mSize; }
-	double left() const { return mOffset.x; }
-	double right() const { return mOffset.x + mSize.x; }
-	double top() const { return mOffset.y; }
-	double bottom() const { return mOffset.y + mSize.y; }
+	vec2 offset() const { return mOffset; }
+	vec2 extent() const { return mOffset + mSize; }
+	float left() const { return mOffset.x; }
+	float right() const { return mOffset.x + mSize.x; }
+	float top() const { return mOffset.y; }
+	float bottom() const { return mOffset.y + mSize.y; }
 	
 	void setFromWindow();
-	void setSize(vec2d sz) { mSize = sz; }
-	void setSize(double w, double h) { mSize.x=w; mSize.y=h; }
+	void setSize(vec2 sz) { mSize = sz; }
+	void setSize(double w, double h) { mSize.set(w,h); }
 	void setSizeWithHeight(double h);
 	void setSizeWithWidth(double w);
-	void setOffset(vec2d off) { mOffset = off; }
-	void setOffset(double x, double y) { mOffset.x=x; mOffset.y=y; }
+	void setOffset(vec2 off) { mOffset = off; }
+	void setOffset(double x, double y) { mOffset.set(x,y); }
+	
+	vec2 windowToViewport(vec2 p) const;
+	vec2 viewportToWindow(vec2 vp) const;
 
-	vec2d windowToViewport(vec2d p) const;
-	vec2d viewportToWindow(vec2d vp) const;
-
-	vec2d mouse() const;
+	vec2 mouse() const;
 
 	void setMVP(GLuint mvp) const;
 	
-	inline bool contains(vec2d p, double pad=0.0) const {
+	inline bool contains(vec2 p, float pad=0.0) const {
 		return p.x > mOffset.x - pad &&
 		       p.x < mOffset.x + mSize.x + pad &&
 		       p.y > mOffset.y - pad &&
@@ -83,6 +83,20 @@ public:
 // userdata if it's configurable from content.  Uses a VERTEX conditional-
 // compilation macro to differentiate the vertex and fragment shader.
 bool compileShader(const GLchar* source, GLuint *outProg, GLuint *outVert, GLuint *outFrag);
+
+struct ShaderHandle {
+	GLuint prog, vert, frag;
+	
+	ShaderHandle(const GLchar *source) {
+		CHECK(compileShader(source, &prog, &vert, &frag));
+	}
+	
+	~ShaderHandle() {
+		glDeleteProgram(prog);
+		glDeleteShader(vert);
+		glDeleteShader(frag);
+	}
+};
 
 typedef Color (*TextureGenerator)(double, double);
 GLuint generateTexture(TextureGenerator cb, int w=256, int h=256);
@@ -149,11 +163,13 @@ public:
 	bool isBound() const;
 	int capacity() const;
 	
-	void begin(const Viewport& view);
+	void begin(const Viewport& view, GLuint program=0);
 	
 	void commit(int count);
 
 	void end();
+	
+	
 
 };
 

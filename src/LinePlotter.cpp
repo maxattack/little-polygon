@@ -16,7 +16,7 @@
 
 #include "littlepolygon_graphics.h"
 
-const GLchar* SIMPLE_SHADER = R"GLSL(
+static const GLchar* SIMPLE_SHADER = R"GLSL(
 
 varying mediump vec4 color;
 

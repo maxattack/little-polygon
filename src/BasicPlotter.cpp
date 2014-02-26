@@ -123,12 +123,16 @@ int BasicPlotterRef::capacity() const {
 	return context->capacity;
 }
 
-void BasicPlotterRef::begin(const Viewport& view) {
+void BasicPlotterRef::begin(const Viewport& view, GLuint program) {
 	ASSERT(!isBound());
 	context->view = &view;
 	
 	ASSERT(context->prog);
-	glUseProgram(context->prog);
+	if (program) {
+		glUseProgram(program);
+	} else {
+		glUseProgram(context->prog);
+	}
 	glEnableVertexAttribArray(context->aPosition);
 	glEnableVertexAttribArray(context->aUV);
 	glEnableVertexAttribArray(context->aColor);

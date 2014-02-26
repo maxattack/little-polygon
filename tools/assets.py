@@ -82,15 +82,16 @@ def load_yaml_texture(context, id, params):
 			for k,v in params.iteritems() 
 			if k.startswith('struct/')
 		]
-		print iter_struct
 		for ims in iter_struct: 
 			images += ims
 		assert len(images) > 0
 		compositedImage = composite_texture(images)
+		filter = params.get('filter', '')
 	else:
 		images = []
 		compositedImage = open_image(load_yaml_path(context, params))
-	return Texture(id, compositedImage, images, params.get('filter', ''))
+		filter = 'linear'
+	return Texture(id, compositedImage, images, filter)
 
 class Texture:
 	def __init__(self, id, compositedImage, images, filter):
@@ -98,8 +99,6 @@ class Texture:
 		self.image = compositedImage
 		cleanup_transparent_pixels(self.image)
 		self.images = images
-
-
 
 		self.flags = 0
 		if filter.lower() == 'linear':
