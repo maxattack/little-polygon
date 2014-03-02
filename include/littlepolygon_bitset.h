@@ -123,8 +123,6 @@ public:
 		}
 	}
 
-	// TODO: C++11 style iterator?
-
 	class iterator {
 	private:
 		const Bitset<tSize> *bs;
@@ -161,7 +159,7 @@ public:
 	};
 
 	iterator listBits() const { return iterator(this); }
-
+	
 	Bitset<tSize>& operator &= (const Bitset<tSize> &other) {
 
 		uint32_t remainder = nonzeroWords | other.nonzeroWords;

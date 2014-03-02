@@ -233,8 +233,20 @@ inline float easeOut4(float u) {
 	u=1.0f-u;
 	return 1.0f - u*u*u*u;
 }
-inline float easeInOutBack(float t, float s=1.70158f) { return (s+1.0f)*t*t*t - s*t*t; }
+inline float easeInOutBack(float t) {
+	auto v = t + t;
+	auto s = 1.70158 * 1.525;
+	if (v < 1.0) {
+		return 0.5 * (v * v * ((s + 1.0) * v - s));
+	} else {
+		v -= 2.0;
+		return 0.5 * (v * v * ((s + 1.0) * v + s) + 2.0);
+	}
+}
 inline float easeInOutQuad(float t) { return t<0.5f ? 2.0f*t*t : -1.0f+(4.0f-t-t)*t; }
+
+inline float easeOutBack(float t) { t-=1.0; return t*t*((1.70158+1.0)*t + 1.70158) + 1.0; }
+
 inline float easeTowards(float curr, float target, float easing, float dt) { return curr + (target - curr) * pow(easing, clamp(1.0/(60.0*dt))); }
 inline vec2 easeTowards(vec2 curr, vec2 target, float easing, float dt)    { return curr + (target - curr) * pow(easing, clamp(1.0/(60.0*dt))); }
 

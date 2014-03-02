@@ -99,7 +99,7 @@ private:
 	Slot slots[N];
 
 public:
-
+	
 	template<typename... Args>
 	T* alloc(Args&&... args) {
 		unsigned index;
@@ -111,9 +111,9 @@ public:
 	}
 
 	void release(T* p) {
+		ASSERT(contains(p));
 		Slot *slot = (Slot*) p;
-		ASSERT(slot - slots >= 0);
-		ASSERT(slot - slots < N);
+		ASSERT(mask[slot-slots]);
 		p->~T();
 		mask.clear(slot-slots);
 	}
@@ -125,8 +125,9 @@ public:
 		T *curr;
 		typename Bitset<N>::iterator biterator;
 
-		iterator(const BitsetPool *pool) : slots((T*)pool->slots), biterator(&pool->mask) {
-		}
+		iterator(const BitsetPool *pool) :
+			slots((T*)pool->slots),
+			biterator(&pool->mask) {}
 
 	public:
 		bool next() {
@@ -144,8 +145,27 @@ public:
 		operator T*() { return curr; }
 		
 	};
+	
+	bool contains(void *p) { return p >= slots && p < slots + N; }
+	
+	T& operator[](int i) {
+		ASSERT(mask[i]);
+		return slots[i].record;
+	}
+	
+	bool active(T* record) {
+		int index = record - (T*)slots;
+		ASSERT(index >= 0 && index < N);
+		return mask[index];
+	}
+	
+	int indexOf(T* record) {
+		ASSERT(active(record));
+		return record - (T*)slots;
+	}
 
 	iterator list() { return iterator(this); }
+	iterator list(Bitset<N> subset) { return iterator(this, subset); }
 	
 	void reset() {
 		T* activeObject;
@@ -333,6 +353,10 @@ public:
 	}
 
 	int count() const { return mCount; }
+	
+	int indexOf(T* record) { ASSERT(active(record)); return ((Slot*)record) - mSlots; }
+	T& operator[](int i) { ASSERT(i >= 0 && i < mCount); return mSlots[i].record; }
+	
 	T* begin() { return (T*)mSlots; }
 	T* end() { return ((T*)mSlots) + mCount; }
 
