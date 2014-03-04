@@ -50,6 +50,13 @@ public:
 		n++;
 	}
 	
+	template<typename... Args>
+	void emplace(Args&&... args) {
+		ASSERT(n < N);
+		new(&slots[(i + n) % N].record) T(std::forward<Args>(args) ...);
+		n++;
+	}
+	
 	T dequeue() {
 		ASSERT(n > 0);
 		T& result = slots[i].record;
@@ -145,6 +152,20 @@ public:
 		ASSERT(n < N);
 		new(&slots[n].record) T(val);
 		n++;
+	}
+	
+	template<typename... Args>
+	T* alloc(Args&&... args) {
+		ASSERT(n < N);
+		auto result = new(&slots[n].record) T(std::forward<Args>(args) ...);
+		n++;
+		return result;
+	}
+	
+	int offsetOf(T* t) {
+		auto slot = (Slot*) t;
+		ASSERT(slot >= slots && slot < slots + n);
+		return slot - slots;
 	}
 	
 	bool tryAppend(const T& val) {
