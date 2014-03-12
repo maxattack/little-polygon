@@ -134,13 +134,22 @@ struct BasicPlotter;
 BasicPlotter *createBasicPlotter(size_t capacity);
 
 struct BasicVertex {
-	vec2 position;
-	vec2 uv;
+	float x,y,z,u,v;
 	Color color;
 	
-	inline void set(vec2 p, vec2 u, Color c) {
-		position = p;
-		uv = u;
+	inline void set(vec2 p, vec2 uv, Color c) {
+		x = p.x;
+		y = p.y;
+		z = 0;
+		u = uv.x;
+		v = uv.y;
+		color = c;
+	}
+	
+	inline void set(vec3f p, vec2 uv, Color c) {
+		p.load(&x);
+		u = uv.x;
+		v = uv.y;
 		color = c;
 	}
 };

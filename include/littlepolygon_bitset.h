@@ -41,6 +41,7 @@ public:
 
 	inline static unsigned size() { return tSize; }
 	inline bool empty() const { return nonzeroWords == 0; }
+	inline bool full() const { return tSize == count(); }
 
 	void reset() {
 		// return to an empty state, even if we're internally

@@ -256,7 +256,7 @@ inline int randInt(int x) { return rand() % x; }
 inline int randInt(int inclusiveMin, int exclusiveMax) { return inclusiveMin + randInt(exclusiveMax-inclusiveMin); }
 inline float randomValue() { return rand() / double(RAND_MAX); }
 inline float randomValue(float u, float v) { return u + randomValue() * (v - u); }
-inline float expovariate(float avgDuration) { return -avgDuration * log(1.0f - randomValue(0.0000001f, 0.999999f)); }
+inline float expovariate(float avgDuration, float rmin=0.00001f, float rmax=0.99999f) { return -avgDuration*log(randomValue(rmin, rmax)); }
 	
 // handling radians sanely
 inline float normalizeAngle(float radians) {

@@ -52,7 +52,7 @@ public:
 		STATIC_ASSERT(N>1);
 		reset();
 	}
-
+	
 	void reset() {
 		firstFree = slots;
 		for(int i=0; i<N-1; ++i) {
@@ -153,28 +153,34 @@ public:
 		return slots[i].record;
 	}
 	
-	bool active(T* record) {
+	bool active(T* record) const {
 		int index = record - (T*)slots;
 		ASSERT(index >= 0 && index < N);
 		return mask[index];
 	}
 	
-	int indexOf(T* record) {
+	int indexOf(T* record) const {
 		ASSERT(active(record));
 		return record - (T*)slots;
 	}
+	
+	bool full() const { return mask.full(); }
 
 	iterator list() { return iterator(this); }
 	iterator list(Bitset<N> subset) { return iterator(this, subset); }
 	
 	void reset() {
-		T* activeObject;
 		for(auto i=list(); i.next();) {
 			i->~T();
 		}
 		mask.reset();
 	}
-
+	
+	~BitsetPool() {
+		for(auto i=list(); i.next();) {
+			i->~T();
+		}
+	}
 	
 };
 
@@ -202,12 +208,12 @@ public:
 	bool empty() const { return mask == 0; }
 	bool full() const { return mask == 0xffffffff; }
 	
-	int indexOf(T* p) {
+	int indexOf(T* p) const {
 		ASSERT(active(p));
 		return ((Slot*)p) - slots;
 	}
 	
-	bool active(T* p) {
+	bool active(T* p) const {
 		int i = ((Slot*)p) - slots;
 		return (mask & bit(i)) != 0;
 	}
@@ -234,6 +240,14 @@ public:
 			slots[i].record.~T();
 		}
 		mask = 0;
+	}
+	
+	~BitsetPool32() {
+		while(mask) {
+			auto i = __builtin_clz(mask);
+			mask ^= bit(i);
+			slots[i].record.~T();
+		}
 	}
 	
 	class Subset {
@@ -316,6 +330,12 @@ private:
 
 public:
 	CompactPool() : mCount(0) {
+	}
+	
+	~CompactPool() {
+		for(int i=0; i<mCount; ++i) {
+			mSlots[i].record.~T();
+		}
 	}
 
 	void reset() {

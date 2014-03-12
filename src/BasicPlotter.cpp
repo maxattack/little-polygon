@@ -23,12 +23,12 @@ varying lowp vec4 color;
 #if VERTEX
 
 uniform highp mat4 mvp;
-attribute mediump vec2 aPosition;
+attribute mediump vec3 aPosition;
 attribute mediump vec2 aUv;
 attribute mediump vec4 aColor;
 
 void main() {
-	gl_Position = mvp * vec4(aPosition, 0.0, 1.0);
+	gl_Position = mvp * vec4(aPosition, 1.0);
 	color = aColor;
 	uv = aUv;
 }
@@ -142,9 +142,9 @@ void BasicPlotterRef::begin(const Viewport& view, GLuint program) {
 void BasicPlotterRef::commit(int count) {
 	// bind new array buffer, update attribute pointers and buffer data
 	glBindBuffer(GL_ARRAY_BUFFER, context->arrays[context->currentArray]);
-	glVertexAttribPointer(context->aPosition, 2, GL_FLOAT, GL_FALSE, sizeof(BasicVertex), (GLvoid*)0);
-	glVertexAttribPointer(context->aUV, 2, GL_FLOAT, GL_FALSE, sizeof(BasicVertex), (GLvoid*)8);
-	glVertexAttribPointer(context->aColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(BasicVertex), (GLvoid*)16);
+	glVertexAttribPointer(context->aPosition, 3, GL_FLOAT, GL_FALSE, sizeof(BasicVertex), (GLvoid*)0);
+	glVertexAttribPointer(context->aUV, 2, GL_FLOAT, GL_FALSE, sizeof(BasicVertex), (GLvoid*)12);
+	glVertexAttribPointer(context->aColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(BasicVertex), (GLvoid*)20);
 	glBufferSubData(GL_ARRAY_BUFFER, 0, count * sizeof(BasicVertex), context->vertices);
 	context->currentArray = (context->currentArray + 1) % 3;
 }

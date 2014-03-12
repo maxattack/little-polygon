@@ -57,7 +57,7 @@ AssetRef loadAssets(const char* path, uint32_t crc) {
 	uint8_t *bytes = (uint8_t*) result;
 	uint32_t offset;
 	while(SDL_RWread(file, &offset, sizeof(uint32_t), 1)) {
-		*((ptrdiff_t*)(bytes + offset)) += ptrdiff_t(bytes);
+		*((uintptr_t*)(bytes + offset)) += uintptr_t(bytes);
 	}
 	SDL_RWclose(file);
 
