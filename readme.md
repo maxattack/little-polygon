@@ -48,12 +48,6 @@ Modules
 * littlepolygon_sprites - batching sprite renderer
 * littlepolygon_trail - efficient trail renderer
 
-Misc Modules (very WIP)
-* littlepolygon_go - an entity-component metadata system
-* littlepolgyon_gocore - go bindings for littlepolygon modules
-* littlepolygon_goedit - generic in-game editor based on go
-* littlepolygon_physics - async bindings to between box2d and littlepolygon_fk
-
 CODING STANDARDS
 ----------------
 

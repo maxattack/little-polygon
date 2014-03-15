@@ -1,1 +1,0 @@
-Some ideas that I'm playing around with but I'm not totally convinced with, yet.
