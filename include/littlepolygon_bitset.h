@@ -127,31 +127,46 @@ public:
 	class iterator {
 	private:
 		const Bitset<tSize> *bs;
-		uint32_t remainder;
-		unsigned w, v;
+		uint32_t remainder, wordIndex, wordMask;
 
 	public:
 		iterator() : remainder(0) {}
 		iterator(const Bitset<tSize>* aSet) : bs(aSet) {
 			remainder = bs->nonzeroWords;
 			if (remainder) {
-				w = clz(remainder);
-				v = bs->words[w];
+				wordIndex = clz(remainder);
+				wordMask = bs->words[wordIndex];
 			}
 		}
 
 		bool next(unsigned &index) {
+			
 			if (remainder) {
-				index = clz(v);
-				v ^= lz(index);
-				index |= (w<<5);
-				if (v == 0) {
-					remainder ^= lz(w);
-					if (remainder) {
-						w = clz(remainder);
-						v = bs->words[w];
-					}
+
+				wordMask &= bs->words[wordIndex]; // avoid bits that were cleared
+												  // since last iteration
+				
+				if (wordMask || advanceRemainder()) {
+				
+					index = clz(wordMask);   // pop local bit from mask
+					wordMask ^= lz(index);   // remove bit from mask
+					index |= (wordIndex<<5); // local -> global
+					if (wordMask == 0) { advanceRemainder(); }
+					return true;
+					
 				}
+				
+			}
+			
+			return false;
+		}
+		
+	private:
+		bool advanceRemainder() {
+			remainder = (remainder ^ lz(wordIndex)) & bs->nonzeroWords;
+			if (remainder) {
+				wordIndex = clz(remainder);
+				wordMask = bs->words[wordIndex];
 				return true;
 			} else {
 				return false;

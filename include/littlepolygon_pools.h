@@ -20,67 +20,13 @@
 #include "littlepolygon_bitset.h"
 
 // Several different common/simple object pools that index into a linear
-// array of preallocated slots:
-//
-// * FreelistPool - Store unoccupied slots in a linked-list (no iteration)
-// * BitsetPool - Store a bitvector which identifies unoccuped slots (allows iteration)
-// * CompactPool - Use slots [0:count), swap-with last on release (fast iteration)
-//                 (only useable for "anonymous" objects, like particles or bullets)
-//
+// array of preallocated slots.  Objects in the pool are not automatically
+// finalized with the pool, so make sure to explicitly clear() them if the
+// destructors matter.
 
+#include <algorithm>
 #include <utility>
-
-//------------------------------------------------------------------------------
-// FREE-LIST POOL
-//------------------------------------------------------------------------------
-
-template<typename T, int N>
-class FreelistPool {
-private:
-	union Slot {
-		T record;
-		Slot *next;
-
-		Slot() {}
-		~Slot() {}
-	};
-	Slot *firstFree;
-	Slot slots[N];
-
-public:
-	FreelistPool() {
-		STATIC_ASSERT(N>1);
-		reset();
-	}
-	
-	void reset() {
-		firstFree = slots;
-		for(int i=0; i<N-1; ++i) {
-			slots[i].next = slots + (i+1);
-		}
-		slots[N-1].next = 0;
-	}
-
-	template<typename... Args>
-	T* alloc(Args&&... args) {
-		if (!firstFree) {
-			return 0;
-		} else {
-			auto result = firstFree;
-			firstFree = result->next;
-			return new(&(result->record)) T(std::forward<Args>(args) ...);
-		}
-	}
-
-	void release(T* p) {
-		Slot *slot = (Slot*)p;
-		ASSERT(slot - slots >= 0);
-		ASSERT(slot - slots < N);
-		p->~T();
-		slot->next = firstFree;
-		firstFree = slot;
-	}
-};
+#include <vector>
 
 //------------------------------------------------------------------------------
 // BITSET POOL
@@ -92,7 +38,6 @@ private:
 	Bitset<N> mask;
 	union Slot {
 		T record;
-		
 		Slot() {}
 		~Slot() {}
 	};
@@ -107,7 +52,7 @@ public:
 			return 0;
 		}
 		mask.mark(index);
-		return new(&slots[index].record) T(std::forward<Args>(args) ...);
+		return new(&slots[index].record) T(args ...);
 	}
 
 	void release(T* p) {
@@ -169,20 +114,16 @@ public:
 	iterator list() { return iterator(this); }
 	iterator list(Bitset<N> subset) { return iterator(this, subset); }
 	
-	void reset() {
-		for(auto i=list(); i.next();) {
-			i->~T();
-		}
+	void clear() {
+		for(auto i=list(); i.next();) { i->~T(); }
 		mask.reset();
 	}
 	
-	~BitsetPool() {
-		for(auto i=list(); i.next();) {
-			i->~T();
-		}
-	}
-	
 };
+
+//------------------------------------------------------------------------------
+// BITSET POOL (noodled for 32 elements, because 32-bit, amiright?)
+//------------------------------------------------------------------------------
 
 template<typename T>
 class BitsetPool32 {
@@ -190,7 +131,6 @@ private:
 	uint32_t mask;
 	union Slot {
 		T record;
-		
 		Slot() {}
 		~Slot() {}
 	};
@@ -223,7 +163,7 @@ public:
 		ASSERT(mask != 0xffffffff);
 		auto i = __builtin_clz(~mask);
 		mask |= bit(i);
-		return new(&slots[i].record) T(std::forward<Args>(args) ...);
+		return new(&slots[i].record) T(args ...);
 	}
 	
 	void release(T* p) {
@@ -233,21 +173,13 @@ public:
 		mask ^= bit(i);
 	}
 
-	void reset() {
+	void clear() {
 		while(mask) {
 			auto i = __builtin_clz(mask);
 			mask ^= bit(i);
 			slots[i].record.~T();
 		}
 		mask = 0;
-	}
-	
-	~BitsetPool32() {
-		while(mask) {
-			auto i = __builtin_clz(mask);
-			mask ^= bit(i);
-			slots[i].record.~T();
-		}
 	}
 	
 	class Subset {
@@ -314,72 +246,66 @@ public:
 
 //------------------------------------------------------------------------------
 // COMPACT POOL
+// Faster iteration and no upper-bound on size, but records are not guarenteed
+// to remain at fixed memory addresses (either because of reallocation or
+// swapping-with-end on dealloc).  Designed for "anonymous collections" like
+// particle systems.
 //------------------------------------------------------------------------------
 
-template<typename T, int N>
+template<typename T>
 class CompactPool {
 private:
-	int mCount;
 	union Slot {
 		T record;
-		
 		Slot() {}
 		~Slot() {}
 	};
-	Slot mSlots[N];
+	std::vector<Slot> slots;
 
 public:
-	CompactPool() : mCount(0) {
-	}
 	
-	~CompactPool() {
-		for(int i=0; i<mCount; ++i) {
-			mSlots[i].record.~T();
-		}
-	}
+	CompactPool() {}
+	CompactPool(size_t n) : slots(n) {}
+	
+	// const methods
+	
+	inline const T* begin() const { return slots.begin(); }
+	inline const T* end() const { return slots.end(); }
 
-	void reset() {
-		for(int i=0; i<mCount; ++i) {
-			mSlots[i].record.~T();
-		}
-		mCount = 0;
+	inline bool isEmpty() const { return slots.empty(); }
+	inline int count() const { return slots.size(); }
+	inline bool active(const T* p) const { return p >= begin() && p < end(); }
+	inline int indexOf(const T* p) const { ASSERT(active(p)); return p - begin(); }
+
+	// ordinary methods
+	
+	inline T* begin() { return slots.begin(); }
+	inline T* end() { return slots.end(); }
+	
+	inline void reserve(int n) { slots.reserve(n); }
+	inline T& operator[](int i) { ASSERT(i >= 0 && i < count()); return slots[i].record; }
+	
+	void clear() {
+		for(auto& slot : slots) { slot.record.~T(); }
+		slots.clear();
 	}
 
 	template<typename... Args>
 	T* alloc(Args&&... args) {
-		ASSERT (mCount < N);
-		++mCount;
-		return new(&mSlots[mCount-1].record) T(std::forward<Args>(args) ...);
-	}
-
-	bool active(T* p) const {
-		auto slot = (Slot*)p;
-		return (slot - mSlots) >= 0 && (slot - mSlots) < mCount;
+		slots.emplace_back(args ...);
+		return &(slots.back().record);
 	}
 
 	void release(T* p) {
 		ASSERT(active(p));
 		auto slot = (Slot*) p;
 		p->~T();
-		--mCount;
-		if (slot != mSlots+mCount) {
-			// Errr... this bit right here is super-derpy.  I guess classes
-			// should be using move semantics?  Like you "move" the object
-			// into the "slot" and then finalize "mSlots+mCount"?  That's kinda
-			// obnoxious, tho, since it means objects can be in this extra "hollowed-out"
-			// state... :P
-			memcpy(slot, mSlots+mCount, sizeof(Slot));
+		if (p != slots.back()) {
+			*p = slots.back();
 		}
+		slots.pop_back();
 	}
 
-	int count() const { return mCount; }
-	
-	int indexOf(T* record) { ASSERT(active(record)); return ((Slot*)record) - mSlots; }
-	T& operator[](int i) { ASSERT(i >= 0 && i < mCount); return mSlots[i].record; }
-	
-	T* begin() { return (T*)mSlots; }
-	T* end() { return ((T*)mSlots) + mCount; }
-
-	bool isEmpty() const { return mCount == 0; }
-	bool isFull() const { return mCount == N; }
 };
+
+
