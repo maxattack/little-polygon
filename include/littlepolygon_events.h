@@ -54,6 +54,8 @@ private:
 	
 public:
 	
+	static Action none() { return Action(0, 0); }
+	
 	template<class T, void (T::*TMethod)(Args...)>
 	static Action callMethod(T* context) {
 		return Action(context, &methodStub<T, TMethod>);
@@ -105,27 +107,29 @@ public:
 
 private:
 	Delegate callback;
-	EventDispatcher<Args...> *dispatcher;
 	SiblingLink prev, next;
+	
+	void attachAfter(EventListener *before) {
+		next = before->next;
+		prev = before;
+		before->next = this;
+		next->prev = this;
+	}
 	
 public:
 	// Probably makes sense to typedef this as a concrete instantiation to
 	// make it easier to type.
 	EventListener(Delegate aCallback) :
-		callback(aCallback), dispatcher(0), prev(0), next(0) {}
+		callback(aCallback), prev(this), next(this) {}
 	~EventListener() { unbind(); }
 	
-	inline bool isBound() const { return dispatcher != 0; }
+	inline bool isBound() const { return next != this; }
 
 	void unbind() {
-		if (isBound()) {
-			if (dispatcher->listeners == this) { dispatcher->listeners = next; }
-			if (next) { next->prev = prev; }
-			if (prev) { prev->next = next; }
-			next = 0;
-			prev = 0;
-			dispatcher = 0;
-		}
+		next->prev = prev;
+		prev->next = next;
+		next = this;
+		prev = this;
 	}
 };
 
@@ -139,36 +143,38 @@ public:
 	typedef EventListener<Args...> Listener;
 
 private:
-	Listener *listeners;
+	Listener head;
 
 public:
-	EventDispatcher() : listeners(0) {}
+	EventDispatcher() : head(Listener::Delegate::none()) {}
 	~EventDispatcher() { unbind(); }
 
 	void bind(EventListener<Args...>* listener) {
 		ASSERT(!listener->isBound());
-		listener->next = listeners;
-		if (listeners) { listeners->prev = listener; }
-		listeners = listener;
-		listener->dispatcher = this;
+		// always add to the head of the list, so that new event subscriptions
+		// made as a side-effect of emit() are not invoked for that dispatch.
+		listener->attachAfter(&head);
 	}
 
 	void unbind() {
-		while(listeners) { listeners->unbind(); }
+		while(isBound()) { head.next->unbind(); }
 	}
 
-	inline bool isBound() { return listeners != 0; }
+	inline bool isBound() { return head.isBound(); }
 
 	// It's OK to add/remove listeners while the event is being emitted. New
 	// listeners will not be triggered by the current event.
 	void emit(Args&&... args) {
-		if (listeners) {
-			auto p = listeners;
-			while(p) {
-				auto next = p->next;
-				p->callback(args ...);
-				p = next;
-			}
+		// we use a bookmark to allow events to be unsubscribed gracefully
+		// without losing our place in the list (since the bookmark will not
+		// be removed by side-effects).
+		Listener bookmark(Listener::Delegate::none());
+		auto p = head.next;
+		while(p != &head) {
+			bookmark.attachAfter(p);
+			p->callback(args...);
+			p = bookmark.next;
+			bookmark.unbind();
 		}
 	}
 
