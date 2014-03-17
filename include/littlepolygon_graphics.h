@@ -138,7 +138,7 @@ struct BasicVertex {
 	Color color;
 	
 	inline void set(vec2 p, vec2 uv, Color c) { x = p.x; y = p.y; z = 0; u = uv.x; v = uv.y; color = c; }
-	inline void set(vec2 p, float z, vec2 uv, Color c) { x = p.x; y = p.y; z = z; u = uv.x; v = uv.y; color = c; }
+	inline void set(vec2 p, float az, vec2 uv, Color c) { x = p.x; y = p.y; z = az; u = uv.x; v = uv.y; color = c; }
 	inline void set(vec3f p, vec2 uv, Color c) { p.load(&x); u = uv.x; v = uv.y; color = c; }
 };
 

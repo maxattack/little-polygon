@@ -18,17 +18,16 @@
 
 #include "littlepolygon_assets.h"
 #include "littlepolygon_graphics.h"
+#include "littlepolygon_pools.h"
+#include <vector>
 
 //------------------------------------------------------------------------------
 // FORWARD DECLARATIONS
 //------------------------------------------------------------------------------
 
-struct SpritePlotter;
-struct SpriteBatch;
-struct Sprite;
-class SpritePlotterRef;
-class SpriteBatchRef;
-class SpriteRef;
+class SpritePlotter;
+class SpriteBatch;
+class Sprite;
 
 //------------------------------------------------------------------------------
 // SPRITE PLOTTER
@@ -97,83 +96,70 @@ private:
 // calls can be freely mixed with other systems).
 //------------------------------------------------------------------------------
 
-// An efficient system for storing sprites and rendering sprites in a batch.
-// Because the batch implements a deque, sprites can be on one of two layers 
-// (top or bottom), but are not well z-ordered within a layer.
-//
-// ?? generic frame-based "animators" ??
-// ?? >2 multilayer ??
-
-//TODO: typedef uint32_t SpriteID;
-
-// Create a new sprite context from a given capacity.
-SpriteBatchRef createSpriteBatch(size_t capacity=1024);
-
-class SpriteBatchRef {
+class Sprite {
+friend class SpriteBatch;
 private:
-	SpriteBatch *context;
+	SpriteBatch *mBatch;
+	int mLayer, mIndex;
 
+	void clear();
+	
 public:
-	SpriteBatchRef() {}
-	SpriteBatchRef(SpriteBatch *aContext) : context(aContext) {}
+	Sprite(SpriteBatch *batch, int layer, int index);
+	
+	SpriteBatch* batch() const { return mBatch; }
+	
+	const AffineMatrix& transform() const;
+	void setTransform(const AffineMatrix& xform);
+	
+	ImageAsset* image() const;
+	void setImage(ImageAsset *image);
+	
+	int layer() const { return mLayer; }
+	void setLayer(int i);
 
-	operator SpriteBatch*() { return context; }
-	operator bool() const { return context; }
+	Color fill() const;
+	void setFill(Color aFill);
+	
+	void release();
+};
 
-	void destroy();
-
-	SpriteRef addSprite(
-		ImageAsset *image, 
-		const AffineMatrix *xform,
-		int frame=0, 
-		Color c=rgba(0), 
-		bool visible=1, 
-		bool onTop=0, 
-		void *userData=0
+class SpriteBatch {
+friend class Sprite;
+private:
+	struct DrawCall {
+		Sprite *sprite;
+		ImageAsset *img;
+		AffineMatrix xform;
+		Color color;
+		int frame;
+		float depth;
+	};
+	
+	typedef CompactPool<DrawCall> Layer;
+	
+	int mLayerCount;
+	Layer* mLayers;
+	DynamicPool<Sprite> mSprites;
+	
+public:
+	SpriteBatch(int nlayers);
+	~SpriteBatch();
+	
+	int layerCount() const { return mLayerCount; }
+	
+	Sprite *addSprite(
+		int layer,
+		ImageAsset *image,
+		const AffineMatrix& xform,
+		int frame=0,
+		Color c=rgba(0),
+		float depth=0
 	);
-
-	void draw(SpritePlotter& plotter);
-
-};
-
-//------------------------------------------------------------------------------
-// BATCHED SPRITE INSTANCE
-//------------------------------------------------------------------------------
-
-class SpriteRef {
-private:
-	Sprite* sprite;
-
-public:
-	SpriteRef() {}
-	SpriteRef(Sprite *aSprite) : sprite(aSprite) {}
-
-	operator Sprite*() { return sprite; }
-	operator bool() const { return sprite; }
-
-	void destroy();
-
-	SpriteBatchRef batch();
 	
-	void setLayer(int layer);
-	void setImage(ImageAsset *img);
-	void setTransform(const AffineMatrix* matrix);
-	void setFrame(int frame);
-	void setVisible(bool flag);
-	void setColor(Color c);
-	void setUserData(void *userData);
+	void draw(SpritePlotter *plotter);
+
+	void clear();
 	
-	int layer() const;
-	const AffineMatrix* transform() const;
-	ImageAsset *image() const;
-	bool visible() const;
-	int frame() const;
-	Color color() const;
-	void *userData() const;
-
-	template<typename T>
-	T* get() const { return (T*) userData(); }
 };
-
-
 

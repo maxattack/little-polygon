@@ -25,11 +25,11 @@ uniform highp mat4 mvp;
 uniform mediump vec4 uColor;
 uniform highp float uTime;
 uniform highp float uFadeDurationInv;
-attribute mediump vec2 aPosition;
+attribute mediump vec3 aPosition;
 attribute mediump float aTime;
 
 void main() {
-	gl_Position = mvp * vec4(aPosition, 0.0, 1.0);
+	gl_Position = mvp * vec4(aPosition, 1.0);
 	color = vec4(uColor.xyz, uColor.w * (1.0 - (uTime - aTime) * uFadeDurationInv));
 }
 
@@ -79,6 +79,7 @@ struct TrailBatch {
 
 	struct Vertex {
 		vec2 position;
+		float z;
 		float time;
 	};
 	
@@ -190,7 +191,7 @@ void TrailBatchRef::clear() {
 	}
 }
 
-void TrailBatchRef::append(vec2 position, float stroke, float minDist) {
+void TrailBatchRef::append(vec2 position, float z, float stroke, float minDist) {
 	if (context->count == context->capacity) {
 		
 		// pop the oldest particles
@@ -223,9 +224,11 @@ void TrailBatchRef::append(vec2 position, float stroke, float minDist) {
 		TrailBatch::Vertex v0[2];
 		
 		v0[0].position = position + unit;
+		v0[0].z = z;
 		v0[0].time = context->time;
 		v0[1].position = position - unit;
 		v0[1].time = context->time;
+		v0[1].z = z;
 		
 		int ri = context->logicalToRaw(i);
 		context->setTime(ri, context->time);
@@ -298,8 +301,8 @@ void TrailBatchRef::draw(const Viewport &view) {
 		
 		glEnableVertexAttribArray(aPosition);
 		glEnableVertexAttribArray(aTime);
-		glVertexAttribPointer(aPosition, 2, GL_FLOAT, GL_FALSE, sizeof(TrailBatch::Vertex), 0);
-		glVertexAttribPointer(aTime, 1, GL_FLOAT, GL_FALSE, sizeof(TrailBatch::Vertex), (void*)sizeof(vec2));
+		glVertexAttribPointer(aPosition, 3, GL_FLOAT, GL_FALSE, sizeof(TrailBatch::Vertex), 0);
+		glVertexAttribPointer(aTime, 1, GL_FLOAT, GL_FALSE, sizeof(TrailBatch::Vertex), (void*)(3*sizeof(float)));
 		
 		// if we're currently wrapping around then we need to make two calls (being sure to
 		// omit two-vertex degenerate cases), otherwise it's just a simple single call

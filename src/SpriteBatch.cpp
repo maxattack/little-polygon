@@ -17,261 +17,137 @@
 #include "littlepolygon_sprites.h"
 #include "littlepolygon_bitset.h"
 
-struct SpriteDraw {
-	ImageAsset *image;
-	const AffineMatrix *xform;
-	Color color;
-	uint16_t slot;
-	uint16_t frame;
-};
 
-struct Sprite {
-	SpriteBatch *context;
-	SpriteDraw *cmd;
-	void *userData;
-	uint32_t layer;
-};
 
-struct SpriteBatch {
-	size_t capacity;
-	size_t bottomCount;
-	size_t topCount;
-	Bitset<1024> allocationMask;
-	Bitset<1024> visibleMask;
-
-	Sprite headSprite;
-
-	bool owns(Sprite* sprite) const {
-		auto offset = sprite - &headSprite;
-		return 0 <= offset && offset < capacity;
-	}
-
-	size_t count() const { 
-		return bottomCount + topCount; 
-	}
-
-	Sprite *get(int index) {
-		ASSERT(allocationMask[index]);
-		return &headSprite + index;
-	}
-
-	SpriteDraw *getDraw(int index) {
-		SpriteDraw *headDraw = (SpriteDraw*) (&headSprite + capacity);
-		return headDraw + index;
-	}
-
-	void markVisible(SpriteDraw *draw) {
-		SpriteDraw *headDraw = (SpriteDraw*) (&headSprite + capacity);
-		visibleMask.mark(draw - headDraw);
-	}
-
-	void clearVisible(SpriteDraw *draw) {
-		SpriteDraw *headDraw = (SpriteDraw*) (&headSprite + capacity);
-		visibleMask.clear(draw - headDraw);
-	}
-
-	bool visible(SpriteDraw *draw) const {
-		SpriteDraw *headDraw = (SpriteDraw*) (&headSprite + capacity);
-		return visibleMask[ draw - headDraw ];
-	}
-
-};
-
-SpriteBatchRef createSpriteBatch(size_t capacity) {
-	// validate args
-	ASSERT(capacity <= 1024);
-
-	// alloc memory
-	auto context = (SpriteBatch*) LITTLE_POLYGON_MALLOC(
-		sizeof(SpriteBatch) + 
-		sizeof(Sprite) * (capacity - 1) + 
-		sizeof(SpriteDraw) * (capacity)
-	);
-
-	// init fields
-	context->capacity = capacity;
-	context->bottomCount = 0;
-	context->topCount =0 ;
-	context->allocationMask.reset();
-	context->visibleMask.reset();
-	return context;
-}
-
-void SpriteBatchRef::destroy() {
-	LITTLE_POLYGON_FREE(context);
-}
-
-static void addToLayer(SpriteBatch *context, Sprite *sprite, int layer) {
-	if (layer == 0) {
-		sprite->cmd = context->getDraw(context->bottomCount);
-		++context->bottomCount;
-	} else {
-		sprite->cmd = context->getDraw(context->capacity - context->topCount);
-		++context->topCount;
-	}
-	sprite->layer = layer;
-}
-
-static void removeFromLayer(SpriteBatch *context, Sprite *sprite) {
-	context->clearVisible(sprite->cmd);
-	if (sprite->layer == 0) {
-		// remove from bottom of the layer
-		int index = sprite->cmd - context->getDraw(0);
-		if (index != context->bottomCount-1) {
-			// swap with the last element
-			auto drawToMove = context->getDraw(context->bottomCount-1);
-			auto wasVisible = context->visible(drawToMove);
-			context->clearVisible(drawToMove);
-			auto spriteToMove = context->get(drawToMove->slot);
-			spriteToMove->cmd = sprite->cmd;
-			*(spriteToMove->cmd) = *drawToMove;
-			if (wasVisible) {
-				context->markVisible(spriteToMove->cmd);
-			}
-		}
-		--context->bottomCount;
-	} else {
-		// remove from top of the layer
-		int index = context->getDraw(context->capacity) - sprite->cmd;
-		if (index != context->topCount-1) {
-			// swap with the first element
-			auto drawToMove = context->getDraw(context->capacity - (context->topCount-1));
-			auto wasVisible = context->visible(drawToMove);
-			context->clearVisible(drawToMove);
-			auto spriteToMove = context->get(drawToMove->slot);
-			spriteToMove->cmd = sprite->cmd;
-			*(spriteToMove->cmd) = *drawToMove;
-			if (wasVisible) {
-				context->markVisible(spriteToMove->cmd);
-			}			
-		}
-		--context->topCount;
+SpriteBatch::SpriteBatch(int nlayers) : mLayerCount(nlayers) {
+	mLayers = (Layer*) LITTLE_POLYGON_MALLOC(mLayerCount * sizeof(Layer));
+	for(int i=0; i<mLayerCount; ++i) {
+		new (mLayers+i) Layer();
 	}
 }
 
-SpriteRef SpriteBatchRef::addSprite(
-	ImageAsset *image, 
-	const AffineMatrix *xform,
-	int frame, Color c, bool visible, bool onTop, 
-	void *userData
+SpriteBatch::~SpriteBatch() {
+	for(int i=0; i<mLayerCount; ++i) {
+		mLayers[i].~Layer();
+	}
+	LITTLE_POLYGON_FREE(mLayers);
+}
+
+Sprite *SpriteBatch::addSprite(
+	int layer,
+	ImageAsset *image,
+	const AffineMatrix& xform,
+	int frame,
+	Color c,
+	float depth
 ) {
-	ASSERT(context->count() < context->capacity);
-
-	unsigned slot;
-	if (!(~context->allocationMask).findFirst(slot)) {
-		return 0;
-	}
-
-	// allocate
-	context->allocationMask.mark(slot);
-	auto result = context->get(slot);
-
-	// setup layer
-	addToLayer(context, result, !!onTop);
-
-	// setup draw call
-	result->cmd->slot = slot;
-	result->cmd->xform = xform;
-	result->cmd->color = c;
-	result->cmd->image = image;
-	result->cmd->frame = frame;
-	if (visible) {
-		context->markVisible(result->cmd);
-	}
+	ASSERT(layer >= 0);
+	ASSERT(layer < mLayerCount);
 	
-	result->context = context;
-	result->userData = userData;
-
+	auto result = mSprites.alloc(this, layer, mLayers[layer].count());
+	
+	auto drawCall = mLayers[layer].alloc();
+	drawCall->sprite = result;
+	drawCall->img = image;
+	drawCall->xform = xform;
+	drawCall->frame = frame;
+	drawCall->color = c;
+	drawCall->depth = depth;
+	
 	return result;
 }
 
-SpriteBatchRef SpriteRef::batch() {
-	return sprite->context;
-}
-
-void SpriteRef::destroy() {
-	removeFromLayer(sprite->context, sprite);
-	sprite->context->allocationMask.clear(sprite - &sprite->context->headSprite);
-}
-
-void SpriteRef::setLayer(int layerIdx) {
-	auto context = sprite->context;
-	if (sprite->layer != layerIdx) {
-		bool wasVisible = context->visible(sprite->cmd);
-		context->clearVisible(sprite->cmd);
-
-		auto cmd = *sprite->cmd;
-		removeFromLayer(context, sprite);
-		addToLayer(context, sprite, layerIdx);
-		
-		*sprite->cmd = cmd;
-		if (wasVisible) {
-			context->markVisible(sprite->cmd);
+void SpriteBatch::draw(SpritePlotter *plotter) {
+	for(int i=0; i<mLayerCount; ++i) {
+		for(auto& draw : mLayers[i]) {
+			plotter->drawImage(draw.img, draw.xform, draw.frame, draw.color, draw.depth);
 		}
 	}
 }
 
-void SpriteRef::setImage(ImageAsset *image) {
-	sprite->cmd->image = image;
-}
-
-void SpriteRef::setTransform(const AffineMatrix *xform) {
-	sprite->cmd->xform = xform;
-}
-
-void SpriteRef::setFrame(int frame) {
-	sprite->cmd->frame = frame;
-}
-
-void SpriteRef::setVisible(bool visible) {
-	auto context = sprite->context;
-	if (visible) {
-		context->markVisible(sprite->cmd);
-	} else {
-		context->clearVisible(sprite->cmd);
+void SpriteBatch::clear() {
+	for(auto s=mSprites.list(); s.next();) {
+		s->release();
 	}
 }
 
-void SpriteRef::setColor(Color c) {
-	sprite->cmd->color = c;
+Sprite::Sprite(SpriteBatch *batch, int layer, int index) :
+mBatch(batch), mLayer(layer), mIndex(index) {
 }
 
-void SpriteRef::setUserData(void *userData) {
-	sprite->userData = userData;
+void Sprite::clear() {
+	mBatch = 0;
+	mLayer = 0;
+	mIndex = 0;
 }
 
-ImageAsset* SpriteRef::image() const {
-	return sprite->cmd->image;
+const AffineMatrix& Sprite::transform() const {
+	return mBatch->mLayers[mLayer][mIndex].xform;
 }
 
-const AffineMatrix* SpriteRef::transform() const {
-	return sprite->cmd->xform;
+void Sprite::setTransform(const AffineMatrix& xform) {
+	mBatch->mLayers[mLayer][mIndex].xform = xform;
 }
 
-int SpriteRef::frame() const {
-	return sprite->cmd->frame;
+ImageAsset* Sprite::image() const {
+	return mBatch->mLayers[mLayer][mIndex].img;
 }
 
-int SpriteRef::layer() const {
-	return sprite->layer;
+void Sprite::setImage(ImageAsset *image) {
+	mBatch->mLayers[mLayer][mIndex].img = image;
 }
 
-bool SpriteRef::visible() const {
-	return sprite->context->visible(sprite->cmd);
-}
+void Sprite::setLayer(int i) {
+	ASSERT(i >= 0 && i < mBatch->mLayerCount);
+	if (i != mLayer) {
 
-Color SpriteRef::color() const {
-	return sprite->cmd->color;
-}
-
-void* SpriteRef::userData() const {
-	return sprite->userData;
-}
-
-void SpriteBatchRef::draw(SpritePlotter& renderer) {
-	unsigned idx;
-	for(auto iterator=context->visibleMask.listBits(); iterator.next(idx);) {
-		auto cmd = context->getDraw(idx);
-		renderer.drawImage(cmd->image, *cmd->xform, cmd->frame, cmd->color);
+		// remove from the current layer, saving current call
+		auto& layer = mBatch->mLayers[mLayer];
+		auto drawCall = layer[mIndex];
+		layer.release(&layer[mIndex]);
+		
+		// if a record was relocated into this slot, then updates it's
+		// sprite handle's index
+		if (mIndex < layer.count()) {
+			layer[mIndex].sprite->mIndex = mIndex;
+		}
+		
+		// add to new layer
+		mLayer = i;
+		mIndex = mBatch->mLayers[i].count();
+		mBatch->mLayers[i].alloc();
+		mBatch->mLayers[i][mIndex] = drawCall;
 	}
+	
 }
+
+Color Sprite::fill() const {
+	return mBatch->mLayers[mLayer][mIndex].color;
+}
+
+void Sprite::setFill(Color aFill) {
+	mBatch->mLayers[mLayer][mIndex].color = aFill;
+}
+
+void Sprite::release() {
+	// remove from the current layer
+	auto& layer = mBatch->mLayers[mLayer];
+	layer.release(&layer[mIndex]);
+	
+	// if a record was relocated into this slot, then updates it's
+	// sprite handle's index
+	if (mIndex < layer.count()) {
+		layer[mIndex].sprite->mIndex = mIndex;
+	}
+	
+	mIndex = 0;
+	mLayer = 0;
+	auto b = mBatch;
+	mBatch = 0;
+	
+	// release thy self
+	b->mSprites.release(this);
+	
+
+}
+

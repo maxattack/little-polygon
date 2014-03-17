@@ -463,19 +463,17 @@ public:
 	CompactPool(size_t n) : slots(n) {}
 	
 	// const methods
+	inline T* begin() const { return (T*) slots.data(); }
+	inline T* end() const { return begin() + count(); }
 	
-	inline const T* begin() const { return slots.begin(); }
-	inline const T* end() const { return slots.end(); }
-
 	inline bool isEmpty() const { return slots.empty(); }
 	inline int count() const { return slots.size(); }
 	inline bool active(const T* p) const { return p >= begin() && p < end(); }
-	inline int indexOf(const T* p) const { ASSERT(active(p)); return p - begin(); }
+	inline int indexOf(const T* p) const { ASSERT(active(p)); return p - slots.data(); }
 
 	// ordinary methods
-	
-	inline T* begin() { return slots.begin(); }
-	inline T* end() { return slots.end(); }
+	inline T* begin() { return (T*) slots.data(); }
+	inline T* end() { return begin() + count(); }
 	
 	inline void reserve(int n) { slots.reserve(n); }
 	inline T& operator[](int i) { ASSERT(i >= 0 && i < count()); return slots[i].record; }
@@ -495,8 +493,8 @@ public:
 		ASSERT(active(p));
 		auto slot = (Slot*) p;
 		p->~T();
-		if (p != slots.back()) {
-			*p = slots.back();
+		if (slot != &slots.back()) {
+			*slot = slots.back();
 		}
 		slots.pop_back();
 	}

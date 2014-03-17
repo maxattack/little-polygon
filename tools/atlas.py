@@ -100,7 +100,16 @@ def render_atlas(images):
 	for image in images:
 		image.computeUVs(pitch)
 		image.renderTo(result, pitch)
-	result.save("__proof.png")
+	# premultiply alpha?
+	# pixels = result.load()
+	# w,h = result.size
+	# for y,x in xyrange(h,w):
+	# 	r,g,b,a = pixels[x,y]
+	# 	u = a / 255.0
+	# 	r = int(r * u)
+	# 	g = int(g * u)
+	# 	b = int(b * u)
+	# 	pixels[x,y] = (r,g,b,a)
 	return (result, images)
 
 class AtlasImage:

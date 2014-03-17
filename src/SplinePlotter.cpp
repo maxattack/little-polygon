@@ -90,7 +90,7 @@ void SplinePlotter::startCurve(int resolution, vec2 p0, vec2 p1, float z, Color 
 		// add degenerate triangle
 		auto tail = plotter.getVertex(count-1);
 		*nextVert() = *tail;
-		nextVert()->set(p0, vec(0, 1), c);
+		nextVert()->set(p0, z, vec(0, 1), c);
 	}
 	nextVert()->set(p0, z, vec(0, 1), c);
 	nextVert()->set(p1, z, vec(1, 1), c);
@@ -143,15 +143,15 @@ void SplinePlotter::plotCubic(const mat4f& posMat, const vec4f& strokeVec, Color
 	
 }
 
-inline void setVertex(BasicVertex*v, vec2 p, float z, vec2 uv, Color c) {
-	v->x = p.x;
-	v->y = p.y;
-	v->z = z;
-	v->u = uv.x;
-	v->v = uv.y;
-	v->color = c;
-}
-
+//inline void setVertex(BasicVertex*v, vec2 p, float z, vec2 uv, Color c) {
+//	v->x = p.x;
+//	v->y = p.y;
+//	v->z = z;
+//	v->u = uv.x;
+//	v->v = uv.y;
+//	v->color = c;
+//}
+//
 void SplinePlotter::plotArc(vec2 p, float z, float r1, float r2, Color c, float a1, float a2, int resolution) {
 	ASSERT(isBound());
 	reserve(resolution<<1);
@@ -173,18 +173,18 @@ void SplinePlotter::plotArc(vec2 p, float z, float r1, float r2, Color c, float 
 		if (count > 0) {
 			auto tail = plotter.getVertex(count-1);
 			*nextVert() = *tail;
-			setVertex(nextVert(), p0, z, vec(0,v), c);
+			nextVert()->set(p0, z, vec(0,v), c);
 		}
 		nextVert()->set(p0, vec(0,v), c);
 		nextVert()->set(p1, vec(1,v), c);
 		for(int i=1; i<resolution-1; ++i) {
 			curr = cmul(curr, rotor);
-			setVertex(nextVert(), p + r1 * curr, z, vec(0, v), c);
-			setVertex(nextVert(), p + r2 * curr, z, vec(1, v), c);
+			nextVert()->set(p + r1 * curr, z, vec(0, v), c);
+			nextVert()->set(p + r2 * curr, z, vec(1, v), c);
 		}
 		
-		setVertex(nextVert(), p0, z, vec(0,v), c);
-		setVertex(nextVert(), p1, z, vec(1,v), c);
+		nextVert()->set(p0, z, vec(0,v), c);
+		nextVert()->set(p1, z, vec(1,v), c);
 		
 	} else {
 		
@@ -195,14 +195,14 @@ void SplinePlotter::plotArc(vec2 p, float z, float r1, float r2, Color c, float 
 		if (count > 0) {
 			auto tail = plotter.getVertex(count-1);
 			*nextVert() = *tail;
-			setVertex(nextVert(), p + r1 * curr, z, vec(0,v), c);
+			nextVert()->set(p + r1 * curr, z, vec(0,v), c);
 		}
-		nextVert()->set(p + r1 * curr, vec(0,v), c);
-		nextVert()->set(p + r2 * curr, vec(1,v), c);
+		nextVert()->set(p + r1 * curr, z, vec(0,v), c);
+		nextVert()->set(p + r2 * curr, z, vec(1,v), c);
 		for(int i=1; i<resolution; ++i) {
 			curr = cmul(curr, rotor);
-			setVertex(nextVert(), p + r1 * curr, z, vec(1, v), c);
-			setVertex(nextVert(), p + r2 * curr, z, vec(0, v), c);
+			nextVert()->set(p + r1 * curr, z, vec(1, v), c);
+			nextVert()->set(p + r2 * curr, z, vec(0, v), c);
 		}
 		
 	}
@@ -218,14 +218,14 @@ void SplinePlotter::plotCircle(vec2 p, float z, float r, Color c, int resolution
 	if (count > 0) {
 		auto tail = plotter.getVertex(count-1);
 		*nextVert() = *tail;
-		setVertex(nextVert(), p+vec(0,r), z, vec(0,1), c);
+		nextVert()->set(p+vec(0,r), z, vec(0,0), c);
 	}
-	nextVert()->set(p+vec(0,r), vec(0,0), c);
-	nextVert()->set(p+vec(0,r), vec(0,0), c);
+	nextVert()->set(p+vec(0,r), z, vec(0,0), c);
+	nextVert()->set(p+vec(0,r), z, vec(0,0), c);
 	for(int i=1; i<resolution; ++i) {
 		curr = cmul(curr, rotor);
-		setVertex(nextVert(), p + r * curr, z, vec(1, 1), c);
-		setVertex(nextVert(), p + r * curr.conjugate(), z, vec(0, 1), c);
+		nextVert()->set(p + r * curr, z, vec(1, 1), c);
+		nextVert()->set(p + r * curr.conjugate(), z, vec(0, 1), c);
 	}
 	
 	

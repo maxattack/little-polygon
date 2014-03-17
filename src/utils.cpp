@@ -83,6 +83,10 @@ SDL_Window *initContext(const char *caption, int w, int h) {
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 	#endif
+
+	//SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+	//SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
+
 	
 	uint32_t winFlags = 0;
 	if (w == 0) {
@@ -102,6 +106,7 @@ SDL_Window *initContext(const char *caption, int w, int h) {
 
 	#if !LITTLE_POLYGON_MOBILE
 	glewInit();
+	//glEnable(GL_MULTISAMPLE);
 	#endif
 
 	SDL_GetWindowSize(pWindow, &w, &h);
@@ -327,16 +332,17 @@ GLuint getFakeAntialiasTexture() {
 	// and a new-one created then this will contains a stale handle.
 	if (!result) {
 		result = generateTexture([](double x, double y) {
-			double distance = 2*fabs(x-0.5);
-			// might consider using a geometric function here to cover
-			// a larger range?
-			double threshold = 0.9 + 0.1 * sqrt(y);
-			if(distance < threshold) {
-				return rgb(0xffffff);
-			} else {
-				double u = (distance - threshold) / (1 - threshold);
-				return rgba(rgb(0xffffff), 1 - u*u);
-			}
+//			double distance = 2*fabs(x-0.5);
+//			// might consider using a geometric function here to cover
+//			// a larger range?
+//			double threshold = 0.9 + 0.1 * sqrt(y);
+//			if(distance < threshold) {
+//				return rgb(0xffffff);
+//			} else {
+//				double u = (distance - threshold) / (1 - threshold);
+//				return rgba(rgb(0xffffff), 1 - u*u);
+//			}
+			return rgba(0xffffffff);
 		});
 	}
 	return result;
