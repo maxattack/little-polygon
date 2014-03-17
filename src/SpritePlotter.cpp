@@ -58,7 +58,7 @@ void SpritePlotter::begin(const Viewport& view, GLuint program) {
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuf);
 }
 
-void SpritePlotter::drawImage(ImageAsset *img, vec2 pos, int frame, Color c) {
+void SpritePlotter::drawImage(ImageAsset *img, vec2 pos, int frame, Color c, float z) {
 	ASSERT(isBound());
 	setTextureAtlas(img->texture);
 	auto slice = nextSlice();
@@ -66,15 +66,15 @@ void SpritePlotter::drawImage(ImageAsset *img, vec2 pos, int frame, Color c) {
 
 	pos -= fr->pivot();
 	
-	slice[0].set(pos,               fr->uv0, c);
-	slice[1].set(pos+vec(0,fr->h),  fr->uv1, c);
-	slice[2].set(pos+vec(fr->w, 0), fr->uv2, c);
-	slice[3].set(pos+fr->size(),    fr->uv3, c);
+	slice[0].set(pos,               z, fr->uv0, c);
+	slice[1].set(pos+vec(0,fr->h),  z, fr->uv1, c);
+	slice[2].set(pos+vec(fr->w, 0), z, fr->uv2, c);
+	slice[3].set(pos+fr->size(),    z, fr->uv3, c);
 
 	++count;
 }
 
-void SpritePlotter::drawImage(ImageAsset *img, vec2 pos, vec2 u, int frame, Color c) {
+void SpritePlotter::drawImage(ImageAsset *img, vec2 pos, vec2 u, int frame, Color c, float z) {
 	ASSERT(isBound());
 	setTextureAtlas(img->texture);
 	auto slice = nextSlice();
@@ -85,15 +85,15 @@ void SpritePlotter::drawImage(ImageAsset *img, vec2 pos, vec2 u, int frame, Colo
 	vec2 p2 = p0 + vec(fr->w, 0);
 	vec2 p3 = p0 + fr->size();
 
-	slice[0].set(pos+cmul(p0,u), fr->uv0, c);
-	slice[1].set(pos+cmul(p1,u), fr->uv1, c);
-	slice[2].set(pos+cmul(p2,u), fr->uv2, c);
-	slice[3].set(pos+cmul(p3,u), fr->uv3, c);
+	slice[0].set(pos+cmul(p0,u), z, fr->uv0, c);
+	slice[1].set(pos+cmul(p1,u), z, fr->uv1, c);
+	slice[2].set(pos+cmul(p2,u), z, fr->uv2, c);
+	slice[3].set(pos+cmul(p3,u), z, fr->uv3, c);
 
 	++count;
 }
 
-void SpritePlotter::drawImage(ImageAsset *img, const AffineMatrix& xform, int frame, Color c) {
+void SpritePlotter::drawImage(ImageAsset *img, const AffineMatrix& xform, int frame, Color c, float z) {
 	ASSERT(isBound());
 	setTextureAtlas(img->texture);
 	auto slice = nextSlice();
@@ -104,15 +104,15 @@ void SpritePlotter::drawImage(ImageAsset *img, const AffineMatrix& xform, int fr
 	vec2 p2 = p0 + vec(fr->w, 0);
 	vec2 p3 = p0 + fr->size();
 	
-	slice[0].set(xform.transformPoint(p0), fr->uv0, c);
-	slice[1].set(xform.transformPoint(p1), fr->uv1, c);
-	slice[2].set(xform.transformPoint(p2), fr->uv2, c);
-	slice[3].set(xform.transformPoint(p3), fr->uv3, c);
+	slice[0].set(xform.transformPoint(p0), z, fr->uv0, c);
+	slice[1].set(xform.transformPoint(p1), z, fr->uv1, c);
+	slice[2].set(xform.transformPoint(p2), z, fr->uv2, c);
+	slice[3].set(xform.transformPoint(p3), z, fr->uv3, c);
 
 	++count;	
 }
 
-void SpritePlotter::drawImage(ImageAsset *img, const mat4f& xform, int frame, Color c) {
+void SpritePlotter::drawImage(ImageAsset *img, const mat4f& xform, int frame, Color c, float z) {
 	ASSERT(isBound());
 	setTextureAtlas(img->texture);
 	auto slice = nextSlice();
@@ -123,31 +123,31 @@ void SpritePlotter::drawImage(ImageAsset *img, const mat4f& xform, int frame, Co
 	vec3f p2 = p0 + vec3f(fr->w, 0, 0);
 	vec3f p3 = p0 + vec3f(fr->w, fr->h, 0);
 
-	slice[0].set(transformPoint(xform, p0).xy(), fr->uv0, c);
-	slice[1].set(transformPoint(xform, p1).xy(), fr->uv1, c);
-	slice[2].set(transformPoint(xform, p2).xy(), fr->uv2, c);
-	slice[3].set(transformPoint(xform, p3).xy(), fr->uv3, c);
+	slice[0].set(transformPoint(xform, p0).xy(), z, fr->uv0, c);
+	slice[1].set(transformPoint(xform, p1).xy(), z, fr->uv1, c);
+	slice[2].set(transformPoint(xform, p2).xy(), z, fr->uv2, c);
+	slice[3].set(transformPoint(xform, p3).xy(), z, fr->uv3, c);
 
 	++count;	
 }
 
-void SpritePlotter::drawQuad(ImageAsset *img, vec2 p0, vec2 p1, vec2 p2, vec2 p3, int frame, Color c) {
+void SpritePlotter::drawQuad(ImageAsset *img, vec2 p0, vec2 p1, vec2 p2, vec2 p3, int frame, Color c, float z) {
 	ASSERT(isBound());
 	setTextureAtlas(img->texture);
 	auto slice = nextSlice();
 	FrameAsset *fr = img->frame(frame);
 
-	slice[0].set(p0, fr->uv0, c);
-	slice[1].set(p1, fr->uv1, c);
-	slice[2].set(p2, fr->uv2, c);
-	slice[3].set(p3, fr->uv3, c);
+	slice[0].set(p0, z, fr->uv0, c);
+	slice[1].set(p1, z, fr->uv1, c);
+	slice[2].set(p2, z, fr->uv2, c);
+	slice[3].set(p3, z, fr->uv3, c);
 
 	++count;	
 }
 
 #define UV_LABEL_SLOP (0.0001f)
 
-void SpritePlotter::plotGlyph(const GlyphAsset& g, float x, float y, float h, Color c) {
+void SpritePlotter::plotGlyph(const GlyphAsset& g, float x, float y, float z, float h, Color c) {
 	if (count == capacity) {
 		commitBatch();
 	}
@@ -158,15 +158,15 @@ void SpritePlotter::plotGlyph(const GlyphAsset& g, float x, float y, float h, Co
 	float du = k * (g.advance-UV_LABEL_SLOP);
 	float dv = k * h;
 
-	slice[0].set(vec(x,y), uv, c);	
-	slice[1].set(vec(x,y+h), uv+vec(0,dv), c);	
-	slice[2].set(vec(x+g.advance,y), uv+vec(du,0), c);	
-	slice[3].set(vec(x+g.advance,y+h), uv+vec(du,dv), c);	
+	slice[0].set(vec(x,y), z, uv, c);
+	slice[1].set(vec(x,y+h), z, uv+vec(0,dv), c);
+	slice[2].set(vec(x+g.advance,y), z, uv+vec(du,0), c);
+	slice[3].set(vec(x+g.advance,y+h), z, uv+vec(du,dv), c);
 
 	++count;
 }
 
-void SpritePlotter::drawLabel(FontAsset *font, vec2 p, Color c, const char *msg) {
+void SpritePlotter::drawLabel(FontAsset *font, vec2 p, Color c, const char *msg, float z) {
 	ASSERT(isBound());
 	setTextureAtlas(&(font->texture));
 
@@ -175,7 +175,7 @@ void SpritePlotter::drawLabel(FontAsset *font, vec2 p, Color c, const char *msg)
 	while(*msg) {
 		if (*msg != '\n') {
 			GlyphAsset g = font->getGlyph(*msg);
-			plotGlyph( g, px, py, font->height, c);
+			plotGlyph( g, px, py, z, font->height, c);
 			px += g.advance;
 		} else {
 			px = p.x;
@@ -186,7 +186,7 @@ void SpritePlotter::drawLabel(FontAsset *font, vec2 p, Color c, const char *msg)
 
 }
 
-void SpritePlotter::drawLabelCentered(FontAsset *font, vec2 p, Color c, const char *msg) {
+void SpritePlotter::drawLabelCentered(FontAsset *font, vec2 p, Color c, const char *msg, float z) {
 	ASSERT(isBound());
 	setTextureAtlas(&(font->texture) );
 	float py = p.y;
@@ -196,7 +196,7 @@ void SpritePlotter::drawLabelCentered(FontAsset *font, vec2 p, Color c, const ch
 		float px = p.x - (length>>1);
 		while(msg != next) {
 			GlyphAsset g = font->getGlyph(*msg);
-			plotGlyph( g, px, py, font->height, c);
+			plotGlyph( g, px, py, z, font->height, c);
 			px += g.advance;
 			msg++;
 		}
@@ -207,7 +207,7 @@ void SpritePlotter::drawLabelCentered(FontAsset *font, vec2 p, Color c, const ch
 	}
 }
 
-void SpritePlotter::drawLabelRightJustified(FontAsset *font, vec2 p, Color c, const char *msg) {
+void SpritePlotter::drawLabelRightJustified(FontAsset *font, vec2 p, Color c, const char *msg, float z) {
 	ASSERT(isBound());
 	setTextureAtlas(&(font->texture) );
 	float py = p.y;
@@ -217,7 +217,7 @@ void SpritePlotter::drawLabelRightJustified(FontAsset *font, vec2 p, Color c, co
 		float px = p.x - length;
 		while(msg != next) {
 			GlyphAsset g = font->getGlyph(*msg);
-			plotGlyph( g, px, py, font->height, c);
+			plotGlyph( g, px, py, z, font->height, c);
 			px += g.advance;
 			msg++;
 		}
@@ -232,7 +232,7 @@ void SpritePlotter::drawLabelRightJustified(FontAsset *font, vec2 p, Color c, co
 
 #define TILE_SLOP (0.001f)
 
-void SpritePlotter::drawTilemap(TilemapAsset *map, vec2 position) {
+void SpritePlotter::drawTilemap(TilemapAsset *map, vec2 position, float z) {
 	ASSERT(isBound());
 
 	// make sure the map is initialized
@@ -274,10 +274,10 @@ void SpritePlotter::drawTilemap(TilemapAsset *map, vec2 position) {
 					/ vec(map->tileAtlas.w, map->tileAtlas.h);
 				auto slice = nextSlice();
 
-				slice[0].set(p, uv, rgba(0));
-				slice[1].set(p+vec(0,th), uv+vec(0,uh), rgba(0));
-				slice[2].set(p+vec(tw,0), uv+vec(uw,0), rgba(0));
-				slice[3].set(p+vec(tw,th), uv+vec(uw,uh), rgba(0));
+				slice[0].set(p, z, uv, rgba(0));
+				slice[1].set(p+vec(0,th), z, uv+vec(0,uh), rgba(0));
+				slice[2].set(p+vec(tw,0), z, uv+vec(uw,0), rgba(0));
+				slice[3].set(p+vec(tw,th), z, uv+vec(uw,uh), rgba(0));
 
 				if (++count == capacity) {
 					commitBatch();

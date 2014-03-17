@@ -82,7 +82,7 @@ void SplinePlotter::reserve(int numVertsRequired) {
 	
 }
 
-void SplinePlotter::startCurve(int resolution, vec2 p0, vec2 p1, Color c) {
+void SplinePlotter::startCurve(int resolution, vec2 p0, vec2 p1, float z, Color c) {
 	ASSERT(isBound());
 	reserve(resolution << 1);
 	curveCapacity = resolution;
@@ -92,17 +92,17 @@ void SplinePlotter::startCurve(int resolution, vec2 p0, vec2 p1, Color c) {
 		*nextVert() = *tail;
 		nextVert()->set(p0, vec(0, 1), c);
 	}
-	nextVert()->set(p0, vec(0, 1), c);
-	nextVert()->set(p1, vec(1, 1), c);
+	nextVert()->set(p0, z, vec(0, 1), c);
+	nextVert()->set(p1, z, vec(1, 1), c);
 	curveCount = 1;
 	
 }
 
-void SplinePlotter::plotCurvePoint(vec2 p0, vec2 p1, Color c) {
+void SplinePlotter::plotCurvePoint(vec2 p0, vec2 p1, float z, Color c) {
 	ASSERT(isBound());
 	ASSERT(curveCapacity > 0 && curveCount < curveCapacity);
-	nextVert()->set(p0, vec(0, 1), c);
-	nextVert()->set(p1, vec(1, 1), c);
+	nextVert()->set(p0, z, vec(0, 1), c);
+	nextVert()->set(p1, z, vec(1, 1), c);
 	curveCount++;
 }
 
@@ -152,7 +152,7 @@ inline void setVertex(BasicVertex*v, vec2 p, float z, vec2 uv, Color c) {
 	v->color = c;
 }
 
-void SplinePlotter::plotArc(vec2 p, float r1, float r2, Color c, float a1, float a2, int resolution, float z) {
+void SplinePlotter::plotArc(vec2 p, float z, float r1, float r2, Color c, float a1, float a2, int resolution) {
 	ASSERT(isBound());
 	reserve(resolution<<1);
 	
@@ -209,7 +209,7 @@ void SplinePlotter::plotArc(vec2 p, float r1, float r2, Color c, float a1, float
 	
 }
 
-void SplinePlotter::plotCircle(vec2 p, float r, Color c, int resolution, float z) {
+void SplinePlotter::plotCircle(vec2 p, float z, float r, Color c, int resolution) {
 	ASSERT(isBound());
 	reserve(resolution<<1);
 	vec2 curr = vec(1,0);
