@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include <utility>
+
 // For ASSERT
 #include "littlepolygon_base.h"
 
@@ -34,6 +36,9 @@ private:
 	void *mThis;
 	CallbackPtr mCallback;
 	
+	// portable stubs for converting different kinds of callbacks into a
+	// common standard call.  This are often optimized away by the compiler.
+	
 	template<void (*TFunc)(Args...)>
 	static void funcStub(Args... args) { TFunc(args...); }
 	
@@ -49,10 +54,15 @@ private:
 		(p->*TMethod)(args...);
 	}
 	
+	// private constructor, so that clients have to initialize this with
+	// the explicit builder methods
+	
 	Action(void *aThis, CallbackPtr aCallback) :
 		mThis(aThis), mCallback(aCallback) {}
 	
 public:
+	
+	// explicit build methods
 	
 	static Action none() { return Action(0, 0); }
 	
@@ -71,19 +81,11 @@ public:
 		return Action(const_cast<T*>(context), &constMethodStub<T, TMethod>);
 	}
 	
-	void operator()(Args&& ... args) {
-		ASSERT(mThis);
-		mCallback(mThis, args...);
-	}
+	// functor operators
 	
-	operator bool() const {
-		return mThis != 0;
-	}
-	
-	bool operator!() const
-	{
-		return !(operator bool());
-	}
+	void operator()(Args&& ... args) { ASSERT(mThis); mCallback(mThis, args...); }
+	operator bool() const { return mThis != 0; }
+	bool operator!() const { return !(operator bool()); }
 };
 
 
@@ -92,23 +94,30 @@ public:
 //------------------------------------------------------------------------------
 
 // Forward declarations
+
 template<typename... Args> class EventListener;
 template<typename... Args> class EventDispatcher;
 
 // EventListener is a control block for a single logical listener.  Multiple
 // registrations for the same callback require multiple control blocks since
 // the are iterated using a simple doubly-linked list.
+
 template<typename... Args>
-class EventListener {
-friend class EventDispatcher<Args...>;
-public:
+struct EventListener {
 	typedef EventListener<Args...>* SiblingLink;
 	typedef Action<Args...> Delegate;
 
-private:
 	Delegate callback;
 	SiblingLink prev, next;
 	
+	// Probably makes sense to typedef this as a concrete instantiation to
+	// make it easier to type.
+	EventListener(Delegate aCallback) :
+		callback(aCallback), prev(this), next(this) {}
+	~EventListener() { unbind(); }
+	
+	inline bool isBound() const { return prev != this; }
+
 	void attachAfter(EventListener *before) {
 		next = before->next;
 		prev = before;
@@ -116,15 +125,13 @@ private:
 		next->prev = this;
 	}
 	
-public:
-	// Probably makes sense to typedef this as a concrete instantiation to
-	// make it easier to type.
-	EventListener(Delegate aCallback) :
-		callback(aCallback), prev(this), next(this) {}
-	~EventListener() { unbind(); }
+	void attachBefore(EventListener *after) {
+		next = after;
+		prev = after->prev;
+		after->prev = this;
+		prev->next = this;
+	}
 	
-	inline bool isBound() const { return next != this; }
-
 	void unbind() {
 		next->prev = prev;
 		prev->next = next;
@@ -136,9 +143,9 @@ public:
 // EventDispatcher is an opaque dispatcher that can be allocated in place as a
 // public parameters without leaking implementation details (unless you don't
 // want "emit" to be public).
+
 template<typename... Args>
 class EventDispatcher {
-friend class EventListener<Args...>;
 public:
 	typedef EventListener<Args...> Listener;
 
@@ -150,32 +157,33 @@ public:
 	~EventDispatcher() { unbind(); }
 
 	void bind(EventListener<Args...>* listener) {
-		ASSERT(!listener->isBound());
+		
 		// always add to the head of the list, so that new event subscriptions
 		// made as a side-effect of emit() are not invoked for that dispatch.
+		
+		ASSERT(!listener->isBound());
 		listener->attachAfter(&head);
-	}
-
-	void unbind() {
-		while(isBound()) { head.next->unbind(); }
+		
 	}
 
 	inline bool isBound() { return head.isBound(); }
+	void unbind() { while(isBound()) { head.next->unbind(); } }
 
-	// It's OK to add/remove listeners while the event is being emitted. New
-	// listeners will not be triggered by the current event.
 	void emit(Args&&... args) {
+		
 		// we use a bookmark to allow events to be unsubscribed gracefully
 		// without losing our place in the list (since the bookmark will not
 		// be removed by side-effects).
+		
 		Listener bookmark(Listener::Delegate::none());
 		auto p = head.next;
 		while(p != &head) {
 			bookmark.attachAfter(p);
-			p->callback(args...);
+			p->callback(std::forward<Args>(args) ...);
 			p = bookmark.next;
 			bookmark.unbind();
 		}
+		
 	}
 
 };
@@ -184,43 +192,36 @@ public:
 // GENERIC TIMER CALLBACK MULTIPLEXOR
 //------------------------------------------------------------------------------
 
-class TimerListener;
-class TimerQueue;
+// Timer listeners are a special event listener that carries a timeout which
+// the timer queue uses to sort listeners.
 
-class TimerListener {
-public:
-	friend class TimerQueue;
-
+class TimerListener : public EventListener<> {
+friend class TimerQueue;
 private:
-	Action<> callback;
-	TimerQueue *queue;
 	double time;
-	TimerListener *next;
-
+	
 public:
-	TimerListener(Action<> aCallback) :
-		callback(aCallback), queue(0), time(0), next(0) {}
-	~TimerListener() { clear(); }
+	TimerListener(Action<> aCallback) : EventListener<>(aCallback), time(0) {}
 	
-	
-	inline bool isQueued() const { return queue != 0; }
-	
-	void clear();
+	double nextTime() const { return static_cast<TimerListener*>(next)->time; }
+	double prevTime() const { return static_cast<TimerListener*>(prev)->time; }
 };
+
+// Multiplexes several timeouts to deduplicate timeout work and simply defered
+// callbacks.  Different timer queues could be used
 
 class TimerQueue {
 private:
-	friend class TimerListener;
 	double time;
-	TimerListener *listeners;
+	TimerListener head;
 	
 public:
-	TimerQueue() : time(0), listeners(0) {}
+	TimerQueue() : time(0), head(Action<>::none()) {}
 	~TimerQueue() { clear(); }
 	
-	inline bool hasQueue() const { return listeners != 0; }
-	void clear();
-	
+	inline bool hasQueue() const { return head.isBound(); }
+
+	void clear() { while(hasQueue()) { head.next->unbind(); } }
 	void enqueue(TimerListener* newListener, double duration);
 	void tick(double dt);
 };

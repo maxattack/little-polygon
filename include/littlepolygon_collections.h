@@ -157,7 +157,7 @@ public:
 	template<typename... Args>
 	T* alloc(Args&&... args) {
 		ASSERT(n < N);
-		auto result = new(&slots[n].record) T(std::forward<Args>(args) ...);
+		auto result = new(&slots[n].record) T(args ...);
 		n++;
 		return result;
 	}
@@ -187,16 +187,12 @@ public:
 		return slots[n-1].record;
 	}
 	
-	T& push() {
-		ASSERT(n < N);
-		n++;
-		return slots[n-1].record;
-	}
-	
 	T pop() {
 		ASSERT(n > 0);
 		n--;
-		return slots[n].record;
+		auto result = slots[n].record;
+		slots[n].record.~T();
+		return result;
 	}
 	
 	void removeAt(int i) {
@@ -206,6 +202,7 @@ public:
 			slots[j-1].record = slots[j].record;
 		}
 		n--;
+		slots[n].record.~T();
 	}
 	
 	void insertAt(const T& val, int i) {
@@ -241,3 +238,4 @@ public:
 		return findFirst(val) != -1;
 	}
 };
+
