@@ -42,12 +42,13 @@ inline void computePRV(
 	const mat4f& strokeMatrix,
 	const vec4f& strokeVector,
 	float u,
-	float faaf,
+	//float faaf,
 
 	// out params
 	vec2& p,
 	vec2& r,
-	float& v
+	float &depth
+	//float& v
 
 ) {
 	
@@ -60,9 +61,10 @@ inline void computePRV(
 	// save out-params
 	p.x = centerPos.x();
 	p.y = centerPos.y();
+	depth = centerPos.z();
 	r.x = stroke.x();
 	r.y = stroke.y();
-	v = clamp(0.01 * faaf * radius);
+	//v = clamp(0.01 * faaf * radius);
 
 }
 
@@ -120,25 +122,25 @@ void SplinePlotter::plotCubic(const mat4f& posMat, const vec4f& strokeVec, Color
 	// point computation is done efficiently with matrix math
 	auto strokeMat = Spline::perpendicularMatrix(posMat);
 	vec2 p,r;
-	float v;
+	float depth;
 	
 	// plot vertices
-	computePRV(posMat, strokeMat, strokeVec, 0, fakeAntiAliasFactor, p, r, v);
+	computePRV(posMat, strokeMat, strokeVec, 0, p, r, depth);
 	if (count > 0) {
 		// add degenerate triangle
 		auto tail = plotter.getVertex(count-1);
 		*nextVert() = *tail;
-		nextVert()->set(p-r, vec(0,v), c);
+		nextVert()->set(p-r, depth, vec(0.5,0.5), c);
 	}
-	nextVert()->set(p-r, vec(0,v), c);
-	nextVert()->set(p+r, vec(1,v), c);
+	nextVert()->set(p-r, depth, vec(0.5,0.5), c);
+	nextVert()->set(p+r, depth, vec(0.5,0.5), c);
 	float du = 1.0 / (resolution-1.0);
 	float u = 0;
 	for(int i=1; i<resolution; ++i) {
 		u += du;
-		computePRV(posMat, strokeMat, strokeVec, u, fakeAntiAliasFactor, p, r, v);
-		nextVert()->set(p-r, vec(0,v), c);
-		nextVert()->set(p+r, vec(1,v), c);
+		computePRV(posMat, strokeMat, strokeVec, u, p, r, depth);
+		nextVert()->set(p-r, depth, vec(0.5,0.5), c);
+		nextVert()->set(p+r, depth, vec(0.5,0.5), c);
 	}
 	
 }

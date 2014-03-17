@@ -85,7 +85,7 @@ SDL_Window *initContext(const char *caption, int w, int h) {
 	#endif
 
 	//SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-	//SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
+	//SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 2);
 
 	
 	uint32_t winFlags = 0;

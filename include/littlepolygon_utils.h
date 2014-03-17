@@ -109,6 +109,29 @@ struct Timeout {
 	}
 };
 
+//------------------------------------------------------------------------------
+// Singleton Template
+
+template<typename T>
+class Singleton {
+private:
+	static T* inst;
+	struct ContextGuard {
+		ContextGuard(T* g) { ASSERT(inst == 0); inst = g; }
+		~ContextGuard() { inst = 0; }
+	};
+	ContextGuard contextGuard;
+
+
+public:
+	Singleton(T* aThis) : contextGuard(aThis) {}
+	static inline T& getInstance() { ASSERT(inst); return *inst; }
+};
+
+template<typename T> T* Singleton<T>::inst = nullptr;
+
+
+
 
 
 
