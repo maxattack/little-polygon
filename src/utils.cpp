@@ -86,6 +86,11 @@ SDL_Window *initContext(const char *caption, int w, int h) {
 		"", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 0, 0,
 		SDL_WINDOW_OPENGL|SDL_WINDOW_FULLSCREEN|SDL_WINDOW_BORDERLESS|SDL_WINDOW_SHOWN
 	);
+	#elif EMSCRIPTEN
+	
+	
+	pEmscriptenWindow = pWindow;
+	
 	#else
 
 	#if LITTLE_POLYGON_GL_CORE_PROFILE
@@ -95,7 +100,6 @@ SDL_Window *initContext(const char *caption, int w, int h) {
 
 	//SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
 	//SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 2);
-
 	
 	uint32_t winFlags = 0;
 	if (w == 0) {
@@ -129,10 +133,6 @@ SDL_Window *initContext(const char *caption, int w, int h) {
 	
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	
-#if EMSCRIPTEN
-	pEmscriptenWindow = pWindow;
-#endif
 	
 	return pWindow;
 }
