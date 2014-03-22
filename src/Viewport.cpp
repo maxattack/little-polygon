@@ -75,7 +75,7 @@ void Viewport::setMVP(GLuint amvp) const {
 	GLfloat buf[16] = {
 		2.0f/mSize.x, 0.0f, 0.0f, 0.0f,
 		0.0f, -2.0f/mSize.y, 0.0f, 0.0f,
-		0.0f, 0.0f, -2.0f/256.0f, 0.0f,
+		0.0f, 0.0f, 2.0f/256.0f, 0.0f,
 		tx, ty, tz, 1.0f
 	};
 //	mvp.store(buf);
