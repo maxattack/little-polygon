@@ -28,6 +28,10 @@
 // to register teardown.
 SDL_Window *initContext(const char *caption, int w=0, int h=0);
 
+#if EMSCRIPTEN
+SDL_Window *SDL_GL_GetCurrentWindow();
+#endif
+
 class Viewport {
 private:
 	vec2 mSize;

@@ -61,23 +61,24 @@ vec2 Viewport::mouse() const {
 
 void Viewport::setMVP(GLuint amvp) const {
 	
-	mat4f mvp = mat4f::ortho(
-		mOffset.x, mOffset.x+mSize.x,
-		mOffset.y+mSize.y, mOffset.y,
-		128.0, -128.0
-	);
+//	mat4f mvp = mat4f::ortho(
+//		mOffset.x, mOffset.x+mSize.x,
+//		mOffset.y+mSize.y, mOffset.y,
+//		128.0, -128.0
+//	);
+//	
 	
+	auto tx = - (2.0f*mOffset.x + mSize.x) / mSize.x;
+	auto ty = - (2.0f*mOffset.y + mSize.y) / (-mSize.y);
+	auto tz = 0.0f;
 	
-//	if (mRotation < -0.0001 || mRotation > 0.0001) {
-//		auto half = (mOffset + 0.5 * mSize);
-//		mvp =
-//			mvp *
-//			mat4f::translation(vec3f(half.x, half.y, 0)) *
-//			mat4f::axisRotation(mRotation, vec3f(0,0,-1)) *
-//			mat4f::translation(vec3f(-half.x, -half.y, 0));
-//	}
-	GLfloat buf[16];
-	mvp.store(buf);
+	GLfloat buf[16] = {
+		2.0f/mSize.x, 0.0f, 0.0f, 0.0f,
+		0.0f, -2.0f/mSize.y, 0.0f, 0.0f,
+		0.0f, 0.0f, -2.0f/256.0f, 0.0f,
+		tx, ty, tz, 1.0f
+	};
+//	mvp.store(buf);
 	glUniformMatrix4fv(amvp, 1, 0, buf);
 }
 

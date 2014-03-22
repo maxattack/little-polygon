@@ -60,6 +60,15 @@ static void doTearDown() {
   SDL_Quit();
 }
 
+#if EMSCRIPTEN
+static SDL_Window *pEmscriptenWindow = 0;
+
+SDL_Window *SDL_GL_GetCurrentWindow() {
+	return pEmscriptenWindow;
+}
+#endif
+
+
 SDL_Window *initContext(const char *caption, int w, int h) {
 	#if LITTLE_POLYGON_MOBILE
 	SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO);
@@ -104,7 +113,7 @@ SDL_Window *initContext(const char *caption, int w, int h) {
 
 	SDL_GL_CreateContext(pWindow);
 
-	#if !LITTLE_POLYGON_MOBILE
+	#if !LITTLE_POLYGON_MOBILE && !EMSCRIPTEN
 	glewInit();
 	//glEnable(GL_MULTISAMPLE);
 	#endif
@@ -114,15 +123,21 @@ SDL_Window *initContext(const char *caption, int w, int h) {
 	glEnable(GL_TEXTURE_2D);
 	glActiveTexture(GL_TEXTURE0);
 	
-	#if !LITTLE_POLYGON_MOBILE
+	#if !LITTLE_POLYGON_MOBILE && !EMSCRIPTEN
 	glEnableClientState(GL_VERTEX_ARRAY);
 	#endif
 	
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	
+#if EMSCRIPTEN
+	pEmscriptenWindow = pWindow;
+#endif
+	
 	return pWindow;
 }
+
+
 
 bool linearIntersection(vec2 u0, vec2 u1, vec2 v0, vec2 v1, float& u) {
 	float norm = (v1.y - v0.y)*(u1.x-u0.x) - (v1.x-v0.x)*(u1.y-u0.y);
