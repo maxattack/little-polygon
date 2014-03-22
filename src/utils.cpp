@@ -70,6 +70,13 @@ SDL_Window *SDL_GL_GetCurrentWindow() {
 
 
 SDL_Window *initContext(const char *caption, int w, int h) {
+	
+	if (w == 0) {
+		// iphone 5 resolution :P
+		w = 1136;
+		h = 640;
+	}
+	
 	#if LITTLE_POLYGON_MOBILE
 	SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO);
 	#else
@@ -79,6 +86,7 @@ SDL_Window *initContext(const char *caption, int w, int h) {
 	atexit(doTearDown);
 
 	#if LITTLE_POLYGON_MOBILE
+	
 	SDL_SetEventFilter(handleAppEvents, 0);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);		
@@ -86,13 +94,9 @@ SDL_Window *initContext(const char *caption, int w, int h) {
 		"", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 0, 0,
 		SDL_WINDOW_OPENGL|SDL_WINDOW_FULLSCREEN|SDL_WINDOW_BORDERLESS|SDL_WINDOW_SHOWN
 	);
-	#elif EMSCRIPTEN
 	
+#else
 	
-	pEmscriptenWindow = pWindow;
-	
-	#else
-
 	#if LITTLE_POLYGON_GL_CORE_PROFILE
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
@@ -102,11 +106,6 @@ SDL_Window *initContext(const char *caption, int w, int h) {
 	//SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 2);
 	
 	uint32_t winFlags = 0;
-	if (w == 0) {
-		// iphone 5 resolution :P
-		w = 1136;
-		h = 640;
-	}
 	SDL_Window *pWindow = SDL_CreateWindow(
 		caption ? caption : "Little Polygon Context",
 		SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
