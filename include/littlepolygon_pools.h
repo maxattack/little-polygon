@@ -485,8 +485,8 @@ public:
 
 	template<typename... Args>
 	T* alloc(Args&&... args) {
-		slots.emplace_back(args ...);
-		return &(slots.back().record);
+		slots.emplace_back();
+		return new (&slots.back()) T(args...);
 	}
 
 	void release(T* p) {
