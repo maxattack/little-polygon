@@ -32,16 +32,17 @@
 	#include <SDL/SDL.h>
 	#include <SDL2/SDL_opengles2.h>
 	#include <SDL/SDL_mixer.h>
-#elif __IPHONEOS__
+#else
 	#include <SDL2/SDL.h>
+#if __IPHONEOS__
 	#include <SDL2/SDL_opengles2.h>
 	#include <SDL2/SDL_mixer.h>
 #else
-	#include <SDL2/SDL.h>
 	#define GLEW_STATIC
 	#include <glew.h>
 	#include <SDL2/SDL_opengl.h>
 	#include <SDL2/SDL_mixer.h>
+#endif
 #endif
 
 #if __IPHONEOS__
