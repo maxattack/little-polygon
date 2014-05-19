@@ -39,39 +39,14 @@ Runtime Dependencies (native)
 Modules
 * littlepolygon_assets - a simple system for packaging and loading compressed game assets
 * littlepolygon_bitset - efficient bitvector with intrinsic optimizations
-* littlepolygon_collisions - efficient AABB collision hash
-* littlepolygon_fk - portable forward-kinematic display tree
 * littlepolygon_graphics - opengl utilities
 * littlepolygon_math - common geometry stuff
 * littlepolygon_pools - a few common object-pool templates
 * littlepolygon_splines - efficient cubic spline drawing
 * littlepolygon_sprites - batching sprite renderer
 * littlepolygon_trail - efficient trail renderer
+* littlepolgyon_context - convenient global context setup and teardown
 
-CODING STANDARDS
-----------------
-
-Python scripts are organized into "tasks" - scripts that encapsulate a single method which
-can be invoked directly (checking for `__main__`), or imported and composited with other
-tasks in higher-level scripts.
-
-Native code is written in C++ with a "C with Objects" mentality.  Each object is expressed
-as a plain-old-data structure with just a few convenience getter methods.  Initialization and
-non-idempotent methods are top-level functions which take the structure as a "context" argument.
-I try to keep method names short by using argument overloading as an implicit namespace. This 
-is a lot more flexible for controlling memory allocation, initialization order,  multithreading, 
-binding to scripting environments, keeping private methods out of headers, and  allowing the use 
-of completely opaque pointers that are just forward-declared.
-
-WISHLIST
---------
-
-* automatic lua binding (using python scripts, not C++ template madness)
-* heirarchical go templates in asset export
-* savedata (sqlite?)
-* asynchronous sprite-batch (for multithreading)
-* more import asset types (SVG, Flash)
-* non-native export targets (e.g. unity, webgl)
 
 LICENSE
 -------
