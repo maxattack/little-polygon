@@ -40,14 +40,16 @@ Modules
 
 * littlepolygon/math - common geometry stuff
 * littlepolygon/bitset - efficient bitvector with intrinsic optimizations
+* littlepolygon/collections - nondynamic collection templates
 * littlepolygon/pools - a few common object-pool templates
+* littlepolygon/events - functors, delegates, and timers
 * littlepolygon/assets - a simple system for packaging and loading compressed game assets
 * littlepolygon/graphics - opengl utilities
 * littlepolygon/sprites - batching sprite renderer
 * littlepolygon/splines - efficient cubic spline drawing
 * littlepolygon/trail - efficient trail renderer
 * littlepolygon/context - convenient global context setup and teardown
-
+* littlepolgyon/capi - ffi interface for scripting environments
 
 LICENSE
 -------

@@ -34,8 +34,11 @@ LIBS = -Llib -framework OpenGL -framework Cocoa -llittlepolygon -lz
 
 # SDL2
 #CFLAGS += -D_THREAD_SAFE
-
 LIBS += -framework SDL2 -framework SDL2_mixer
+
+# MONO
+# CFLAGS += -I/Library/Frameworks/Mono.framework/Headers/mono-2.0
+# LIBS += -framework Mono
 
 # VECTORIAL
 CFLAGS += -Ivectorial/include
@@ -47,7 +50,8 @@ CFLAGS += -g -DDEBUG
 # CFLAGS += -Os -flto 
 
 # 32 BITS
-CFLAGS += -arch i386
+# CFLAGS += -arch i386
+CFLAGS += -m32
 AFLAGS = 32
 # AFLAGS = 64
 
@@ -62,6 +66,9 @@ bin/platformer: lib/liblittlepolygon.a $(PLATFORMER_OBJ_FILES)
 bin/platformer.bin: demo/assets/* tools/*.py demo/tools/*.py
 	mkdir -p bin
 	demo/tools/export_game_assets.py demo/assets/assets.yaml $@ $(AFLAGS)
+
+# bin/game.dll: demo/scripts/*.cs
+# 	mcs demo/scripts/*.cs -out:bin/game.dll -unsafe
 
 clean:
 	rm -f lib/*

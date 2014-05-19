@@ -1,5 +1,8 @@
 #include <littlepolygon/context.h>
 
+// #include <mono/jit/jit.h>
+// #include <mono/metadata/assembly.h>
+
 #define CANVAS_WIDTH   320
 #define CANVAS_HEIGHT  115
 
@@ -43,6 +46,10 @@ void handleKeydown(const SDL_KeyboardEvent& event) {
 	}
 }
 
+// extern "C" void sayHello() {
+// 	puts("sayHello() called!");
+// }
+
 int main(int argc, char *argv[]) {
 
 	// INTIAILIZE LITTLE POLYGON
@@ -50,6 +57,17 @@ int main(int argc, char *argv[]) {
 
 	// INITIALIZE GLOBAL OPENGL STATE
 	glClearColor(0.5, 0.6, 0.8, 0.0);
+
+	// auto domain = mono_jit_init("game");
+	// auto assembly = mono_domain_assembly_open(domain, "game.dll");
+	// if (!assembly) {
+	// 	LOG(("NO game.dll\n"));
+	// } else {
+	// 	const char *monoArgs[] = { "game.dll", "--gc=sgen", "-v" };
+	// 	mono_jit_exec(domain, assembly, 3, (char**) monoArgs);
+	// }
+
+	// mono_jit_cleanup(domain);
 
 	// INITIALIZE MUSIC
 	auto music = Mix_LoadMUS("song.mid");
