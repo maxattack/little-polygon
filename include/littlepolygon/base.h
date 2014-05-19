@@ -36,12 +36,12 @@
 	#include <SDL2/SDL.h>
 #if __IPHONEOS__
 	#include <SDL2/SDL_opengles2.h>
-	#include <SDL2/SDL_mixer.h>
+	#include <SDL2_mixer/SDL_mixer.h>
 #else
 	#define GLEW_STATIC
 	#include <glew.h>
 	#include <SDL2/SDL_opengl.h>
-	#include <SDL2/SDL_mixer.h>
+	#include <SDL2_mixer/SDL_mixer.h>
 #endif
 #endif
 
