@@ -1,7 +1,6 @@
-using System;
-using System.Runtime.InteropServices;
-
+using LittlePolygon;
 using SDL2;
+using System;
 
 static class Game {
 
@@ -9,7 +8,7 @@ static class Game {
 
 	static void Main(string[] args) {
 
-		CreateContext("Little Polygon C# Demo", 3 * 320, 3 * 115, "demo.bin");
+		FFI.CreateContext("Little Polygon C# Demo", 3 * 320, 3 * 115, "demo.bin");
 
 		// PLAY SOME MUSIC
 		var mus = SDL_mixer.Mix_LoadMUS("song.mid");
@@ -21,11 +20,11 @@ static class Game {
 		var window = SDL.SDL_GL_GetCurrentWindow();
 		while(!gDone) {
 			HandleEvents();
-			ClearScreen();
+			FFI.ClearScreen();
 			SDL.SDL_GL_SwapWindow(window);
 		}
 
-		DestroyContext();
+		FFI.DestroyContext();
 
 	}
 
@@ -56,8 +55,4 @@ static class Game {
 		}
 	}
 	
-	[DllImport("__Internal")] static extern int CreateContext(string caption, int w, int h, string assetPath);
-	[DllImport("__Internal")] static extern int DestroyContext();
-	[DllImport("__Internal")] static extern void ClearScreen();
-
 }

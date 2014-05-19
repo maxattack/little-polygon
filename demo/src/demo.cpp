@@ -5,7 +5,6 @@
 
 int main(int argc, char *argv[]) {
 
-
 	// RESOLVE DLL TO SDL'S RESOURCE DIR
 	auto basePath = SDL_GetBasePath();
 	char dllPath[128];

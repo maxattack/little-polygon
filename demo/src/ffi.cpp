@@ -1,17 +1,20 @@
 #include <littlepolygon/context.h>
-#include <littlepolygon/ffi.h>
 
-extern "C" int littlepolygon_initialize(const char* caption, int w, int h, const char* assetPath) {
+extern "C" {
+
+int CreateContext(const char* caption, int w, int h, const char* assetPath) {
 	LPInit(caption, w, h, assetPath);
+	glClearColor(0.5, 0.6, 0.8, 0.0);	
 	return 0;
 }
 
-extern "C" int littlepolygon_destroy() {
+int DestroyContext() {
 	LPDestroy();
 	return 0;
 }
 
-extern "C" void littlepolygon_clearscreen() {
+void ClearScreen() {
 	glClear(GL_COLOR_BUFFER_BIT);
 }
 
+}
