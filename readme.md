@@ -49,7 +49,6 @@ Modules
 * littlepolygon/splines - efficient cubic spline drawing
 * littlepolygon/trail - efficient trail renderer
 * littlepolygon/context - convenient global context setup and teardown
-* littlepolgyon/capi - ffi interface for scripting environments
 
 LICENSE
 -------
