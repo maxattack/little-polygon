@@ -37,15 +37,16 @@ Runtime Dependencies (native)
 * zlib - asset decompression
 
 Modules
-* littlepolygon_assets - a simple system for packaging and loading compressed game assets
-* littlepolygon_bitset - efficient bitvector with intrinsic optimizations
-* littlepolygon_graphics - opengl utilities
-* littlepolygon_math - common geometry stuff
-* littlepolygon_pools - a few common object-pool templates
-* littlepolygon_splines - efficient cubic spline drawing
-* littlepolygon_sprites - batching sprite renderer
-* littlepolygon_trail - efficient trail renderer
-* littlepolgyon_context - convenient global context setup and teardown
+
+* littlepolygon/math - common geometry stuff
+* littlepolygon/bitset - efficient bitvector with intrinsic optimizations
+* littlepolygon/pools - a few common object-pool templates
+* littlepolygon/assets - a simple system for packaging and loading compressed game assets
+* littlepolygon/graphics - opengl utilities
+* littlepolygon/sprites - batching sprite renderer
+* littlepolygon/splines - efficient cubic spline drawing
+* littlepolygon/trail - efficient trail renderer
+* littlepolygon/context - convenient global context setup and teardown
 
 
 LICENSE
