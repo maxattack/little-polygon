@@ -16,8 +16,8 @@
 
 #pragma once
 
-#include "littlepolygon_assets.h"
-#include "littlepolygon_math.h"
+#include "assets.h"
+#include "math.h"
 #include <functional>
 
 //------------------------------------------------------------------------------
@@ -27,10 +27,6 @@
 // initialize everything the asset system needs (SDL, MIXER, etc).  Uses atexit()
 // to register teardown.
 SDL_Window *initContext(const char *caption, int w=0, int h=0);
-
-#if EMSCRIPTEN
-SDL_Window *SDL_GL_GetCurrentWindow();
-#endif
 
 class Viewport {
 private:
@@ -80,26 +76,17 @@ public:
 	}
 };
 
-
-
-// Dead-simple shader-compiler.  Easiest to just use C++11 raw string
-// literals to store the source, or else you could stash it in asset 
-// userdata if it's configurable from content.  Uses a VERTEX conditional-
-// compilation macro to differentiate the vertex and fragment shader.
-bool compileShader(const GLchar* source, GLuint *outProg, GLuint *outVert, GLuint *outFrag);
-
-struct ShaderHandle {
+struct Shader {
 	GLuint prog, vert, frag;
 	
-	ShaderHandle(const GLchar *source) {
-		CHECK(compileShader(source, &prog, &vert, &frag));
-	}
-	
-	~ShaderHandle() {
-		glDeleteProgram(prog);
-		glDeleteShader(vert);
-		glDeleteShader(frag);
-	}
+	Shader(const GLchar *source);
+	~Shader();
+
+	bool isValid() const { return prog; }
+	void use() { ASSERT(prog); glUseProgram(prog); }
+	GLuint uniformLocation(const char *name) { ASSERT(prog); return glGetUniformLocation(prog, name); }
+	GLuint attribLocation(const char *name) { ASSERT(prog); return glGetAttribLocation(prog, name); }
+
 };
 
 typedef Color (*TextureGenerator)(double, double);
@@ -111,7 +98,7 @@ int createRenderToTextureFramebuffer(GLsizei w, GLsizei h, GLuint *outTexture, G
 class PostProcessingFX {
 private:
 	GLuint dfb, fb, rt;    // framebuffer & rendertexture handles
-	GLuint prog, vsh, fsh; // shader handles
+	Shader shader;
 	GLuint ap, auv;        // attribute locations
 	GLuint vbuf;           // vertex buffer handle
 	
@@ -133,9 +120,6 @@ public:
 // BASIC PLOTTER
 //------------------------------------------------------------------------------
 
-struct BasicPlotter;
-
-BasicPlotter *createBasicPlotter(size_t capacity);
 
 struct BasicVertex {
 	float x,y,z,u,v;
@@ -146,71 +130,72 @@ struct BasicVertex {
 	inline void set(vec3f p, vec2 uv, Color c) { p.load(&x); u = uv.x; v = uv.y; color = c; }
 };
 
-struct BasicPlotterRef {
+struct BasicPlotter {
 private:
-	BasicPlotter *context;
+	int bound;
+	int capacity;
 	
+	Viewport view;
+	Shader shader;	
+	GLuint uMVP;
+	GLuint uAtlas;
+	GLuint aPosition;
+	GLuint aUV;
+	GLuint aColor;
+	
+	GLuint arrays[3]; // triple-buffered
+	int currentArray;
+	
+	BasicVertex *vertices;
+
 public:
-	BasicPlotterRef() {}
-	BasicPlotterRef(BasicPlotter *aContext) : context(aContext) {}
+	BasicPlotter(int capacity);
+	~BasicPlotter();	
 	
-	operator BasicPlotter*() { return context; }
-	operator bool() const { return context; }
-	
-	void destroy();
-	
-	const Viewport* view() const;
+	const Viewport& getView() const { return view; }
 	BasicVertex *getVertex(int i);
-	bool isBound() const;
-	int capacity() const;
+	bool isBound() const { return bound; }
+	int getCapacity() const { return capacity; }
 	
 	void begin(const Viewport& view, GLuint program=0);
-	
 	void commit(int count);
-
 	void end();
-	
-	
 
-};
-
-class BasicPlotterHandle : public BasicPlotterRef {
-public:
-	BasicPlotterHandle(size_t capacity) : BasicPlotterRef(createBasicPlotter(capacity)) {}
-	~BasicPlotterHandle() { destroy(); }
 };
 
 //------------------------------------------------------------------------------
 // DEBUG LINE RENDERING
 //------------------------------------------------------------------------------
 
-struct LinePlotter;
-class LinePlotterRef;
 
-LinePlotterRef createLinePlotter();
-
-class LinePlotterRef {
+class LinePlotter {
 private:
-	LinePlotter *context;
+	int count, capacity;
+	Shader shader;
+	GLuint uMVP, aPosition, aColor;
+
+	struct Vertex {
+		vec2 position;
+		Color color;
+
+		inline void set(vec2 p, Color c) { 
+			position = p; 
+			color = c; 
+		}
+	};
+
+	Vertex *vertices;
 
 public:
-	LinePlotterRef() {}
-	LinePlotterRef(LinePlotter *aContext) : context(aContext) {}
-
-	operator LinePlotter*() { return context; }
-	operator bool() const { return context; }
-
-	void destroy();
+	LinePlotter(int capacity);
+	~LinePlotter();
 
 	void begin(const Viewport& viewport);
 	void plot(vec2 p0, vec2 p1, Color c);
 	void plotLittleBox(vec2 p, float r, Color c);
 	void plotArrow(vec2 p0, vec2 p1, float r, Color c);
 	void end();
-};
 
-class LinePlotterHandle : public LinePlotterRef {
-public:
-	LinePlotterHandle(LinePlotter *p) : LinePlotterRef(p) {}
-	~LinePlotterHandle() { if (*this) destroy(); }
+private:
+	void commitBatch();
 };

@@ -15,11 +15,8 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
-#include "littlepolygon_base.h"
-#include "littlepolygon_math.h"
-
-struct AssetBundle;
-class AssetRef;
+#include "base.h"
+#include "math.h"
 
 //------------------------------------------------------------------------------
 // CONSTANTS
@@ -197,20 +194,18 @@ struct UserdataAsset {
 // MAIN INTERFACE
 //------------------------------------------------------------------------------
 
-// Block allocate assets from the binary at the given SDL path.  Can optionally
-// pass a crc along to double-check it's a specific build.
-AssetRef loadAssets(const char* path, uint32_t crc=0);
+struct AssetData;
 
-class AssetRef {
+class AssetBundle {
 private:
-	AssetBundle *bundle;
+	AssetData *data;
+	AssetBundle *fallback;
 
 public:
-	AssetRef() {}
-	AssetRef(AssetBundle *aBundle) : bundle(aBundle) {}
+	AssetBundle(const char* path=0, uint32_t crc=0);
+	~AssetBundle();
 
-	operator AssetBundle*() { return bundle; }
-	operator bool() const { return bundle; }
+	operator bool() const { return data; }
 
 	// Assets are keyed by name-hashes (fnv-1a)
 	// inlined so that the compiler can constant-fold over string literals :)
@@ -229,7 +224,6 @@ public:
 	#else
 	#define ASSET_RESULT_VERIFY(expr) return expr;
 	#endif
-
 
 	// lookup assets by name
 	TextureAsset *texture(const char *name) { ASSET_RESULT_VERIFY(texture(hash(name))) }
@@ -253,23 +247,13 @@ public:
 
 	// headers are sorted by hash, so lookup is LOG(N)
 	void* findHeader(uint32_t hash, uint32_t assetType);
-	void setFallback(AssetRef fallback);
+	void setFallback(AssetBundle* fallback);
 
 	// by default assets are initialized lazily, but this method will eagerly initialize
-	// the whole asset bundle;
+	// the whole asset data;
 	void init();
 
 	// release all intialized assets, but don't free the POD from memory
 	void release();
 
-	// release all assets and free POD from memory
-	void destroy();
-
 };
-
-class AssetHandle : public AssetRef {
-public:
-	AssetHandle(AssetBundle *p) : AssetRef(p) {}
-	~AssetHandle() { if (*this) destroy(); }
-};
-

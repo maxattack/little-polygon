@@ -15,7 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
-#include "littlepolygon_base.h"
+#include "base.h"
 
 #ifndef M_PI
 #define M_PI  (3.141592653589793)

@@ -1,128 +1,71 @@
-#include "platformer.h"
+#include <littlepolygon/context.h>
 
-static void handleEvents(PlayerInput& input);
-static void handleKeyDown(PlayerInput& input, const SDL_KeyboardEvent& key);
+#define CANVAS_WIDTH   320
+#define CANVAS_HEIGHT  115
 
-static void handleEvents(PlayerInput& input) {
+#define PIXELS_PER_METER 16
+#define METERS_PER_PIXEL (1.0/16.0)
+
+static bool gDone = 0;
+
+void handleEvents();
+void handleKeydown(const SDL_KeyboardEvent& event);
+
+void handleEvents() {
 	SDL_Event event;
 	while(SDL_PollEvent(&event)) {
 		switch(event.type) {
-			case SDL_QUIT:
-				input.done = true;
-				break;
+			
 			case SDL_KEYDOWN:
-				if (!event.key.repeat) {
-					handleKeyDown(input, event.key);
-				}
+				handleKeydown(event.key);
 				break;
+			
+			case SDL_QUIT:
+				gDone = true;
+				break;
+
+			default:
+				break;
+
 		}
-	}		
+	}
 }
 
-static void handleKeyDown(PlayerInput& input, const SDL_KeyboardEvent& key) {
-	switch(key.keysym.sym) {
+void handleKeydown(const SDL_KeyboardEvent& event) {
+	switch(event.keysym.sym) {
+		
 		case SDLK_ESCAPE:
-		case SDLK_q:
-			input.done = true;
+			gDone = true;
 			break;
-		case SDLK_TAB:
-			input.drawWireframe = !input.drawWireframe;
-			break;
-		case SDLK_SPACE:
-			input.jumpPressed = true;
+
+		default:
 			break;
 	}
 }
 
 int main(int argc, char *argv[]) {
 
-	auto window = initContext("A Girl and Her Cat", 4 * CANVAS_WIDTH, 4 * CANVAS_HEIGHT);
+	// INTIAILIZE LITTLE POLYGON
+	LPInit("Little Polygon Demo", 3 * CANVAS_WIDTH, 3 * CANVAS_HEIGHT, "platformer.bin");
 
-	Viewport view(vec(CANVAS_WIDTH, CANVAS_HEIGHT));
+	// INITIALIZE GLOBAL OPENGL STATE
+	glClearColor(0.5, 0.6, 0.8, 0.0);
 
-	auto color = rgb(0x95b5a2);
-	glClearColor(color.red(), color.green(), color.blue(), 0.0f);
-	
-	glEnable(GL_BLEND);	
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glLineWidth(2);
-
-	// initialize lp systems
-	auto assets = loadAssets("platformer.bin");
-	auto batch = createSpriteBatch();
-	auto sprites = createSpritePlotter();
-	auto lines = createLinePlotter();
-
-	// things with ctors
-	Timer timer;
-	timer.reset();
-	PlayerInput input;
-	auto collisions = createCollisionSystem();
-	collisions.setMetersToDisplay(PIXELS_PER_METER);
-
-	// scene entities
-	Environment environment;
-	Hero hero;
-	Kitten kitten;
-	
-	environment.init(assets, collisions);
-	hero.init(assets, batch, collisions);
-	kitten.init(assets, batch, collisions);
-	
-	// start music
-	// Mix_Music *music = Mix_LoadMUS("song.mid");
-	// if(music) { Mix_FadeInMusic(music, -1, 5000); }
-
-	while(!input.done) {
-
-		// clear canvas
-		glClear(GL_COLOR_BUFFER_BIT);
-
-		// tick time
-		timer.tick();
-		handleEvents(input);
-		hero.tick(&input, timer.deltaSeconds);
-		input.jumpPressed = false;
-
-		// render scene
-
-		sprites.begin(view);
-		environment.draw(sprites);
-		batch.draw(sprites);
-		sprites.end();
-
-		if (input.drawWireframe) {
-
-
-			glDisable(GL_BLEND);
-			lines.begin(view);
-			collisions.debugDraw(lines, rgb(0xffff00));
-
-			// test raycasting
-			auto ray = Ray(0.25f * view.size(), view.mouse());
-			auto physRay = Ray(METERS_PER_PIXEL * ray.p0, METERS_PER_PIXEL * ray.p1);
-			ColliderRef result;
-			auto u = collisions.raycast(physRay, 0xffffffff, &result);
-			if (u > 0) {
-				lines.plot(ray.p0, ray.pointAt(u), rgb(0x00ff00));
-			} else {
-				lines.plot(ray.p0, ray.p1, rgb(0xff0000));
-			}
-
-			lines.end();
-			glEnable(GL_BLEND);
-
-		}
-	
-		// present and wait for next frame
-		SDL_GL_SwapWindow(window);
+	// INITIALIZE MUSIC
+	auto music = Mix_LoadMUS("song.mid");
+	if (music) {
+		Mix_PlayMusic(music, -1);
 	}
 
-	collisions.destroy();
-	lines.destroy();
-	sprites.destroy();
-	batch.destroy();
-	assets.destroy();
+	// EVENT LOOP
+	while (!gDone) {
+		glClear(GL_COLOR_BUFFER_BIT);
+		handleEvents();
+		SDL_GL_SwapWindow(gWindow);
+	}
+
+	// SHUT EVERYTHING DOWN
+	LPDestroy();
 	
 	return 0;
 

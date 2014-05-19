@@ -14,20 +14,20 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "littlepolygon_graphics.h"
-#include "littlepolygon_splines.h"
+#include "littlepolygon/graphics.h"
+#include "littlepolygon/splines.h"
 
-SplinePlotter::SplinePlotter(BasicPlotterRef aPlotter) : plotter(aPlotter), count(-1), curveCapacity(-1) {
+SplinePlotter::SplinePlotter(BasicPlotter* aPlotter) : plotter(aPlotter), count(-1), curveCapacity(-1) {
 }
 
 SplinePlotter::~SplinePlotter() {
 }
 
 void SplinePlotter::begin(const Viewport& viewport, GLuint prog) {
-	ASSERT(!plotter.isBound());
+	ASSERT(!plotter->isBound());
 	ASSERT(!isBound());
 	count = 0;
-	plotter.begin(viewport, prog);
+	plotter->begin(viewport, prog);
 	
 	int w,h;
 	SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &w, &h);
@@ -69,7 +69,7 @@ inline void computePRV(
 }
 
 void SplinePlotter::reserve(int numVertsRequired) {
-	ASSERT(numVertsRequired <= plotter.capacity());
+	ASSERT(numVertsRequired <= plotter->getCapacity());
 	ASSERT(curveCapacity == -1);
 	
 	// need to add "degenerate" triangles to separate the two splines
@@ -78,7 +78,7 @@ void SplinePlotter::reserve(int numVertsRequired) {
 	}
 	
 	// flush if necessary
-	if (count > 0 && count + numVertsRequired > plotter.capacity()) {
+	if (count > 0 && count + numVertsRequired > plotter->getCapacity()) {
 		flush();
 	}
 	
@@ -90,7 +90,7 @@ void SplinePlotter::startCurve(int resolution, vec2 p0, vec2 p1, float z, Color 
 	curveCapacity = resolution;
 	if (count > 0) {
 		// add degenerate triangle
-		auto tail = plotter.getVertex(count-1);
+		auto tail = plotter->getVertex(count-1);
 		*nextVert() = *tail;
 		nextVert()->set(p0, z, vec(0, 1), c);
 	}
@@ -128,7 +128,7 @@ void SplinePlotter::plotCubic(const mat4f& posMat, const vec4f& strokeVec, Color
 	computePRV(posMat, strokeMat, strokeVec, 0, p, r, depth);
 	if (count > 0) {
 		// add degenerate triangle
-		auto tail = plotter.getVertex(count-1);
+		auto tail = plotter->getVertex(count-1);
 		*nextVert() = *tail;
 		nextVert()->set(p-r, depth, vec(0.5,0.5), c);
 	}
@@ -173,7 +173,7 @@ void SplinePlotter::plotArc(vec2 p, float z, float r1, float r2, Color c, float 
 		vec2 p1 = p + r2 * curr;
 		
 		if (count > 0) {
-			auto tail = plotter.getVertex(count-1);
+			auto tail = plotter->getVertex(count-1);
 			*nextVert() = *tail;
 			nextVert()->set(p0, z, vec(0,v), c);
 		}
@@ -195,7 +195,7 @@ void SplinePlotter::plotArc(vec2 p, float z, float r1, float r2, Color c, float 
 		vec2 rotor = unitVector(da / float(resolution-1));
 		
 		if (count > 0) {
-			auto tail = plotter.getVertex(count-1);
+			auto tail = plotter->getVertex(count-1);
 			*nextVert() = *tail;
 			nextVert()->set(p + r1 * curr, z, vec(0,v), c);
 		}
@@ -218,7 +218,7 @@ void SplinePlotter::plotCircle(vec2 p, float z, float r, Color c, int resolution
 	vec2 rotor = unitVector(M_PI / (resolution-1));
 	
 	if (count > 0) {
-		auto tail = plotter.getVertex(count-1);
+		auto tail = plotter->getVertex(count-1);
 		*nextVert() = *tail;
 		nextVert()->set(p+vec(0,r), z, vec(0,0), c);
 	}
@@ -235,7 +235,7 @@ void SplinePlotter::plotCircle(vec2 p, float z, float r, Color c, int resolution
 
 void SplinePlotter::flush() {
 	if (count > 0) {
-		plotter.commit(count);
+		plotter->commit(count);
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, count);
 		count = 0;
 	}
@@ -245,5 +245,5 @@ void SplinePlotter::end() {
 	ASSERT(isBound());
 	flush();
 	count = -1;
-	plotter.end();
+	plotter->end();
 }

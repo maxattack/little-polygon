@@ -69,6 +69,9 @@ def render_atlas(images):
 			ww = pitch-w
 			length = (pitch - h) * ww
 			k = 0
+			collided = 0
+			x = 0
+			y = 0
 			while k < length:
 				x = k % ww
 				y = k / ww

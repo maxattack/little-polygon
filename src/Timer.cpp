@@ -1,4 +1,4 @@
-#include <littlepolygon_events.h>
+#include <littlepolygon/events.h>
 
 void TimerQueue::enqueue(TimerListener *newListener, double duration) {
 	ASSERT(!newListener->isBound());

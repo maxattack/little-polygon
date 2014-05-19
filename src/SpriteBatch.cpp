@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "littlepolygon_sprites.h"
-#include "littlepolygon_bitset.h"
+#include "littlepolygon/sprites.h"
+#include "littlepolygon/bitset.h"
 
 
 
@@ -128,6 +128,16 @@ Color Sprite::fill() const {
 void Sprite::setFill(Color aFill) {
 	mBatch->mLayers[mLayer][mIndex].color = aFill;
 }
+
+int Sprite::frame() const {
+	return mBatch->mLayers[mLayer][mIndex].frame;
+}
+
+void Sprite::setFrame(int frame) {
+	ASSERT(frame < image()->nframes);
+	mBatch->mLayers[mLayer][mIndex].frame = frame;
+}
+
 
 void Sprite::release() {
 	// remove from the current layer

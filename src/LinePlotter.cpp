@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "littlepolygon_graphics.h"
+#include "littlepolygon/graphics.h"
 
 static const GLchar* SIMPLE_SHADER = R"GLSL(
 
@@ -41,110 +41,62 @@ void main() {
 
 )GLSL";
 
-#define LINE_PLOTTER_CAPACITY 256
-
-struct LinePlotter {
-	int count;
-	GLuint prog;
-	GLuint vert;
-	GLuint frag;
-	GLuint uMVP;
-	GLuint aPosition;
-	GLuint aColor;
-
-	struct Vertex {
-		vec2 position;
-		Color color;
-
-		inline void set(vec2 p, Color c) { 
-			position = p; 
-			color = c; 
-		}
-	};
-
-	Vertex vertices[ 2 * LINE_PLOTTER_CAPACITY ];
-};
-
-// private helper functions
-void commitBatch(LinePlotter* context);	
-
-static LinePlotter *allocLinePlotter() {
-	return (LinePlotter*) LITTLE_POLYGON_MALLOC(sizeof(LinePlotter));
+LinePlotter::LinePlotter(int aCapacity) : count(-1), capacity(aCapacity), shader(SIMPLE_SHADER), vertices(0) {
+	shader.use();
+	uMVP = shader.uniformLocation("mvp");
+	aPosition = shader.attribLocation("aPosition");
+	aColor = shader.attribLocation("aColor");
+	vertices = (Vertex*) LITTLE_POLYGON_MALLOC(sizeof(Vertex) * capacity);
 }
 
-static void dealloc(LinePlotter *plotter) {
-	LITTLE_POLYGON_FREE(plotter);
-}
 
-static void initialize(LinePlotter* context) {
-	context->count = -1;
-	CHECK( 
-		compileShader(SIMPLE_SHADER, &context->prog, &context->vert, &context->frag) 
-	);
-	glUseProgram(context->prog);
-	context->uMVP = glGetUniformLocation(context->prog, "mvp");
-	context->aPosition = glGetAttribLocation(context->prog, "aPosition");
-	context->aColor = glGetAttribLocation(context->prog, "aColor");
-}
-
-static void release(LinePlotter* context) {
-	glDeleteProgram(context->prog);
-	glDeleteShader(context->vert);
-	glDeleteShader(context->frag);
-}
-
-LinePlotterRef createLinePlotter() {
-	auto result = allocLinePlotter();
-	initialize(result);
-	return result;
-}
-
-void LinePlotterRef::destroy() {
-	release(context);
-	dealloc(context);
-}
-
-void LinePlotterRef::begin(const Viewport& viewport) {
-	ASSERT(context->count == -1);
-	context->count = 0;
-
-	glUseProgram(context->prog);
-	viewport.setMVP(context->uMVP);
-
-	glEnableVertexAttribArray(context->aPosition);
-	glEnableVertexAttribArray(context->aColor);
-
-	glVertexAttribPointer(
-		context->aPosition, 2, GL_FLOAT, GL_FALSE,
-		sizeof(LinePlotter::Vertex),
-		&context->vertices[0].position
-	);
-	glVertexAttribPointer(
-		context->aColor, 4, GL_UNSIGNED_BYTE, GL_TRUE,
-		sizeof(LinePlotter::Vertex),
-		&context->vertices[0].color
-	);
-}
-
-void LinePlotterRef::plot(vec2 p0, vec2 p1, Color c) {
-	ASSERT(context->count >= 0);
-	context->vertices[2*context->count  ].set(p0, c);
-	context->vertices[2*context->count+1].set(p1, c);
-
-	++context->count;
-	if (context->count == LINE_PLOTTER_CAPACITY) {
-		commitBatch(context);
+LinePlotter::~LinePlotter() {
+	if (vertices) {
+		LITTLE_POLYGON_FREE(vertices);
 	}
 }
 
-void LinePlotterRef::plotLittleBox(vec2 p, float r, Color c) {
+void LinePlotter::begin(const Viewport& viewport) {
+	ASSERT(count == -1);
+	count = 0;
+
+	shader.use();
+	viewport.setMVP(uMVP);
+
+	glEnableVertexAttribArray(aPosition);
+	glEnableVertexAttribArray(aColor);
+
+	glVertexAttribPointer(
+		aPosition, 2, GL_FLOAT, GL_FALSE,
+		sizeof(LinePlotter::Vertex),
+		&vertices[0].position
+	);
+	glVertexAttribPointer(
+		aColor, 4, GL_UNSIGNED_BYTE, GL_TRUE,
+		sizeof(LinePlotter::Vertex),
+		&vertices[0].color
+	);
+}
+
+void LinePlotter::plot(vec2 p0, vec2 p1, Color c) {
+	ASSERT(count >= 0);
+	vertices[2*count  ].set(p0, c);
+	vertices[2*count+1].set(p1, c);
+
+	++count;
+	if (count == capacity) {
+		commitBatch();
+	}
+}
+
+void LinePlotter::plotLittleBox(vec2 p, float r, Color c) {
 	plot(p+vec(-r,-r), p+vec(r,-r), c);
 	plot(p+vec(r,-r), p+vec(r,r), c);
 	plot(p+vec(r,r), p+vec(-r,r), c);
 	plot(p+vec(-r,r), p+vec(-r,-r), c);
 }
 
-void LinePlotterRef::plotArrow(vec2 p0, vec2 p1, float r, Color c) {
+void LinePlotter::plotArrow(vec2 p0, vec2 p1, float r, Color c) {
 	plot(p0, p1, c);
 	auto delta = r * (p0 - p1).normalized();
 	auto r0 = unitVector(0.25 * M_PI);
@@ -152,19 +104,19 @@ void LinePlotterRef::plotArrow(vec2 p0, vec2 p1, float r, Color c) {
 	plot(p1, p1 + cmul(delta, r0.conjugate()), c);
 }
 
-void LinePlotterRef::end() {
-	ASSERT(context->count >= 0);
-	if (context->count > 0) {
-		commitBatch(context);
+void LinePlotter::end() {
+	ASSERT(count >= 0);
+	if (count > 0) {
+		commitBatch();
 	}
-	context->count = -1;
-	glDisableVertexAttribArray(context->aPosition);
-	glDisableVertexAttribArray(context->aColor);
+	count = -1;
+	glDisableVertexAttribArray(aPosition);
+	glDisableVertexAttribArray(aColor);
 }
 
-void commitBatch(LinePlotter* context) {
-	ASSERT(context->count > 0);
-	glDrawArrays(GL_LINES, 0, 2*context->count);
-	context->count = 0;
+void LinePlotter::commitBatch() {
+	ASSERT(count > 0);
+	glDrawArrays(GL_LINES, 0, 2*count);
+	count = 0;
 }
 

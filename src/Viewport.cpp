@@ -14,9 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "littlepolygon_utils.h"
-#include "littlepolygon_math.h"
-#include "littlepolygon_graphics.h"
+#include "littlepolygon/utils.h"
+#include "littlepolygon/math.h"
+#include "littlepolygon/graphics.h"
 #include <algorithm>
 
 void Viewport::setFromWindow() {

@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "littlepolygon_graphics.h"
+#include "graphics.h"
 
 //------------------------------------------------------------------------------
 // SPLINE REDNERING
@@ -24,17 +24,17 @@
 
 class SplinePlotter {
 private:
-	BasicPlotterRef plotter;
+	BasicPlotter* plotter;
 	int count;
 	float fakeAntiAliasFactor;
 	int curveCount, curveCapacity;
 	
 public:
-	SplinePlotter(BasicPlotterRef aPlotter);
+	SplinePlotter(BasicPlotter* aPlotter);
 	~SplinePlotter();
 	
 	bool isBound() const { return count >= 0; }
-	BasicPlotterRef getPlotter() { return plotter; }
+	BasicPlotter* getPlotter() { return plotter; }
 	
 	void begin(const Viewport& viewport, GLuint prog=0);
 	
@@ -53,7 +53,7 @@ public:
 	
 private:
 	void reserve(int nverts);
-	BasicVertex* nextVert() { return plotter.getVertex(count++); }
+	BasicVertex* nextVert() { return plotter->getVertex(count++); }
 };
 
 namespace Spline {

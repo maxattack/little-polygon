@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <littlepolygon_trail.h>
+#include <littlepolygon/trail.h>
 
 GLchar TRAIL_SHADER[] = R"GLSL(
 varying mediump vec4 color;

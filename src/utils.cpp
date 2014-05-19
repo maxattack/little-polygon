@@ -14,9 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "littlepolygon_utils.h"
-#include "littlepolygon_math.h"
-#include "littlepolygon_graphics.h"
+#include "littlepolygon/utils.h"
+#include "littlepolygon/math.h"
+#include "littlepolygon/graphics.h"
 #include <algorithm>
 
 
@@ -55,20 +55,6 @@ static int handleAppEvents(void *userdata, SDL_Event *event) {
 }
 #endif
 
-static void doTearDown() {
-  Mix_CloseAudio();
-  SDL_Quit();
-}
-
-#if EMSCRIPTEN
-static SDL_Window *pEmscriptenWindow = 0;
-
-SDL_Window *SDL_GL_GetCurrentWindow() {
-	return pEmscriptenWindow;
-}
-#endif
-
-
 SDL_Window *initContext(const char *caption, int w, int h) {
 	
 	if (w == 0) {
@@ -83,7 +69,6 @@ SDL_Window *initContext(const char *caption, int w, int h) {
 	SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO|SDL_INIT_JOYSTICK);
 	#endif
 	Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024);
-	atexit(doTearDown);
 
 	#if LITTLE_POLYGON_MOBILE
 	
@@ -237,87 +222,6 @@ void Color::toHSV(float *h, float *s, float *v) {
 	*h = 360.f * fabs(K + (g-b) / (6.f * chroma + 1e-20f));
 	*s = chroma / (r + 1e-20f);
 	*v = r;
-}
-
-bool compileShader(const GLchar* source, GLuint *outProg, GLuint *outVert, GLuint *outFrag) {
-	int prog = glCreateProgram();
-	int vert = glCreateShader(GL_VERTEX_SHADER);
-	int frag = glCreateShader(GL_FRAGMENT_SHADER);
-
-	// setup source and compile
-	const char vpreamble[] = "#define VERTEX 1\n";
-	const char fpreamble[] = "#define VERTEX 0\n";
-	int slen = (int) strlen(source);
-	
-	#if LITTLE_POLYGON_MOBILE
-		const char* vsrcList[] = { vpreamble, source };
-		const char* fsrcList[] = { fpreamble, source };
-		int vlengths[] = { (int) strlen(vpreamble), slen };
-		int flengths[] = { (int) strlen(fpreamble), slen };
-		glShaderSource(vert, 2, vsrcList, vlengths);
-		glShaderSource(frag, 2, fsrcList, flengths);
-	#else
-		const char preamble[] = "#version 120\n#define mediump  \n#define highp  \n#define lowp  \n";
-		const char* vsrcList[] = { preamble, vpreamble, source };
-		const char* fsrcList[] = { preamble, fpreamble, source };
-		int vlengths[] = { (int) strlen(preamble), (int) strlen(vpreamble), slen };
-		int flengths[] = { (int) strlen(preamble), (int) strlen(fpreamble), slen };
-		glShaderSource(vert, 3, vsrcList, vlengths);
-		glShaderSource(frag, 3, fsrcList, flengths);
-	#endif
-	
-	glCompileShader(vert);
-	glCompileShader(frag);
-
-	// check compile results
-	GLint result;
-	glGetShaderiv(vert, GL_COMPILE_STATUS, &result);
-	if (result != GL_TRUE) {
-		GLchar buf[256];
-		int len;
-		glGetShaderInfoLog(vert, 256, &len, buf);
-		LOG(("VERTEX %s\n", buf));
-		glDeleteProgram(prog);
-		glDeleteShader(frag);
-		glDeleteShader(vert);        
-		return false;
-	}
-
-	glGetShaderiv(frag, GL_COMPILE_STATUS, &result);
-	if (result != GL_TRUE) {
-		GLchar buf[256];
-		int len;
-		glGetShaderInfoLog(frag, 256, &len, buf);
-		LOG(("FRAGMENT %s\n", buf));
-		glDeleteProgram(prog);
-		glDeleteShader(frag);
-		glDeleteShader(vert);        
-		return false;
-	}
-
-	// link
-	glAttachShader(prog, vert);
-	glAttachShader(prog, frag);
-	glLinkProgram(prog);
-
-	// check link results
-	glGetProgramiv(prog, GL_LINK_STATUS, &result);
-	if (result != GL_TRUE) {
-		GLchar buf[256];
-		int len;
-		glGetProgramInfoLog(prog, 256, &len, buf);
-		LOG(("LINK %s\n", buf));
-		glDeleteProgram(prog);
-		glDeleteShader(frag);
-		glDeleteShader(vert);        
-		return false;
-	}
-
-	// save handles
-	*outProg = prog;
-	*outVert = vert;
-	*outFrag = frag;  
-	return true;
 }
 
 GLuint generateTexture(TextureGenerator cb, int w, int h) {

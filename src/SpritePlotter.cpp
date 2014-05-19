@@ -14,15 +14,15 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "littlepolygon_sprites.h"
-#include "littlepolygon_graphics.h"
+#include "littlepolygon/sprites.h"
+#include "littlepolygon/graphics.h"
 
-SpritePlotter::SpritePlotter(BasicPlotterRef aPlotter) : 
+SpritePlotter::SpritePlotter(BasicPlotter* aPlotter) : 
 plotter(aPlotter), 
 count(-1), 
 workingTexture(0) 
 {
-	capacity = plotter.capacity() >> 2;
+	capacity = plotter->getCapacity() >> 2;
 
 	// setup element array buffer
 	uint16_t indices[6 * capacity];
@@ -51,10 +51,10 @@ SpritePlotter::~SpritePlotter() {
 }
 
 void SpritePlotter::begin(const Viewport& view, GLuint program) {
-	ASSERT(!plotter.isBound());
+	ASSERT(!plotter->isBound());
 	ASSERT(!isBound());
 	count = 0;
-	plotter.begin(view, program);
+	plotter->begin(view, program);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuf);
 }
 
@@ -237,13 +237,13 @@ void SpritePlotter::drawTilemap(TilemapAsset *map, vec2 position, float z) {
 
 	// make sure the map is initialized
 	map->init();
-	auto view = plotter.view();
+	auto view = plotter->getView();
 	
-	vec2 cs = view->size() / vec(map->tw, map->th);
+	vec2 cs = view.size() / vec(map->tw, map->th);
 	int latticeW = ceilf(cs.x) + 1;
 	int latticeH = ceilf(cs.y) + 1;
 
-	vec2 scroll = view->offset() - position;
+	vec2 scroll = view.offset() - position;
 	
 
 	int vox = int(scroll.x/map->tw);
@@ -268,7 +268,7 @@ void SpritePlotter::drawTilemap(TilemapAsset *map, vec2 position, float z) {
 			if (coord.x != 0xff) {
 				vec2 p = vec(x * map->tw, y * map->th) 
 					- vec(TILE_SLOP, TILE_SLOP) 
-					- rem + view->offset();
+					- rem + view.offset();
 				vec2 uv = 
 					(vec(map->tw * coord.x, map->th * coord.y) + vec(TILE_SLOP, TILE_SLOP))
 					/ vec(map->tileAtlas.w, map->tileAtlas.h);
@@ -300,12 +300,12 @@ void SpritePlotter::end() {
 	count = -1;
 	workingTexture = 0;
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-	plotter.end();
+	plotter->end();
 }
 
 void SpritePlotter::commitBatch() {
 	ASSERT(count > 0);
-	plotter.commit(count<<2);
+	plotter->commit(count<<2);
 	glDrawElements(GL_TRIANGLES, 6 * count, GL_UNSIGNED_SHORT, 0);
 	count = 0;
 }

@@ -1,11 +1,12 @@
 LIBRARY_OBJ_FILES =        \
 	obj/glew.o             \
 	obj/AssetBundle.o      \
-	obj/CirclePlotter.o    \
-	obj/CollisionContext.o \
-	obj/FkContext.o        \
+	obj/BasicPlotter.o     \
+	obj/GlobalContext.o    \
 	obj/LinePlotter.o      \
+	obj/lodepng.o          \
 	obj/SampleAsset.o      \
+	obj/Shader.o           \
 	obj/SimplexNoise.o     \
 	obj/SplinePlotter.o    \
 	obj/SpriteBatch.o      \
@@ -16,10 +17,8 @@ LIBRARY_OBJ_FILES =        \
 	obj/utils.o         
 
 PLATFORMER_OBJ_FILES =     \
-	obj/Environment.o      \
-	obj/Hero.o             \
-	obj/Kitten.o           \
 	obj/platformer.o
+
 # COMPILER
 CC = clang
 CPP = clang++

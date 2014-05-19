@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "littlepolygon_graphics.h"
+#include "graphics.h"
 
 // TODO: Texture-mapping and/or ramping along the trail?
 

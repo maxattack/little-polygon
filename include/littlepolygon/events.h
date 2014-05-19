@@ -20,7 +20,7 @@
 #include <utility>
 
 // For ASSERT
-#include "littlepolygon_base.h"
+#include "base.h"
 
 //------------------------------------------------------------------------------
 // GENERIC CALLBACK DELEGATE
@@ -95,7 +95,7 @@ public:
 
 // Forward declarations
 
-template<typename... Args> class EventListener;
+template<typename... Args> struct EventListener;
 template<typename... Args> class EventDispatcher;
 
 // EventListener is a control block for a single logical listener.  Multiple

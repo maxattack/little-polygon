@@ -15,7 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
-#include "littlepolygon_base.h"
+#include "base.h"
 
 //--------------------------------------------------------------------------------
 // BITSET WITH CLEVER ITERATION OF "1"s

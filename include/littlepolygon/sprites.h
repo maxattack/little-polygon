@@ -16,10 +16,9 @@
 
 #pragma once
 
-#include "littlepolygon_assets.h"
-#include "littlepolygon_graphics.h"
-#include "littlepolygon_pools.h"
-#include <vector>
+#include "assets.h"
+#include "graphics.h"
+#include "pools.h"
 
 //------------------------------------------------------------------------------
 // FORWARD DECLARATIONS
@@ -39,20 +38,20 @@ class Sprite;
 
 class SpritePlotter {
 private:
-	BasicPlotterRef plotter;
+	BasicPlotter* plotter;
 	int capacity;
 	int count;
 	GLuint elementBuf;
 	TextureAsset *workingTexture;
 
 public:
-	SpritePlotter(BasicPlotterRef plotter);
+	SpritePlotter(BasicPlotter* plotter);
 	~SpritePlotter();
 
 	void destroy();
 
 	bool isBound() const { return count >= 0; }
-	BasicPlotterRef getPlotter() { return plotter; }
+	BasicPlotter* getPlotter() { return plotter; }
 
 	// Call this method to initialize the graphics context state.  Asserts that the plotter
 	// is already bound (in case you're coalescing with other plotters) and state e.g. blending are
@@ -83,7 +82,7 @@ public:
 	void end();
 
 private:
-	BasicVertex *nextSlice() { return plotter.getVertex(count<<2); }
+	BasicVertex *nextSlice() { return plotter->getVertex(count<<2); }
 	void setTextureAtlas(TextureAsset* texture);
 	void commitBatch();
 	void plotGlyph(const GlyphAsset& g, float x, float y, float z, float h, Color c);
@@ -121,6 +120,9 @@ public:
 	Color fill() const;
 	void setFill(Color aFill);
 	
+	int frame() const;
+	void setFrame(int frame);
+
 	void release();
 };
 

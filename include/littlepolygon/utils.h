@@ -15,8 +15,8 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
-#include "littlepolygon_base.h"
-#include "littlepolygon_math.h"
+#include "base.h"
+#include "math.h"
 
 // A garbage-bin of additional helpful utilities not necessarily required by LPAAT,
 // which I've accumulated and rolled over from project to project :P
@@ -129,6 +129,7 @@ private:
 
 public:
 	Singleton(T* aThis) : contextGuard(aThis) {}
+	static inline T* getInstancePtr() { return inst; }
 	static inline T& getInstance() { ASSERT(inst); return *inst; }
 };
 
