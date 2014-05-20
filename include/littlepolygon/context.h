@@ -27,9 +27,11 @@
 
 
 class GlobalContext : public Singleton<GlobalContext> {
-public:
+private:
+	struct SDLContext { SDLContext(const char *caption, int w, int h); };
 
-	SDL_Window *window;
+public:
+	SDLContext sdl;
 	AssetBundle assets;
 	Viewport view;
 	Timer timer;
@@ -54,7 +56,6 @@ inline void lpFinalize() {
 	delete GlobalContext::getInstancePtr();
 }
 
-#define gWindow  (GlobalContext::getInstance().window)
 #define gAssets  (GlobalContext::getInstance().assets)
 #define gView    (GlobalContext::getInstance().view)
 #define gTimer   (GlobalContext::getInstance().timer)

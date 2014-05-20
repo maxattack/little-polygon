@@ -39,7 +39,7 @@
 	#include <SDL2_mixer/SDL_mixer.h>
 #else
 	#define GLEW_STATIC
-	#include <glew.h>
+	#include <GL/glew.h>
 	#include <SDL2/SDL_opengl.h>
 	#include <SDL2_mixer/SDL_mixer.h>
 #endif
@@ -49,9 +49,12 @@
 	#define LITTLE_POLYGON_MOBILE 1
 #else
 	#define LITTLE_POLYGON_MOBILE 0
-	#ifndef LITTLE_POLYGON_GL_CORE_PROFILE
-		#define LITTLE_POLYGON_GL_CORE_PROFILE 1
-	#endif
+#endif
+
+#if LITTLE_POLYGON_MOBILE || EMSCRIPTEN
+	#define LITTLE_POLYGON_OPENGL_ES 1
+#else
+	#define LITTLE_POLYGON_OPENGL_CORE 1
 #endif
 
 #include <vectorial/vectorial.h>

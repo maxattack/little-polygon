@@ -17,15 +17,16 @@
 #include "littlepolygon/graphics.h"
 
 const GLchar* BASIC_SHADER = R"GLSL(
-varying mediump vec2 uv;
-varying lowp vec4 color;
-
 #if VERTEX
 
-uniform highp mat4 mvp;
-attribute mediump vec3 aPosition;
-attribute mediump vec2 aUv;
-attribute mediump vec4 aColor;
+uniform mat4 mvp;
+
+in vec3 aPosition;
+in vec2 aUv;
+in vec4 aColor;
+
+out vec2 uv;
+out vec4 color;
 
 void main() {
 	gl_Position = mvp * vec4(aPosition, 1.0);
@@ -35,13 +36,18 @@ void main() {
 
 #else
 
-uniform lowp sampler2D atlas;
+uniform sampler2D atlas;
+
+in vec2 uv;
+in vec4 color;
+
+out vec4 outColor;
 
 void main() {
-	lowp vec4 baseColor = texture2D(atlas, uv);
+	vec4 baseColor = texture(atlas, uv);
 	// premultiplied alpha version
-	//gl_FragColor = vec4(mix(baseColor.rgb, baseColor.a * color.rgb, color.a), baseColor.a);
-	gl_FragColor = vec4(mix(baseColor.rgb, color.rgb, color.a), baseColor.a);
+	//outColor = vec4(mix(baseColor.rgb, baseColor.a * color.rgb, color.a), baseColor.a);
+	outColor = vec4(mix(baseColor.rgb, color.rgb, color.a), baseColor.a);
 }
 
 #endif

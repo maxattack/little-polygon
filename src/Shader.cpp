@@ -34,7 +34,7 @@ Shader::Shader(const GLchar* source) {
 		glShaderSource(vert, 2, vsrcList, vlengths);
 		glShaderSource(frag, 2, fsrcList, flengths);
 	#else
-		const char preamble[] = "#version 120\n#define mediump  \n#define highp  \n#define lowp  \n";
+		const char preamble[] = "#version 150\n";
 		const char* vsrcList[] = { preamble, vpreamble, source };
 		const char* fsrcList[] = { preamble, fpreamble, source };
 		int vlengths[] = { (int) strlen(preamble), (int) strlen(vpreamble), slen };

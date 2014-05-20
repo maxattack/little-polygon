@@ -17,14 +17,15 @@
 #include "littlepolygon/graphics.h"
 
 static const GLchar* SIMPLE_SHADER = R"GLSL(
-
-varying mediump vec4 color;
-
 #if VERTEX
 
-uniform highp mat4 mvp;
-attribute mediump vec2 aPosition;
-attribute mediump vec4 aColor;
+uniform mat4 mvp;
+
+in vec2 aPosition;
+in vec4 aColor;
+
+out vec4 color;
+
 
 void main() {
 	gl_Position = mvp * vec4(aPosition, 0.0, 1.0);
@@ -33,13 +34,17 @@ void main() {
 
 #else
 
+in vec4 color;
+
+out vec4 outColor;
+
 void main() {
-	gl_FragColor = color;
+	outColor = color;
 }
 
 #endif
-
 )GLSL";
+
 
 LinePlotter::LinePlotter(int aCapacity) : count(-1), capacity(aCapacity), shader(SIMPLE_SHADER), vertices(0) {
 	shader.use();

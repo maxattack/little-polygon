@@ -1,5 +1,4 @@
 LIBRARY_OBJ_FILES =        \
-	obj/glew.o             \
 	obj/AssetBundle.o      \
 	obj/BasicPlotter.o     \
 	obj/GlobalContext.o    \
@@ -14,6 +13,7 @@ LIBRARY_OBJ_FILES =        \
 	obj/TextureAsset.o     \
 	obj/TilemapAsset.o     \
 	obj/Viewport.o         \
+	obj/glew.o             \
 	obj/utils.o         
 
 PLATFORMER_OBJ_FILES =     \

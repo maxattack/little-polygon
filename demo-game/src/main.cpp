@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
 	while(!sDone) {
 		glClear(GL_COLOR_BUFFER_BIT);
 		handleEvents();
-		SDL_GL_SwapWindow(gWindow);
+		SDL_GL_SwapWindow(SDL_GL_GetCurrentWindow());
 	}
 	
 	lpFinalize();

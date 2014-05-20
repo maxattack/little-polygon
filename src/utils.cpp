@@ -19,110 +19,6 @@
 #include "littlepolygon/graphics.h"
 #include <algorithm>
 
-
-#if LITTLE_POLYGON_MOBILE
-static int handleAppEvents(void *userdata, SDL_Event *event) {
-	switch (event->type) {
-	case SDL_QUIT:
-		exit(0);
-		break;
-
-	case SDL_APP_TERMINATING:
-		// shut down everything
-		return 0;
-			
-	case SDL_APP_LOWMEMORY:
-		// release as much as possible?
-		return 0;
-			
-	case SDL_APP_WILLENTERBACKGROUND:
-		return 0;
-			
-	case SDL_APP_DIDENTERBACKGROUND:
-		// 5s to save state or you are dead
-		return 0;
-			
-	case SDL_APP_WILLENTERFOREGROUND:
-		return 0;
-			
-	case SDL_APP_DIDENTERFOREGROUND:
-		return 0;
-			
-	default:
-		// just put event on the queue
-		return 1;
-	}
-}
-#endif
-
-SDL_Window *initContext(const char *caption, int w, int h) {
-	
-	if (w == 0) {
-		// iphone 5 resolution :P
-		w = 1136;
-		h = 640;
-	}
-	
-	#if LITTLE_POLYGON_MOBILE
-	SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO);
-	#else
-	SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO|SDL_INIT_JOYSTICK);
-	#endif
-	Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024);
-
-	#if LITTLE_POLYGON_MOBILE
-	
-	SDL_SetEventFilter(handleAppEvents, 0);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);		
-	SDL_Window *pWindow = SDL_CreateWindow(
-		"", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 0, 0,
-		SDL_WINDOW_OPENGL|SDL_WINDOW_FULLSCREEN|SDL_WINDOW_BORDERLESS|SDL_WINDOW_SHOWN
-	);
-	
-#else
-	
-	#if LITTLE_POLYGON_GL_CORE_PROFILE
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
-	#endif
-
-	//SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-	//SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 2);
-	
-	uint32_t winFlags = 0;
-	SDL_Window *pWindow = SDL_CreateWindow(
-		caption ? caption : "Little Polygon Context",
-		SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-		w, h, SDL_WINDOW_OPENGL|winFlags
-	);
-	
-	#endif
-
-	SDL_GL_CreateContext(pWindow);
-
-	#if !LITTLE_POLYGON_MOBILE && !EMSCRIPTEN
-	glewInit();
-	//glEnable(GL_MULTISAMPLE);
-	#endif
-
-	SDL_GetWindowSize(pWindow, &w, &h);
-	glViewport(0, 0, w, h);
-	glEnable(GL_TEXTURE_2D);
-	glActiveTexture(GL_TEXTURE0);
-	
-	#if !LITTLE_POLYGON_MOBILE && !EMSCRIPTEN
-	glEnableClientState(GL_VERTEX_ARRAY);
-	#endif
-	
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	
-	return pWindow;
-}
-
-
-
 bool linearIntersection(vec2 u0, vec2 u1, vec2 v0, vec2 v1, float& u) {
 	float norm = (v1.y - v0.y)*(u1.x-u0.x) - (v1.x-v0.x)*(u1.y-u0.y);
 	if (norm > -M_COLINEAR_SLOP && norm < M_COLINEAR_SLOP) {
@@ -266,40 +162,40 @@ GLuint getFakeAntialiasTexture() {
 	return result;
 }
 
-int createRenderToTextureFramebuffer(GLsizei w, GLsizei h, GLuint *t, GLuint *f) {
-	glGenFramebuffers(1, f);
-	glGenTextures(1, t);
-	
-	glBindFramebuffer(GL_FRAMEBUFFER, *f);
-	glBindTexture(GL_TEXTURE_2D, *t);
-	
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, *t, 0);
-	
-//	GLuint depthBuffer;
-//	glGenRenderbuffers(1, &depthBuffer);
-//	glBindRenderbuffer(GL_RENDERBUFFER, depthBuffer);
-//	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, w, h);
-//	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthBuffer);
-	
-	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-	if (status != GL_FRAMEBUFFER_COMPLETE) {
-		LOG(("Framebuffer Status: %x\n", (int)status));
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glDeleteFramebuffers(1, f);
-		glDeleteTextures(1, t);
-		return 1;
-	} else {
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		return 0;
-	}
-	
-}
-
-
-
+//int createRenderToTextureFramebuffer(GLsizei w, GLsizei h, GLuint *t, GLuint *f) {
+//	glGenFramebuffers(1, f);
+//	glGenTextures(1, t);
+//	
+//	glBindFramebuffer(GL_FRAMEBUFFER, *f);
+//	glBindTexture(GL_TEXTURE_2D, *t);
+//	
+//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+//	
+//	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+//	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, *t, 0);
+//	
+////	GLuint depthBuffer;
+////	glGenRenderbuffers(1, &depthBuffer);
+////	glBindRenderbuffer(GL_RENDERBUFFER, depthBuffer);
+////	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, w, h);
+////	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthBuffer);
+//	
+//	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+//	if (status != GL_FRAMEBUFFER_COMPLETE) {
+//		LOG(("Framebuffer Status: %x\n", (int)status));
+//		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+//		glDeleteFramebuffers(1, f);
+//		glDeleteTextures(1, t);
+//		return 1;
+//	} else {
+//		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+//		return 0;
+//	}
+//	
+//}
+//
+//
+//
