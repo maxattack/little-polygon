@@ -116,6 +116,7 @@
 		50333AB0192B02780098FFCC = {
 			isa = PBXGroup;
 			children = (
+				506F6789192B1D4500BDE41D /* Assets */,
 				506F674B192B080C00BDE41D /* Source */,
 				5008664C192B05DA0018B313 /* Common */,
 				50333ABB192B02780098FFCC /* Frameworks */,
@@ -173,6 +174,13 @@
 				506F6785192B0B4600BDE41D /* InfoPlist.strings */,
 			);
 			path = en.lproj;
+			sourceTree = "<group>";
+		};
+		506F6789192B1D4500BDE41D /* Assets */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Assets;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

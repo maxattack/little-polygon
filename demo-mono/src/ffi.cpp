@@ -3,13 +3,13 @@
 extern "C" {
 
 int CreateContext(const char* caption, int w, int h, const char* assetPath) {
-	LPInit(caption, w, h, assetPath);
+	lpInitialize(caption, w, h, assetPath);
 	glClearColor(0.5, 0.6, 0.8, 0.0);	
 	return 0;
 }
 
 int DestroyContext() {
-	LPDestroy();
+	lpFinalize();
 	return 0;
 }
 
