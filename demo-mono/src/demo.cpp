@@ -14,7 +14,7 @@ int main(int argc, char *argv[]) {
 	SDL_free(basePath);
 
 	// RUN C# CODE
-	auto domain = mono_jit_init("Little Polygon");
+	auto domain = mono_jit_init("LP");
 	auto assembly = mono_domain_assembly_open(domain, dllPath);
 	if (!assembly) {
 		LOG(("DLL Not Found: %s\n", dllName));

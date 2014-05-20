@@ -29,7 +29,7 @@ CPP = clang++
 # as well.
 
 # BASE FLAGS
-CFLAGS = -Iinclude -Wall -ffast-math
+CFLAGS = -I../include -Wall -ffast-math
 CCFLAGS = -std=c++11  -fno-rtti -fno-exceptions
 LIBS = -Llib -framework OpenGL -framework Cocoa -lz -llittlepolygon
 
@@ -42,7 +42,7 @@ CFLAGS += -I/Library/Frameworks/Mono.framework/Headers/mono-2.0
 LIBS += -framework Mono
 
 # VECTORIAL
-CFLAGS += -Ivectorial/include
+CFLAGS += -I../vectorial/include
 
 # DEBUG FLAGS
 CFLAGS += -g -DDEBUG
@@ -56,19 +56,19 @@ CFLAGS += -m32
 BITS = 32
 
 test : bin/demo bin/demo.bin bin/demo.dll
-	cp demo/assets/song.mid bin/song.mid
+	cp assets/song.mid bin/song.mid
 	bin/demo
 
 bin/demo: lib/liblittlepolygon.a $(PLATFORMER_OBJ_FILES) 
 	mkdir -p bin
 	$(CPP) -o $@ $(CFLAGS) $(CCFLAGS) $(LIBS) $(PLATFORMER_OBJ_FILES) -export_dynamic
 
-bin/demo.bin: demo/assets/* tools/*.py demo/tools/*.py
+bin/demo.bin: assets/* tools/*.py tools/*.py
 	mkdir -p bin
-	demo/tools/export_game_assets.py demo/assets/assets.yaml $@ $(BITS)
+	tools/export_game_assets.py assets/assets.yaml $@ $(BITS)
 
-bin/demo.dll: demo/scripts/*.cs
-	mcs demo/scripts/*.cs -out:bin/demo.dll -unsafe
+bin/demo.dll: scripts/*.cs
+	mcs scripts/*.cs -out:bin/demo.dll -unsafe
 
 clean:
 	rm -f lib/*
@@ -79,15 +79,15 @@ lib/liblittlepolygon.a: $(LIBRARY_OBJ_FILES)
 	mkdir -p lib
 	ar rcs $@ $^
 
-obj/%.o: src/%.c
+obj/%.o: ../src/%.c
 	mkdir -p obj
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-obj/%.o: src/%.cpp include/*.h
+obj/%.o: ../src/%.cpp ../include/*.h
 	mkdir -p obj
 	$(CPP) $(CFLAGS) $(CCFLAGS) -c -o $@ $<
 
-obj/%.o: demo/src/%.cpp
+obj/%.o: src/%.cpp
 	mkdir -p obj
 	$(CPP) $(CFLAGS) $(CCFLAGS) -c -o $@ $<
 

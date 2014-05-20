@@ -25,6 +25,7 @@
 #include "splines.h"
 #include "utils.h"
 
+
 class GlobalContext : public Singleton<GlobalContext> {
 public:
 
@@ -41,12 +42,17 @@ public:
 	
 
 public:
-	GlobalContext(const char *caption, int w, int h, const char *assetPath=0, int plotterCap=1024, int linesCap=128, int spriteLayers=8);
+	GlobalContext(const char *caption, int w, int h, const char *assetPath, int plotterCap, int linesCap, int spriteLayers);
 	~GlobalContext();
 };
 
-#define LPInit(...) (new GlobalContext(__VA_ARGS__))
-#define LPDestroy() (delete GlobalContext::getInstancePtr())
+inline void lpInitialize(const char *caption, int w, int h, const char *assetPath=0, int plotterCap=1024, int linesCap=128, int spriteLayers=8) {
+	new GlobalContext(caption, w, h, assetPath, plotterCap, linesCap, spriteLayers);
+}
+
+inline void lpFinalize() {
+	delete GlobalContext::getInstancePtr();
+}
 
 #define gWindow  (GlobalContext::getInstance().window)
 #define gAssets  (GlobalContext::getInstance().assets)

@@ -103,6 +103,7 @@ TrailBatch* createTrailBatch(size_t capacity) {
 	);
 	
 	if (globalRefCount == 0) {
+		
 		CHECK(compileShader(TRAIL_SHADER, &prog, &vert, &frag));
 		mvp = glGetUniformLocation(prog, "mvp");
 		uColor = glGetUniformLocation(prog, "uColor");
