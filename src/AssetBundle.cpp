@@ -48,10 +48,10 @@ AssetBundle::AssetBundle(const char* path, uint32_t crc) : data(0), fallback(0) 
 	int count = SDL_ReadLE32(file);
 
 	// read data
-	data = (AssetData*) LITTLE_POLYGON_MALLOC(sizeof(AssetData)-sizeof(AssetHeader) + length);
+	data = (AssetData*) malloc(sizeof(AssetData)-sizeof(AssetHeader) + length);
 	void *result = &(data->headers);
 	if (SDL_RWread(file, result, length, 1) == -1) {
-		LITTLE_POLYGON_FREE(data);
+		free(data);
 		SDL_RWclose(file);
 		data = 0;
 		return;
@@ -71,7 +71,7 @@ AssetBundle::AssetBundle(const char* path, uint32_t crc) : data(0), fallback(0) 
 AssetBundle::~AssetBundle() {
 	if (data) {
 		release();
-		LITTLE_POLYGON_FREE(data);
+		free(data);
 	}
 }
 

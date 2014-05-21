@@ -286,7 +286,7 @@ public:
 	~DynamicPool() {
 		// free memory
 		for(int i=0; i<5 && extendedSlots[i]; ++i) {
-			LITTLE_POLYGON_FREE(extendedSlots[i]);
+			free(extendedSlots[i]);
 		}
 	}
 	
@@ -413,7 +413,7 @@ private:
 	inline void allocateBuffer(int i) {
 		ASSERT(i >= 0 && i < 5);
 		ASSERT(extendedSlots[i] == 0);
-		extendedSlots[i] = (Slot*) LITTLE_POLYGON_MALLOC(sizeof(Slot) * lengthOfBuffer(i));
+		extendedSlots[i] = (Slot*) malloc(sizeof(Slot) * lengthOfBuffer(i));
 	}
 	
 	inline int getIndex(Slot* p) const {

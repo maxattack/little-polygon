@@ -16,9 +16,6 @@
 
 #pragma once
 
-// determine platform
-
-
 // standard includes
 #include <cstdio>
 #include <cstdlib>
@@ -34,32 +31,33 @@
 	#include <SDL/SDL_mixer.h>
 #else
 	#include <SDL2/SDL.h>
-#if __IPHONEOS__
-	#include <SDL2/SDL_opengles2.h>
-	#include <SDL2_mixer/SDL_mixer.h>
-#else
-	#define GLEW_STATIC
-	#include <GL/glew.h>
-	#include <SDL2/SDL_opengl.h>
+	#if __IPHONEOS__
+		#include <SDL2/SDL_opengles2.h>
+	#else
+		#define GLEW_STATIC
+		#include <GL/glew.h>
+		#include <SDL2/SDL_opengl.h>
+	#endif
 	#include <SDL2_mixer/SDL_mixer.h>
 #endif
-#endif
+#include <vectorial/vectorial.h>
+using namespace vectorial;
 
+// highter level conditional-compilation flags
 #if __IPHONEOS__
 	#define LITTLE_POLYGON_MOBILE 1
 #else
 	#define LITTLE_POLYGON_MOBILE 0
 #endif
-
 #if LITTLE_POLYGON_MOBILE || EMSCRIPTEN
 	#define LITTLE_POLYGON_OPENGL_ES 1
+	#define LITTLE_POLYGON_OPENGL_CORE 0
 #else
+	#define LITTLE_POLYGON_OPENGL_ES 0
 	#define LITTLE_POLYGON_OPENGL_CORE 1
 #endif
 
-#include <vectorial/vectorial.h>
-using namespace vectorial;
-
+// handy macros
 #ifndef STATIC_ASSERT
 #define STATIC_ASSERT(_x)  ((void)sizeof(char[1 - 2*!(_x)]))
 #endif
@@ -77,14 +75,8 @@ using namespace vectorial;
 #define MAX(a,b)   ((a) > (b) ? (a) : (b))
 #endif
 
-#ifndef LITTLE_POLYGON_MALLOC
-#define LITTLE_POLYGON_MALLOC malloc
-#define LITTLE_POLYGON_FREE   free
-#endif
-
 #ifdef DEBUG
 #   define ASSERT(cond)     (assert(cond))
-#	define CHECK(cond)      {int _result=(cond); ASSERT(_result);}
 #   define LOG(_x)          printf _x
 #   define LOG_MSG(_msg)    printf("%s:%d " _msg "\n", __FILE__, __LINE__)
 #	define LOG_INT(_expr)	printf("%s:%d " #_expr " = %d\n", __FILE__, __LINE__, (_expr))
@@ -92,7 +84,6 @@ using namespace vectorial;
 #	define LOG_VEC(_expr)	{ vec2 __u__ = (_expr); printf("%s:%d " #_expr " = <%f,%f>\n", __FILE__, __LINE__, __u__.x, __u__.y); }
 #else
 #   define ASSERT(cond)
-#   define CHECK(cond)      {if (!(cond)) { puts("FATAL: ##cond"); exit(-1); }}
 #   define LOG(_x)
 #   define LOG_MSG(_msg)
 #	define LOG_INT(_expr)

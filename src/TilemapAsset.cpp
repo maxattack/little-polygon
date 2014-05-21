@@ -21,9 +21,9 @@ void TilemapAsset::init() {
 	tileAtlas.init();
 	if (!data) {
 		uLongf size = sizeof(uint8_pair_t) * mw * mh;
-		data = (uint8_pair_t *) LITTLE_POLYGON_MALLOC( size );
+		data = (uint8_pair_t *) malloc( size );
 		int result = uncompress((Bytef*)data, &size, (const Bytef*)compressedData, compressedSize);
-		CHECK(result == Z_OK);
+		assert(result == Z_OK);
 	}
 
 }
@@ -31,7 +31,7 @@ void TilemapAsset::init() {
 void TilemapAsset::release() {
 	tileAtlas.release();
 	if (data) {
-		LITTLE_POLYGON_FREE(data);
+		free(data);
 		data = 0;
 	}
 }

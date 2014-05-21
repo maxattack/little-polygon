@@ -49,7 +49,7 @@ struct WaveHeader {
 void SampleAsset::init() {
 	if (chunk == 0) {
 		// Allocate a buffer for the RW_ops structure to read from 
-		Bytef *scratch = (Bytef*) LITTLE_POLYGON_MALLOC(size + sizeof(WaveHeader));
+		Bytef *scratch = (Bytef*) malloc(size + sizeof(WaveHeader));
 		{
 		// Mixer expects a WAVE header on PCM data, so let's provide it :P
 		WaveHeader hdr = {{'R','I','F','F'},0,{'W','A','V','E'},{'f','m','t',' '},16,1,1,0,0,0,0,{'d','a','t','a'},0};
@@ -68,7 +68,7 @@ void SampleAsset::init() {
 		// load the chunk
 		chunk = Mix_LoadWAV_RW(SDL_RWFromMem(scratch, sz+sizeof(WaveHeader)), 0);
 		ASSERT(chunk);
-		LITTLE_POLYGON_FREE(scratch);
+		free(scratch);
 	}
 }
 

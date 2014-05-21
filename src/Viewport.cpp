@@ -79,6 +79,6 @@ void Viewport::setMVP(GLuint amvp) const {
 		tx, ty, tz, 1.0f
 	};
 //	mvp.store(buf);
-	glUniformMatrix4fv(amvp, 1, 0, buf);
+	glUniformMatrix4fv(amvp, 1, GL_FALSE, buf);
 }
 

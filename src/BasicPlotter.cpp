@@ -54,7 +54,7 @@ void main() {
 )GLSL";
 
 BasicPlotter::BasicPlotter(int aCapacity) : bound(0), capacity(aCapacity), shader(BASIC_SHADER), currentArray(0) {
-	vertices = (BasicVertex*) LITTLE_POLYGON_MALLOC(capacity * sizeof(BasicVertex));
+	vertices = (BasicVertex*) malloc(capacity * sizeof(BasicVertex));
 	
 	// initialize shader
 	shader.use();
@@ -75,7 +75,7 @@ BasicPlotter::BasicPlotter(int aCapacity) : bound(0), capacity(aCapacity), shade
 
 BasicPlotter::~BasicPlotter() {
 	glDeleteBuffers(3, arrays);
-	LITTLE_POLYGON_FREE(vertices);
+	free(vertices);
 }
 
 BasicVertex *BasicPlotter::getVertex(int i) {

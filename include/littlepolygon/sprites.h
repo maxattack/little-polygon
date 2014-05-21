@@ -48,8 +48,6 @@ public:
 	SpritePlotter(BasicPlotter* plotter);
 	~SpritePlotter();
 
-	void destroy();
-
 	bool isBound() const { return count >= 0; }
 	BasicPlotter* getPlotter() { return plotter; }
 

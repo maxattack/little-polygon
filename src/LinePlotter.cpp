@@ -20,10 +20,8 @@ static const GLchar* SIMPLE_SHADER = R"GLSL(
 #if VERTEX
 
 uniform mat4 mvp;
-
 in vec2 aPosition;
 in vec4 aColor;
-
 out vec4 color;
 
 
@@ -35,7 +33,6 @@ void main() {
 #else
 
 in vec4 color;
-
 out vec4 outColor;
 
 void main() {
@@ -51,13 +48,13 @@ LinePlotter::LinePlotter(int aCapacity) : count(-1), capacity(aCapacity), shader
 	uMVP = shader.uniformLocation("mvp");
 	aPosition = shader.attribLocation("aPosition");
 	aColor = shader.attribLocation("aColor");
-	vertices = (Vertex*) LITTLE_POLYGON_MALLOC(sizeof(Vertex) * capacity);
+	vertices = (Vertex*) malloc(sizeof(Vertex) * capacity);
 }
 
 
 LinePlotter::~LinePlotter() {
 	if (vertices) {
-		LITTLE_POLYGON_FREE(vertices);
+		free(vertices);
 	}
 }
 

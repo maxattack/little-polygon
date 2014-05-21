@@ -15,7 +15,6 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "littlepolygon/sprites.h"
-#include "littlepolygon/graphics.h"
 
 SpritePlotter::SpritePlotter(BasicPlotter* aPlotter) : 
 plotter(aPlotter), 

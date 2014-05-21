@@ -20,7 +20,7 @@
 
 
 SpriteBatch::SpriteBatch(int nlayers) : mLayerCount(nlayers) {
-	mLayers = (Layer*) LITTLE_POLYGON_MALLOC(mLayerCount * sizeof(Layer));
+	mLayers = (Layer*) malloc(mLayerCount * sizeof(Layer));
 	for(int i=0; i<mLayerCount; ++i) {
 		new (mLayers+i) Layer();
 	}
@@ -30,7 +30,7 @@ SpriteBatch::~SpriteBatch() {
 	for(int i=0; i<mLayerCount; ++i) {
 		mLayers[i].~Layer();
 	}
-	LITTLE_POLYGON_FREE(mLayers);
+	free(mLayers);
 }
 
 Sprite *SpriteBatch::addSprite(

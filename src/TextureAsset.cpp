@@ -36,12 +36,12 @@ void TextureAsset::init() {
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		}
 		uLongf size = 4 * w * h;
-		Bytef *scratch = (Bytef *) LITTLE_POLYGON_MALLOC(size);
+		Bytef *scratch = (Bytef *) malloc(size);
 		int result = uncompress(scratch, &size, (const Bytef*)compressedData, compressedSize);
-		CHECK(result == Z_OK);
+		assert(result == Z_OK);
 		int fmt = format();
 		glTexImage2D(GL_TEXTURE_2D, 0, fmt, w, h, 0, fmt, GL_UNSIGNED_BYTE, scratch);
-		LITTLE_POLYGON_FREE(scratch);
+		free(scratch);
 	}
 }
 
