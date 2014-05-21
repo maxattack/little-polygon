@@ -157,7 +157,7 @@ public:
 	bool isBound() const { return bound; }
 	int getCapacity() const { return capacity; }
 	
-	void begin(const Viewport& view, GLuint program=0);
+	void begin(const Viewport& view);
 	void commit(int count);
 	void end();
 

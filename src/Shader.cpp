@@ -79,10 +79,9 @@ Shader::Shader(const GLchar* source) {
 	// link
 	glAttachShader(prog, vert);
 	glAttachShader(prog, frag);
-	
 	glBindFragDataLocation(prog, 0, "outColor");
-	
 	glLinkProgram(prog);
+	
 
 	// check link results
 	glGetProgramiv(prog, GL_LINK_STATUS, &result);

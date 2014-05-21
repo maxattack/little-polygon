@@ -49,11 +49,11 @@ SpritePlotter::~SpritePlotter() {
 	glDeleteBuffers(1, &elementBuf); 
 }
 
-void SpritePlotter::begin(const Viewport& view, GLuint program) {
+void SpritePlotter::begin(const Viewport& view) {
 	ASSERT(!plotter->isBound());
 	ASSERT(!isBound());
 	count = 0;
-	plotter->begin(view, program);
+	plotter->begin(view);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuf);
 }
 

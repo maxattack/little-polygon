@@ -36,7 +36,7 @@ public:
 	bool isBound() const { return count >= 0; }
 	BasicPlotter* getPlotter() { return plotter; }
 	
-	void begin(const Viewport& viewport, GLuint prog=0);
+	void begin(const Viewport& viewport);
 	
 	void startCurve(int resolution, vec2 p0, vec2 p1, float z, Color c);
 	void plotCurvePoint(vec2 p0, vec2 p1, float z, Color c);

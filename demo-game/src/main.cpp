@@ -42,8 +42,8 @@ int main(int argc, char *argv[]) {
 		handleEvents();
 		
 		gSprites.begin(gView);
-		int mx, my; SDL_GetMouseState(&mx, &my);
-		gSprites.drawImage(gAssets.image("btnUp"), 0.333f * vec(mx, my));
+		auto img = gAssets.image("background");
+		gSprites.drawImage(img, gView.mouse());
 		gSprites.end();
 		
 		SDL_GL_SwapWindow(SDL_GL_GetCurrentWindow());

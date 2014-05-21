@@ -66,7 +66,7 @@ void Viewport::setMVP(GLuint amvp) const {
 //		mOffset.y+mSize.y, mOffset.y,
 //		128.0, -128.0
 //	);
-//	
+	
 	
 	auto tx = - (2.0f*mOffset.x + mSize.x) / mSize.x;
 	auto ty = - (2.0f*mOffset.y + mSize.y) / (-mSize.y);
@@ -79,6 +79,7 @@ void Viewport::setMVP(GLuint amvp) const {
 		tx, ty, tz, 1.0f
 	};
 //	mvp.store(buf);
+
 	glUniformMatrix4fv(amvp, 1, GL_FALSE, buf);
 }
 

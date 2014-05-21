@@ -23,11 +23,11 @@ SplinePlotter::SplinePlotter(BasicPlotter* aPlotter) : plotter(aPlotter), count(
 SplinePlotter::~SplinePlotter() {
 }
 
-void SplinePlotter::begin(const Viewport& viewport, GLuint prog) {
+void SplinePlotter::begin(const Viewport& viewport) {
 	ASSERT(!plotter->isBound());
 	ASSERT(!isBound());
 	count = 0;
-	plotter->begin(viewport, prog);
+	plotter->begin(viewport);
 	
 	int w,h;
 	SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &w, &h);

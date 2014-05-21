@@ -20,11 +20,9 @@ const GLchar* BASIC_SHADER = R"GLSL(
 #if VERTEX
 
 uniform mat4 mvp;
-
 in vec3 aPosition;
 in vec2 aUv;
 in vec4 aColor;
-
 out vec2 uv;
 out vec4 color;
 
@@ -37,17 +35,14 @@ void main() {
 #else
 
 uniform sampler2D atlas;
-
 in vec2 uv;
 in vec4 color;
-
 out vec4 outColor;
 
 void main() {
 	vec4 baseColor = texture(atlas, uv);
-	// premultiplied alpha version
-	//outColor = vec4(mix(baseColor.rgb, baseColor.a * color.rgb, color.a), baseColor.a);
 	outColor = vec4(mix(baseColor.rgb, color.rgb, color.a), baseColor.a);
+	//outColor = vec4(mix(baseColor.rgb, baseColor.a * color.rgb, color.a), baseColor.a);
 }
 
 #endif
@@ -84,16 +79,13 @@ BasicVertex *BasicPlotter::getVertex(int i) {
 	return vertices + i;
 }
 
-void BasicPlotter::begin(const Viewport& aView, GLuint program) {
+void BasicPlotter::begin(const Viewport& aView) {
 	ASSERT(!isBound());
 	bound = 1;
 	view = aView;
 	
-	if (program) {
-		glUseProgram(program);
-	} else {
-		shader.use();
-	}
+	shader.use();
+
 	// WILL THESE LOCATIONS MATCH??
 	glEnableVertexAttribArray(aPosition);
 	glEnableVertexAttribArray(aUV);
