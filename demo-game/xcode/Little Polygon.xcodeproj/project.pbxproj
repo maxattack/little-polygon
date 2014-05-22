@@ -7,19 +7,17 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5006D7EC192D868F00E79368 /* LinePlotter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5006D7EB192D868F00E79368 /* LinePlotter.cpp */; };
 		50333ABD192B02780098FFCC /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 50333ABC192B02780098FFCC /* Cocoa.framework */; };
 		506F674E192B08A200BDE41D /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 506F674D192B08A200BDE41D /* main.cpp */; };
 		506F6751192B092300BDE41D /* SDL2_mixer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 506F674F192B092300BDE41D /* SDL2_mixer.framework */; };
 		506F6752192B092300BDE41D /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 506F6750192B092300BDE41D /* SDL2.framework */; };
 		506F6766192B095800BDE41D /* AssetBundle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 506F6753192B095800BDE41D /* AssetBundle.cpp */; };
-		506F6767192B095800BDE41D /* BasicPlotter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 506F6754192B095800BDE41D /* BasicPlotter.cpp */; };
 		506F6769192B095800BDE41D /* GlobalContext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 506F6756192B095800BDE41D /* GlobalContext.cpp */; };
-		506F676A192B095800BDE41D /* LinePlotter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 506F6757192B095800BDE41D /* LinePlotter.cpp */; };
 		506F676B192B095800BDE41D /* lodepng.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 506F6758192B095800BDE41D /* lodepng.cpp */; };
 		506F676D192B095800BDE41D /* SampleAsset.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 506F675A192B095800BDE41D /* SampleAsset.cpp */; };
 		506F676E192B095800BDE41D /* Shader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 506F675B192B095800BDE41D /* Shader.cpp */; };
 		506F676F192B095800BDE41D /* SimplexNoise.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 506F675C192B095800BDE41D /* SimplexNoise.cpp */; };
-		506F6770192B095800BDE41D /* SplinePlotter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 506F675D192B095800BDE41D /* SplinePlotter.cpp */; };
 		506F6771192B095800BDE41D /* SpriteBatch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 506F675E192B095800BDE41D /* SpriteBatch.cpp */; };
 		506F6772192B095800BDE41D /* SpritePlotter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 506F675F192B095800BDE41D /* SpritePlotter.cpp */; };
 		506F6773192B095800BDE41D /* TextureAsset.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 506F6760192B095800BDE41D /* TextureAsset.cpp */; };
@@ -39,6 +37,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		5006D7EB192D868F00E79368 /* LinePlotter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = LinePlotter.cpp; path = ../../src/LinePlotter.cpp; sourceTree = "<group>"; };
 		50333AB9192B02780098FFCC /* Little Polygon.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Little Polygon.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		50333ABC192B02780098FFCC /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		50333ABF192B02780098FFCC /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -49,14 +48,11 @@
 		506F674F192B092300BDE41D /* SDL2_mixer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2_mixer.framework; path = ../../../../../../Library/Frameworks/SDL2_mixer.framework; sourceTree = "<group>"; };
 		506F6750192B092300BDE41D /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2.framework; path = ../../../../../../Library/Frameworks/SDL2.framework; sourceTree = "<group>"; };
 		506F6753192B095800BDE41D /* AssetBundle.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AssetBundle.cpp; path = ../../src/AssetBundle.cpp; sourceTree = "<group>"; };
-		506F6754192B095800BDE41D /* BasicPlotter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BasicPlotter.cpp; path = ../../src/BasicPlotter.cpp; sourceTree = "<group>"; };
 		506F6756192B095800BDE41D /* GlobalContext.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GlobalContext.cpp; path = ../../src/GlobalContext.cpp; sourceTree = "<group>"; };
-		506F6757192B095800BDE41D /* LinePlotter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = LinePlotter.cpp; path = ../../src/LinePlotter.cpp; sourceTree = "<group>"; };
 		506F6758192B095800BDE41D /* lodepng.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = lodepng.cpp; path = ../../src/lodepng.cpp; sourceTree = "<group>"; };
 		506F675A192B095800BDE41D /* SampleAsset.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SampleAsset.cpp; path = ../../src/SampleAsset.cpp; sourceTree = "<group>"; };
 		506F675B192B095800BDE41D /* Shader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Shader.cpp; path = ../../src/Shader.cpp; sourceTree = "<group>"; };
 		506F675C192B095800BDE41D /* SimplexNoise.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SimplexNoise.cpp; path = ../../src/SimplexNoise.cpp; sourceTree = "<group>"; };
-		506F675D192B095800BDE41D /* SplinePlotter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SplinePlotter.cpp; path = ../../src/SplinePlotter.cpp; sourceTree = "<group>"; };
 		506F675E192B095800BDE41D /* SpriteBatch.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SpriteBatch.cpp; path = ../../src/SpriteBatch.cpp; sourceTree = "<group>"; };
 		506F675F192B095800BDE41D /* SpritePlotter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SpritePlotter.cpp; path = ../../src/SpritePlotter.cpp; sourceTree = "<group>"; };
 		506F6760192B095800BDE41D /* TextureAsset.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TextureAsset.cpp; path = ../../src/TextureAsset.cpp; sourceTree = "<group>"; };
@@ -96,16 +92,14 @@
 		5008664C192B05DA0018B313 /* Common */ = {
 			isa = PBXGroup;
 			children = (
-				506F678A192BDFCD00BDE41D /* glew.c */,
 				506F6753192B095800BDE41D /* AssetBundle.cpp */,
-				506F6754192B095800BDE41D /* BasicPlotter.cpp */,
+				506F678A192BDFCD00BDE41D /* glew.c */,
 				506F6756192B095800BDE41D /* GlobalContext.cpp */,
-				506F6757192B095800BDE41D /* LinePlotter.cpp */,
+				5006D7EB192D868F00E79368 /* LinePlotter.cpp */,
 				506F6758192B095800BDE41D /* lodepng.cpp */,
 				506F675A192B095800BDE41D /* SampleAsset.cpp */,
 				506F675B192B095800BDE41D /* Shader.cpp */,
 				506F675C192B095800BDE41D /* SimplexNoise.cpp */,
-				506F675D192B095800BDE41D /* SplinePlotter.cpp */,
 				506F675E192B095800BDE41D /* SpriteBatch.cpp */,
 				506F675F192B095800BDE41D /* SpritePlotter.cpp */,
 				506F6760192B095800BDE41D /* TextureAsset.cpp */,
@@ -257,14 +251,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				506F6777192B095800BDE41D /* utils.cpp in Sources */,
-				506F676A192B095800BDE41D /* LinePlotter.cpp in Sources */,
 				506F6769192B095800BDE41D /* GlobalContext.cpp in Sources */,
-				506F6767192B095800BDE41D /* BasicPlotter.cpp in Sources */,
+				5006D7EC192D868F00E79368 /* LinePlotter.cpp in Sources */,
 				506F6766192B095800BDE41D /* AssetBundle.cpp in Sources */,
 				506F6778192B095800BDE41D /* Viewport.cpp in Sources */,
 				506F676E192B095800BDE41D /* Shader.cpp in Sources */,
 				506F676D192B095800BDE41D /* SampleAsset.cpp in Sources */,
-				506F6770192B095800BDE41D /* SplinePlotter.cpp in Sources */,
 				506F674E192B08A200BDE41D /* main.cpp in Sources */,
 				506F6773192B095800BDE41D /* TextureAsset.cpp in Sources */,
 				506F6771192B095800BDE41D /* SpriteBatch.cpp in Sources */,

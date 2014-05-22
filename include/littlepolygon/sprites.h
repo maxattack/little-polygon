@@ -38,18 +38,53 @@ class Sprite;
 
 class SpritePlotter {
 private:
-	BasicPlotter* plotter;
+	
+	struct Vertex {
+		float x,y,z,u,v;
+		Color color;
+
+		inline void set(vec2 p, vec2 uv, Color c) {
+			x = p.x; y = p.y; z = 0; u = uv.x; v = uv.y; color = c;
+		}
+		
+		inline void set(vec2 p, float az, vec2 uv, Color c) {
+			x = p.x; y = p.y; z = az; u = uv.x; v = uv.y; color = c;
+		}
+		
+		inline void set(vec3f p, vec2 uv, Color c) {
+			p.load(&x); u = uv.x; v = uv.y; color = c;
+		}
+		
+	};
+	
 	int capacity;
 	int count;
+	
+	Viewport view;
+	Shader shader;
+	
+	GLuint uMVP;
+	GLuint uAtlas;
+	GLuint aPosition;
+	GLuint aUV;
+	GLuint aColor;
+	
+	
+	GLuint vao[3];
+	GLuint vbo[3];
 	GLuint elementBuf;
+	
+	int currentArray;
+	
 	TextureAsset *workingTexture;
+	Vertex *vertices;
 
 public:
-	SpritePlotter(BasicPlotter* plotter);
+	SpritePlotter(int cap);
 	~SpritePlotter();
 
 	bool isBound() const { return count >= 0; }
-	BasicPlotter* getPlotter() { return plotter; }
+	int vertexCapacity() const { return capacity << 2; }
 
 	// Call this method to initialize the graphics context state.  Asserts that the plotter
 	// is already bound (in case you're coalescing with other plotters) and state e.g. blending are
@@ -80,7 +115,7 @@ public:
 	void end();
 
 private:
-	BasicVertex *nextSlice() { return plotter->getVertex(count<<2); }
+	Vertex *nextSlice() { return vertices + (count<<2); }
 	void setTextureAtlas(TextureAsset* texture);
 	void commitBatch();
 	void plotGlyph(const GlyphAsset& g, float x, float y, float z, float h, Color c);

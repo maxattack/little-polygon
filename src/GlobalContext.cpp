@@ -62,38 +62,37 @@ GlobalContext::SDLContext::SDLContext(const char *caption, int w, int h) {
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
-	auto pWindow = SDL_CreateWindow(
+	window = SDL_CreateWindow(
 		caption ? caption : "Little Polygon Context",
 		SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
 		w, h, SDL_WINDOW_OPENGL
 	);
 	
-	SDL_GL_CreateContext(pWindow);
-
-	#if LITTLE_POLYGON_OPENGL_CORE
+	gl = SDL_GL_CreateContext(window);
 	glewExperimental = GL_TRUE;
 	glewInit();
-	#endif
 	
-	SDL_GetWindowSize(pWindow, &w, &h);
-	glViewport(0, 0, w, h);
-	glEnable(GL_TEXTURE_2D);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
-
+GlobalContext::SDLContext::~SDLContext() {
+	SDL_GL_DeleteContext(gl);
+	SDL_DestroyWindow(window);
+	Mix_CloseAudio();
+	SDL_Quit();
+}
 
 GlobalContext::GlobalContext(const char *caption, int w, int h, const char *assetPath, int plotterCap, int linesCap, int spriteLayers) :
 Singleton<GlobalContext>(this),
 sdl(caption, w, h),
 assets(assetPath),
 view(makeView()),
-plotter(plotterCap),
+//plotter(plotterCap),
 lines(linesCap),
-sprites(&plotter),
-batch(spriteLayers),
-splines(&plotter)
+sprites(plotterCap),
+batch(spriteLayers)
+//splines(&plotter)
 {
 }
 

@@ -22,13 +22,17 @@
 #include "events.h"
 #include "graphics.h"
 #include "sprites.h"
-#include "splines.h"
 #include "utils.h"
 
 
 class GlobalContext : public Singleton<GlobalContext> {
 private:
-	struct SDLContext { SDLContext(const char *caption, int w, int h); };
+	struct SDLContext {
+		SDL_Window *window;
+		SDL_GLContext gl;
+		SDLContext(const char *caption, int w, int h);
+		~SDLContext();
+	};
 
 public:
 	SDLContext sdl;
@@ -36,11 +40,11 @@ public:
 	Viewport view;
 	Timer timer;
 	TimerQueue queue;
-	BasicPlotter plotter;
+//	BasicPlotter plotter;
 	LinePlotter lines;
 	SpritePlotter sprites;
 	SpriteBatch batch;
-	SplinePlotter splines;
+//	SplinePlotter splines;
 	
 
 public:
@@ -48,7 +52,7 @@ public:
 	~GlobalContext();
 };
 
-inline void lpInitialize(const char *caption, int w, int h, const char *assetPath=0, int plotterCap=1024, int linesCap=128, int spriteLayers=8) {
+inline void lpInitialize(const char *caption, int w, int h, const char *assetPath=0, int plotterCap=128, int linesCap=128, int spriteLayers=8) {
 	new GlobalContext(caption, w, h, assetPath, plotterCap, linesCap, spriteLayers);
 }
 
@@ -56,11 +60,11 @@ inline void lpFinalize() {
 	delete GlobalContext::getInstancePtr();
 }
 
+#define gWindow  (GlobalContext::getInstance().sdl.window)
 #define gAssets  (GlobalContext::getInstance().assets)
 #define gView    (GlobalContext::getInstance().view)
 #define gTimer   (GlobalContext::getInstance().timer)
 #define gQueue   (GlobalContext::getInstance().queue)
-#define gPlotter (GlobalContext::getInstance().plotter)
 #define gLines   (GlobalContext::getInstance().lines)
 #define gSprites (GlobalContext::getInstance().sprites)
 #define gBatch   (GlobalContext::getInstance().batch)

@@ -38,15 +38,18 @@ int main(int argc, char *argv[]) {
 	gView.setSizeWithWidth(300);
 	
 	while(!sDone) {
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		handleEvents();
 		
 		gSprites.begin(gView);
-		auto img = gAssets.image("background");
-		gSprites.drawImage(img, gView.mouse());
+		gSprites.drawImage(gAssets.image("background"), gView.mouse());
 		gSprites.end();
 		
-		SDL_GL_SwapWindow(SDL_GL_GetCurrentWindow());
+		gLines.begin(gView);
+		gLines.plot(vec(0,0), gView.mouse(), rgb(0xffff00));
+		gLines.end();
+		
+		SDL_GL_SwapWindow(gWindow);
 	}
 	
 	lpFinalize();

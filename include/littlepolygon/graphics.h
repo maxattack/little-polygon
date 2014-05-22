@@ -93,76 +93,76 @@ typedef Color (*TextureGenerator)(double, double);
 GLuint generateTexture(TextureGenerator cb, int w=256, int h=256);
 GLuint getFakeAntialiasTexture();
 
-int createRenderToTextureFramebuffer(GLsizei w, GLsizei h, GLuint *outTexture, GLuint *outFramebuffer);
-
-class PostProcessingFX {
-private:
-	GLuint dfb, fb, rt;    // framebuffer & rendertexture handles
-	Shader shader;
-	GLuint ap, auv;        // attribute locations
-	GLuint vbuf;           // vertex buffer handle
-	
-public:
-	PostProcessingFX(const GLchar *source);
-	~PostProcessingFX();
-	
-	// If the fx fail to initialize we'll just fallback on NOOP
-	bool valid() const { return fb != 0; }
-	
-	void release();
-	
-	void beginScene();
-	void endScene();
-	void draw();
-};
-
-//------------------------------------------------------------------------------
-// BASIC PLOTTER
-//------------------------------------------------------------------------------
-
-
-struct BasicVertex {
-	float x,y,z,u,v;
-	Color color;
-	
-	inline void set(vec2 p, vec2 uv, Color c) { x = p.x; y = p.y; z = 0; u = uv.x; v = uv.y; color = c; }
-	inline void set(vec2 p, float az, vec2 uv, Color c) { x = p.x; y = p.y; z = az; u = uv.x; v = uv.y; color = c; }
-	inline void set(vec3f p, vec2 uv, Color c) { p.load(&x); u = uv.x; v = uv.y; color = c; }
-};
-
-struct BasicPlotter {
-private:
-	int bound;
-	int capacity;
-	
-	Viewport view;
-	Shader shader;	
-	GLuint uMVP;
-	GLuint uAtlas;
-	GLuint aPosition;
-	GLuint aUV;
-	GLuint aColor;
-	
-	GLuint arrays[3]; // triple-buffered
-	int currentArray;
-	
-	BasicVertex *vertices;
-
-public:
-	BasicPlotter(int capacity);
-	~BasicPlotter();	
-	
-	const Viewport& getView() const { return view; }
-	BasicVertex *getVertex(int i);
-	bool isBound() const { return bound; }
-	int getCapacity() const { return capacity; }
-	
-	void begin(const Viewport& view);
-	void commit(int count);
-	void end();
-
-};
-
+//int createRenderToTextureFramebuffer(GLsizei w, GLsizei h, GLuint *outTexture, GLuint *outFramebuffer);
+//
+//class PostProcessingFX {
+//private:
+//	GLuint dfb, fb, rt;    // framebuffer & rendertexture handles
+//	Shader shader;
+//	GLuint ap, auv;        // attribute locations
+//	GLuint vbuf;           // vertex buffer handle
+//	
+//public:
+//	PostProcessingFX(const GLchar *source);
+//	~PostProcessingFX();
+//	
+//	// If the fx fail to initialize we'll just fallback on NOOP
+//	bool valid() const { return fb != 0; }
+//	
+//	void release();
+//	
+//	void beginScene();
+//	void endScene();
+//	void draw();
+//};
+//
+////------------------------------------------------------------------------------
+//// BASIC PLOTTER
+////------------------------------------------------------------------------------
+//
+//
+//struct BasicVertex {
+//	float x,y,z,u,v;
+//	Color color;
+//	
+//	inline void set(vec2 p, vec2 uv, Color c) { x = p.x; y = p.y; z = 0; u = uv.x; v = uv.y; color = c; }
+//	inline void set(vec2 p, float az, vec2 uv, Color c) { x = p.x; y = p.y; z = az; u = uv.x; v = uv.y; color = c; }
+//	inline void set(vec3f p, vec2 uv, Color c) { p.load(&x); u = uv.x; v = uv.y; color = c; }
+//};
+//
+//struct BasicPlotter {
+//private:
+//	int bound;
+//	int capacity;
+//	
+//	Viewport view;
+//	Shader shader;	
+//	GLuint uMVP;
+//	GLuint uAtlas;
+//	GLuint aPosition;
+//	GLuint aUV;
+//	GLuint aColor;
+//	
+//	GLuint arrays[3]; // triple-buffered
+//	int currentArray;
+//	
+//	BasicVertex *vertices;
+//
+//public:
+//	BasicPlotter(int capacity);
+//	~BasicPlotter();	
+//	
+//	const Viewport& getView() const { return view; }
+//	BasicVertex *getVertex(int i);
+//	bool isBound() const { return bound; }
+//	int getCapacity() const { return capacity; }
+//	
+//	void begin(const Viewport& view);
+//	void commit(int count);
+//	void end();
+//
+//};
+//
 //------------------------------------------------------------------------------
 // DEBUG LINE RENDERING
 //------------------------------------------------------------------------------
@@ -172,7 +172,7 @@ class LinePlotter {
 private:
 	int count, capacity;
 	Shader shader;
-	GLuint uMVP, aPosition, aColor;
+	GLuint vao, vbo, uMVP, aPosition, aColor;
 
 	struct Vertex {
 		vec2 position;

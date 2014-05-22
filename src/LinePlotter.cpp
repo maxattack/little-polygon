@@ -49,35 +49,42 @@ LinePlotter::LinePlotter(int aCapacity) : count(-1), capacity(aCapacity), shader
 	aPosition = shader.attribLocation("aPosition");
 	aColor = shader.attribLocation("aColor");
 	vertices = (Vertex*) malloc(sizeof(Vertex) * capacity);
+	
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+	
+	glGenBuffers(1, &vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * capacity, 0, GL_DYNAMIC_DRAW);
+	
+	glEnableVertexAttribArray(aPosition);
+	glEnableVertexAttribArray(aColor);
+	glVertexAttribPointer(
+		aPosition, 2, GL_FLOAT, GL_FALSE,
+		sizeof(Vertex),
+		(void*) 0
+	);
+	glVertexAttribPointer(
+		aColor, 4, GL_UNSIGNED_BYTE, GL_TRUE,
+		sizeof(Vertex),
+		(void*) 8
+	);
+	
+	glBindVertexArray(0);
+	
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 
 LinePlotter::~LinePlotter() {
-	if (vertices) {
-		free(vertices);
-	}
+	free(vertices);
 }
 
 void LinePlotter::begin(const Viewport& viewport) {
 	ASSERT(count == -1);
 	count = 0;
-
 	shader.use();
 	viewport.setMVP(uMVP);
-
-	glEnableVertexAttribArray(aPosition);
-	glEnableVertexAttribArray(aColor);
-
-	glVertexAttribPointer(
-		aPosition, 2, GL_FLOAT, GL_FALSE,
-		sizeof(LinePlotter::Vertex),
-		&vertices[0].position
-	);
-	glVertexAttribPointer(
-		aColor, 4, GL_UNSIGNED_BYTE, GL_TRUE,
-		sizeof(LinePlotter::Vertex),
-		&vertices[0].color
-	);
 }
 
 void LinePlotter::plot(vec2 p0, vec2 p1, Color c) {
@@ -112,13 +119,16 @@ void LinePlotter::end() {
 		commitBatch();
 	}
 	count = -1;
-	glDisableVertexAttribArray(aPosition);
-	glDisableVertexAttribArray(aColor);
 }
 
 void LinePlotter::commitBatch() {
 	ASSERT(count > 0);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, 2*count*sizeof(Vertex), vertices);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(vao);
 	glDrawArrays(GL_LINES, 0, 2*count);
+	glBindVertexArray(0);
 	count = 0;
 }
 
