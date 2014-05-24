@@ -64,7 +64,7 @@ public:
 	vec2 windowToViewport(vec2 p) const;
 	vec2 viewportToWindow(vec2 vp) const;
 
-	vec2 mouse() const;
+	vec2 cursor() const;
 
 	void setMVP(GLuint mvp) const;
 	

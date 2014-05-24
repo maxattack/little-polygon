@@ -53,10 +53,9 @@ vec2 Viewport::viewportToWindow(vec2 vp) const {
 	return vec2(w,h) / mSize * (vp - mOffset);
 }
 
-vec2 Viewport::mouse() const {
-	SDL_Point mp;
-	SDL_GetMouseState(&mp.x, &mp.y);
-	return windowToViewport(mp);
+vec2 Viewport::cursor() const {
+	int x,y; SDL_GetMouseState(&x, &y);
+	return windowToViewport(vec(x, y));
 }
 
 void Viewport::setMVP(GLuint amvp) const {

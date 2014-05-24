@@ -59,6 +59,7 @@ sh(SPLINE_VERT, SPLINE_FRAG) {
 	// initialize vaos
 	glGenVertexArrays(3, vao);
 	for(int i=0; i<3; ++i) {
+		
 		glBindVertexArray(vao[i]);
 		glBindBuffer(GL_ARRAY_BUFFER, plotter->getVBO(i));
 		glEnableVertexAttribArray(aPosition);
@@ -68,10 +69,12 @@ sh(SPLINE_VERT, SPLINE_FRAG) {
 		glVertexAttribPointer(aUv, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)12);
 		glVertexAttribPointer(aColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Vertex), (GLvoid*)20);
 		glBindVertexArray(0);
+		
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glDisableVertexAttribArray(aPosition);
 		glDisableVertexAttribArray(aUv);
 		glDisableVertexAttribArray(aColor);
+		
 	}
 	
 	tex = generateTexture([](double x, double y) {
@@ -104,7 +107,8 @@ void SplinePlotter::begin(const Viewport& viewport) {
 	int w,h; SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &w, &h);
 	fakeAntiAliasFactor = 0.001 * float(w) / viewport.width();
 	
-	
+	sh.use();
+	view.setMVP(uMVP);
 	glBindTexture(GL_TEXTURE_2D, tex);
 }
 
@@ -320,5 +324,7 @@ void SplinePlotter::flush() {
 void SplinePlotter::end() {
 	ASSERT(isBound());
 	flush();
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glUseProgram(0);
 	count = -1;
 }

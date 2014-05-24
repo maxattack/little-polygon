@@ -41,13 +41,17 @@ int main(int argc, char *argv[]) {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		handleEvents();
 		
-		gSprites.begin(gView);
-		gSprites.drawImage(gAssets.image("background"), gView.mouse());
-		gSprites.end();
+//		gSprites.begin(gView);
+//		gSprites.drawImage(gAssets.image("background"), gView.cursor());
+//		gSprites.end();
 		
 		gLines.begin(gView);
-		gLines.plot(vec(0,0), gView.mouse(), rgb(0xffff00));
+		gLines.plot(vec(0,0), gView.cursor(), rgb(0xffff00));
 		gLines.end();
+		
+		gSplines.begin(gView);
+		gSplines.plotCircle(gView.cursor(), 0, 16, rgb(0xffff99));
+		gSplines.end();
 		
 		SDL_GL_SwapWindow(gWindow);
 	}
