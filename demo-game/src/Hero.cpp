@@ -4,12 +4,13 @@
 
 Hero::Hero() :
 Entity(
-	gAssets.userdata("hero.position")->get<vec2>() - vec(0, 1),
+	gAssets.userdata("hero.position")->get<vec2>() - vec(0, 0.01f),
 	vec(kHeroWidth, kHeroHeight)
 ),
 img(gAssets.image("hero")),
 dir(1),
-animTime(0.0f), yScale(1.0f)
+animTime(0.0f), yScale(1.0f),
+grounded(true)
 {
 	auto mus = Mix_LoadMUS("song.mid");
 	if (mus) {
@@ -32,16 +33,17 @@ void Hero::tick() {
 	pspeed()->y += kGravity * dt;
 	
 	// JUMPING
-	if (contactBottom() && gWorld.input.pressedJump()) {
+	if (grounded && gWorld.input.pressedJump()) {
 		gAssets.sample("jump")->play();
 		pspeed()->y = -sqrtf(2.0f * kHeroJumpHeight * kGravity);
 	}
 	
-	auto wasGrounded = contactBottom();
+	auto wasGrounded = grounded;
 	
-	move();
+	int hitX, hitY; move(&hitX, &hitY);
 	
-	if (contactBottom()) {
+	grounded = hitY > 0;
+	if (grounded) {
 		if (!wasGrounded) {
 			// LANDING FX
 			animTime = 0.0f;
@@ -78,7 +80,7 @@ bool Hero::isStandingStill() const {
 }
 
 int Hero::getFrame() const {
-	if (!contactBottom()) {
+	if (!grounded) {
 		return 1;
 	} else if (!isStandingStill()) {
 		return int(animTime) % 2;

@@ -22,17 +22,33 @@ TileMask::~TileMask() {
 }
 
 bool TileMask::get(int x, int y) const {
+	return x < 0 || x >= mWidth || rawGet(x,y);
+}
+
+bool TileMask::rawGet(int x, int y) const {
+	ASSERT(x >= 0);
+	ASSERT(y >= 0);
+	ASSERT(x < mWidth);
+	ASSERT(y < mHeight);
 	int byteIdx, localIdx; getIndices(x, y, &byteIdx, &localIdx);
 	return bytes[byteIdx] & (1<<localIdx);
 }
 
 void TileMask::mark(int x, int y) {
+	ASSERT(x >= 0);
+	ASSERT(y >= 0);
+	ASSERT(x < mWidth);
+	ASSERT(y < mHeight);
 	int byteIdx, localIdx; getIndices(x, y, &byteIdx, &localIdx);
 	bytes[byteIdx] |= (1<<localIdx);
 	
 }
 
 void TileMask::clear(int x, int y) {
+	ASSERT(x >= 0);
+	ASSERT(y >= 0);
+	ASSERT(x < mWidth);
+	ASSERT(y < mHeight);
 	int byteIdx, localIdx; getIndices(x, y, &byteIdx, &localIdx);
 	bytes[byteIdx] &= ~(1<<localIdx);
 
@@ -45,10 +61,10 @@ void TileMask::getIndices(int x, int y, int *byteIdx, int *localIdx) const {
 }
 
 bool TileMask::check(vec2 topLeft, vec2 bottomRight) const {
-	int left = topLeft.x;
-	int right = bottomRight.x;
-	int bottom = bottomRight.y;
-	int top = topLeft.y;
+	int left = floorToInt(topLeft.x);
+	int right = floorToInt(bottomRight.x);
+	int bottom = floorToInt(bottomRight.y);
+	int top = floorToInt(topLeft.y);
 	for(int y=top; y<=bottom; ++y)
 	for(int x=left; x<=right; ++x) {
 		if (get(x,y)) { return true; }
@@ -56,15 +72,15 @@ bool TileMask::check(vec2 topLeft, vec2 bottomRight) const {
 	return false;
 }
 
-bool TileMask::checkLeft(vec2 bottomLeft, vec2 topRight, float *outResult) const {
-	int left = bottomLeft.x;
-	int right = topRight.x;
-	int bottom = bottomLeft.y;
-	int top = topRight.y;
+bool TileMask::checkLeft(vec2 topLeft, vec2 bottomRight, float *outResult) const {
+	int left = floorToInt(topLeft.x);
+	int right = floorToInt(bottomRight.x);
+	int bottom = floorToInt(bottomRight.y);
+	int top = floorToInt(topLeft.y);
 	for(int x=left; x<=right; ++x)
 	for(int y=top; y<=bottom; ++y) {
 		if (get(x,y)) {
-			*outResult = x + 1.0f - bottomLeft.x + kSlop;
+			*outResult = x + 1.0f - topLeft.x + kSlop;
 			return true;
 		}
 	}
@@ -72,15 +88,15 @@ bool TileMask::checkLeft(vec2 bottomLeft, vec2 topRight, float *outResult) const
 	return false;
 }
 
-bool TileMask::checkRight(vec2 bottomLeft, vec2 topRight, float *outResult) const {
-	int left = bottomLeft.x;
-	int right = topRight.x;
-	int bottom = bottomLeft.y;
-	int top = topRight.y;
+bool TileMask::checkRight(vec2 topLeft, vec2 bottomRight, float *outResult) const {
+	int left = floorToInt(topLeft.x);
+	int right = floorToInt(bottomRight.x);
+	int bottom = floorToInt(bottomRight.y);
+	int top = floorToInt(topLeft.y);
 	for(int x=right; x>=left; --x)
 	for(int y=top; y<=bottom; ++y) {
 		if (get(x,y)) {
-			*outResult = x - topRight.x - kSlop;
+			*outResult = x - bottomRight.x - kSlop;
 			return true;
 		}
 	}
@@ -89,15 +105,15 @@ bool TileMask::checkRight(vec2 bottomLeft, vec2 topRight, float *outResult) cons
 
 }
 
-bool TileMask::checkTop(vec2 bottomLeft, vec2 topRight, float *outResult) const {
-	int left = bottomLeft.x;
-	int right = topRight.x;
-	int bottom = bottomLeft.y;
-	int top = topRight.y;
+bool TileMask::checkTop(vec2 topLeft, vec2 bottomRight, float *outResult) const {
+	int left = floorToInt(topLeft.x);
+	int right = floorToInt(bottomRight.x);
+	int bottom = floorToInt(bottomRight.y);
+	int top = floorToInt(topLeft.y);
 	for(int y=bottom; y>=top; --y)
 	for(int x=left; x<=right; ++x) {
 		if (get(x,y)) {
-			*outResult = y + 1.0f - topRight.y + kSlop;
+			*outResult = y + 1.0f - topLeft.y + kSlop;
 			return true;
 		}
 	}
@@ -106,15 +122,15 @@ bool TileMask::checkTop(vec2 bottomLeft, vec2 topRight, float *outResult) const 
 
 }
 
-bool TileMask::checkBottom(vec2 bottomLeft, vec2 topRight, float *outResult) const {
-	int left = bottomLeft.x;
-	int right = topRight.x;
-	int bottom = bottomLeft.y;
-	int top = topRight.y;
+bool TileMask::checkBottom(vec2 topLeft, vec2 bottomRight, float *outResult) const {
+	int left = floorToInt(topLeft.x);
+	int right = floorToInt(bottomRight.x);
+	int bottom = floorToInt(bottomRight.y);
+	int top = floorToInt(topLeft.y);
 	for(int y=top; y<=bottom; ++y)
 	for(int x=left; x<=right; ++x) {
 		if (get(x,y)) {
-			*outResult = y - bottomLeft.y - kSlop;
+			*outResult = y - bottomRight.y - kSlop;
 			return true;
 		}
 	}
@@ -125,7 +141,7 @@ bool TileMask::checkBottom(vec2 bottomLeft, vec2 topRight, float *outResult) con
 void TileMask::debugDraw() {
 	for(int y=0; y<mHeight; ++y)
 	for(int x=0; x<mWidth; ++x) {
-		if (get(x,y)) {
+		if (rawGet(x,y)) {
 			gLines.plotBox(vec(x,y), vec(x+1, y+1), rgb(333333));
 		}
 	}

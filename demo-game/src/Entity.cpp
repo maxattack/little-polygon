@@ -4,14 +4,13 @@ Entity::Entity(vec2 aPos, vec2 aSize) :
 mPosition(aPos.x, aPos.y - 0.5f * aSize.y),
 mSpeed(0,0),
 mOffset(0, 0.5f * aSize.y),
-mHalfSize(0.5f * aSize),
-hitX(0), hitY(0)
+mHalfSize(0.5f * aSize)
 {
 }
 
-void Entity::move() {
-	hitX = 0;
-	hitY = 0;
+void Entity::move(int* hitX, int* hitY) {
+	*hitX = 0;
+	*hitY = 0;
 	auto displacement = mSpeed * gTimer.deltaSeconds;
 	auto p1 = mPosition + displacement;
 	if (gWorld.mask.check(p1 - mHalfSize, p1 + mHalfSize)) {
@@ -20,9 +19,9 @@ void Entity::move() {
 		if (displacement.y > kDeadZone) {
 			// MOVE DOWN
 			float dy;
-			if (gWorld.mask.checkBottom(vec(left(), bottom()+displacement.y), vec(right(), mPosition.y), &dy)) {
+			if (gWorld.mask.checkBottom(vec(left(), mPosition.y), vec(right(), bottom()+displacement.y), &dy)) {
 				mPosition.y += std::max(displacement.y + dy, 0.0f);
-				hitY = 1;
+				*hitY = 1;
 				mSpeed.y = 0.0f;
 			} else {
 				mPosition.y += displacement.y;
@@ -30,9 +29,9 @@ void Entity::move() {
 		} else if (displacement.y < -kDeadZone) {
 			// MOVE UP
 			float dy;
-			if (gWorld.mask.checkTop(vec(left(), mPosition.y), vec(right(), top() + displacement.y), &dy)) {
+			if (gWorld.mask.checkTop(vec(left(), top() + displacement.y), vec(right(), mPosition.y), &dy)) {
 				mPosition.y += std::min(displacement.y + dy, 0.0f);
-				hitY = -1;
+				*hitY = -1;
 				mSpeed.y = 0.0f;
 			} else {
 				mPosition.y += displacement.y;
@@ -41,9 +40,9 @@ void Entity::move() {
 		if (displacement.x > kDeadZone) {
 			// MOVE RIGHT
 			float dx;
-			if (gWorld.mask.checkRight(vec(mPosition.x, bottom()), vec(right() + displacement.x, top()), &dx)) {
+			if (gWorld.mask.checkRight(vec(mPosition.x, top()), vec(right() + displacement.x, bottom()), &dx)) {
 				mPosition.x += std::max(displacement.x + dx, 0.0f);
-				hitX = 1;
+				*hitX = 1;
 				mSpeed.x = 0.0f;
 			} else {
 				mPosition.x += displacement.x;
@@ -51,9 +50,9 @@ void Entity::move() {
 		} else if (displacement.x < -kDeadZone) {
 			// MOVE LEFT
 			float dx;
-			if (gWorld.mask.checkLeft(vec(left() + displacement.x, bottom()), vec(mPosition.x, top()), &dx)) {
+			if (gWorld.mask.checkLeft(vec(left() + displacement.x, top()), vec(mPosition.x, bottom()), &dx)) {
 				mPosition.x += std::min(displacement.x + dx, 0.0f);
-				hitX = -1;
+				*hitX = -1;
 				mSpeed.x = 0.0f;
 			} else {
 				mPosition.x += displacement.x;

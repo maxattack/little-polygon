@@ -44,7 +44,9 @@ public:
 	void mark(int x, int y);
 	void clear(int x, int y);
 
-	bool check(vec2 bottomLeft, vec2 topRight) const;
+	bool check(vec2 topLeft, vec2 bottomRight) const;
+	
+	// TODO: Change args to match check() :P
 	bool checkLeft(vec2 bottomLeft, vec2 topRight, float *outResult) const;
 	bool checkRight(vec2 bottomLeft, vec2 topRight, float *outResult) const;
 	bool checkTop(vec2 bottomLeft, vec2 topRight, float *outResult) const;
@@ -53,6 +55,7 @@ public:
 	void debugDraw();
 	
 private:
+	bool rawGet(int x, int y) const;
 	void getIndices(int x, int y, int *byteIdx, int *localIdx) const;
 };
 
@@ -65,7 +68,6 @@ private:
 	vec2 mSpeed;
 	vec2 mOffset;
 	vec2 mHalfSize;
-	int hitX, hitY;
 	
 public:
 
@@ -84,16 +86,11 @@ public:
 	float speedY() const { return mSpeed.y; }
 	vec2 *pspeed() { return &mSpeed; }
 	
-	bool contactLeft() const { return hitX < 0; }
-	bool contactRight() const { return hitX > 0; }
-	bool contactTop() const { return hitY < 0; }
-	bool contactBottom() const { return hitY > 0; }
-	
 	void setPosition(vec2 p) { mPosition = p; }
 	void setSpeed(vec2 s) { mSpeed = s; }
 	void addSpeed(vec2 s) { mSpeed += s; }
 
-	void move();
+	void move(int* hitX, int* hitY);
 	
 	void debugDraw();
 };
@@ -138,6 +135,7 @@ private:
 	ImageAsset *img;
 	int dir;
 	float animTime, yScale;
+	bool grounded;
 	
 public:
 	Hero();
@@ -145,8 +143,10 @@ public:
 	void tick();
 	void draw();
 	
-private:
+	bool isGrounded() const { return grounded; }
 	bool isStandingStill() const;
+	
+private:
 	int getFrame() const;
 };
 

@@ -283,6 +283,10 @@ inline float parabola(float x) {
 	return 1.0f - x * x;
 }
 
+inline int floorToInt(float x) {
+	return floorf(x);
+}
+
 // // line-line intersection test
 bool linearIntersection(vec2 u0, vec2 u1, vec2 v0, vec2 v1, float& u);
 bool linearIntersection(vec2 u0, vec2 u1, vec2 v0, vec2 v1, float& u, float& v);
