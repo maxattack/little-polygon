@@ -53,14 +53,14 @@ vertices(0)
 	uMVP = shader.uniformLocation("mvp");
 	aPosition = shader.attribLocation("aPosition");
 	aColor = shader.attribLocation("aColor");
-	vertices = (Vertex*) malloc(sizeof(Vertex) * capacity);
+	vertices = (Vertex*) malloc(2*sizeof(Vertex) * capacity);
 	
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
 	
 	glGenBuffers(1, &vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * capacity, 0, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, 2*sizeof(Vertex) * capacity, 0, GL_DYNAMIC_DRAW);
 	
 	glEnableVertexAttribArray(aPosition);
 	glEnableVertexAttribArray(aColor);
@@ -101,6 +101,15 @@ void LinePlotter::plot(vec2 p0, vec2 p1, Color c) {
 	if (count == capacity) {
 		commitBatch();
 	}
+}
+
+void LinePlotter::plotBox(vec2 p0, vec2 p2, Color c) {
+	auto p1 = vec(p0.x, p2.y);
+	auto p3 = vec(p2.x, p0.y);
+	plot(p0, p1, c);
+	plot(p1, p2, c);
+	plot(p2, p3, c);
+	plot(p3, p0, c);
 }
 
 void LinePlotter::plotLittleBox(vec2 p, float r, Color c) {

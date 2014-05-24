@@ -8,7 +8,8 @@ import tmx, assets, export_asset_bin, bintools
 def loadAssets(path):
 	result = assets.Assets(path)
 	tmap = tmx.TileMap(os.path.join(result.dir, 'test.tmx'))
-	
+	w,h = tmap.size
+
 	# find opaque tiles
 	opaque_ids = (0,)
 	opaque_coords = set(
@@ -18,45 +19,28 @@ def loadAssets(path):
 		if tile is not None and tile.id in opaque_ids
 	)
 
-	# coalesce left-right into "slabs"
-	slabs = set()
-	while len(opaque_coords) > 0:
-		x0,y = opaque_coords.pop()
-		x1 = x0
-		while (x0-1,y) in opaque_coords:
-			x0 -= 1
-			opaque_coords.remove((x0,y))
-		while (x1+1,y) in opaque_coords:
-			x1 += 1
-			opaque_coords.remove((x1,y))
-		slabs.add((x0,x1,y))
+	def is_opaque(x,y): return (x,y) in opaque_coords
+	bits = [ is_opaque(x,y) for y,x in xyrange(h,w) ]
+	nbytes = (len(bits)+7) // 8
+	bytes = [0] * nbytes
+	for i,bit in enumerate(bits):
+		x = i % w
+		y = i // w
+		if is_opaque(x,y):
+			byteIdx = i // 8
+			localIdx = i - 8 * byteIdx
+			bytes[byteIdx] |= (1<<localIdx)
 
-	# coalesce up-down into colliders
-	colliders = set()
-	while len(slabs) > 0:
-		x0,x1,y0 = slabs.pop()
-		y1 = y0
-		while (x0,x1,y0-1) in slabs:
-			y0 -= 1
-			slabs.remove((x0,x1,y0))
-		while (x0,x1,y1+1) in slabs:
-			y1 += 1
-			slabs.remove((x0,x1,y1))
-		colliders.add((float(x0),float(y0),float(x1+1),float(y1+1)))
-
-	# find "sentry floors"
-	
-
-	# create data string
 	result.addUserdata(
-		'environment.colliders', 
-		array.array('f', (elem for c in colliders for elem in c)).tostring()
+		'world.mask',
+		struct.pack('ii' + 'B'*nbytes, *([w, h] + bytes))
 	)
 
 	# find player position
 	heroObj = next( obj for obj in tmap.objects if obj.type == 'hero' )
 	hx,hy = heroObj.position
 	hw,hh = heroObj.size
+
 	result.addUserdata(
 		'hero.position',
 		struct.pack('ff', hx + 0.5 * hw, hy + hh)
