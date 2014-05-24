@@ -20,7 +20,6 @@
 		506F676D192B095800BDE41D /* SampleAsset.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 506F675A192B095800BDE41D /* SampleAsset.cpp */; };
 		506F676E192B095800BDE41D /* Shader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 506F675B192B095800BDE41D /* Shader.cpp */; };
 		506F676F192B095800BDE41D /* SimplexNoise.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 506F675C192B095800BDE41D /* SimplexNoise.cpp */; };
-		506F6771192B095800BDE41D /* SpriteBatch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 506F675E192B095800BDE41D /* SpriteBatch.cpp */; };
 		506F6772192B095800BDE41D /* SpritePlotter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 506F675F192B095800BDE41D /* SpritePlotter.cpp */; };
 		506F6773192B095800BDE41D /* TextureAsset.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 506F6760192B095800BDE41D /* TextureAsset.cpp */; };
 		506F6774192B095800BDE41D /* TilemapAsset.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 506F6761192B095800BDE41D /* TilemapAsset.cpp */; };
@@ -57,7 +56,6 @@
 		506F675A192B095800BDE41D /* SampleAsset.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SampleAsset.cpp; path = ../../src/SampleAsset.cpp; sourceTree = "<group>"; };
 		506F675B192B095800BDE41D /* Shader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Shader.cpp; path = ../../src/Shader.cpp; sourceTree = "<group>"; };
 		506F675C192B095800BDE41D /* SimplexNoise.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SimplexNoise.cpp; path = ../../src/SimplexNoise.cpp; sourceTree = "<group>"; };
-		506F675E192B095800BDE41D /* SpriteBatch.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SpriteBatch.cpp; path = ../../src/SpriteBatch.cpp; sourceTree = "<group>"; };
 		506F675F192B095800BDE41D /* SpritePlotter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SpritePlotter.cpp; path = ../../src/SpritePlotter.cpp; sourceTree = "<group>"; };
 		506F6760192B095800BDE41D /* TextureAsset.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TextureAsset.cpp; path = ../../src/TextureAsset.cpp; sourceTree = "<group>"; };
 		506F6761192B095800BDE41D /* TilemapAsset.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TilemapAsset.cpp; path = ../../src/TilemapAsset.cpp; sourceTree = "<group>"; };
@@ -106,7 +104,6 @@
 				506F675B192B095800BDE41D /* Shader.cpp */,
 				506F675C192B095800BDE41D /* SimplexNoise.cpp */,
 				5006D7EF193009C400E79368 /* SplinePlotter.cpp */,
-				506F675E192B095800BDE41D /* SpriteBatch.cpp */,
 				506F675F192B095800BDE41D /* SpritePlotter.cpp */,
 				506F6760192B095800BDE41D /* TextureAsset.cpp */,
 				506F6761192B095800BDE41D /* TilemapAsset.cpp */,
@@ -266,7 +263,6 @@
 				506F676D192B095800BDE41D /* SampleAsset.cpp in Sources */,
 				506F674E192B08A200BDE41D /* main.cpp in Sources */,
 				506F6773192B095800BDE41D /* TextureAsset.cpp in Sources */,
-				506F6771192B095800BDE41D /* SpriteBatch.cpp in Sources */,
 				506F676B192B095800BDE41D /* lodepng.cpp in Sources */,
 				506F6774192B095800BDE41D /* TilemapAsset.cpp in Sources */,
 				5006D7F0193009C400E79368 /* SplinePlotter.cpp in Sources */,

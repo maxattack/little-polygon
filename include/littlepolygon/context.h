@@ -42,17 +42,16 @@ public:
 	Plotter plotter;
 	LinePlotter lines;
 	SpritePlotter sprites;
-	SpriteBatch batch;
 	SplinePlotter splines;
 	
 
 public:
-	GlobalContext(const char *caption, int w, int h, const char *assetPath, int plotterCap, int linesCap, int spriteLayers);
+	GlobalContext(const char *caption, int w, int h, const char *assetPath, int plotterCap, int linesCap);
 	~GlobalContext();
 };
 
-inline void lpInitialize(const char *caption, int w, int h, const char *assetPath=0, int plotterCap=128, int linesCap=128, int spriteLayers=8) {
-	new GlobalContext(caption, w, h, assetPath, plotterCap, linesCap, spriteLayers);
+inline void lpInitialize(const char *caption, int w, int h, const char *assetPath=0, int plotterCap=1024, int linesCap=128) {
+	new GlobalContext(caption, w, h, assetPath, plotterCap, linesCap);
 }
 
 inline void lpFinalize() {

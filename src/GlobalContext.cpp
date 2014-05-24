@@ -83,7 +83,7 @@ GlobalContext::SDLContext::~SDLContext() {
 	SDL_Quit();
 }
 
-GlobalContext::GlobalContext(const char *caption, int w, int h, const char *assetPath, int plotterCap, int linesCap, int spriteLayers) :
+GlobalContext::GlobalContext(const char *caption, int w, int h, const char *assetPath, int plotterCap, int linesCap) :
 Singleton<GlobalContext>(this),
 sdl(caption, w, h),
 assets(assetPath),
@@ -91,7 +91,6 @@ view(makeView()),
 plotter(plotterCap),
 lines(linesCap),
 sprites(&plotter),
-batch(spriteLayers),
 splines(&plotter)
 {
 }

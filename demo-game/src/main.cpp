@@ -33,7 +33,7 @@ static void handleEvents() {
 
 int main(int argc, char *argv[]) {
 	lpInitialize("Hello, World", 900, 550, "assets.bin");
-	glClearColor(0.2, 0.2, 0.3, 0);
+	glClearColor(0.8, 0.8, 0.9, 0);
 	
 	gView.setSizeWithWidth(300);
 	
@@ -41,22 +41,18 @@ int main(int argc, char *argv[]) {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		handleEvents();
 		
-//		gSprites.begin(gView);
-//		gSprites.drawImage(gAssets.image("background"), gView.cursor());
-//		gSprites.end();
+		gTimer.tick();
+		float fps = 8;
+		auto kitten = gAssets.image("kitten");
+		int frame = int(gTimer.seconds * fps) % kitten->nframes;
 		
-		gLines.begin(gView);
-		gLines.plot(vec(0,0), gView.cursor(), rgb(0xffff00));
-		gLines.end();
-		
-		gSplines.begin(gView);
-		gSplines.plotCircle(gView.cursor(), 0, 16, rgb(0xffff99));
-		gSplines.end();
+		gSprites.begin(gView);
+		gSprites.drawImage(kitten, gView.cursor(), frame);
+		gSprites.end();
 		
 		SDL_GL_SwapWindow(gWindow);
 	}
 	
 	lpFinalize();
 }
-
 

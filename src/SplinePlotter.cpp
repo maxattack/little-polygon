@@ -37,9 +37,10 @@ in vec4 color;
 out vec4 outColor;
 
 void main() {
-  vec4 baseColor = texture(atlas, uv);
-  outColor = vec4(mix(baseColor.rgb, color.rgb, color.a), baseColor.a);
+	vec4 baseColor = texture(atlas, uv);
+  //outColor = vec4(mix(baseColor.rgb, color.rgb, color.a), baseColor.a);
   //outColor = vec4(mix(baseColor.rgb, baseColor.a * color.rgb, color.a), baseColor.a);
+	outColor = color * baseColor;
 });
 
 

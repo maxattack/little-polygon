@@ -75,7 +75,7 @@ def load_yaml_texture(context, id, params):
 		images = [
 			load_yaml_image(context, k, v)
 			for k,v in params.iteritems() 
-			if k.startswith('image/')
+			if k.startswith('image/') or k.startswith('animation/')
 		]
 		iter_struct = [
 			load_yaml_structured_image(context, k, v) 
@@ -110,10 +110,7 @@ class Texture:
 ################################################################################
 
 def load_frames_with_path(path, num_frames):
-	if path.lower().endswith('.psd[]'):
-		# photoshop animation
-		frames = open_image_layers(path[:-2] )
-	elif path.lower().endswith('.gif'):
+	if path.lower().endswith('.gif'):
 		# animated gif
 		im = open_image(path)
 		curr_frame = 0
@@ -195,8 +192,8 @@ def trim_frames(frames):
 		result.append(trimmed)
 	return w,h,result
 
-def create_image(id, path, pivot, num_frames, pad):
-	frames = load_frames_with_path(path, num_frames)
+def create_image(id, path, pivot, num_frames, pad, animated):
+	frames = open_image_layers(path) if animated else load_frames_with_path(path, num_frames)
 	w, h, frames = trim_frames(frames)
 	px, py = load_pivot_from_string(pivot, w, h)
 	return Image(id, w, h, px, py, frames, pad)
@@ -209,7 +206,8 @@ def load_yaml_image(context, namespace_id, params):
 			load_yaml_path(context, params['path']), 
 			params.get('pivot', ''), 
 			int(params.get('frames', '1')),
-			bool(params.get('pad', True))
+			bool(params.get('pad', True)),
+			t == 'animation'
 		)
 	else:
 		return create_image(id, load_yaml_path(context, params), '', 1, False)
