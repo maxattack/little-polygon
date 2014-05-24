@@ -43,3 +43,84 @@ void TileMask::getIndices(int x, int y, int *byteIdx, int *localIdx) const {
 	*byteIdx = index >> 3;
 	*localIdx = index - ((*byteIdx) << 3);
 }
+
+bool TileMask::check(vec2 bottomLeft, vec2 topRight) const {
+	int left = bottomLeft.x;
+	int right = topRight.x;
+	int bottom = bottomLeft.y;
+	int top = topRight.y;
+	for(int y=top; y<=bottom; ++y)
+	for(int x=left; x<=right; ++x) {
+		if (get(x,y)) { return true; }
+	}
+	return false;
+}
+
+bool TileMask::checkLeft(vec2 bottomLeft, vec2 topRight, float *outResult) const {
+	int left = bottomLeft.x;
+	int right = topRight.x;
+	int bottom = bottomLeft.y;
+	int top = topRight.y;
+	for(int x=left; x<=right; ++x)
+	for(int y=top; y<=bottom; ++y) {
+		if (get(x,y)) {
+			*outResult = x + 1.0f - bottomLeft.x + kSlop;
+			return true;
+		}
+	}
+	*outResult = 0.0f;
+	return false;
+}
+
+bool TileMask::checkRight(vec2 bottomLeft, vec2 topRight, float *outResult) const {
+	int left = bottomLeft.x;
+	int right = topRight.x;
+	int bottom = bottomLeft.y;
+	int top = topRight.y;
+	for(int x=right; x>=left; --x)
+	for(int y=top; y<=bottom; ++y) {
+		if (get(x,y)) {
+			*outResult = x - topRight.x - kSlop;
+			return true;
+		}
+	}
+	*outResult = 0.0f;
+	return false;
+
+}
+
+bool TileMask::checkTop(vec2 bottomLeft, vec2 topRight, float *outResult) const {
+	int left = bottomLeft.x;
+	int right = topRight.x;
+	int bottom = bottomLeft.y;
+	int top = topRight.y;
+	for(int y=bottom; y>=top; --y)
+	for(int x=left; x<=right; ++x) {
+		if (get(x,y)) {
+			*outResult = y + 1.0f - topRight.y + kSlop;
+			return true;
+		}
+	}
+	*outResult = 0.0f;
+	return false;
+
+}
+
+bool TileMask::checkBottom(vec2 bottomLeft, vec2 topRight, float *outResult) const {
+	int left = bottomLeft.x;
+	int right = topRight.x;
+	int bottom = bottomLeft.y;
+	int top = topRight.y;
+	for(int y=top; y<=bottom; ++y)
+	for(int x=left; x<=right; ++x) {
+		if (get(x,y)) {
+			*outResult = y - bottomLeft.y - kSlop;
+			return true;
+		}
+	}
+	*outResult = 0.0f;
+	return false;
+}
+
+
+

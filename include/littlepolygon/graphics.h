@@ -127,7 +127,7 @@ public:
 	Vertex *getVertex(int i) { ASSERT(i >= 0 && i < capacity); return &vertices[i]; }
 	
 	int getCurrentArray() { return currentArray; }
-	int swapBuffer();
+	void swapBuffer();
 	
 	void bufferData(int count);
 };

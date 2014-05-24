@@ -6,12 +6,13 @@ mask(gAssets.userdata("world.mask")->as<TileMask::Data>()),
 done(false)
 {
 	glClearColor(0.8, 0.8, 0.9, 0);
-	gView.setSizeWithWidth(20 * PixelsPerMeter);
+	gView.setSizeWithWidth(20 * kPixelsPerMeter);
 }
 
 void World::run() {
 	while(!done) {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		input.enterFrame();
 		handleEvents();
 		tick();
 		draw();
@@ -33,8 +34,8 @@ void World::draw() {
 	gSprites.end();
 
 	Viewport simView(
-		gView.size() * MetersPerPixel,
-		gView.offset() * MetersPerPixel
+		gView.size() * kMetersPerPixel,
+		gView.offset() * kMetersPerPixel
 	);
 	gLines.begin(simView);
 	kitten.debugDraw();
@@ -56,6 +57,7 @@ void World::handleKeydown(const SDL_KeyboardEvent& event) {
 void World::handleEvents() {
 	SDL_Event event;
 	while(SDL_PollEvent(&event)) {
+		if (input.handleEvent(event)) { continue; }
 		switch(event.type) {
 			case SDL_KEYDOWN:
 				handleKeydown(event.key);

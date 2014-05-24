@@ -244,11 +244,11 @@ inline float easeInOutBack(float t) {
 	}
 }
 inline float easeInOutQuad(float t) { return t<0.5f ? 2.0f*t*t : -1.0f+(4.0f-t-t)*t; }
-
 inline float easeOutBack(float t) { t-=1.0; return t*t*((1.70158+1.0)*t + 1.70158) + 1.0; }
 
-inline float easeTowards(float curr, float target, float easing, float dt) { return curr + (target - curr) * pow(easing, clamp(1.0/(60.0*dt))); }
-inline vec2 easeTowards(vec2 curr, vec2 target, float easing, float dt)    { return curr + (target - curr) * pow(easing, clamp(1.0/(60.0*dt))); }
+inline float timeIndependentEasing(float easing, float dt) { return 1.0f - powf(1.0f-easing, 60.0f * dt); }
+inline float easeTowards(float curr, float target, float easing, float dt) { return curr + (target - curr) * timeIndependentEasing(easing, dt); }
+inline vec2 easeTowards(vec2 curr, vec2 target, float easing, float dt)    { return curr + (target - curr) * timeIndependentEasing(easing, dt); }
 
 
 // random number functions

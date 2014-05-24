@@ -38,6 +38,7 @@
 		506F6787192B0B4600BDE41D /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 506F6783192B0B4600BDE41D /* Credits.rtf */; };
 		506F6788192B0B4600BDE41D /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 506F6785192B0B4600BDE41D /* InfoPlist.strings */; };
 		506F678B192BDFCD00BDE41D /* glew.c in Sources */ = {isa = PBXBuildFile; fileRef = 506F678A192BDFCD00BDE41D /* glew.c */; };
+		507FE0EF1931126500CE2737 /* PlayerInput.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 507FE0EE1931126500CE2737 /* PlayerInput.cpp */; };
 		50BEE2F8192C21F900FBA346 /* assets.bin in Resources */ = {isa = PBXBuildFile; fileRef = 50BEE2F6192C21F900FBA346 /* assets.bin */; };
 		50BEE2F9192C21F900FBA346 /* song.mid in Resources */ = {isa = PBXBuildFile; fileRef = 50BEE2F7192C21F900FBA346 /* song.mid */; };
 /* End PBXBuildFile section */
@@ -80,6 +81,7 @@
 		506F6784192B0B4600BDE41D /* en */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = en; path = Credits.rtf; sourceTree = "<group>"; };
 		506F6786192B0B4600BDE41D /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = InfoPlist.strings; sourceTree = "<group>"; };
 		506F678A192BDFCD00BDE41D /* glew.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = glew.c; path = ../../src/glew.c; sourceTree = "<group>"; };
+		507FE0EE1931126500CE2737 /* PlayerInput.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PlayerInput.cpp; path = ../src/PlayerInput.cpp; sourceTree = "<group>"; };
 		50BEE2F6192C21F900FBA346 /* assets.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; name = assets.bin; path = ../assets/assets.bin; sourceTree = "<group>"; };
 		50BEE2F7192C21F900FBA346 /* song.mid */ = {isa = PBXFileReference; lastKnownFileType = audio.midi; name = song.mid; path = ../assets/song.mid; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -169,6 +171,7 @@
 				5006D7F5193052DE00E79368 /* Hero.cpp */,
 				5006D7F6193052DE00E79368 /* Kitten.cpp */,
 				506F674D192B08A200BDE41D /* main.cpp */,
+				507FE0EE1931126500CE2737 /* PlayerInput.cpp */,
 				5006D7F91930586500E79368 /* TileMask.cpp */,
 				5006D7FB193060A100E79368 /* World.cpp */,
 			);
@@ -278,6 +281,7 @@
 				506F6778192B095800BDE41D /* Viewport.cpp in Sources */,
 				5006D7FC193060A100E79368 /* World.cpp in Sources */,
 				506F676E192B095800BDE41D /* Shader.cpp in Sources */,
+				507FE0EF1931126500CE2737 /* PlayerInput.cpp in Sources */,
 				5006D7EE192FD9AD00E79368 /* Plotter.cpp in Sources */,
 				506F676D192B095800BDE41D /* SampleAsset.cpp in Sources */,
 				506F674E192B08A200BDE41D /* main.cpp in Sources */,

@@ -18,9 +18,8 @@ Plotter::~Plotter() {
 	glDeleteBuffers(3, vbo);
 }
 
-int Plotter::swapBuffer() {
+void Plotter::swapBuffer() {
 	currentArray=(currentArray+1) % 3;
-	return currentArray;
 }
 
 void Plotter::bufferData(int count) {
