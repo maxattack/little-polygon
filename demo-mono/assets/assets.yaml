@@ -1,6 +1,0 @@
-
-font/default: { path: nokiafc22.ttf, size: 8 }
-
-texture/sprites:
-  image/kitten: { path: kitten.png, pivot: bottom_center }
-  

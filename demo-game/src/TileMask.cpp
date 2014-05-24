@@ -122,5 +122,14 @@ bool TileMask::checkBottom(vec2 bottomLeft, vec2 topRight, float *outResult) con
 	return false;
 }
 
+void TileMask::debugDraw() {
+	for(int y=0; y<mHeight; ++y)
+	for(int x=0; x<mWidth; ++x) {
+		if (get(x,y)) {
+			gLines.plotBox(vec(x,y), vec(x+1, y+1), rgb(333333));
+		}
+	}
+		
+}
 
 

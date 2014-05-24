@@ -44,6 +44,7 @@ void World::draw() {
 		gLines.begin(simView);
 		kitten.debugDraw();
 		hero.debugDraw();
+		mask.debugDraw();
 		gLines.end();
 	}
 	

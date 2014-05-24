@@ -8,7 +8,7 @@ static class Game {
 
 	static void Main(string[] args) {
 
-		FFI.CreateContext("Little Polygon C# Demo", 3 * 320, 3 * 115, "demo.bin");
+		FFI.CreateContext("Little Polygon C# Demo", 3 * 320, 3 * 115, "");
 
 		// PLAY SOME MUSIC
 		var mus = SDL_mixer.Mix_LoadMUS("song.mid");

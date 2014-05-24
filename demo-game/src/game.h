@@ -50,6 +50,8 @@ public:
 	bool checkTop(vec2 bottomLeft, vec2 topRight, float *outResult) const;
 	bool checkBottom(vec2 bottomLeft, vec2 topRight, float *outResult) const;
 
+	void debugDraw();
+	
 private:
 	void getIndices(int x, int y, int *byteIdx, int *localIdx) const;
 };
@@ -135,7 +137,7 @@ class Hero : public Entity {
 private:
 	ImageAsset *img;
 	int dir;
-	float animTime, runningTime, yScale;
+	float animTime, yScale;
 	
 public:
 	Hero();

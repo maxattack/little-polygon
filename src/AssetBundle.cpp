@@ -30,7 +30,7 @@ struct AssetData {
 };
 
 AssetBundle::AssetBundle(const char* path, uint32_t crc) : data(0), fallback(0) {
-	if (path == 0) {
+	if (path == 0 || strlen(path) == 0) {
 		return;
 	}
 

@@ -9,8 +9,12 @@ Entity(
 ),
 img(gAssets.image("hero")),
 dir(1),
-animTime(0.0f), runningTime(0.0f), yScale(1.0f)
+animTime(0.0f), yScale(1.0f)
 {
+	auto mus = Mix_LoadMUS("song.mid");
+	if (mus) {
+		Mix_PlayMusic(mus, -1);
+	}
 }
 
 void Hero::tick() {
@@ -41,7 +45,6 @@ void Hero::tick() {
 		if (!wasGrounded) {
 			// LANDING FX
 			animTime = 0.0f;
-			runningTime = 0.0f;
 			yScale = 0.8f;
 			gAssets.sample("land")->play();
 		} else {

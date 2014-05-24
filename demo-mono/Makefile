@@ -54,17 +54,13 @@ CFLAGS += -g -DDEBUG
 CFLAGS += -m32
 BITS = 32
 
-test : bin/demo bin/demo.bin bin/demo.dll
-	cp assets/song.mid bin/song.mid
+test : bin/demo bin/demo.dll
+	cp ../demo-game/assets/song.mid bin/song.mid
 	bin/demo
 
 bin/demo: lib/liblittlepolygon.a $(PLATFORMER_OBJ_FILES) 
 	mkdir -p bin
 	$(CPP) -o $@ $(CFLAGS) $(CCFLAGS) $(LIBS) $(PLATFORMER_OBJ_FILES) -export_dynamic
-
-bin/demo.bin: assets/* tools/*.py tools/*.py
-	mkdir -p bin
-	tools/export_game_assets.py assets/assets.yaml $@ $(BITS)
 
 bin/demo.dll: scripts/*.cs
 	mcs scripts/*.cs -out:bin/demo.dll -unsafe
