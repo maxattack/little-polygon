@@ -33,14 +33,14 @@ def npot(n):
 def render_atlas(images):
 	if not type(images) is list:
 		images = [ image for image in images ]
-	if len(images) == 1:
-		w, h = images[0].size
-		tw,th = npot(w), npot(h)
-		trivial_result = Image.new('RGBA', (tw, th))
-		trivial_result.paste(images[0], (0,0))
-		if '-preview' in sys.argv:
-			trivial_result.show()
-		return (trivial_result, [AtlasImage(images[0], False)])
+	# if len(images) == 1:
+	# 	w, h = images[0].size
+	# 	tw,th = npot(w), npot(h)
+	# 	trivial_result = Image.new('RGBA', (tw, th))
+	# 	trivial_result.paste(images[0], (0,0))
+	# 	if '-preview' in sys.argv:
+	# 		trivial_result.show()
+	# 	return (trivial_result, [AtlasImage(images[0], False)])
 
 	images = [ AtlasImage(image, True) for image in images ]
 	images.sort(key = lambda image: -image.area())

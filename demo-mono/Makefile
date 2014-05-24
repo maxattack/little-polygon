@@ -1,14 +1,13 @@
 LIBRARY_OBJ_FILES =        \
 	obj/AssetBundle.o      \
-	obj/BasicPlotter.o     \
 	obj/GlobalContext.o    \
 	obj/LinePlotter.o      \
 	obj/lodepng.o          \
+	obj/Plotter.o          \
 	obj/SampleAsset.o      \
 	obj/Shader.o           \
 	obj/SimplexNoise.o     \
 	obj/SplinePlotter.o    \
-	obj/SpriteBatch.o      \
 	obj/SpritePlotter.o    \
 	obj/TextureAsset.o     \
 	obj/TilemapAsset.o     \

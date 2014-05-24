@@ -2,24 +2,5 @@
 font/default: { path: nokiafc22.ttf, size: 8 }
 
 texture/sprites:
-  animation/explosion: { path: explosion.psd, pivot: center }
-  animation/fire: { path: fire.psd, pivot: bottom_center }
-  animation/hero: { path: hero.psd, pivot: bottom_center }
-  animation/kitten: { path: kitten.psd, pivot: bottom_center }
-  image/background: { path: bg.psd, pivot: bottom_left }
-  image/btnDown: { path: button_down.psd, pivot: center }
-  image/btnUp: { path: button_up.psd, pivot: center }
-  image/btnRight: { path: button_right.psd, pivot: center }
-  image/btnShift: { path: button_shift.psd, pivot: center }
-
-sample/button: button.wav
-sample/catturn: catturn.wav
-sample/death: death.wav
-sample/explosionSfx: explosion.wav
-sample/footfall: footfall.wav
-sample/jump: jump.wav
-sample/land: land.wav
-sample/pickup: pickup.wav
-sample/throw: throw.wav
-
-tilemap/test: test.tmx
+  image/kitten: { path: kitten.png, pivot: bottom_center }
+  
