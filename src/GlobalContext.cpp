@@ -88,11 +88,11 @@ Singleton<GlobalContext>(this),
 sdl(caption, w, h),
 assets(assetPath),
 view(makeView()),
-//plotter(plotterCap),
+plotter(plotterCap),
 lines(linesCap),
-sprites(plotterCap),
-batch(spriteLayers)
-//splines(&plotter)
+sprites(&plotter),
+batch(spriteLayers),
+splines(&plotter)
 {
 }
 

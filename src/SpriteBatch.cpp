@@ -33,7 +33,8 @@ SpriteBatch::~SpriteBatch() {
 	free(mLayers);
 }
 
-Sprite *SpriteBatch::addSprite(
+void SpriteBatch::addSprite(
+	Sprite *sprite,
 	int layer,
 	ImageAsset *image,
 	const AffineMatrix& xform,
@@ -43,18 +44,19 @@ Sprite *SpriteBatch::addSprite(
 ) {
 	ASSERT(layer >= 0);
 	ASSERT(layer < mLayerCount);
+	ASSERT(sprite->batch() == 0);
 	
-	auto result = mSprites.alloc(this, layer, mLayers[layer].count());
+	sprite->mBatch = this;
+	sprite->mLayer = layer;
+	sprite->mIndex = mLayers[layer].count();
 	
 	auto drawCall = mLayers[layer].alloc();
-	drawCall->sprite = result;
+	drawCall->sprite = sprite;
 	drawCall->img = image;
 	drawCall->xform = xform;
 	drawCall->frame = frame;
 	drawCall->color = c;
 	drawCall->depth = depth;
-	
-	return result;
 }
 
 void SpriteBatch::draw(SpritePlotter *plotter) {
@@ -65,20 +67,8 @@ void SpriteBatch::draw(SpritePlotter *plotter) {
 	}
 }
 
-void SpriteBatch::clear() {
-	for(auto s=mSprites.list(); s.next();) {
-		s->release();
-	}
-}
-
-Sprite::Sprite(SpriteBatch *batch, int layer, int index) :
-mBatch(batch), mLayer(layer), mIndex(index) {
-}
-
-void Sprite::clear() {
-	mBatch = 0;
-	mLayer = 0;
-	mIndex = 0;
+Sprite::Sprite() :
+mBatch(0), mLayer(0), mIndex(0) {
 }
 
 const AffineMatrix& Sprite::transform() const {
@@ -91,6 +81,14 @@ void Sprite::setTransform(const AffineMatrix& xform) {
 
 ImageAsset* Sprite::image() const {
 	return mBatch->mLayers[mLayer][mIndex].img;
+}
+
+const vec2 Sprite::position() const {
+	return mBatch->mLayers[mLayer][mIndex].xform.t;
+}
+
+void Sprite::setPosition(vec2 pos) {
+	mBatch->mLayers[mLayer][mIndex].xform.t = pos;
 }
 
 void Sprite::setImage(ImageAsset *image) {
@@ -138,7 +136,6 @@ void Sprite::setFrame(int frame) {
 	mBatch->mLayers[mLayer][mIndex].frame = frame;
 }
 
-
 void Sprite::release() {
 	// remove from the current layer
 	auto& layer = mBatch->mLayers[mLayer];
@@ -152,11 +149,7 @@ void Sprite::release() {
 	
 	mIndex = 0;
 	mLayer = 0;
-	auto b = mBatch;
 	mBatch = 0;
-	
-	// release thy self
-	b->mSprites.release(this);
 	
 
 }

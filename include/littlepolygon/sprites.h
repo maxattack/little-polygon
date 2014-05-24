@@ -16,7 +16,6 @@
 
 #pragma once
 
-#include "assets.h"
 #include "graphics.h"
 #include "pools.h"
 
@@ -38,26 +37,7 @@ class Sprite;
 
 class SpritePlotter {
 private:
-	
-	struct Vertex {
-		float x,y,z,u,v;
-		Color color;
-
-		inline void set(vec2 p, vec2 uv, Color c) {
-			x = p.x; y = p.y; z = 0; u = uv.x; v = uv.y; color = c;
-		}
-		
-		inline void set(vec2 p, float az, vec2 uv, Color c) {
-			x = p.x; y = p.y; z = az; u = uv.x; v = uv.y; color = c;
-		}
-		
-		inline void set(vec3f p, vec2 uv, Color c) {
-			p.load(&x); u = uv.x; v = uv.y; color = c;
-		}
-		
-	};
-	
-	int capacity;
+	Plotter *plotter;
 	int count;
 	
 	Viewport view;
@@ -71,20 +51,16 @@ private:
 	
 	
 	GLuint vao[3];
-	GLuint vbo[3];
 	GLuint elementBuf;
 	
-	int currentArray;
-	
 	TextureAsset *workingTexture;
-	Vertex *vertices;
 
 public:
-	SpritePlotter(int cap);
+	SpritePlotter(Plotter *plotter);
 	~SpritePlotter();
 
+	int capacity() const { return plotter->getCapacity()>>2; }
 	bool isBound() const { return count >= 0; }
-	int vertexCapacity() const { return capacity << 2; }
 
 	// Call this method to initialize the graphics context state.  Asserts that the plotter
 	// is already bound (in case you're coalescing with other plotters) and state e.g. blending are
@@ -115,7 +91,7 @@ public:
 	void end();
 
 private:
-	Vertex *nextSlice() { return vertices + (count<<2); }
+	Vertex *nextSlice() { return plotter->getVertex(count<<2); }
 	void setTextureAtlas(TextureAsset* texture);
 	void commitBatch();
 	void plotGlyph(const GlyphAsset& g, float x, float y, float z, float h, Color c);
@@ -137,12 +113,15 @@ private:
 	void clear();
 	
 public:
-	Sprite(SpriteBatch *batch, int layer, int index);
+	Sprite();
 	
 	SpriteBatch* batch() const { return mBatch; }
 	
 	const AffineMatrix& transform() const;
 	void setTransform(const AffineMatrix& xform);
+	
+	const vec2 position() const;
+	void setPosition(vec2 pos);
 	
 	ImageAsset* image() const;
 	void setImage(ImageAsset *image);
@@ -175,7 +154,6 @@ private:
 	
 	int mLayerCount;
 	Layer* mLayers;
-	DynamicPool<Sprite> mSprites;
 	
 public:
 	SpriteBatch(int nlayers);
@@ -183,7 +161,8 @@ public:
 	
 	int layerCount() const { return mLayerCount; }
 	
-	Sprite *addSprite(
+	void addSprite(
+		Sprite *sprite,
 		int layer,
 		ImageAsset *image,
 		const AffineMatrix& xform,
@@ -193,8 +172,6 @@ public:
 	);
 	
 	void draw(SpritePlotter *plotter);
-
-	void clear();
 	
 };
 

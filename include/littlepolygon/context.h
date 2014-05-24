@@ -18,10 +18,9 @@
 
 // THIS IS STRICTLY A CONVENIENCE MODULE :P
 
-#include "assets.h"
 #include "events.h"
-#include "graphics.h"
 #include "sprites.h"
+#include "splines.h"
 #include "utils.h"
 
 
@@ -40,11 +39,11 @@ public:
 	Viewport view;
 	Timer timer;
 	TimerQueue queue;
-//	BasicPlotter plotter;
+	Plotter plotter;
 	LinePlotter lines;
 	SpritePlotter sprites;
 	SpriteBatch batch;
-//	SplinePlotter splines;
+	SplinePlotter splines;
 	
 
 public:
@@ -68,4 +67,4 @@ inline void lpFinalize() {
 #define gLines   (GlobalContext::getInstance().lines)
 #define gSprites (GlobalContext::getInstance().sprites)
 #define gBatch   (GlobalContext::getInstance().batch)
-
+#define gSplines (GlobalContext::getInstance().splines)

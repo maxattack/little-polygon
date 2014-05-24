@@ -14,25 +14,98 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "littlepolygon/graphics.h"
 #include "littlepolygon/splines.h"
 
-SplinePlotter::SplinePlotter(BasicPlotter* aPlotter) : plotter(aPlotter), count(-1), curveCapacity(-1) {
+const GLchar SPLINE_VERT[] = GLSL(
+uniform mat4 mvp;
+in vec3 aPosition;
+in vec2 aUv;
+in vec4 aColor;
+out vec2 uv;
+out vec4 color;
+
+void main() {
+  gl_Position = mvp * vec4(aPosition, 1.0);
+  color = aColor;
+  uv = aUv;
+});
+
+const GLchar SPLINE_FRAG[] = GLSL(
+uniform sampler2D atlas;
+in vec2 uv;
+in vec4 color;
+out vec4 outColor;
+
+void main() {
+  vec4 baseColor = texture(atlas, uv);
+  outColor = vec4(mix(baseColor.rgb, color.rgb, color.a), baseColor.a);
+  //outColor = vec4(mix(baseColor.rgb, baseColor.a * color.rgb, color.a), baseColor.a);
+});
+
+
+SplinePlotter::SplinePlotter(Plotter* aPlotter) :
+plotter(aPlotter),
+count(-1),
+curveCapacity(-1),
+sh(SPLINE_VERT, SPLINE_FRAG) {
+	
+	// bind shader
+	sh.use();
+	uMVP = sh.uniformLocation("mvp");
+	aPosition = sh.attribLocation("aPosition");
+	aUv = sh.attribLocation("aUv");
+	aColor = sh.attribLocation("aColor");
+	
+	// initialize vaos
+	glGenVertexArrays(3, vao);
+	for(int i=0; i<3; ++i) {
+		glBindVertexArray(vao[i]);
+		glBindBuffer(GL_ARRAY_BUFFER, plotter->getVBO(i));
+		glEnableVertexAttribArray(aPosition);
+		glEnableVertexAttribArray(aUv);
+		glEnableVertexAttribArray(aColor);
+		glVertexAttribPointer(aPosition, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)0);
+		glVertexAttribPointer(aUv, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)12);
+		glVertexAttribPointer(aColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Vertex), (GLvoid*)20);
+		glBindVertexArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glDisableVertexAttribArray(aPosition);
+		glDisableVertexAttribArray(aUv);
+		glDisableVertexAttribArray(aColor);
+	}
+	
+	tex = generateTexture([](double x, double y) {
+//		double distance = 2*fabs(x-0.5);
+//		// might consider using a geometric function here to cover
+//		// a larger range?
+//		double threshold = 0.9 + 0.1 * sqrt(y);
+//		if(distance < threshold) {
+//			return rgb(0xffffff);
+//		} else {
+//			double u = (distance - threshold) / (1 - threshold);
+//			return rgba(rgb(0xffffff), 1 - u*u);
+//		}
+		return rgba(0xffffffff);
+	});
+	
+	
 }
 
 SplinePlotter::~SplinePlotter() {
+	glDeleteVertexArrays(3, vao);
+	glDeleteTextures(1, &tex);
 }
 
 void SplinePlotter::begin(const Viewport& viewport) {
-	ASSERT(!plotter->isBound());
 	ASSERT(!isBound());
 	count = 0;
-	plotter->begin(viewport);
+	view = viewport;
 	
-	int w,h;
-	SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &w, &h);
+	int w,h; SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &w, &h);
 	fakeAntiAliasFactor = 0.001 * float(w) / viewport.width();
-	glBindTexture(GL_TEXTURE_2D, getFakeAntialiasTexture());
+	
+	
+	glBindTexture(GL_TEXTURE_2D, tex);
 }
 
 inline void computePRV(
@@ -235,8 +308,11 @@ void SplinePlotter::plotCircle(vec2 p, float z, float r, Color c, int resolution
 
 void SplinePlotter::flush() {
 	if (count > 0) {
-		plotter->commit(count);
+		plotter->bufferData(count);
+		glBindVertexArray(vao[plotter->getCurrentArray()]);
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, count);
+		glBindVertexArray(0);
+		plotter->swapBuffer();
 		count = 0;
 	}
 }
@@ -245,5 +321,4 @@ void SplinePlotter::end() {
 	ASSERT(isBound());
 	flush();
 	count = -1;
-	plotter->end();
 }

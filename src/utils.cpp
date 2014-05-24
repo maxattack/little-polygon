@@ -140,28 +140,6 @@ GLuint generateTexture(TextureGenerator cb, int w, int h) {
 	return result;
 }
 
-GLuint getFakeAntialiasTexture() {
-	static GLuint result = 0;
-	// This is a pretty stupid impl right here, actually.  If the gl context is destroyed
-	// and a new-one created then this will contains a stale handle.
-	if (!result) {
-		result = generateTexture([](double x, double y) {
-//			double distance = 2*fabs(x-0.5);
-//			// might consider using a geometric function here to cover
-//			// a larger range?
-//			double threshold = 0.9 + 0.1 * sqrt(y);
-//			if(distance < threshold) {
-//				return rgb(0xffffff);
-//			} else {
-//				double u = (distance - threshold) / (1 - threshold);
-//				return rgba(rgb(0xffffff), 1 - u*u);
-//			}
-			return rgba(0xffffffff);
-		});
-	}
-	return result;
-}
-
 //int createRenderToTextureFramebuffer(GLsizei w, GLsizei h, GLuint *t, GLuint *f) {
 //	glGenFramebuffers(1, f);
 //	glGenTextures(1, t);

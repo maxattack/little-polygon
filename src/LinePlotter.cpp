@@ -16,8 +16,7 @@
 
 #include "littlepolygon/graphics.h"
 
-static const GLchar* SIMPLE_SHADER = R"GLSL(
-#if VERTEX
+const GLchar LINE_VERT[] = GLSL(
 
 uniform mat4 mvp;
 in vec2 aPosition;
@@ -30,7 +29,9 @@ void main() {
 	color = aColor;
 }
 
-#else
+);
+
+const GLchar LINE_FRAG[] = GLSL(
 
 in vec4 color;
 out vec4 outColor;
@@ -39,11 +40,15 @@ void main() {
 	outColor = color;
 }
 
-#endif
-)GLSL";
+);
 
+LinePlotter::LinePlotter(int aCapacity) :
+count(-1),
+capacity(aCapacity),
+shader(LINE_VERT, LINE_FRAG),
+vertices(0)
 
-LinePlotter::LinePlotter(int aCapacity) : count(-1), capacity(aCapacity), shader(SIMPLE_SHADER), vertices(0) {
+{
 	shader.use();
 	uMVP = shader.uniformLocation("mvp");
 	aPosition = shader.attribLocation("aPosition");

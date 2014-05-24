@@ -76,10 +76,12 @@ public:
 	}
 };
 
+#define GLSL(src) "#version 150 core\n" #src
+
 struct Shader {
 	GLuint prog, vert, frag;
 	
-	Shader(const GLchar *source);
+	Shader(const GLchar *vsrc, const GLchar *fsrc);
 	~Shader();
 
 	bool isValid() const { return prog; }
@@ -91,7 +93,45 @@ struct Shader {
 
 typedef Color (*TextureGenerator)(double, double);
 GLuint generateTexture(TextureGenerator cb, int w=256, int h=256);
-GLuint getFakeAntialiasTexture();
+
+struct Vertex {
+	float x,y,z,u,v;
+	Color color;
+	
+	inline void set(vec2 p, vec2 uv, Color c) {
+		x = p.x; y = p.y; z = 0; u = uv.x; v = uv.y; color = c;
+	}
+	
+	inline void set(vec2 p, float az, vec2 uv, Color c) {
+		x = p.x; y = p.y; z = az; u = uv.x; v = uv.y; color = c;
+	}
+	
+	inline void set(vec3f p, vec2 uv, Color c) {
+		p.load(&x); u = uv.x; v = uv.y; color = c;
+	}
+	
+};
+
+class Plotter {
+private:
+	int capacity;
+	int currentArray;
+	GLuint vbo[3];
+	Vertex *vertices;
+	
+public:
+	Plotter(int capacity);
+	~Plotter();
+	
+	int getCapacity() const { return capacity; }
+	GLuint getVBO(int i) { ASSERT(i >= 0 && i < 3); return vbo[i]; }
+	Vertex *getVertex(int i) { ASSERT(i >= 0 && i < capacity); return &vertices[i]; }
+	
+	int getCurrentArray() { return currentArray; }
+	int swapBuffer();
+	
+	void bufferData(int count);
+};
 
 //int createRenderToTextureFramebuffer(GLsizei w, GLsizei h, GLuint *outTexture, GLuint *outFramebuffer);
 //
@@ -116,53 +156,7 @@ GLuint getFakeAntialiasTexture();
 //	void draw();
 //};
 //
-////------------------------------------------------------------------------------
-//// BASIC PLOTTER
-////------------------------------------------------------------------------------
-//
-//
-//struct BasicVertex {
-//	float x,y,z,u,v;
-//	Color color;
-//	
-//	inline void set(vec2 p, vec2 uv, Color c) { x = p.x; y = p.y; z = 0; u = uv.x; v = uv.y; color = c; }
-//	inline void set(vec2 p, float az, vec2 uv, Color c) { x = p.x; y = p.y; z = az; u = uv.x; v = uv.y; color = c; }
-//	inline void set(vec3f p, vec2 uv, Color c) { p.load(&x); u = uv.x; v = uv.y; color = c; }
-//};
-//
-//struct BasicPlotter {
-//private:
-//	int bound;
-//	int capacity;
-//	
-//	Viewport view;
-//	Shader shader;	
-//	GLuint uMVP;
-//	GLuint uAtlas;
-//	GLuint aPosition;
-//	GLuint aUV;
-//	GLuint aColor;
-//	
-//	GLuint arrays[3]; // triple-buffered
-//	int currentArray;
-//	
-//	BasicVertex *vertices;
-//
-//public:
-//	BasicPlotter(int capacity);
-//	~BasicPlotter();	
-//	
-//	const Viewport& getView() const { return view; }
-//	BasicVertex *getVertex(int i);
-//	bool isBound() const { return bound; }
-//	int getCapacity() const { return capacity; }
-//	
-//	void begin(const Viewport& view);
-//	void commit(int count);
-//	void end();
-//
-//};
-//
+
 //------------------------------------------------------------------------------
 // DEBUG LINE RENDERING
 //------------------------------------------------------------------------------

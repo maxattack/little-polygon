@@ -16,8 +16,7 @@
 
 #include "littlepolygon/sprites.h"
 
-const GLchar* BASIC_SHADER = R"GLSL(
-#if VERTEX
+const GLchar SPRITE_VERT[] = GLSL(
 
 uniform mat4 mvp;
 in vec3 aPosition;
@@ -32,7 +31,9 @@ void main() {
 	uv = aUv;
 }
 
-#else
+);
+
+const GLchar SPRITE_FRAG[] = GLSL(
 
 uniform sampler2D atlas;
 in vec2 uv;
@@ -45,18 +46,14 @@ void main() {
 	//outColor = vec4(mix(baseColor.rgb, baseColor.a * color.rgb, color.a), baseColor.a);
 }
 
-#endif
-)GLSL";
+);
 
-SpritePlotter::SpritePlotter(int cap) :
-capacity(cap),
+SpritePlotter::SpritePlotter(Plotter *aPlotter) :
+plotter(aPlotter),
 count(-1),
-shader(BASIC_SHADER),
-currentArray(0),
-workingTexture(0) 
+shader(SPRITE_VERT, SPRITE_FRAG),
+workingTexture(0)
 {
-	vertices = (Vertex*) malloc(vertexCapacity() * sizeof(Vertex));
-
 	
 	// initialize shader
 	shader.use();
@@ -67,8 +64,8 @@ workingTexture(0)
 	aColor = shader.attribLocation("aColor");
 	
 	// setup element array buffer
-	uint16_t indices[6 * capacity];
-	for(int i=0; i<capacity; ++i) {
+	uint16_t indices[6 * capacity()];
+	for(int i=0; i<capacity(); ++i) {
 		indices[6*i+0] = 4*i;
 		indices[6*i+1] = 4*i+1;
 		indices[6*i+2] = 4*i+2;
@@ -80,7 +77,7 @@ workingTexture(0)
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuf);
 	glBufferData(
 		GL_ELEMENT_ARRAY_BUFFER, 
-		6 * capacity * sizeof(uint16_t), 
+		6 * capacity() * sizeof(uint16_t),
 		indices, 
 		GL_STATIC_DRAW
 	);
@@ -88,11 +85,9 @@ workingTexture(0)
 	
 	// initialize vbos
 	glGenVertexArrays(3, vao);
-	glGenBuffers(3, vbo);
 	for(int i=0; i<3; ++i) {
 		glBindVertexArray(vao[i]);
-		glBindBuffer(GL_ARRAY_BUFFER, vbo[i]);
-		glBufferData(GL_ARRAY_BUFFER, vertexCapacity()*sizeof(Vertex), 0, GL_DYNAMIC_DRAW);
+		glBindBuffer(GL_ARRAY_BUFFER, plotter->getVBO(i));
 		glEnableVertexAttribArray(aPosition);
 		glEnableVertexAttribArray(aUV);
 		glEnableVertexAttribArray(aColor);
@@ -113,9 +108,7 @@ workingTexture(0)
 
 SpritePlotter::~SpritePlotter() {
 	glDeleteBuffers(1, &elementBuf);
-	glDeleteBuffers(3, vbo);
 	glDeleteVertexArrays(3, vao);
-	free(vertices);
 }
 
 void SpritePlotter::begin(const Viewport& aView) {
@@ -216,7 +209,7 @@ void SpritePlotter::drawQuad(ImageAsset *img, vec2 p0, vec2 p1, vec2 p2, vec2 p3
 #define UV_LABEL_SLOP (0.0001f)
 
 void SpritePlotter::plotGlyph(const GlyphAsset& g, float x, float y, float z, float h, Color c) {
-	if (count == capacity) {
+	if (count == capacity()) {
 		commitBatch();
 	}
 
@@ -346,7 +339,7 @@ void SpritePlotter::drawTilemap(TilemapAsset *map, vec2 position, float z) {
 				slice[2].set(p+vec(tw,0), z, uv+vec(uw,0), rgba(0));
 				slice[3].set(p+vec(tw,th), z, uv+vec(uw,uh), rgba(0));
 
-				if (++count == capacity) {
+				if (++count == capacity()) {
 					commitBatch();
 				}
 			}
@@ -372,15 +365,13 @@ void SpritePlotter::end() {
 void SpritePlotter::commitBatch() {
 	ASSERT(count > 0);
 	
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[currentArray]);
-	glBufferSubData(GL_ARRAY_BUFFER, 0, (count<<2) * sizeof(Vertex), vertices);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	plotter->bufferData(count<<2);
 
-	glBindVertexArray(vao[currentArray]);
+	glBindVertexArray(vao[plotter->getCurrentArray()]);
 	glDrawElements(GL_TRIANGLES, 6 * count, GL_UNSIGNED_SHORT, 0);
 	glBindVertexArray(0);
 	
-	currentArray = (currentArray + 1) % 3;
+	plotter->swapBuffer();
 	count = 0;
 }
 
@@ -389,7 +380,7 @@ void SpritePlotter::setTextureAtlas(TextureAsset *texture) {
 	
 	// emit a draw call if we're at SPRITE_CAPACITY of if the atlas is changing.
 	// (assuming that count will be 0 if workingTexture is null)
-	if (count == capacity || (count > 0 && atlasChange)) {
+	if (count == capacity() || (count > 0 && atlasChange)) {
 		commitBatch();
 	}
 

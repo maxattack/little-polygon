@@ -24,17 +24,25 @@
 
 class SplinePlotter {
 private:
-	BasicPlotter* plotter;
+	Plotter* plotter;
+
 	int count;
 	float fakeAntiAliasFactor;
 	int curveCount, curveCapacity;
 	
+	Viewport view;
+	Shader sh;
+	GLuint uMVP;
+	GLuint aPosition, aUv, aColor;
+	GLuint tex;
+	
+	GLuint vao[3];
+	
 public:
-	SplinePlotter(BasicPlotter* aPlotter);
+	SplinePlotter(Plotter* aPlotter);
 	~SplinePlotter();
 	
 	bool isBound() const { return count >= 0; }
-	BasicPlotter* getPlotter() { return plotter; }
 	
 	void begin(const Viewport& viewport);
 	
@@ -53,7 +61,7 @@ public:
 	
 private:
 	void reserve(int nverts);
-	BasicVertex* nextVert() { return plotter->getVertex(count++); }
+	Vertex* nextVert() { return plotter->getVertex(count++); }
 };
 
 namespace Spline {

@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		5006D7EC192D868F00E79368 /* LinePlotter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5006D7EB192D868F00E79368 /* LinePlotter.cpp */; };
+		5006D7EE192FD9AD00E79368 /* Plotter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5006D7ED192FD9AD00E79368 /* Plotter.cpp */; };
+		5006D7F0193009C400E79368 /* SplinePlotter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5006D7EF193009C400E79368 /* SplinePlotter.cpp */; };
 		50333ABD192B02780098FFCC /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 50333ABC192B02780098FFCC /* Cocoa.framework */; };
 		506F674E192B08A200BDE41D /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 506F674D192B08A200BDE41D /* main.cpp */; };
 		506F6751192B092300BDE41D /* SDL2_mixer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 506F674F192B092300BDE41D /* SDL2_mixer.framework */; };
@@ -38,6 +40,8 @@
 
 /* Begin PBXFileReference section */
 		5006D7EB192D868F00E79368 /* LinePlotter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = LinePlotter.cpp; path = ../../src/LinePlotter.cpp; sourceTree = "<group>"; };
+		5006D7ED192FD9AD00E79368 /* Plotter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Plotter.cpp; path = ../../src/Plotter.cpp; sourceTree = "<group>"; };
+		5006D7EF193009C400E79368 /* SplinePlotter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SplinePlotter.cpp; path = ../../src/SplinePlotter.cpp; sourceTree = "<group>"; };
 		50333AB9192B02780098FFCC /* Little Polygon.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Little Polygon.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		50333ABC192B02780098FFCC /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		50333ABF192B02780098FFCC /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -97,9 +101,11 @@
 				506F6756192B095800BDE41D /* GlobalContext.cpp */,
 				5006D7EB192D868F00E79368 /* LinePlotter.cpp */,
 				506F6758192B095800BDE41D /* lodepng.cpp */,
+				5006D7ED192FD9AD00E79368 /* Plotter.cpp */,
 				506F675A192B095800BDE41D /* SampleAsset.cpp */,
 				506F675B192B095800BDE41D /* Shader.cpp */,
 				506F675C192B095800BDE41D /* SimplexNoise.cpp */,
+				5006D7EF193009C400E79368 /* SplinePlotter.cpp */,
 				506F675E192B095800BDE41D /* SpriteBatch.cpp */,
 				506F675F192B095800BDE41D /* SpritePlotter.cpp */,
 				506F6760192B095800BDE41D /* TextureAsset.cpp */,
@@ -256,12 +262,14 @@
 				506F6766192B095800BDE41D /* AssetBundle.cpp in Sources */,
 				506F6778192B095800BDE41D /* Viewport.cpp in Sources */,
 				506F676E192B095800BDE41D /* Shader.cpp in Sources */,
+				5006D7EE192FD9AD00E79368 /* Plotter.cpp in Sources */,
 				506F676D192B095800BDE41D /* SampleAsset.cpp in Sources */,
 				506F674E192B08A200BDE41D /* main.cpp in Sources */,
 				506F6773192B095800BDE41D /* TextureAsset.cpp in Sources */,
 				506F6771192B095800BDE41D /* SpriteBatch.cpp in Sources */,
 				506F676B192B095800BDE41D /* lodepng.cpp in Sources */,
 				506F6774192B095800BDE41D /* TilemapAsset.cpp in Sources */,
+				5006D7F0193009C400E79368 /* SplinePlotter.cpp in Sources */,
 				506F678B192BDFCD00BDE41D /* glew.c in Sources */,
 				506F6775192B095800BDE41D /* Timer.cpp in Sources */,
 				506F676F192B095800BDE41D /* SimplexNoise.cpp in Sources */,
@@ -384,6 +392,7 @@
 					../../vectorial/include,
 				);
 				INFOPLIST_FILE = "Little Polygon-Info.plist";
+				LLVM_LTO = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
 			};
@@ -412,6 +421,7 @@
 					../../vectorial/include,
 				);
 				INFOPLIST_FILE = "Little Polygon-Info.plist";
+				LLVM_LTO = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
 			};

@@ -16,33 +16,19 @@
 
 #include "littlepolygon/graphics.h"
 
-Shader::Shader(const GLchar* source) {
+Shader::Shader(const GLchar *vsrc, const GLchar *fsrc) {
 	prog = glCreateProgram();
 	vert = glCreateShader(GL_VERTEX_SHADER);
 	frag = glCreateShader(GL_FRAGMENT_SHADER);
 
 	// setup source and compile
-	const char vpreamble[] = "#define VERTEX 1\n";
-	const char fpreamble[] = "#define VERTEX 0\n";
-	int slen = (int) strlen(source);
-	
-	#if LITTLE_POLYGON_MOBILE
-		const char* vsrcList[] = { vpreamble, source };
-		const char* fsrcList[] = { fpreamble, source };
-		int vlengths[] = { (int) strlen(vpreamble), slen };
-		int flengths[] = { (int) strlen(fpreamble), slen };
-		glShaderSource(vert, 2, vsrcList, vlengths);
-		glShaderSource(frag, 2, fsrcList, flengths);
-	#else
-		const char preamble[] = "#version 150\n";
-		const char* vsrcList[] = { preamble, vpreamble, source };
-		const char* fsrcList[] = { preamble, fpreamble, source };
-		int vlengths[] = { (int) strlen(preamble), (int) strlen(vpreamble), slen };
-		int flengths[] = { (int) strlen(preamble), (int) strlen(fpreamble), slen };
-		glShaderSource(vert, 3, vsrcList, vlengths);
-		glShaderSource(frag, 3, fsrcList, flengths);
-	#endif
-	
+	const char preamble[] = "\n";
+	const char* vsrcList[] = { preamble, vsrc };
+	const char* fsrcList[] = { preamble, fsrc };
+	int vlengths[] = { (int) strlen(preamble), (int) strlen(vsrc) };
+	int flengths[] = { (int) strlen(preamble), (int) strlen(fsrc) };
+	glShaderSource(vert, 2, vsrcList, vlengths);
+	glShaderSource(frag, 2, fsrcList, flengths);
 	glCompileShader(vert);
 	glCompileShader(frag);
 
