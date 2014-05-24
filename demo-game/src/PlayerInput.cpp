@@ -20,6 +20,7 @@ bool PlayerInput::handleEvent(const SDL_Event& event) {
 }
 
 bool PlayerInput::handleKeyDown(const SDL_KeyboardEvent& event) {
+	if (event.repeat) { return true; }
 	switch(event.keysym.sym) {
 		
 		case SDLK_LEFT:
@@ -39,6 +40,7 @@ bool PlayerInput::handleKeyDown(const SDL_KeyboardEvent& event) {
 		
 		case SDLK_UP:
 		case SDLK_w:
+			mPressedJump = true;
 			mDirY = -1;
 			return true;
 		
@@ -46,9 +48,10 @@ bool PlayerInput::handleKeyDown(const SDL_KeyboardEvent& event) {
 			mPressedJump = true;
 			return true;
 		
-		default: return false;
+		default:
+			return false;
+			
 	}
-
 }
 
 bool PlayerInput::handleKeyUp(const SDL_KeyboardEvent& event) {
@@ -75,7 +78,9 @@ bool PlayerInput::handleKeyUp(const SDL_KeyboardEvent& event) {
 			return true;
 		
 			
-		default: return false;
+		default:
+			return false;
+			
 	}
 }
 

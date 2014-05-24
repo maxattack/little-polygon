@@ -4,17 +4,18 @@
 //--------------------------------------------------------------------------------
 // CONSTANTS
 
-#define kPixelsPerMeter	(16.0f)
-#define kMetersPerPixel	(1.0f/16.0f)
-#define kHeroHeight		(0.8f)
-#define kHeroWidth 		(0.6f)
-#define kHeroMoveSpeed  (2.0f)
-#define kHeroJumpSpeed  (10.0f)
-#define kKittenWidth	(0.8f)
-#define kKittenHeight	(0.6f)
-#define kSlop			(0.0001f)
-#define kDeadZone       (0.0001f)
-#define kGravity        (10.0f)
+#define kPixelsPerMeter			(16.0f)
+#define kMetersPerPixel			(1.0f/16.0f)
+#define kHeroHeight				(0.8f)
+#define kHeroWidth 				(0.6f)
+#define kHeroMoveSpeed  		(5.0f)
+#define kHeroJumpHeight 		(2.5f)
+#define kHeroStepsPerMeter		(3.0f)
+#define kKittenWidth			(0.8f)
+#define kKittenHeight			(0.6f)
+#define kSlop					(0.0001f)
+#define kDeadZone       		(0.0001f)
+#define kGravity        		(72.0f)
 
 //--------------------------------------------------------------------------------
 // TILE MASK (for collisions)
@@ -70,16 +71,16 @@ public:
 	
 	float left() const { return mPosition.x - mHalfSize.x; }
 	float right() const { return mPosition.x + mHalfSize.x; }
-	float bottom() const { return mPosition.x + mHalfSize.x; }
-	float top() const { return mPosition.x - mHalfSize.x; }
+	float bottom() const { return mPosition.y + mHalfSize.y; }
+	float top() const { return mPosition.y - mHalfSize.y; }
 	
 	vec2 halfSize() const { return mHalfSize; }
 	vec2 centerPosition() const { return mPosition; }
 	vec2 pixelPosition() const { return kPixelsPerMeter * (mPosition+mOffset); }
-	vec2 speed() const { return mSpeed; }
-	
-	// Because controllers often modify this directly
-	vec2* speed() { return &mSpeed; }
+	vec2 speed() { return mSpeed; }
+	float speedX() const { return mSpeed.x; }
+	float speedY() const { return mSpeed.y; }
+	vec2 *pspeed() { return &mSpeed; }
 	
 	bool contactLeft() const { return hitX < 0; }
 	bool contactRight() const { return hitX > 0; }
@@ -133,12 +134,18 @@ private:
 class Hero : public Entity {
 private:
 	ImageAsset *img;
-
+	int dir;
+	float animTime, runningTime, yScale;
+	
 public:
 	Hero();
 	
 	void tick();
 	void draw();
+	
+private:
+	bool isStandingStill() const;
+	int getFrame() const;
 };
 
 //--------------------------------------------------------------------------------
@@ -166,6 +173,7 @@ public:
 	Kitten kitten;
 	
 private:
+	bool debugDraw;
 	bool done;
 	
 public:

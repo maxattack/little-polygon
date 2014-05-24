@@ -10,33 +10,14 @@ hitX(0), hitY(0)
 }
 
 void Entity::move() {
-	// TODO: MAX SPEED
-	auto displacement = mSpeed * gTimer.deltaSeconds;
-	
 	hitX = 0;
 	hitY = 0;
-	
+	auto displacement = mSpeed * gTimer.deltaSeconds;
 	auto p1 = mPosition + displacement;
 	if (gWorld.mask.check(p1 - mHalfSize, p1 + mHalfSize)) {
 		
-		LOG_MSG("CLIP");
-		
 		// COLLISION, RESOLVE AXES SEPARATELY
-		
-		if (displacement.y < -kDeadZone) {
-
-			// MOVE UP
-			float dy;
-			if (gWorld.mask.checkTop(vec(left(), mPosition.y), vec(right(), top() + displacement.y), &dy)) {
-				mPosition.y += std::min(displacement.y + dy, 0.0f);
-				hitY = -1;
-				mSpeed.y = 0.0f;
-			} else {
-				mPosition.y += displacement.y;
-			}
-			
-		} else if (displacement.y > kDeadZone) {
-
+		if (displacement.y > kDeadZone) {
 			// MOVE DOWN
 			float dy;
 			if (gWorld.mask.checkBottom(vec(left(), bottom()+displacement.y), vec(right(), mPosition.y), &dy)) {
@@ -46,11 +27,18 @@ void Entity::move() {
 			} else {
 				mPosition.y += displacement.y;
 			}
-			
+		} else if (displacement.y < -kDeadZone) {
+			// MOVE UP
+			float dy;
+			if (gWorld.mask.checkTop(vec(left(), mPosition.y), vec(right(), top() + displacement.y), &dy)) {
+				mPosition.y += std::min(displacement.y + dy, 0.0f);
+				hitY = -1;
+				mSpeed.y = 0.0f;
+			} else {
+				mPosition.y += displacement.y;
+			}
 		}
-		
 		if (displacement.x > kDeadZone) {
-
 			// MOVE RIGHT
 			float dx;
 			if (gWorld.mask.checkRight(vec(mPosition.x, bottom()), vec(right() + displacement.x, top()), &dx)) {
@@ -60,9 +48,7 @@ void Entity::move() {
 			} else {
 				mPosition.x += displacement.x;
 			}
-			
 		} else if (displacement.x < -kDeadZone) {
-
 			// MOVE LEFT
 			float dx;
 			if (gWorld.mask.checkLeft(vec(left() + displacement.x, bottom()), vec(mPosition.x, top()), &dx)) {
@@ -72,19 +58,21 @@ void Entity::move() {
 			} else {
 				mPosition.x += displacement.x;
 			}
-			
 		}
-	
 	} else {
-		
 		// FREEFALL
-		LOG_MSG("FREEFALL");
 		mPosition = p1;
-		
 	}
-	
 }
 
 void Entity::debugDraw() {
+//	int x0 = left();
+//	int x1 = right();
+//	int y0 = top();
+//	int y1 = bottom();
+//	for(int x=x0; x<=x1; ++x)
+//	for(int y=y0; y<=y1; ++y) {
+//		gLines.plotBox(vec(x,y), vec(x+1, y+1), rgb(0xaaaaaa));
+//	}
 	gLines.plotBox(mPosition - mHalfSize, mPosition + mHalfSize, rgb(0xffffff));
 }

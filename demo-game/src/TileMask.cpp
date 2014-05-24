@@ -44,11 +44,11 @@ void TileMask::getIndices(int x, int y, int *byteIdx, int *localIdx) const {
 	*localIdx = index - ((*byteIdx) << 3);
 }
 
-bool TileMask::check(vec2 bottomLeft, vec2 topRight) const {
-	int left = bottomLeft.x;
-	int right = topRight.x;
-	int bottom = bottomLeft.y;
-	int top = topRight.y;
+bool TileMask::check(vec2 topLeft, vec2 bottomRight) const {
+	int left = topLeft.x;
+	int right = bottomRight.x;
+	int bottom = bottomRight.y;
+	int top = topLeft.y;
 	for(int y=top; y<=bottom; ++y)
 	for(int x=left; x<=right; ++x) {
 		if (get(x,y)) { return true; }

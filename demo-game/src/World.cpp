@@ -3,15 +3,18 @@
 World::World() :
 Singleton<World>(this),
 mask(gAssets.userdata("world.mask")->as<TileMask::Data>()),
+debugDraw(false),
 done(false)
 {
-	glClearColor(0.8, 0.8, 0.9, 0);
+	auto color = gAssets.palette("global")->getColor(0);
+	glClearColor(color.red(), color.green(), color.blue(), 0);
 	gView.setSizeWithWidth(20 * kPixelsPerMeter);
 }
 
 void World::run() {
 	while(!done) {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		gTimer.tick();
 		input.enterFrame();
 		handleEvents();
 		tick();
@@ -33,20 +36,28 @@ void World::draw() {
 	hero.draw();
 	gSprites.end();
 
-	Viewport simView(
-		gView.size() * kMetersPerPixel,
-		gView.offset() * kMetersPerPixel
-	);
-	gLines.begin(simView);
-	kitten.debugDraw();
-	hero.debugDraw();
-	gLines.end();
+	if (debugDraw) {
+		Viewport simView(
+			gView.size() * kMetersPerPixel,
+			gView.offset() * kMetersPerPixel
+		);
+		gLines.begin(simView);
+		kitten.debugDraw();
+		hero.debugDraw();
+		gLines.end();
+	}
+	
 }
 
 void World::handleKeydown(const SDL_KeyboardEvent& event) {
+	if (event.repeat) { return; }
 	switch(event.keysym.sym) {
 		case SDLK_ESCAPE:
 			done = true;
+			break;
+		
+		case SDLK_TAB:
+			debugDraw = !debugDraw;
 			break;
 			
 		default:

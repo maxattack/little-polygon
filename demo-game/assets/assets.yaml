@@ -16,10 +16,14 @@ sample/button: button.wav
 sample/catturn: catturn.wav
 sample/death: death.wav
 sample/explosionSfx: explosion.wav
-sample/footfall: footfall.wav
 sample/jump: jump.wav
 sample/land: land.wav
 sample/pickup: pickup.wav
 sample/throw: throw.wav
 
 tilemap/test: test.tmx
+
+palette/global:
+  - rgb(95b6a2)
+
+
