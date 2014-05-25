@@ -107,6 +107,7 @@ def export_native_assets(assetGroup, outpath, bpp):
 	asset_header.sort(key = lambda tup: tup[0])
 
 	records = [bintools.Record(
+		'assertHeaders',
 		'II#' * len(asset_header),
 		tuple(e for t in asset_header for e in t)
 	)]
@@ -123,6 +124,7 @@ def export_native_assets(assetGroup, outpath, bpp):
 		# TextureHandle : uint (0)
 		# Flags         : uint
 		records.append(bintools.Record(
+			texture.id,
 			'#iiIII', 
 			(header_count + idx, w, h, len(texture.data), 0, texture.flags))
 		)
@@ -136,6 +138,7 @@ def export_native_assets(assetGroup, outpath, bpp):
 			# PivotY     : int
 			# NumFrames  : int
 			records.append(bintools.Record(
+				image.id,
 				'#iiiii', (texture_location, image.w, image.h, image.px, image.py, nframes)
 			))
 			format = 'ffffffffiiii' * nframes
@@ -180,7 +183,10 @@ def export_native_assets(assetGroup, outpath, bpp):
 					image.px-trimx, image.py-trimy,
 					fw, fh
 				)
-			records.append(bintools.Record(format, parameters))
+			records.append(bintools.Record(
+				"%s_frames" % (image.id),
+				format, parameters
+			))
 
 	for idx,font in enumerate(fonts):
 		print "Encoding Font(%s)" % font.id
@@ -193,6 +199,7 @@ def export_native_assets(assetGroup, outpath, bpp):
 		# T:TextureHandle : uint (0)
 		# T:flags         : uint (0)
 		records.append(bintools.Record(
+			font.id,
 			'i' + 'iii'*len(fontsheet.CHARSET) + '#iiIII', \
 			(font.height,) + \
 			tuple(comp for gmetric in font.metrics for comp in gmetric) + \
@@ -218,6 +225,7 @@ def export_native_assets(assetGroup, outpath, bpp):
 		pData = header_count + len(textures) + len(fonts) + 2*idx
 		pTexData = header_count + len(textures) + len(fonts) + 2*idx + 1
 		records.append(bintools.Record(
+			tilemap.id,
 			'P#IIIII' + '#iiIII',
 			(0, pData, tilemap.tw, tilemap.th, mw, mh, len(tilemap.mapData)) + \
 			(pTexData,) + tilemap.atlasImg.size + (len(tilemap.atlasData), 0, 0)
@@ -233,21 +241,25 @@ def export_native_assets(assetGroup, outpath, bpp):
 		# length        : uint
 		# compressedLen : uint
 		# bufferHandle : uint (0)
-		records.append(bintools.Record('P#iiiII', (
-			0,
-			header_count + len(textures) + len(fonts) + 2*len(tilemaps) + idx,
-			sample.channel_count, 
-			sample.sample_width, 
-			sample.freq, 
-			sample.uncompressed_size, 
-			len(sample.data)
-		)))
+		records.append(bintools.Record(
+			sample.id,
+			'P#iiiII', (
+				0,
+				header_count + len(textures) + len(fonts) + 2*len(tilemaps) + idx,
+				sample.channel_count, 
+				sample.sample_width, 
+				sample.freq, 
+				sample.uncompressed_size, 
+				len(sample.data)
+			)
+		))
 
 	for palette in palettes:
 		print 'Writing Palette (%s)' % palette.id
 		# length : int
 		# colors : byte[] (RGBARGBA...)
 		records.append(bintools.Record(
+			palette.id,
 			'I' + 'B' * (4*len(palette.colors)),
 			(len(palette.colors),) + tuple(c for color in palette.colors for c in color)
 		))
@@ -257,6 +269,7 @@ def export_native_assets(assetGroup, outpath, bpp):
 		# length  : size_t
 		# data    : byte[]
 		records.append(bintools.Record(
+			data.id,
 			('I' if bpp == 32 else 'Q') + ('B' * len(data.data)),
 			[ len(data.data) ] + array.array('B', data.data).tolist()
 		))
@@ -264,17 +277,37 @@ def export_native_assets(assetGroup, outpath, bpp):
 	# WRITE COMPRESSED DATA BLOCKS
 
 	for texture in textures:
-		records.append(bintools.Record('B'*len(texture.data), array.array('B', texture.data).tolist()))
+		records.append(bintools.Record(
+			"%s_data" % texture.id,
+			'B'*len(texture.data), 
+			array.array('B', texture.data).tolist()
+		))
 
 	for font in fonts:
-		records.append(bintools.Record('B'*len(font.data), array.array('B', font.data).tolist()))
+		records.append(bintools.Record(
+			"%s_data" % font.id,
+			'B'*len(font.data), 
+			array.array('B', font.data).tolist()
+		))
 
 	for tilemap in tilemaps:
-		records.append(bintools.Record('B'*len(tilemap.mapData), array.array('B', tilemap.mapData).tolist()))
-		records.append(bintools.Record('B'*len(tilemap.atlasData), array.array('B', tilemap.atlasData).tolist()))
+		records.append(bintools.Record(
+			'%s_mapData' % tilemap.id,
+			'B'*len(tilemap.mapData), 
+			array.array('B', tilemap.mapData).tolist()
+		))
+		records.append(bintools.Record(
+			'%s_atlasData' % tilemap.id,
+			'B'*len(tilemap.atlasData), 
+			array.array('B', tilemap.atlasData).tolist()
+		))
 
 	for sample in samples:
-		records.append(bintools.Record('B'*len(sample.data), array.array('B', sample.data).tolist()))
+		records.append(bintools.Record(
+			'%s_data' % sample.id,
+			'B'*len(sample.data), 
+			array.array('B', sample.data).tolist()
+		))
 
 	data, pointers = bintools.export(records, pointer_width=bpp)
 

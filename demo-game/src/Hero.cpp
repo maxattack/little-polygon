@@ -92,7 +92,6 @@ void Hero::performAction() {
 		speed.x -= dir * kHeroShootKickback;
 	}
 	
-	
 }
 
 void Hero::draw() {

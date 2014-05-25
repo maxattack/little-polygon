@@ -18,7 +18,7 @@
 
 import collections, platform, string, struct, sys
 
-Record = collections.namedtuple('Record', ('format', 'parameters'))
+Record = collections.namedtuple('Record', ('key', 'format', 'parameters'))
 PaddedRecord = collections.namedtuple('PaddedRecord', ('format', 'size', 'alignment'))
 
 SIZE_OF = {
@@ -57,8 +57,23 @@ def export(records, **kwargs):
 	pointer_type = 'p' if pointer_width == 32 else 'P'
 	format_pointer_type = 'I' if pointer_width == 32 else 'Q'
 
+	# map keys to indices, update records to replace keys with indexes
+	key_to_index = dict((record.key,i) for i,record in enumerate(records))
+
+	def convert_pointer_val(val):
+		return key_to_index[val] if isinstance(val,str) else val
+
+	def convert_pointer_keys_to_indexes(record):
+		new_params = tuple(
+			convert_pointer_val(val) if record.format[i]=='#' else val
+			for i,val in enumerate(record.parameters)
+		)
+		return Record(record.key, record.format, new_params)
+
+	records = map(convert_pointer_keys_to_indexes, records)
+	
 	# pad records and note final locations
-	padded_records = [ add_padding(format.replace('P', format_pointer_type).replace('#', pointer_type)) for format,_ in records ]
+	padded_records = [ add_padding(format.replace('P', format_pointer_type).replace('#', pointer_type)) for key,format,_ in records ]
 	locations = [0]
 	location = 0
 	for i in xrange(len(records)-1):
