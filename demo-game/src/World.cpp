@@ -3,6 +3,7 @@
 World::World(const WorldData& data) :
 Singleton<World>(this),
 mask(data),
+tilemap(lpAssets.tilemap("test")),
 hero(data),
 kitten(data),
 debugDraw(false),
@@ -11,6 +12,15 @@ done(false)
 	auto color = lpAssets.palette("global")->getColor(0);
 	glClearColor(color.red(), color.green(), color.blue(), 0);
 	lpView.setSizeWithHeight(8 * kPixelsPerMeter);
+}
+
+
+void World::destroyTile(int x, int y) {
+	if (x >= 0 && x < tilemap->mw && y >= 0 && y < tilemap->mh) {
+		//lpAssets.sample("explosionSfx")->play();
+		tilemap->clearTile(x,y);
+		mask.clear(x,y);
+	}
 }
 
 void World::run() {
@@ -46,7 +56,7 @@ void World::draw() {
 	lpSprites.begin(lpView);
 	auto bg = lpAssets.image("background");
 	lpSprites.drawImage(bg, vec(0, lpView.height()-16));
-	lpSprites.drawTilemap(lpAssets.tilemap("test"));
+	lpSprites.drawTilemap(tilemap);
 	kitten.draw();
 	hero.draw();
 	lpSprites.end();

@@ -230,6 +230,7 @@ class World : public Singleton<World> {
 public:
 	PlayerInput input;
 	TileMask mask;
+	TilemapAsset* tilemap;
 	Camera camera;
 	Hero hero;
 	Kitten kitten;
@@ -240,8 +241,11 @@ private:
 	
 public:
 	World(const WorldData& data);
-	void run();
+	
+	void destroyTile(int x, int y);
 
+	void run();
+	
 private:
 	void tick();
 	void draw();
