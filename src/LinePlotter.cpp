@@ -92,7 +92,7 @@ void LinePlotter::begin(const Viewport& viewport) {
 	viewport.setMVP(uMVP);
 }
 
-void LinePlotter::plot(vec2 p0, vec2 p1, Color c) {
+void LinePlotter::plot(Vec2 p0, Vec2 p1, Color c) {
 	ASSERT(count >= 0);
 	vertices[2*count  ].set(p0, c);
 	vertices[2*count+1].set(p1, c);
@@ -103,7 +103,7 @@ void LinePlotter::plot(vec2 p0, vec2 p1, Color c) {
 	}
 }
 
-void LinePlotter::plotBox(vec2 p0, vec2 p2, Color c) {
+void LinePlotter::plotBox(Vec2 p0, Vec2 p2, Color c) {
 	auto p1 = vec(p0.x, p2.y);
 	auto p3 = vec(p2.x, p0.y);
 	plot(p0, p1, c);
@@ -112,14 +112,14 @@ void LinePlotter::plotBox(vec2 p0, vec2 p2, Color c) {
 	plot(p3, p0, c);
 }
 
-void LinePlotter::plotLittleBox(vec2 p, float r, Color c) {
+void LinePlotter::plotLittleBox(Vec2 p, float r, Color c) {
 	plot(p+vec(-r,-r), p+vec(r,-r), c);
 	plot(p+vec(r,-r), p+vec(r,r), c);
 	plot(p+vec(r,r), p+vec(-r,r), c);
 	plot(p+vec(-r,r), p+vec(-r,-r), c);
 }
 
-void LinePlotter::plotArrow(vec2 p0, vec2 p1, float r, Color c) {
+void LinePlotter::plotArrow(Vec2 p0, Vec2 p1, float r, Color c) {
 	plot(p0, p1, c);
 	auto delta = r * (p0 - p1).normalized();
 	auto r0 = unitVector(0.25 * M_PI);

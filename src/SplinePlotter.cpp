@@ -123,8 +123,8 @@ inline void computePRV(
 	//float faaf,
 
 	// out params
-	vec2& p,
-	vec2& r,
+	Vec2& p,
+	Vec2& r,
 	float &depth
 	//float& v
 
@@ -162,7 +162,7 @@ void SplinePlotter::reserve(int numVertsRequired) {
 	
 }
 
-void SplinePlotter::startCurve(int resolution, vec2 p0, vec2 p1, float z, Color c) {
+void SplinePlotter::startCurve(int resolution, Vec2 p0, Vec2 p1, float z, Color c) {
 	ASSERT(isBound());
 	reserve(resolution << 1);
 	curveCapacity = resolution;
@@ -178,7 +178,7 @@ void SplinePlotter::startCurve(int resolution, vec2 p0, vec2 p1, float z, Color 
 	
 }
 
-void SplinePlotter::plotCurvePoint(vec2 p0, vec2 p1, float z, Color c) {
+void SplinePlotter::plotCurvePoint(Vec2 p0, Vec2 p1, float z, Color c) {
 	ASSERT(isBound());
 	ASSERT(curveCapacity > 0 && curveCount < curveCapacity);
 	nextVert()->set(p0, z, vec(0, 1), c);
@@ -199,7 +199,7 @@ void SplinePlotter::plotCubic(const mat4f& posMat, const vec4f& strokeVec, Color
 	
 	// point computation is done efficiently with matrix math
 	auto strokeMat = Spline::perpendicularMatrix(posMat);
-	vec2 p,r;
+	Vec2 p,r;
 	float depth;
 	
 	// plot vertices
@@ -223,7 +223,7 @@ void SplinePlotter::plotCubic(const mat4f& posMat, const vec4f& strokeVec, Color
 	
 }
 
-//inline void setVertex(BasicVertex*v, vec2 p, float z, vec2 uv, Color c) {
+//inline void setVertex(BasicVertex*v, Vec2 p, float z, Vec2 uv, Color c) {
 //	v->x = p.x;
 //	v->y = p.y;
 //	v->z = z;
@@ -232,7 +232,7 @@ void SplinePlotter::plotCubic(const mat4f& posMat, const vec4f& strokeVec, Color
 //	v->color = c;
 //}
 //
-void SplinePlotter::plotArc(vec2 p, float z, float r1, float r2, Color c, float a1, float a2, int resolution) {
+void SplinePlotter::plotArc(Vec2 p, float z, float r1, float r2, Color c, float a1, float a2, int resolution) {
 	ASSERT(isBound());
 	reserve(resolution<<1);
 	
@@ -244,11 +244,11 @@ void SplinePlotter::plotArc(vec2 p, float z, float r1, float r2, Color c, float 
 		
 		// special case - plotting a closed loop
 		// (don't want gaps or overlapped faces)
-		vec2 curr = vec(1,0);
-		vec2 rotor = unitVector((M_TAU) / (resolution-1));
+		Vec2 curr = vec(1,0);
+		Vec2 rotor = unitVector((M_TAU) / (resolution-1));
 		
-		vec2 p0 = p + r1 * curr;
-		vec2 p1 = p + r2 * curr;
+		Vec2 p0 = p + r1 * curr;
+		Vec2 p1 = p + r2 * curr;
 		
 		if (count > 0) {
 			auto tail = plotter->getVertex(count-1);
@@ -269,8 +269,8 @@ void SplinePlotter::plotArc(vec2 p, float z, float r1, float r2, Color c, float 
 	} else {
 		
 		// general case
-		vec2 curr = unitVector(a1);
-		vec2 rotor = unitVector(da / float(resolution-1));
+		Vec2 curr = unitVector(a1);
+		Vec2 rotor = unitVector(da / float(resolution-1));
 		
 		if (count > 0) {
 			auto tail = plotter->getVertex(count-1);
@@ -289,11 +289,11 @@ void SplinePlotter::plotArc(vec2 p, float z, float r1, float r2, Color c, float 
 	
 }
 
-void SplinePlotter::plotCircle(vec2 p, float z, float r, Color c, int resolution) {
+void SplinePlotter::plotCircle(Vec2 p, float z, float r, Color c, int resolution) {
 	ASSERT(isBound());
 	reserve(resolution<<1);
-	vec2 curr = vec(1,0);
-	vec2 rotor = unitVector(M_PI / (resolution-1));
+	Vec2 curr = vec(1,0);
+	Vec2 rotor = unitVector(M_PI / (resolution-1));
 	
 	if (count > 0) {
 		auto tail = plotter->getVertex(count-1);

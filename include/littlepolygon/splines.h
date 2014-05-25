@@ -46,14 +46,14 @@ public:
 	
 	void begin(const Viewport& viewport);
 	
-	void startCurve(int resolution, vec2 p0, vec2 p1, float z, Color c);
-	void plotCurvePoint(vec2 p0, vec2 p1, float z, Color c);
+	void startCurve(int resolution, Vec2 p0, Vec2 p1, float z, Color c);
+	void plotCurvePoint(Vec2 p0, Vec2 p1, float z, Color c);
 	void finishCurve();
 	
 	void plotCubic(const mat4f& positionMatrix, const vec4f& strokeVector, Color c, int resolution=10);
 	
-	void plotArc(vec2 p, float z, float r1, float r2, Color c, float a0=0, float a1=M_TAU, int resolution=32);
-	void plotCircle(vec2 p, float z, float r, Color c, int resolution=32);
+	void plotArc(Vec2 p, float z, float r1, float r2, Color c, float a0=0, float a1=M_TAU, int resolution=32);
+	void plotCircle(Vec2 p, float z, float r, Color c, int resolution=32);
 	
 	void flush();
 	void end();

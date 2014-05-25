@@ -119,7 +119,7 @@ void SpritePlotter::begin(const Viewport& aView) {
 	view.setMVP(uMVP);
 }
 
-void SpritePlotter::drawImage(ImageAsset *img, vec2 pos, int frame, Color c, float z) {
+void SpritePlotter::drawImage(ImageAsset *img, Vec2 pos, int frame, Color c, float z) {
 	ASSERT(isBound());
 	setTextureAtlas(img->texture);
 	auto slice = nextSlice();
@@ -135,16 +135,16 @@ void SpritePlotter::drawImage(ImageAsset *img, vec2 pos, int frame, Color c, flo
 	++count;
 }
 
-void SpritePlotter::drawImage(ImageAsset *img, vec2 pos, vec2 u, int frame, Color c, float z) {
+void SpritePlotter::drawImage(ImageAsset *img, Vec2 pos, Vec2 u, int frame, Color c, float z) {
 	ASSERT(isBound());
 	setTextureAtlas(img->texture);
 	auto slice = nextSlice();
 	FrameAsset *fr = img->frame(frame);
 
-	vec2 p0 = -fr->pivot();
-	vec2 p1 = p0 + vec(0, fr->h);
-	vec2 p2 = p0 + vec(fr->w, 0);
-	vec2 p3 = p0 + fr->size();
+	Vec2 p0 = -fr->pivot();
+	Vec2 p1 = p0 + vec(0, fr->h);
+	Vec2 p2 = p0 + vec(fr->w, 0);
+	Vec2 p3 = p0 + fr->size();
 
 	slice[0].set(pos+cmul(p0,u), z, fr->uv0, c);
 	slice[1].set(pos+cmul(p1,u), z, fr->uv1, c);
@@ -160,10 +160,10 @@ void SpritePlotter::drawImage(ImageAsset *img, const AffineMatrix& xform, int fr
 	auto slice = nextSlice();
 	FrameAsset *fr = img->frame(frame);
 
-	vec2 p0 = -fr->pivot();
-	vec2 p1 = p0 + vec(0, fr->h);
-	vec2 p2 = p0 + vec(fr->w, 0);
-	vec2 p3 = p0 + fr->size();
+	Vec2 p0 = -fr->pivot();
+	Vec2 p1 = p0 + vec(0, fr->h);
+	Vec2 p2 = p0 + vec(fr->w, 0);
+	Vec2 p3 = p0 + fr->size();
 	
 	slice[0].set(xform.transformPoint(p0), z, fr->uv0, c);
 	slice[1].set(xform.transformPoint(p1), z, fr->uv1, c);
@@ -192,7 +192,7 @@ void SpritePlotter::drawImage(ImageAsset *img, const mat4f& xform, int frame, Co
 	++count;	
 }
 
-void SpritePlotter::drawQuad(ImageAsset *img, vec2 p0, vec2 p1, vec2 p2, vec2 p3, int frame, Color c, float z) {
+void SpritePlotter::drawQuad(ImageAsset *img, Vec2 p0, Vec2 p1, Vec2 p2, Vec2 p3, int frame, Color c, float z) {
 	ASSERT(isBound());
 	setTextureAtlas(img->texture);
 	auto slice = nextSlice();
@@ -215,7 +215,7 @@ void SpritePlotter::plotGlyph(const GlyphAsset& g, float x, float y, float z, fl
 
 	auto slice = nextSlice();
 	float k = 1.f / workingTexture->w;
-	vec2 uv = k * vec(g.x, g.y);
+	Vec2 uv = k * vec(g.x, g.y);
 	float du = k * (g.advance-UV_LABEL_SLOP);
 	float dv = k * h;
 
@@ -227,7 +227,7 @@ void SpritePlotter::plotGlyph(const GlyphAsset& g, float x, float y, float z, fl
 	++count;
 }
 
-void SpritePlotter::drawLabel(FontAsset *font, vec2 p, Color c, const char *msg, float z) {
+void SpritePlotter::drawLabel(FontAsset *font, Vec2 p, Color c, const char *msg, float z) {
 	ASSERT(isBound());
 	setTextureAtlas(&(font->texture));
 
@@ -247,7 +247,7 @@ void SpritePlotter::drawLabel(FontAsset *font, vec2 p, Color c, const char *msg,
 
 }
 
-void SpritePlotter::drawLabelCentered(FontAsset *font, vec2 p, Color c, const char *msg, float z) {
+void SpritePlotter::drawLabelCentered(FontAsset *font, Vec2 p, Color c, const char *msg, float z) {
 	ASSERT(isBound());
 	setTextureAtlas(&(font->texture) );
 	float py = p.y;
@@ -268,7 +268,7 @@ void SpritePlotter::drawLabelCentered(FontAsset *font, vec2 p, Color c, const ch
 	}
 }
 
-void SpritePlotter::drawLabelRightJustified(FontAsset *font, vec2 p, Color c, const char *msg, float z) {
+void SpritePlotter::drawLabelRightJustified(FontAsset *font, Vec2 p, Color c, const char *msg, float z) {
 	ASSERT(isBound());
 	setTextureAtlas(&(font->texture) );
 	float py = p.y;
@@ -293,23 +293,23 @@ void SpritePlotter::drawLabelRightJustified(FontAsset *font, vec2 p, Color c, co
 
 #define TILE_SLOP (0.001f)
 
-void SpritePlotter::drawTilemap(TilemapAsset *map, vec2 position, float z) {
+void SpritePlotter::drawTilemap(TilemapAsset *map, Vec2 position, float z) {
 	ASSERT(isBound());
 
 	// make sure the map is initialized
 	map->init();
 	
-	vec2 cs = view.size() / vec(map->tw, map->th);
+	Vec2 cs = view.size() / vec(map->tw, map->th);
 	int latticeW = ceilf(cs.x) + 1;
 	int latticeH = ceilf(cs.y) + 1;
 
-	vec2 scroll = view.offset() - position;
+	Vec2 scroll = view.offset() - position;
 	
 
 	int vox = int(scroll.x/map->tw);
 	int voy = int(scroll.y/map->th);
 	
-	vec2 rem = vec(
+	Vec2 rem = vec(
 		fmod(scroll.x, map->tw),
 		fmod(scroll.y, map->th)
 	);
@@ -326,10 +326,10 @@ void SpritePlotter::drawTilemap(TilemapAsset *map, vec2 position, float z) {
 		if (rawX >= 0 && rawX < map->mw && rawY >= 0 && rawY < map->mh) {
 			uint8_pair_t coord = map->tileAt(rawX, rawY);
 			if (coord.x != 0xff) {
-				vec2 p = vec(x * map->tw, y * map->th) 
+				Vec2 p = vec(x * map->tw, y * map->th) 
 					- vec(TILE_SLOP, TILE_SLOP) 
 					- rem + view.offset();
-				vec2 uv = 
+				Vec2 uv = 
 					(vec(map->tw * coord.x, map->th * coord.y) + vec(TILE_SLOP, TILE_SLOP))
 					/ vec(map->tileAtlas.w, map->tileAtlas.h);
 				auto slice = nextSlice();

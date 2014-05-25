@@ -4,7 +4,7 @@
 
 Hero::Hero() :
 Entity(
-	gAssets.userdata("hero.position")->get<vec2>() - vec(0, kSlop),
+	gAssets.userdata("hero.position")->get<Vec2>() - vec(0, kSlop),
 	vec(kHeroWidth, kHeroHeight)
 ),
 img(gAssets.image("hero")),
@@ -17,13 +17,9 @@ grounded(true), holdingKitten(false)
 void Hero::tick() {
 	float dt = gTimer.deltaSeconds;
 	
-	if (gWorld.input.pressedAction()) {
-		performAction();
-	}
-	
 	// MOVEMENT
 	auto speedTarget = kHeroMoveSpeed * gWorld.input.dirX();
-	auto easing = gWorld.input.dirX() == 0 ? 0.2f : 0.4f;
+	auto easing = gWorld.input.dirX() == 0 ? 0.2f : 0.333f;
 	speed.x = easeTowards(speed.x, speedTarget, easing, dt);
 	
 	if (gWorld.input.dirX()) { dir = gWorld.input.dirX(); }
@@ -34,7 +30,7 @@ void Hero::tick() {
 	// JUMPING
 	if (grounded && gWorld.input.pressedJump()) {
 		gAssets.sample("jump")->play();
-		speed.y = -sqrtf(2.0f * kHeroJumpHeight * kGravity);
+		speed.y = jumpImpulse(kHeroJumpHeight);
 	}
 	
 	// KINEMATICS
@@ -69,17 +65,29 @@ void Hero::tick() {
 		yScale = easeTowards(yScale, 1.025f, 0.2f, dt);
 		
 	}
+
+	// PICKUP KITTEN?
+	if (gWorld.kitten.canPickUp() && overlaps(&gWorld.kitten)) {
+		// PICKUP
+		gAssets.sample("pickup")->play();
+		gWorld.kitten.pickup();
+	}
+	
+	// ACTION?
+	if (gWorld.input.pressedAction()) {
+		performAction();
+	}
+	
+	
 	
 }
 
 void Hero::performAction() {
-	if (!gWorld.kitten.isCarried() && overlaps(&gWorld.kitten)) {
-		// PICKUP
-		gAssets.sample("pickup")->play();
-		gWorld.kitten.pickup();
-	} else if (gWorld.kitten.isCarried()) {
+	if (gWorld.kitten.isCarried()) {
 		// SHOOT
-		gAssets.sample("throw")->play();
+		gAssets.sample("shoot")->play();
+		gWorld.kitten.shoot();
+		speed.x -= dir * kHeroShootKickback;
 	}
 	
 	
@@ -97,8 +105,8 @@ bool Hero::isStandingStill() const {
 	return speed.x > -0.133f && speed.x < 0.133f;
 }
 
-vec2 Hero::carryAnchor() const {
-	return position + vec(dir * halfSize.x, -2.0f * yScale * halfSize.y);
+Vec2 Hero::carryAnchor() const {
+	return position + vec(dir * halfSize.x, -2.1f * yScale * halfSize.y) - vec(0, kMetersPerPixel * getFrame());
 }
 
 int Hero::getFrame() const {

@@ -72,15 +72,15 @@ public:
 	// to the graphics device if: (i) the buffer has reached capacity or (ii) the texture 
 	// atlas has changed.  Color transforms *can* be batched, because they are encoded
 	// in the vertices, not in shader uniforms.
-	void drawImage(ImageAsset *image, vec2 position, int frame=0, Color color=rgba(0), float z=0);
-	void drawImage(ImageAsset *image, vec2 position, vec2 u, int frame=0, Color color=rgba(0), float z=0);
+	void drawImage(ImageAsset *image, Vec2 position, int frame=0, Color color=rgba(0), float z=0);
+	void drawImage(ImageAsset *image, Vec2 position, Vec2 u, int frame=0, Color color=rgba(0), float z=0);
 	void drawImage(ImageAsset *image, const AffineMatrix& xform, int frame=0, Color color=rgba(0), float z=0);
 	void drawImage(ImageAsset *image, const mat4f& xform, int frame=0, Color color=rgba(0), float z=0);
-	void drawQuad(ImageAsset *image, vec2 p0, vec2 p1, vec2 p2, vec2 p3, int frame=0, Color color=rgba(0), float z=0);
-	void drawLabel(FontAsset *font, vec2 p, Color c, const char *msg, float z=0);
-	void drawLabelCentered(FontAsset *font, vec2 p, Color c, const char *msg, float z=0);
-	void drawLabelRightJustified(FontAsset *font, vec2 p, Color c, const char *msg, float z=0);
-	void drawTilemap(TilemapAsset *map, vec2 position=vec(0,0), float z=0);
+	void drawQuad(ImageAsset *image, Vec2 p0, Vec2 p1, Vec2 p2, Vec2 p3, int frame=0, Color color=rgba(0), float z=0);
+	void drawLabel(FontAsset *font, Vec2 p, Color c, const char *msg, float z=0);
+	void drawLabelCentered(FontAsset *font, Vec2 p, Color c, const char *msg, float z=0);
+	void drawLabelRightJustified(FontAsset *font, Vec2 p, Color c, const char *msg, float z=0);
+	void drawTilemap(TilemapAsset *map, Vec2 position=vec(0,0), float z=0);
 
 	// if you want to monkey with the global rendering state (e.g. change blending settings)
 	// you need to flush the render queue first.

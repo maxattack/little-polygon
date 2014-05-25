@@ -29,45 +29,45 @@ SDL_Window *initContext(const char *caption, int w=0, int h=0);
 
 class Viewport {
 private:
-	vec2 mSize;
-	vec2 mOffset;
+	Vec2 mSize;
+	Vec2 mOffset;
 
 public:
 	Viewport() {}
-	Viewport(vec2 aSize, vec2 aOffset=vec2(0,0)) :
+	Viewport(Vec2 aSize, Vec2 aOffset=Vec2(0,0)) :
 		mSize(aSize), mOffset(aOffset) {}
 	Viewport(float w, float h, float x=0, float y=0) :
 		mSize(w,h), mOffset(x,y) {}
 	
-	vec2 size() const { return mSize; }
+	Vec2 size() const { return mSize; }
 	float width() const { return mSize.x; }
 	float height() const { return mSize.y; }
 	
 	float aspect() const { return mSize.x / mSize.y; }
 
-	vec2 offset() const { return mOffset; }
-	vec2 extent() const { return mOffset + mSize; }
+	Vec2 offset() const { return mOffset; }
+	Vec2 extent() const { return mOffset + mSize; }
 	float left() const { return mOffset.x; }
 	float right() const { return mOffset.x + mSize.x; }
 	float top() const { return mOffset.y; }
 	float bottom() const { return mOffset.y + mSize.y; }
 	
 	void setFromWindow();
-	void setSize(vec2 sz) { mSize = sz; }
+	void setSize(Vec2 sz) { mSize = sz; }
 	void setSize(double w, double h) { mSize.set(w,h); }
 	void setSizeWithHeight(double h);
 	void setSizeWithWidth(double w);
-	void setOffset(vec2 off) { mOffset = off; }
+	void setOffset(Vec2 off) { mOffset = off; }
 	void setOffset(double x, double y) { mOffset.set(x,y); }
 	
-	vec2 windowToViewport(vec2 p) const;
-	vec2 viewportToWindow(vec2 vp) const;
+	Vec2 windowToViewport(Vec2 p) const;
+	Vec2 viewportToWindow(Vec2 vp) const;
 
-	vec2 cursor() const;
+	Vec2 cursor() const;
 
 	void setMVP(GLuint mvp) const;
 	
-	inline bool contains(vec2 p, float pad=0.0) const {
+	inline bool contains(Vec2 p, float pad=0.0) const {
 		return p.x > mOffset.x - pad &&
 		       p.x < mOffset.x + mSize.x + pad &&
 		       p.y > mOffset.y - pad &&
@@ -97,15 +97,15 @@ struct Vertex {
 	float x,y,z,u,v;
 	Color color;
 	
-	inline void set(vec2 p, vec2 uv, Color c) {
+	inline void set(Vec2 p, Vec2 uv, Color c) {
 		x = p.x; y = p.y; z = 0; u = uv.x; v = uv.y; color = c;
 	}
 	
-	inline void set(vec2 p, float az, vec2 uv, Color c) {
+	inline void set(Vec2 p, float az, Vec2 uv, Color c) {
 		x = p.x; y = p.y; z = az; u = uv.x; v = uv.y; color = c;
 	}
 	
-	inline void set(vec3f p, vec2 uv, Color c) {
+	inline void set(vec3f p, Vec2 uv, Color c) {
 		p.load(&x); u = uv.x; v = uv.y; color = c;
 	}
 	
@@ -168,10 +168,10 @@ private:
 	GLuint vao, vbo, uMVP, aPosition, aColor;
 
 	struct Vertex {
-		vec2 position;
+		Vec2 position;
 		Color color;
 
-		inline void set(vec2 p, Color c) { 
+		inline void set(Vec2 p, Color c) { 
 			position = p; 
 			color = c; 
 		}
@@ -184,10 +184,10 @@ public:
 	~LinePlotter();
 
 	void begin(const Viewport& viewport);
-	void plot(vec2 p0, vec2 p1, Color c);
-	void plotBox(vec2 p0, vec2 p2, Color c);
-	void plotLittleBox(vec2 p, float r, Color c);
-	void plotArrow(vec2 p0, vec2 p1, float r, Color c);
+	void plot(Vec2 p0, Vec2 p1, Color c);
+	void plotBox(Vec2 p0, Vec2 p2, Color c);
+	void plotLittleBox(Vec2 p, float r, Color c);
+	void plotArrow(Vec2 p0, Vec2 p1, float r, Color c);
 	void end();
 
 private:

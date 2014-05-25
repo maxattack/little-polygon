@@ -1,6 +1,6 @@
 #include "game.h"
 
-Entity::Entity(vec2 aPos, vec2 aSize) :
+Entity::Entity(Vec2 aPos, Vec2 aSize) :
 position(aPos.x, aPos.y - 0.5f * aSize.y),
 speed(0,0),
 anchor(0, 0.5f * aSize.y),

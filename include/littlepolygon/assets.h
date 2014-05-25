@@ -57,7 +57,7 @@ struct TextureAsset {
 	bool initialized() const { return textureHandle != 0; }
 	int format() const { return GL_RGBA; }
 
-	vec2 size() const { return vec(w,h); }
+	Vec2 size() const { return vec(w,h); }
 
 	void init();
 	void bind();
@@ -65,13 +65,13 @@ struct TextureAsset {
 };
 
 struct FrameAsset {
-	vec2 uv0, uv1, uv2, uv3;  // UV coordinates of the corners (necessary since the image
+	Vec2 uv0, uv1, uv2, uv3;  // UV coordinates of the corners (necessary since the image
 	                          // might have been transposed during packing)
 	int32_t px, py, // post-trim pivot of the frame
 		w, h;	    // post-trim size of the frame
 
-	vec2 pivot() const { return vec(px,py); }
-	vec2 size() const { return vec(w,h); }
+	Vec2 pivot() const { return vec(px,py); }
+	Vec2 size() const { return vec(w,h); }
 };
 
 struct ImageAsset {
@@ -80,8 +80,8 @@ struct ImageAsset {
 		px, py,            // the logical pivot of the image
 		nframes;           // number of rendered frames
 
-	vec2 size() const { return vec(w,h); }
-	vec2 pivot() const { return vec(px,py); }
+	Vec2 size() const { return vec(w,h); }
+	Vec2 pivot() const { return vec(px,py); }
 
 	FrameAsset* frame(int i) {
 		// frames are stored immediately after the image (correctly aligned)
@@ -105,8 +105,8 @@ struct TilemapAsset {
 
 	bool intialized() const { return data != 0; }
 
-	vec2 tileSize() const { return vec(tw,th); }
-	vec2 mapSize() const { return vec(mw,mh); }
+	Vec2 tileSize() const { return vec(tw,th); }
+	Vec2 mapSize() const { return vec(mw,mh); }
 
 	uint8_pair_t tileAt(int x, int y) const {
 		ASSERT(intialized());

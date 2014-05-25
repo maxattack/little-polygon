@@ -27,16 +27,16 @@
 #endif
 
 // easy to use two-dimensional vector with shorthand operators
-struct vec2 {
+struct Vec2 {
 	float x, y;
 	
-	vec2() {}
-	vec2(float ax, float ay) : x(ax), y(ay) {}
-	vec2(SDL_Point p) : x(p.x), y(p.y) {}
-	vec2(vec2f u) : x(u.x()), y(u.y()) {}
+	Vec2() {}
+	Vec2(float ax, float ay) : x(ax), y(ay) {}
+	Vec2(SDL_Point p) : x(p.x), y(p.y) {}
+	Vec2(vec2f u) : x(u.x()), y(u.y()) {}
 
 	#ifdef BOX2D_H
-	vec2(b2Vec2 v) : x(v.x), y(v.y) {}
+	Vec2(b2Vec2 v) : x(v.x), y(v.y) {}
 	operator b2Vec2() { return b2Vec2(x, y); }
 	#endif
 
@@ -49,41 +49,41 @@ struct vec2 {
 	float norm() const         { return x*x + y*y; }
 	float manhattan() const    { return fabsf(x)+fabsf(y); }
 	float magnitude() const    { return sqrtf(norm()); }
-	vec2 conjugate() const     { return vec2(x,-y); }
+	Vec2 conjugate() const     { return Vec2(x,-y); }
 	float radians() const      { return atan2f(y,x); }
-	vec2 reflection() const    { return vec2(y,x); }
-	vec2 anticlockwise() const { return vec2(-y, x); }
-	vec2 clockwise() const     { return vec2(y, -x); }
-	vec2 normalized() const    { return (*this) / magnitude(); }
+	Vec2 reflection() const    { return Vec2(y,x); }
+	Vec2 anticlockwise() const { return Vec2(-y, x); }
+	Vec2 clockwise() const     { return Vec2(y, -x); }
+	Vec2 normalized() const    { return (*this) / magnitude(); }
 
-	vec2 operator+(vec2 q) const  { return vec2(x+q.x, y+q.y); }
-	vec2 operator-(vec2 q) const  { return vec2(x-q.x, y-q.y); }
-	vec2 operator*(vec2 q) const  { return vec2(x*q.x, y*q.y); }
-	vec2 operator/(vec2 q) const  { return vec2(x/q.x, y/q.y); }
+	Vec2 operator+(Vec2 q) const  { return Vec2(x+q.x, y+q.y); }
+	Vec2 operator-(Vec2 q) const  { return Vec2(x-q.x, y-q.y); }
+	Vec2 operator*(Vec2 q) const  { return Vec2(x*q.x, y*q.y); }
+	Vec2 operator/(Vec2 q) const  { return Vec2(x/q.x, y/q.y); }
 
-	vec2 operator-() const        { return vec2(-x, -y); }
-	vec2 operator*(float k) const { return vec2(k*x, k*y); }
-	vec2 operator/(float k) const { return vec2(x/k, y/k); }
+	Vec2 operator-() const        { return Vec2(-x, -y); }
+	Vec2 operator*(float k) const { return Vec2(k*x, k*y); }
+	Vec2 operator/(float k) const { return Vec2(x/k, y/k); }
 
-	vec2 operator +=(vec2 u)  { x+=u.x; y+=u.y; return *this; }
-	vec2 operator -=(vec2 u)  { x-=u.x; y-=u.y; return *this; }
-	vec2 operator *=(vec2 u)  { x*=u.x; y*=u.y; return *this; }
-	vec2 operator /=(vec2 u)  { x/=u.x; y/=u.y; return *this; }
+	Vec2 operator +=(Vec2 u)  { x+=u.x; y+=u.y; return *this; }
+	Vec2 operator -=(Vec2 u)  { x-=u.x; y-=u.y; return *this; }
+	Vec2 operator *=(Vec2 u)  { x*=u.x; y*=u.y; return *this; }
+	Vec2 operator /=(Vec2 u)  { x/=u.x; y/=u.y; return *this; }
 
-	vec2 operator *=(float k) { x*=k; y*=k; return *this; }
-	vec2 operator /=(float k) { x/=k; y/=k; return *this; }
+	Vec2 operator *=(float k) { x*=k; y*=k; return *this; }
+	Vec2 operator /=(float k) { x/=k; y/=k; return *this; }
 };
 
 // I hate all those 2s cluttering up math code :P
-inline vec2 vec(float ax, float ay) { return vec2(ax, ay); }
+inline Vec2 vec(float ax, float ay) { return Vec2(ax, ay); }
 
-// vec2 helpers
-inline vec2 operator*(float k, vec2 q) { return vec2(k*q.x, k*q.y); }
-inline vec2 operator*(double k, vec2 q) { return vec2(k*q.x, k*q.y); }
-inline float dot(vec2 u, vec2 v) { return u.x*v.x + u.y*v.y; }
-inline float cross(vec2 u, vec2 v) { return u.x * v.y - v.x* u.y; }
-inline vec2 lerp(vec2 u, vec2 v, float t) { return u + t * (v - u); }
-inline vec2 slerp(vec2 u, vec2 v, float t) {
+// Vec2 helpers
+inline Vec2 operator*(float k, Vec2 q) { return Vec2(k*q.x, k*q.y); }
+inline Vec2 operator*(double k, Vec2 q) { return Vec2(k*q.x, k*q.y); }
+inline float dot(Vec2 u, Vec2 v) { return u.x*v.x + u.y*v.y; }
+inline float cross(Vec2 u, Vec2 v) { return u.x * v.y - v.x* u.y; }
+inline Vec2 lerp(Vec2 u, Vec2 v, float t) { return u + t * (v - u); }
+inline Vec2 slerp(Vec2 u, Vec2 v, float t) {
 	float theta = acosf(dot(u,v));
 	float s = 1.f/sinf(theta);
 	return (sinf((1-t)*theta)*s)*u + (sinf(t*theta)*s)*v;
@@ -98,13 +98,13 @@ struct AffineMatrix {
 		};
 		struct {
 			// 
-			vec2 u, v, t;
+			Vec2 u, v, t;
 		};
 	};
 	
 
 	AffineMatrix() {}
-	AffineMatrix(vec2 au, vec2 av, vec2 at) : u(au), v(av), t(at) {}	
+	AffineMatrix(Vec2 au, Vec2 av, Vec2 at) : u(au), v(av), t(at) {}	
 
 	inline AffineMatrix operator *(const AffineMatrix& m) const {
 		return AffineMatrix(
@@ -121,18 +121,18 @@ struct AffineMatrix {
 		return *this = (*this) * m;
 	}
 
-	inline vec2 transformPoint(const vec2 p) const {
+	inline Vec2 transformPoint(const Vec2 p) const {
 		return vec(u.x*p.x + v.x*p.y + t.x,
 		           u.y*p.x + v.y*p.y + t.y);
 	}
 
-	inline vec2 transformVector(const vec2 w) const {
+	inline Vec2 transformVector(const Vec2 w) const {
 		return vec(u.x*w.x + v.x*w.y,
 		           u.y*w.x + v.y*w.y);
 	}
 
 	float radians() const { return atan2f(u.y, u.x); }
-	vec2 scale() const { return vec(u.magnitude(), v.magnitude()); }
+	Vec2 scale() const { return vec(u.magnitude(), v.magnitude()); }
 	
 	mat4f matrix() const {
 		return mat4f({
@@ -170,25 +170,25 @@ struct AffineMatrix {
 		*this = inverse();
 	}
 
-	vec2 invRigidTransformVector(const vec2 &w) const {
+	Vec2 invRigidTransformVector(const Vec2 &w) const {
 		return vec(a * w.x + d * w.y,
 			       b * w.x + e * w.y);
 	}
 
-	vec2 invRigidTransformPoint(const vec2& p) const {
+	Vec2 invRigidTransformPoint(const Vec2& p) const {
 		return invRigidTransformVector(p - t);
 	}
 
 };
 
 inline AffineMatrix matIdentity() { return AffineMatrix(vec(1,0), vec(0,1), vec(0,0)); }
-inline AffineMatrix matTranslation(vec2 t) { return AffineMatrix(vec(1,0), vec(0,1), t); }
+inline AffineMatrix matTranslation(Vec2 t) { return AffineMatrix(vec(1,0), vec(0,1), t); }
 inline AffineMatrix matTranslation(float x, float y) { return matTranslation(vec(x,y)); }
-inline AffineMatrix matAttitude(vec2 dir) { return AffineMatrix(dir, vec(-dir.y,dir.x), vec(0,0)); }
+inline AffineMatrix matAttitude(Vec2 dir) { return AffineMatrix(dir, vec(-dir.y,dir.x), vec(0,0)); }
 inline AffineMatrix matAttitude(float x, float y) { return matAttitude(vec(x,y)); }
 inline AffineMatrix matRotation(float radians) { return matAttitude(cosf(radians), sinf(radians)); }
 inline AffineMatrix matPolar(float r, float radians) { return matAttitude(r*cosf(radians), r*sinf(radians)); }
-inline AffineMatrix matScale(vec2 s) { return AffineMatrix(vec(s.x,0), vec(0,s.y), vec(0,0)); }
+inline AffineMatrix matScale(Vec2 s) { return AffineMatrix(vec(s.x,0), vec(0,s.y), vec(0,0)); }
 inline AffineMatrix matScale(float x, float y) { return matScale(vec(x,y)); }
 inline AffineMatrix matScale(float k) { return matScale(vec(k,k)); }
 inline AffineMatrix matForeshortened(const mat4f& matrix) {
@@ -211,18 +211,20 @@ inline double lerpd(double u, double v, double t) { return u + t * (v-u); }
 inline double inverseLerpd(double u, double v, double t) { return (t-u) / (v-u); }
 
 // complex multiplication
-inline vec2  cmul(vec2  u, vec2  v) { return vec2 (u.x*v.x-u.y*v.y, u.x*v.y+u.y*v.x); }
+inline Vec2  cmul(Vec2  u, Vec2  v) { return Vec2 (u.x*v.x-u.y*v.y, u.x*v.y+u.y*v.x); }
 
 // complex division
-inline vec2 cdiv(vec2 u, vec2 v) {
+inline Vec2 cdiv(Vec2 u, Vec2 v) {
 	float normInv = 1.0f/v.norm();
-	return vec2((u.x*v.x+u.y*v.y)*normInv, (v.x*u.y-u.x*v.y)*normInv);
+	return Vec2((u.x*v.x+u.y*v.y)*normInv, (v.x*u.y-u.x*v.y)*normInv);
 }
 
 // polar -> linear conversion
 
-inline vec2 polarVector(float radius, float radians) { return radius * vec2(cosf(radians), sinf(radians)); }
-inline vec2 unitVector(float radians) { return vec2(cosf(radians), sinf(radians)); }
+inline Vec2 polarVector(float radius, float radians) { return radius * Vec2(cosf(radians), sinf(radians)); }
+inline Vec2 unitVector(float radians) { return Vec2(cosf(radians), sinf(radians)); }
+
+inline int floorToInt(float x) { return floorf(x); }
 
 // easing functions
 inline float easeOut2(float u) {
@@ -248,7 +250,7 @@ inline float easeOutBack(float t) { t-=1.0; return t*t*((1.70158+1.0)*t + 1.7015
 
 inline float timeIndependentEasing(float easing, float dt) { return 1.0f - powf(1.0f-easing, 60.0f * dt); }
 inline float easeTowards(float curr, float target, float easing, float dt) { return curr + (target - curr) * timeIndependentEasing(easing, dt); }
-inline vec2 easeTowards(vec2 curr, vec2 target, float easing, float dt)    { return curr + (target - curr) * timeIndependentEasing(easing, dt); }
+inline Vec2 easeTowards(Vec2 curr, Vec2 target, float easing, float dt)    { return curr + (target - curr) * timeIndependentEasing(easing, dt); }
 
 
 // random number functions
@@ -283,21 +285,17 @@ inline float parabola(float x) {
 	return 1.0f - x * x;
 }
 
-inline int floorToInt(float x) {
-	return floorf(x);
-}
-
 // // line-line intersection test
-bool linearIntersection(vec2 u0, vec2 u1, vec2 v0, vec2 v1, float& u);
-bool linearIntersection(vec2 u0, vec2 u1, vec2 v0, vec2 v1, float& u, float& v);
+bool linearIntersection(Vec2 u0, Vec2 u1, Vec2 v0, Vec2 v1, float& u);
+bool linearIntersection(Vec2 u0, Vec2 u1, Vec2 v0, Vec2 v1, float& u, float& v);
 
 // // some common curves
-vec2 quadraticBezier(vec2 p0, vec2 p1, vec2 p2, float u);
-vec2 quadraticBezierDeriv(vec2 p0, vec2 p1, vec2 p2, float u);
-vec2 cubicBezier(vec2 p0, vec2 p1, vec2 p2, vec2 p3, float u);
-vec2 cubicBezierDeriv(vec2 p0, vec2 p1, vec2 p2, vec2 p3, float u);
-vec2 cubicHermite(vec2 p0, vec2 m0, vec2 p1, vec2 m1, float u);
-vec2 cubicHermiteDeriv(vec2 p0, vec2 m0, vec2 p1, vec2 m1, float u);
+Vec2 quadraticBezier(Vec2 p0, Vec2 p1, Vec2 p2, float u);
+Vec2 quadraticBezierDeriv(Vec2 p0, Vec2 p1, Vec2 p2, float u);
+Vec2 cubicBezier(Vec2 p0, Vec2 p1, Vec2 p2, Vec2 p3, float u);
+Vec2 cubicBezierDeriv(Vec2 p0, Vec2 p1, Vec2 p2, Vec2 p3, float u);
+Vec2 cubicHermite(Vec2 p0, Vec2 m0, Vec2 p1, Vec2 m1, float u);
+Vec2 cubicHermiteDeriv(Vec2 p0, Vec2 m0, Vec2 p1, Vec2 m1, float u);
 
 //--------------------------------------------------------------------------------
 // COLOR HELPER
@@ -345,3 +343,9 @@ inline Color lerp(Color a, Color b, float u) {
 		lerp(a.alpha(), b.alpha(), u)
 	);
 }
+
+inline Color easeTowards(Color curr, Color target, float easing, float dt) {
+	return lerp(curr, target, timeIndependentEasing(easing, dt));
+}
+
+

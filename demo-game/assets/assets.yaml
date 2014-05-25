@@ -15,13 +15,14 @@ texture/sprites:
 sample/jump: jump.wav
 sample/land: land.wav
 sample/footfall: footfall.wav
+sample/pickup: pickup.wav
+sample/shoot: shoot.wav
+sample/collide: collide.wav
 
 sample/button: button.wav
 sample/catturn: catturn.wav
 sample/death: death.wav
 sample/explosionSfx: explosion.wav
-sample/pickup: pickup.wav
-sample/throw: throw.wav
 
 tilemap/test: test.tmx
 
