@@ -8,9 +8,9 @@ kitten(data),
 debugDraw(false),
 done(false)
 {
-	auto color = gAssets.palette("global")->getColor(0);
+	auto color = lpAssets.palette("global")->getColor(0);
 	glClearColor(color.red(), color.green(), color.blue(), 0);
-	gView.setSizeWithHeight(8 * kPixelsPerMeter);
+	lpView.setSizeWithHeight(8 * kPixelsPerMeter);
 }
 
 void World::run() {
@@ -25,12 +25,12 @@ void World::run() {
 	
 	while(!done) {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		gTimer.tick();
+		lpTimer.tick();
 		input.enterFrame();
 		handleEvents();
 		tick();
 		draw();
-		SDL_GL_SwapWindow(gWindow);
+		SDL_GL_SwapWindow(lpWindow);
 	}
 }
 
@@ -43,24 +43,24 @@ void World::tick() {
 
 void World::draw() {
 	
-	gSprites.begin(gView);
-	auto bg = gAssets.image("background");
-	gSprites.drawImage(bg, vec(0, gView.height()-16));
-	gSprites.drawTilemap(gAssets.tilemap("test"));
+	lpSprites.begin(lpView);
+	auto bg = lpAssets.image("background");
+	lpSprites.drawImage(bg, vec(0, lpView.height()-16));
+	lpSprites.drawTilemap(lpAssets.tilemap("test"));
 	kitten.draw();
 	hero.draw();
-	gSprites.end();
+	lpSprites.end();
 
 	if (debugDraw) {
 		Viewport simView(
-			gView.size() * kMetersPerPixel,
-			gView.offset() * kMetersPerPixel
+			lpView.size() * kMetersPerPixel,
+			lpView.offset() * kMetersPerPixel
 		);
-		gLines.begin(simView);
+		lpLines.begin(simView);
 		kitten.debugDraw();
 		hero.debugDraw();
 		mask.debugDraw();
-		gLines.end();
+		lpLines.end();
 	}
 	
 }

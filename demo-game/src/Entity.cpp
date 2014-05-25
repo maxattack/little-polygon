@@ -18,7 +18,7 @@ bool Entity::overlaps(const Entity *other) {
 void Entity::move(int* hitX, int* hitY) {
 	*hitX = 0;
 	*hitY = 0;
-	auto displacement = speed * gTimer.deltaSeconds;
+	auto displacement = speed * lpTimer.deltaSeconds;
 	auto p1 = position + displacement;
 	if (gWorld.mask.check(p1 - halfSize, p1 + halfSize)) {
 		
@@ -80,5 +80,5 @@ void Entity::debugDraw() {
 //	for(int y=y0; y<=y1; ++y) {
 //		gLines.plotBox(vec(x,y), vec(x+1, y+1), rgb(0xaaaaaa));
 //	}
-	gLines.plotBox(position - halfSize, position + halfSize, rgb(0xffffff));
+	lpLines.plotBox(position - halfSize, position + halfSize, rgb(0xffffff));
 }

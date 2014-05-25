@@ -9,11 +9,11 @@ void Camera::quake() {
 
 void Camera::tick() {
 	if (quakeTime > 0.0f) {
-		quakeTime -= gTimer.deltaSeconds;
+		quakeTime -= lpTimer.deltaSeconds;
 		if (quakeTime <= 0.0f) {
-			gView.setOffset(position);
+			lpView.setOffset(position);
 		} else {
-			gView.setOffset(position + vec(0, -10.0f * quakeTime));
+			lpView.setOffset(position + vec(0, -10.0f * quakeTime));
 		}
 		
 	}

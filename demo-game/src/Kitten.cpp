@@ -6,7 +6,7 @@ Entity(
 	data.kittenPosition - vec(0, kSlop),
 	vec(kKittenWidth, kKittenHeight)
 ),
-img(gAssets.image("kitten")),
+img(lpAssets.image("kitten")),
 dir(1)
 {
 	startSentry();
@@ -65,18 +65,18 @@ void Kitten::tick() {
 
 void Kitten::tickPausing() {
 	if (timeout > 0.0f) {
-		timeout -= gTimer.deltaSeconds;
+		timeout -= lpTimer.deltaSeconds;
 		if (timeout <= 0.0f) {
 			dir = -dir;
 			animTime = 1.0f;
-			gAssets.sample("catturn")->play();
+			lpAssets.sample("catturn")->play();
 			status = Walking;
 		}
 	}
 }
 
 void Kitten::tickWalking() {
-	float dt = gTimer.deltaSeconds;
+	float dt = lpTimer.deltaSeconds;
 	animTime += kKittenStepsPerMeter * dt;
 	if (dir > 0) {
 		position.x += dt * kKittenMoveSpeed;
@@ -99,7 +99,7 @@ void Kitten::tickWalking() {
 
 void Kitten::tickCarried() {
 	if (carryProgress < 1.0f) {
-		carryProgress += gTimer.deltaSeconds / kKittenPickupTime;
+		carryProgress += lpTimer.deltaSeconds / kKittenPickupTime;
 		if (carryProgress > 1.0f) { carryProgress = 1.0f; }
 		position = lerp(carryBasePosition, gWorld.hero.carryAnchor(), carryProgress) +
 			vec(0, -parabola(carryProgress));
@@ -114,7 +114,7 @@ void Kitten::tickShooting() {
 	// travel until you hit a tile of the side of the screen
 	int hitX, hitY; move(&hitX, &hitY);
 	if (hitX) {
-		gAssets.sample("collide")->play();
+		lpAssets.sample("collide")->play();
 		speed.x = -dir * kKittenCollisionKickback;
 		speed.y = jumpImpulse(kKittenCollisionHeight);
 		status = Falling;
@@ -124,7 +124,7 @@ void Kitten::tickShooting() {
 
 
 void Kitten::tickFalling() {
-	speed.y += kGravity * gTimer.deltaSeconds;
+	speed.y += kGravity * lpTimer.deltaSeconds;
 	int hitX, hitY; move(&hitX, &hitY);
 	if (hitY > 0) {
 		startSentry();
@@ -132,7 +132,7 @@ void Kitten::tickFalling() {
 }
 
 void Kitten::draw() {
-	gSprites.drawImage(
+	lpSprites.drawImage(
 		img,
 		AffineMatrix(vec(dir, 0), vec(0, 1), pixelPosition()),
 		int(animTime) % 2,

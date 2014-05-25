@@ -7,7 +7,7 @@ Entity(
 	data.heroPosition - vec(0, kSlop),
 	vec(kHeroWidth, kHeroHeight)
 ),
-img(gAssets.image("hero")),
+img(lpAssets.image("hero")),
 dir(1),
 animTime(0.0f), yScale(1.0f),
 grounded(true),
@@ -16,7 +16,7 @@ tint(rgba(0))
 }
 
 void Hero::tick() {
-	float dt = gTimer.deltaSeconds;
+	float dt = lpTimer.deltaSeconds;
 	
 	// MOVEMENT
 	auto speedTarget = kHeroMoveSpeed * gWorld.input.dirX();
@@ -30,14 +30,14 @@ void Hero::tick() {
 	
 	// JUMPING
 	if (grounded && gWorld.input.pressedJump()) {
-		gAssets.sample("jump")->play();
+		lpAssets.sample("jump")->play();
 		speed.y = jumpImpulse(kHeroJumpHeight);
 	}
 	
 	// PICKUP KITTEN?
 	if (gWorld.kitten.canPickUp() && overlaps(&gWorld.kitten)) {
 		// PICKUP
-		gAssets.sample("pickup")->play();
+		lpAssets.sample("pickup")->play();
 		gWorld.kitten.pickup();
 		tint = rgb(0xffffff);
 	}
@@ -57,7 +57,7 @@ void Hero::tick() {
 			// LANDING FX
 			animTime = 0.0f;
 			yScale = 0.8f;
-			gAssets.sample("land")->play();
+			lpAssets.sample("land")->play();
 
 		} else {
 			
@@ -66,7 +66,7 @@ void Hero::tick() {
 			animTime += kHeroStepsPerMeter * dt * abs(speed.x);
 			int nextFrame = getFrame();
 			if (prevFrame == 1 && nextFrame == 0) {
-				gAssets.sample("footfall")->play();
+				lpAssets.sample("footfall")->play();
 			}
 
 			// EASE TO NORMAL SCALE
@@ -87,7 +87,7 @@ void Hero::tick() {
 void Hero::performAction() {
 	if (gWorld.kitten.isCarried()) {
 		// SHOOT
-		gAssets.sample("shoot")->play();
+		lpAssets.sample("shoot")->play();
 		gWorld.kitten.shoot();
 		speed.x -= dir * kHeroShootKickback;
 	}
@@ -95,7 +95,7 @@ void Hero::performAction() {
 }
 
 void Hero::draw() {
-	gSprites.drawImage(
+	lpSprites.drawImage(
 		img,
 		AffineMatrix(vec((2.0f-yScale) * dir,0), vec(0,yScale), pixelPosition()),
 		getFrame(),

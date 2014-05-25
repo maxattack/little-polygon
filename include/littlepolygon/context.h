@@ -58,12 +58,12 @@ inline void lpFinalize() {
 	delete GlobalContext::getInstancePtr();
 }
 
-#define gWindow  (GlobalContext::getInstance().sdl.window)
-#define gAssets  (GlobalContext::getInstance().assets)
-#define gView    (GlobalContext::getInstance().view)
-#define gTimer   (GlobalContext::getInstance().timer)
-#define gQueue   (GlobalContext::getInstance().queue)
-#define gLines   (GlobalContext::getInstance().lines)
-#define gSprites (GlobalContext::getInstance().sprites)
-#define gBatch   (GlobalContext::getInstance().batch)
-#define gSplines (GlobalContext::getInstance().splines)
+#define lpWindow  (GlobalContext::getInstance().sdl.window)
+#define lpAssets  (GlobalContext::getInstance().assets)
+#define lpView    (GlobalContext::getInstance().view)
+#define lpTimer   (GlobalContext::getInstance().timer)
+#define lpQueue   (GlobalContext::getInstance().queue)
+#define lpLines   (GlobalContext::getInstance().lines)
+#define lpSprites (GlobalContext::getInstance().sprites)
+#define lpBatch   (GlobalContext::getInstance().batch)
+#define lpSplines (GlobalContext::getInstance().splines)
