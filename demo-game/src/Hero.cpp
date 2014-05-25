@@ -33,6 +33,18 @@ void Hero::tick() {
 		speed.y = jumpImpulse(kHeroJumpHeight);
 	}
 	
+	// PICKUP KITTEN?
+	if (gWorld.kitten.canPickUp() && overlaps(&gWorld.kitten)) {
+		// PICKUP
+		gAssets.sample("pickup")->play();
+		gWorld.kitten.pickup();
+	}
+	
+	// ACTION?
+	if (gWorld.input.pressedAction()) {
+		performAction();
+	}
+	
 	// KINEMATICS
 	auto wasGrounded = grounded;
 	int hitX, hitY; move(&hitX, &hitY);
@@ -66,20 +78,6 @@ void Hero::tick() {
 		
 	}
 
-	// PICKUP KITTEN?
-	if (gWorld.kitten.canPickUp() && overlaps(&gWorld.kitten)) {
-		// PICKUP
-		gAssets.sample("pickup")->play();
-		gWorld.kitten.pickup();
-	}
-	
-	// ACTION?
-	if (gWorld.input.pressedAction()) {
-		performAction();
-	}
-	
-	
-	
 }
 
 void Hero::performAction() {

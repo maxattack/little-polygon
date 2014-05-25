@@ -134,6 +134,21 @@ private:
 };
 
 //--------------------------------------------------------------------------------
+// CAMERA CONTROLLER
+
+class Camera {
+private:
+	float quakeTime;
+	Vec2 position;
+	
+public:
+	Camera();
+
+	void quake();
+	void tick();
+};
+
+//--------------------------------------------------------------------------------
 // HERO ENTITY
 
 class Hero : public Entity {
@@ -206,6 +221,7 @@ class World : public Singleton<World> {
 public:
 	PlayerInput input;
 	TileMask mask;
+	Camera camera;
 	Hero hero;
 	Kitten kitten;
 	

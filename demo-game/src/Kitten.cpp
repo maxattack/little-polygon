@@ -118,6 +118,7 @@ void Kitten::tickShooting() {
 		speed.x = -dir * kKittenCollisionKickback;
 		speed.y = jumpImpulse(kKittenCollisionHeight);
 		status = Falling;
+		gWorld.camera.quake();
 	}
 }
 

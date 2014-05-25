@@ -15,6 +15,7 @@
 		5006D7F8193052DE00E79368 /* Kitten.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5006D7F6193052DE00E79368 /* Kitten.cpp */; };
 		5006D7FA1930586500E79368 /* TileMask.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5006D7F91930586500E79368 /* TileMask.cpp */; };
 		5006D7FC193060A100E79368 /* World.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5006D7FB193060A100E79368 /* World.cpp */; };
+		5006D7FE1931F40000E79368 /* Camera.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5006D7FD1931F40000E79368 /* Camera.cpp */; };
 		50333ABD192B02780098FFCC /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 50333ABC192B02780098FFCC /* Cocoa.framework */; };
 		506F674E192B08A200BDE41D /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 506F674D192B08A200BDE41D /* main.cpp */; };
 		506F6751192B092300BDE41D /* SDL2_mixer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 506F674F192B092300BDE41D /* SDL2_mixer.framework */; };
@@ -53,6 +54,7 @@
 		5006D7F6193052DE00E79368 /* Kitten.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Kitten.cpp; path = ../src/Kitten.cpp; sourceTree = "<group>"; };
 		5006D7F91930586500E79368 /* TileMask.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TileMask.cpp; path = ../src/TileMask.cpp; sourceTree = "<group>"; };
 		5006D7FB193060A100E79368 /* World.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = World.cpp; path = ../src/World.cpp; sourceTree = "<group>"; };
+		5006D7FD1931F40000E79368 /* Camera.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Camera.cpp; path = ../src/Camera.cpp; sourceTree = "<group>"; };
 		50333AB9192B02780098FFCC /* Little Polygon.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Little Polygon.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		50333ABC192B02780098FFCC /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		50333ABF192B02780098FFCC /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -166,6 +168,7 @@
 		506F674B192B080C00BDE41D /* Source */ = {
 			isa = PBXGroup;
 			children = (
+				5006D7FD1931F40000E79368 /* Camera.cpp */,
 				5006D7F21930529E00E79368 /* Entity.cpp */,
 				5006D7F11930452D00E79368 /* game.h */,
 				5006D7F5193052DE00E79368 /* Hero.cpp */,
@@ -277,6 +280,7 @@
 				5006D7FA1930586500E79368 /* TileMask.cpp in Sources */,
 				506F6769192B095800BDE41D /* GlobalContext.cpp in Sources */,
 				5006D7EC192D868F00E79368 /* LinePlotter.cpp in Sources */,
+				5006D7FE1931F40000E79368 /* Camera.cpp in Sources */,
 				506F6766192B095800BDE41D /* AssetBundle.cpp in Sources */,
 				506F6778192B095800BDE41D /* Viewport.cpp in Sources */,
 				5006D7FC193060A100E79368 /* World.cpp in Sources */,

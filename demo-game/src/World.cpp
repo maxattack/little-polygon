@@ -35,6 +35,7 @@ void World::run() {
 void World::tick() {
 	hero.tick();
 	kitten.tick();
+	camera.tick();
 	//gView.setOffset(gView.offset() + vec(4.0f * gTimer.deltaSeconds, 0));
 }
 
