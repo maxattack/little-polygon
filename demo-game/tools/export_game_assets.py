@@ -6,11 +6,14 @@ import tmx, assets, export_asset_bin, bintools
 # a special loader which also imports game-specific floor data
 
 def loadAssets(path):
+	# load asset script
 	result = assets.Assets(path)
+	
+	# load tilemap
 	tmap = tmx.TileMap(os.path.join(result.dir, 'test.tmx'))
 	w,h = tmap.size
 
-	# find opaque tiles
+	# find collision-mask tiles
 	opaque_ids = (0,)
 	opaque_coords = set(
 		(tile.x, tile.y)
@@ -18,7 +21,6 @@ def loadAssets(path):
 		for tile in layer.tiles 
 		if tile is not None and tile.id in opaque_ids
 	)
-
 	def is_opaque(x,y): return (x,y) in opaque_coords
 	bits = [ is_opaque(x,y) for y,x in xyrange(h,w) ]
 	nbytes = (len(bits)+7) // 8
@@ -44,6 +46,7 @@ def loadAssets(path):
 	kw,kh = kittenObj.size
 	kittenPosition = (kx + 0.5 * kw, ky + kh)
 
+	# construct world data
 	result.addUserdata(
 		'world',
 		'ffffii#',
