@@ -78,30 +78,22 @@ def export_native_assets(assetGroup, outpath, bpp):
 
 	# WRITE HEADERS
 
-	record_count = 1 # assert header
 	asset_header = []
 
 	for texture in textures:
-		asset_header.append((texture.hash, ASSET_TYPE_TEXTURE, record_count))
-		record_count += 1 # header
+		asset_header.append((texture.hash, ASSET_TYPE_TEXTURE, texture.id))
 		for image in texture.images:
-			asset_header.append((image.hash, ASSET_TYPE_IMAGE, record_count))
-			record_count += 2 # header and frame-array
+			asset_header.append((image.hash, ASSET_TYPE_IMAGE, image.id))
 	for font in fonts:
-		asset_header.append((font.hash, ASSET_TYPE_FONT, record_count))
-		record_count += 1 # font header
+		asset_header.append((font.hash, ASSET_TYPE_FONT, font.id))
 	for tilemap in tilemaps:
-		asset_header.append((tilemap.hash, ASSET_TYPE_TILEMAP, record_count))
-		record_count += 1 # tilemap header
+		asset_header.append((tilemap.hash, ASSET_TYPE_TILEMAP, tilemap.id))
 	for sample in samples:
-		asset_header.append((sample.hash, ASSET_TYPE_SAMPLE, record_count))
-		record_count += 1 # sample record
+		asset_header.append((sample.hash, ASSET_TYPE_SAMPLE, sample.id))
 	for palette in palettes:
-		asset_header.append((palette.hash, ASSET_TYPE_PALETTE, record_count))
-		record_count += 1 # palette record
+		asset_header.append((palette.hash, ASSET_TYPE_PALETTE, palette.id))
 	for data in userdata:
-		asset_header.append((data.hash, ASSET_TYPE_USERDATA, record_count))
-		record_count += 1 # data header
+		asset_header.append((data.hash, ASSET_TYPE_USERDATA, data.id))
 
 	# sort by hash, so we can bin-search at runtime
 	asset_header.sort(key = lambda tup: tup[0])
@@ -126,7 +118,7 @@ def export_native_assets(assetGroup, outpath, bpp):
 		records.append(bintools.Record(
 			texture.id,
 			'#iiIII', 
-			(header_count + idx, w, h, len(texture.data), 0, texture.flags))
+			("%s_data" % texture.id, w, h, len(texture.data), 0, texture.flags))
 		)
 		for image in texture.images:
 			print "Encoding Image(%s)" % image.id
@@ -139,7 +131,7 @@ def export_native_assets(assetGroup, outpath, bpp):
 			# NumFrames  : int
 			records.append(bintools.Record(
 				image.id,
-				'#iiiii', (texture_location, image.w, image.h, image.px, image.py, nframes)
+				'#iiiii', (texture.id, image.w, image.h, image.px, image.py, nframes)
 			))
 			format = 'ffffffffiiii' * nframes
 			parameters = tuple()
@@ -203,7 +195,7 @@ def export_native_assets(assetGroup, outpath, bpp):
 			'i' + 'iii'*len(fontsheet.CHARSET) + '#iiIII', \
 			(font.height,) + \
 			tuple(comp for gmetric in font.metrics for comp in gmetric) + \
-			(header_count + len(textures) + idx,) + font.texture.size + (len(font.data), 0, 0)
+			("%s_data" % font.id,) + font.texture.size + (len(font.data), 0, 0)
 		))
 
 	for idx,tilemap in enumerate(tilemaps):
@@ -222,30 +214,28 @@ def export_native_assets(assetGroup, outpath, bpp):
 		# TA:TextureHandle : uint (0)
 		# TA:flags         : uint (0)
 		mw, mh = tilemap.mapSize
-		pData = header_count + len(textures) + len(fonts) + 2*idx
-		pTexData = header_count + len(textures) + len(fonts) + 2*idx + 1
 		records.append(bintools.Record(
 			tilemap.id,
 			'P#IIIII' + '#iiIII',
-			(0, pData, tilemap.tw, tilemap.th, mw, mh, len(tilemap.mapData)) + \
-			(pTexData,) + tilemap.atlasImg.size + (len(tilemap.atlasData), 0, 0)
+			(0, "%s_mapData" % tilemap.id, tilemap.tw, tilemap.th, mw, mh, len(tilemap.mapData)) + \
+			("%s_atlasData" % tilemap.id,) + tilemap.atlasImg.size + (len(tilemap.atlasData), 0, 0)
 		))
 
 
 	for idx,sample in enumerate(samples):
 		print 'Encoding Sample(%s)' % sample.id
+		# bufferHandle : uint (0)
 		# *data
 		# channelCount  : int
 		# sampleWidth   : int
 		# freq          : int
 		# length        : uint
 		# compressedLen : uint
-		# bufferHandle : uint (0)
 		records.append(bintools.Record(
 			sample.id,
 			'P#iiiII', (
 				0,
-				header_count + len(textures) + len(fonts) + 2*len(tilemaps) + idx,
+				"%s_data" % sample.id,
 				sample.channel_count, 
 				sample.sample_width, 
 				sample.freq, 
