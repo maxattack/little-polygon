@@ -23,18 +23,17 @@
 #include "splines.h"
 #include "utils.h"
 
-
-class GlobalContext : public Singleton<GlobalContext> {
-private:
-	struct SDLContext {
-		SDL_Window *window;
-		SDL_GLContext gl;
-		SDLContext(const char *caption, int w, int h);
-		~SDLContext();
-	};
-
+class SDLContext {
 public:
-	SDLContext sdl;
+	SDL_Window *window;
+	SDL_GLContext gl;
+	
+	SDLContext(const char *caption, int w, int h);
+	~SDLContext();
+};
+
+class LPContext : public Singleton<LPContext>, public SDLContext {
+public:
 	AssetBundle assets;
 	Viewport view;
 	Timer timer;
@@ -44,26 +43,23 @@ public:
 	SpritePlotter sprites;
 	SplinePlotter splines;
 	
-
-public:
-	GlobalContext(const char *caption, int w, int h, const char *assetPath, int plotterCap, int linesCap);
-	~GlobalContext();
+	LPContext(const char *caption, int w, int h, const char *assetPath, int plotterCap, int linesCap);
 };
 
 inline void lpInitialize(const char *caption, int w, int h, const char *assetPath=0, int plotterCap=1024, int linesCap=128) {
-	new GlobalContext(caption, w, h, assetPath, plotterCap, linesCap);
+	new LPContext(caption, w, h, assetPath, plotterCap, linesCap);
 }
 
 inline void lpFinalize() {
-	delete GlobalContext::getInstancePtr();
+	delete LPContext::getInstancePtr();
 }
 
-#define lpWindow  (GlobalContext::getInstance().sdl.window)
-#define lpAssets  (GlobalContext::getInstance().assets)
-#define lpView    (GlobalContext::getInstance().view)
-#define lpTimer   (GlobalContext::getInstance().timer)
-#define lpQueue   (GlobalContext::getInstance().queue)
-#define lpLines   (GlobalContext::getInstance().lines)
-#define lpSprites (GlobalContext::getInstance().sprites)
-#define lpBatch   (GlobalContext::getInstance().batch)
-#define lpSplines (GlobalContext::getInstance().splines)
+#define lpWindow  (LPContext::getInstance().window)
+#define lpAssets  (LPContext::getInstance().assets)
+#define lpView    (LPContext::getInstance().view)
+#define lpTimer   (LPContext::getInstance().timer)
+#define lpQueue   (LPContext::getInstance().queue)
+#define lpLines   (LPContext::getInstance().lines)
+#define lpSprites (LPContext::getInstance().sprites)
+#define lpBatch   (LPContext::getInstance().batch)
+#define lpSplines (LPContext::getInstance().splines)

@@ -30,8 +30,12 @@ void TilemapAsset::init() {
 
 void TilemapAsset::release() {
 	tileAtlas.release();
-	if (data) {
-		free(data);
-		data = 0;
-	}
+	free(data);
+	data = 0;
+}
+
+void TilemapAsset::reload() {
+	free(data);
+	data = 0;
+	init();
 }

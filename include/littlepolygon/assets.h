@@ -97,11 +97,11 @@ struct uint8_pair_t {
 
 struct TilemapAsset {
 	uint8_pair_t *data;
-	void *compressedData;   // zlib compressed tilemap buffer
-	uint32_t tw, th,        // the size of the individual tiles
-		mw, mh,             // the size of the tilemap
-		compressedSize;     // the byte-length of the compressed buffer
-	TextureAsset tileAtlas; // a texture-atlas of all the tiles
+	void *compressedData;    // zlib compressed tilemap buffer
+	uint32_t tw, th,         // the size of the individual tiles
+	         mw, mh,         // the size of the tilemap
+	         compressedSize; // the byte-length of the compressed buffer
+	TextureAsset tileAtlas;  // a texture-atlas of all the tiles
 
 	bool intialized() const { return data != 0; }
 
@@ -117,6 +117,8 @@ struct TilemapAsset {
 
 	void init();
 	void release();
+	
+	void reload();
 };
 
 struct GlyphAsset {
@@ -173,7 +175,7 @@ struct PaletteAsset {
 	}
 };
 
-struct RawAsset {
+struct RawUserdata {
 	uint32_t size;
 	
 	void *data() const { return (void*)(this+1); }
@@ -185,7 +187,7 @@ struct RawAsset {
 	const T& get() { ASSERT(size == sizeof(T)); return *((T*)(this+1)); }
 };
 
-struct CompressedAsset {
+struct CompressedUserdata {
 	uint32_t size;
 	uint32_t compressedSize;
 	void *compressedData;

@@ -56,7 +56,7 @@ static Viewport makeView() {
 //}
 //#endif
 
-GlobalContext::SDLContext::SDLContext(const char *caption, int w, int h) {
+SDLContext::SDLContext(const char *caption, int w, int h) {
 	
 	if (w == 0) {
 		// iphone 5 resolution :P
@@ -92,16 +92,16 @@ GlobalContext::SDLContext::SDLContext(const char *caption, int w, int h) {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
-GlobalContext::SDLContext::~SDLContext() {
+SDLContext::~SDLContext() {
 	SDL_GL_DeleteContext(gl);
 	SDL_DestroyWindow(window);
 	Mix_CloseAudio();
 	SDL_Quit();
 }
 
-GlobalContext::GlobalContext(const char *caption, int w, int h, const char *assetPath, int plotterCap, int linesCap) :
-Singleton<GlobalContext>(this),
-sdl(caption, w, h),
+LPContext::LPContext(const char *caption, int w, int h, const char *assetPath, int plotterCap, int linesCap) :
+Singleton<LPContext>(this),
+SDLContext(caption, w, h),
 assets(assetPath),
 view(makeView()),
 plotter(plotterCap),
@@ -109,9 +109,4 @@ lines(linesCap),
 sprites(&plotter),
 splines(&plotter)
 {
-}
-
-GlobalContext::~GlobalContext() {
-  Mix_CloseAudio();
-  SDL_Quit();	
 }
