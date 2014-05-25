@@ -81,7 +81,7 @@ void Hero::tick() {
 	}
 	
 	// FADE OUT TINT
-	tint = easeTowards(tint, rgba(0xffffff00), 0.1f, dt);
+	tint = easeTowards(tint, rgba(0xffffff00), 0.15f, dt);
 }
 
 void Hero::performAction() {
