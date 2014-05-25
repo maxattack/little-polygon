@@ -12,12 +12,14 @@ texture/sprites:
   image/btnRight: { path: button_right.psd, pivot: center }
   image/btnShift: { path: button_shift.psd, pivot: center }
 
+sample/jump: jump.wav
+sample/land: land.wav
+sample/footfall: footfall.wav
+
 sample/button: button.wav
 sample/catturn: catturn.wav
 sample/death: death.wav
 sample/explosionSfx: explosion.wav
-sample/jump: jump.wav
-sample/land: land.wav
 sample/pickup: pickup.wav
 sample/throw: throw.wav
 

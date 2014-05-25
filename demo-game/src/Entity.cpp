@@ -1,66 +1,73 @@
 #include "game.h"
 
 Entity::Entity(vec2 aPos, vec2 aSize) :
-mPosition(aPos.x, aPos.y - 0.5f * aSize.y),
-mSpeed(0,0),
-mOffset(0, 0.5f * aSize.y),
-mHalfSize(0.5f * aSize)
+position(aPos.x, aPos.y - 0.5f * aSize.y),
+speed(0,0),
+anchor(0, 0.5f * aSize.y),
+halfSize(0.5f * aSize)
 {
+}
+
+bool Entity::overlaps(const Entity *other) {
+	auto dx = abs(position.x - other->position.x);
+	auto dy = abs(position.y - other->position.y);
+	return dx < halfSize.x + other->halfSize.x &&
+		dy < halfSize.y + other->halfSize.y;
 }
 
 void Entity::move(int* hitX, int* hitY) {
 	*hitX = 0;
 	*hitY = 0;
-	auto displacement = mSpeed * gTimer.deltaSeconds;
-	auto p1 = mPosition + displacement;
-	if (gWorld.mask.check(p1 - mHalfSize, p1 + mHalfSize)) {
+	auto displacement = speed * gTimer.deltaSeconds;
+	auto p1 = position + displacement;
+	if (gWorld.mask.check(p1 - halfSize, p1 + halfSize)) {
 		
 		// COLLISION, RESOLVE AXES SEPARATELY
 		if (displacement.y > kDeadZone) {
 			// MOVE DOWN
 			float dy;
-			if (gWorld.mask.checkBottom(vec(left(), mPosition.y), vec(right(), bottom()+displacement.y), &dy)) {
-				mPosition.y += std::max(displacement.y + dy, 0.0f);
+			if (gWorld.mask.checkBottom(vec(left(), position.y), vec(right(), bottom()+displacement.y), &dy)) {
+				position.y += std::max(displacement.y + dy, 0.0f);
 				*hitY = 1;
-				mSpeed.y = 0.0f;
+				speed.y = 0.0f;
 			} else {
-				mPosition.y += displacement.y;
+				position.y += displacement.y;
 			}
 		} else if (displacement.y < -kDeadZone) {
 			// MOVE UP
 			float dy;
-			if (gWorld.mask.checkTop(vec(left(), top() + displacement.y), vec(right(), mPosition.y), &dy)) {
-				mPosition.y += std::min(displacement.y + dy, 0.0f);
+			if (gWorld.mask.checkTop(vec(left(), top() + displacement.y), vec(right(), position.y), &dy)) {
+				position.y += std::min(displacement.y + dy, 0.0f);
 				*hitY = -1;
-				mSpeed.y = 0.0f;
+				speed.y = 0.0f;
 			} else {
-				mPosition.y += displacement.y;
+				position.y += displacement.y;
 			}
 		}
 		if (displacement.x > kDeadZone) {
 			// MOVE RIGHT
 			float dx;
-			if (gWorld.mask.checkRight(vec(mPosition.x, top()), vec(right() + displacement.x, bottom()), &dx)) {
-				mPosition.x += std::max(displacement.x + dx, 0.0f);
+			if (gWorld.mask.checkRight(vec(position.x, top()), vec(right() + displacement.x, bottom()), &dx)) {
+				position.x += std::max(displacement.x + dx, 0.0f);
 				*hitX = 1;
-				mSpeed.x = 0.0f;
+				speed.x = 0.0f;
 			} else {
-				mPosition.x += displacement.x;
+				position.x += displacement.x;
 			}
 		} else if (displacement.x < -kDeadZone) {
 			// MOVE LEFT
 			float dx;
-			if (gWorld.mask.checkLeft(vec(left() + displacement.x, top()), vec(mPosition.x, bottom()), &dx)) {
-				mPosition.x += std::min(displacement.x + dx, 0.0f);
+			if (gWorld.mask.checkLeft(vec(left() + displacement.x, top()), vec(position.x, bottom()), &dx)) {
+				position.x += std::min(displacement.x + dx, 0.0f);
 				*hitX = -1;
-				mSpeed.x = 0.0f;
+				speed.x = 0.0f;
 			} else {
-				mPosition.x += displacement.x;
+				position.x += displacement.x;
 			}
 		}
 	} else {
 		// FREEFALL
-		mPosition = p1;
+		position = p1;
 	}
 }
 
@@ -73,5 +80,5 @@ void Entity::debugDraw() {
 //	for(int y=y0; y<=y1; ++y) {
 //		gLines.plotBox(vec(x,y), vec(x+1, y+1), rgb(0xaaaaaa));
 //	}
-	gLines.plotBox(mPosition - mHalfSize, mPosition + mHalfSize, rgb(0xffffff));
+	gLines.plotBox(position - halfSize, position + halfSize, rgb(0xffffff));
 }

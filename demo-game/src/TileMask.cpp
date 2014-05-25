@@ -22,7 +22,7 @@ TileMask::~TileMask() {
 }
 
 bool TileMask::get(int x, int y) const {
-	return x < 0 || x >= mWidth || rawGet(x,y);
+	return x < 0 || x >= mWidth || (y >= 0 && y < mHeight && rawGet(x,y));
 }
 
 bool TileMask::rawGet(int x, int y) const {
@@ -146,6 +146,10 @@ void TileMask::debugDraw() {
 		}
 	}
 		
+}
+
+bool TileMask::isFloor(int x, int y) const {
+	return !get(x,y) && get(x, y+1);
 }
 
 

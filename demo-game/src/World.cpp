@@ -8,10 +8,19 @@ done(false)
 {
 	auto color = gAssets.palette("global")->getColor(0);
 	glClearColor(color.red(), color.green(), color.blue(), 0);
-	gView.setSizeWithWidth(20 * kPixelsPerMeter);
+	gView.setSizeWithHeight(8 * kPixelsPerMeter);
 }
 
 void World::run() {
+	
+	for(int i=0; i<MIX_CHANNELS; ++i) {
+		Mix_Volume(i, 33);
+	}
+//	auto mus = Mix_LoadMUS("song.mid");
+//	if (mus) {
+//		Mix_PlayMusic(mus, -1);
+//	}
+	
 	while(!done) {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		gTimer.tick();
@@ -32,6 +41,8 @@ void World::tick() {
 void World::draw() {
 	
 	gSprites.begin(gView);
+	auto bg = gAssets.image("background");
+	gSprites.drawImage(bg, vec(0, gView.height()-16));
 	gSprites.drawTilemap(gAssets.tilemap("test"));
 	kitten.draw();
 	hero.draw();

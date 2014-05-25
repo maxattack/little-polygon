@@ -2,13 +2,14 @@
 
 PlayerInput::PlayerInput() :
 mDirX(0), mDirY(0),
-mPressedJump(false)
+mPressedJump(false), mPressedAction(false)
 {
 	
 }
 
 void PlayerInput::enterFrame() {
 	mPressedJump = false;
+	mPressedAction = false;
 }
 
 bool PlayerInput::handleEvent(const SDL_Event& event) {
@@ -35,6 +36,7 @@ bool PlayerInput::handleKeyDown(const SDL_KeyboardEvent& event) {
 		
 		case SDLK_DOWN:
 		case SDLK_s:
+			mPressedAction = true;
 			mDirY = 1;
 			return true;
 		
@@ -48,6 +50,10 @@ bool PlayerInput::handleKeyDown(const SDL_KeyboardEvent& event) {
 			mPressedJump = true;
 			return true;
 		
+		case SDLK_z:
+			mPressedAction = true;
+			return true;
+			
 		default:
 			return false;
 			

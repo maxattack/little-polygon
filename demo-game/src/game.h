@@ -7,12 +7,16 @@
 #define kPixelsPerMeter			(16.0f)
 #define kMetersPerPixel			(1.0f/16.0f)
 #define kHeroHeight				(0.8f)
-#define kHeroWidth 				(0.6f)
+#define kHeroWidth 				(0.5f)
 #define kHeroMoveSpeed  		(5.0f)
 #define kHeroJumpHeight 		(2.5f)
 #define kHeroStepsPerMeter		(3.0f)
 #define kKittenWidth			(0.8f)
-#define kKittenHeight			(0.6f)
+#define kKittenHeight			(0.5f)
+#define kKittenMoveSpeed        (2.0f)
+#define kKittenPause            (1.0f)
+#define kKittenStepsPerMeter    (6.6f)
+#define kKittenPickupTime       (0.2f)
 #define kSlop					(0.0001f)
 #define kDeadZone       		(0.0001f)
 #define kGravity        		(72.0f)
@@ -54,6 +58,8 @@ public:
 
 	void debugDraw();
 	
+	bool isFloor(int x, int y) const;
+	
 private:
 	bool rawGet(int x, int y) const;
 	void getIndices(int x, int y, int *byteIdx, int *localIdx) const;
@@ -63,33 +69,26 @@ private:
 // BASE MOVEABLE ENTITY
 
 class Entity {
-private:
-	vec2 mPosition;
-	vec2 mSpeed;
-	vec2 mOffset;
-	vec2 mHalfSize;
+public:
+	vec2 position;
+	vec2 speed;
+	vec2 anchor;
+	vec2 halfSize;
 	
 public:
-
+	// POSITION AT ANCHOR'S WORLD-COORDINATE
 	Entity(vec2 position, vec2 size);
 	
-	float left() const { return mPosition.x - mHalfSize.x; }
-	float right() const { return mPosition.x + mHalfSize.x; }
-	float bottom() const { return mPosition.y + mHalfSize.y; }
-	float top() const { return mPosition.y - mHalfSize.y; }
+	// GETTERS
+	float left() const { return position.x - halfSize.x; }
+	float right() const { return position.x + halfSize.x; }
+	float bottom() const { return position.y + halfSize.y; }
+	float top() const { return position.y - halfSize.y; }
+	vec2 pixelPosition() const { return kPixelsPerMeter * (position+anchor); }
 	
-	vec2 halfSize() const { return mHalfSize; }
-	vec2 centerPosition() const { return mPosition; }
-	vec2 pixelPosition() const { return kPixelsPerMeter * (mPosition+mOffset); }
-	vec2 speed() { return mSpeed; }
-	float speedX() const { return mSpeed.x; }
-	float speedY() const { return mSpeed.y; }
-	vec2 *pspeed() { return &mSpeed; }
+	bool overlaps(const Entity *other);
 	
-	void setPosition(vec2 p) { mPosition = p; }
-	void setSpeed(vec2 s) { mSpeed = s; }
-	void addSpeed(vec2 s) { mSpeed += s; }
-
+	// MOVE BASED ON SPEED, COLLIDERS
 	void move(int* hitX, int* hitY);
 	
 	void debugDraw();
@@ -101,7 +100,7 @@ public:
 class PlayerInput {
 private:
 	int mDirX, mDirY;
-	int mPressedJump;
+	int mPressedJump, mPressedAction;
 
 public:
 	PlayerInput();
@@ -117,6 +116,7 @@ public:
 	bool pressingUp() const { return mDirY < 0; }
 	bool pressingDown() const { return mDirY > 0; }
 	bool pressedJump() const { return mPressedJump; }
+	bool pressedAction() const { return mPressedAction; }
 	
 	// METHODS
 	void enterFrame();
@@ -135,33 +135,57 @@ private:
 	ImageAsset *img;
 	int dir;
 	float animTime, yScale;
-	bool grounded;
+	bool grounded, holdingKitten;
 	
 public:
 	Hero();
 	
+	// METHODS
 	void tick();
 	void draw();
 	
+	// GETTERS
 	bool isGrounded() const { return grounded; }
 	bool isStandingStill() const;
+	int carryDirection() const { return dir; }
+	vec2 carryAnchor() const;
 	
 private:
 	int getFrame() const;
+	void performAction();
 };
 
 //--------------------------------------------------------------------------------
 // KITTEN ENTITY
 
 class Kitten : public Entity {
+public:
+	enum Status { Pausing, Walking, Carried };
 private:
 	ImageAsset *img;
+	Status status;
+	int dir;
+	float timeout, animTime;
+	float sentryLeft, sentryRight;
+
+	vec2 carryBasePosition;
+	float carryProgress;
+	
 	
 public:
 	Kitten();
+
+	bool isCarried() const { return status == Carried; }
+	
+	void pickup();
 	
 	void tick();
 	void draw();
+
+private:
+	void tickPausing();
+	void tickWalking();
+	void tickCarried();
 };
 
 //--------------------------------------------------------------------------------
