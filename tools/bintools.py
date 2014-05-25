@@ -58,9 +58,9 @@ def export(records, **kwargs):
 	format_pointer_type = 'I' if pointer_width == 32 else 'Q'
 
 	# map keys to indices, update records to replace keys with indexes
-	key_to_index = dict((record.key,i) for i,record in enumerate(records))
-	if len(key_to_index) < len(records):
-		raise Error("bin record IDs not unique")
+	key_to_index = dict((record.key,i) for i,record in enumerate(records) if record.key)
+	# if len(key_to_index) < len(records):
+	# 	raise Error("bin record IDs not unique")
 	def convert_pointer_val(val): return key_to_index[val] if isinstance(val,str) else val
 	def convert_pointer_keys_to_indexes(record):
 		new_params = tuple(

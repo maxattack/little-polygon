@@ -31,28 +31,24 @@ def loadAssets(path):
 			localIdx = i - 8 * byteIdx
 			bytes[byteIdx] |= (1<<localIdx)
 
-	result.addUserdata(
-		'world.mask',
-		struct.pack('ii' + 'B'*nbytes, *([w, h] + bytes))
-	)
 
-	# find player position
+	# find hero position
 	heroObj = next( obj for obj in tmap.objects if obj.type == 'hero' )
 	hx,hy = heroObj.position
 	hw,hh = heroObj.size
-
-	result.addUserdata(
-		'hero.position',
-		struct.pack('ff', hx + 0.5 * hw, hy + hh)
-	)
-
+	heroPosition = (hx + 0.5 * hw, hy + hh)
+	
 	# find kitten position
 	kittenObj = next( obj for obj in tmap.objects if obj.type == 'kitten' )
 	kx,ky = kittenObj.position
 	kw,kh = kittenObj.size
+	kittenPosition = (kx + 0.5 * kw, ky + kh)
+
 	result.addUserdata(
-		'kitten.position',
-		struct.pack('ff', kx + 0.5 * kw, ky + kh)
+		'world',
+		'ffffii#',
+		heroPosition + kittenPosition + tmap.size + ('world.maskBytes',),
+		assets.raw_userdata('world.maskBytes', bytes)
 	)
 
 	return result

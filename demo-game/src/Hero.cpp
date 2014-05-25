@@ -2,9 +2,9 @@
 
 
 
-Hero::Hero() :
+Hero::Hero(const WorldData& data) :
 Entity(
-	gAssets.userdata("hero.position")->get<Vec2>() - vec(0, kSlop),
+	data.heroPosition - vec(0, kSlop),
 	vec(kHeroWidth, kHeroHeight)
 ),
 img(gAssets.image("hero")),

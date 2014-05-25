@@ -1,20 +1,12 @@
 #include "game.h"
 
-TileMask::TileMask(int w, int h) :
-mWidth(w),
-mHeight(h)
-{
-	int nbytes = (w * h + 7) >> 3;
-	bytes = (uint8_t*) malloc(nbytes);
-}
-
-TileMask::TileMask(const Data* data) :
-mWidth(data->w),
-mHeight(data->h)
+TileMask::TileMask(const WorldData& data) :
+mWidth(data.maskWidth),
+mHeight(data.maskHeight)
 {
 	int nbytes = (mWidth * mHeight + 7) >> 3;
 	bytes = (uint8_t*) malloc(nbytes);
-	memcpy(bytes, data->bytes, nbytes);
+	memcpy(bytes, data.maskBytes, nbytes);
 }
 
 TileMask::~TileMask() {

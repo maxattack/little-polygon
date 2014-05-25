@@ -173,21 +173,24 @@ struct PaletteAsset {
 	}
 };
 
-struct UserdataAsset {
-	// A slice of plain old data that can represent anything - structured game assets,
-	// UTF8 strings, etc.  Data immediately follows the initial size term.
-
-	// TODO: Add support for optionally-compressed userdata ("always add value"!).
-
-	size_t size; // length of the data, in bytes
-
+struct RawAsset {
+	uint32_t size;
+	
 	void *data() const { return (void*)(this+1); }
 
-	template<typename T> 
+	template<typename T>
 	const T* as() { return (T*)(this+1); }
-
-	template<typename T> 
+	
+	template<typename T>
 	const T& get() { ASSERT(size == sizeof(T)); return *((T*)(this+1)); }
+};
+
+struct CompressedAsset {
+	uint32_t size;
+	uint32_t compressedSize;
+	void *compressedData;
+	
+	void inflate(void* result);
 };
 
 //------------------------------------------------------------------------------
@@ -232,7 +235,9 @@ public:
 	FontAsset *font(const char *name) { ASSET_RESULT_VERIFY(font(hash(name))) }
 	SampleAsset *sample(const char *name) { ASSET_RESULT_VERIFY(sample(hash(name))) }
 	PaletteAsset *palette(const char *name) { ASSET_RESULT_VERIFY(palette(hash(name))) }
-	UserdataAsset *userdata(const char *name) { ASSET_RESULT_VERIFY(userdata(hash(name))) }
+	
+	template<typename T>
+	T *userdata(const char *name) { ASSET_RESULT_VERIFY(userdata<T>(hash(name))) }
 
 	// lookup assets by hash
 	TextureAsset *texture(uint32_t hash) { return (TextureAsset*) findHeader(hash, ASSET_TYPE_TEXTURE); }
@@ -241,7 +246,9 @@ public:
 	FontAsset *font(uint32_t hash) { return (FontAsset*) findHeader(hash, ASSET_TYPE_FONT); }
 	SampleAsset *sample(uint32_t hash) { return (SampleAsset*) findHeader(hash, ASSET_TYPE_SAMPLE); }
 	PaletteAsset *palette(uint32_t hash) { return (PaletteAsset*) findHeader(hash, ASSET_TYPE_PALETTE); }
-	UserdataAsset *userdata(uint32_t hash) { return (UserdataAsset*) findHeader(hash, ASSET_TYPE_USERDATA); }
+	
+	template<typename T>
+	T *userdata(uint32_t hash) { return (T*) findHeader(hash, ASSET_TYPE_USERDATA); }
 
 	#undef ASSET_RESULT_VERIFY
 

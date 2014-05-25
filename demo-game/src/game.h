@@ -26,23 +26,31 @@
 #define kGravity        			(72.0f)
 
 //--------------------------------------------------------------------------------
+// WORLD ASSET
+
+struct WorldData {
+
+	// INITIAL LOCATIONS
+	Vec2 heroPosition;
+	Vec2 kittenPosition;
+
+	// TILE MASK
+	int maskWidth, maskHeight;
+	uint8_t *maskBytes;
+	
+};
+
+
+//--------------------------------------------------------------------------------
 // TILE MASK (for collisions)
 
 class TileMask {
-public:
-	struct Data {
-		int w, h;
-		uint8_t bytes[1]; // actually variable-length, bounded by w and h
-		                  // included like this for alignment purposes.
-	};
-	
 private:
 	int mWidth, mHeight;
 	uint8_t *bytes;
 	
 public:
-	TileMask(int w, int h);
-	TileMask(const Data* data);
+	TileMask(const WorldData& data);
 	~TileMask();
 	
 	int width() const { return mWidth; }
@@ -160,7 +168,7 @@ private:
 	Color tint;
 	
 public:
-	Hero();
+	Hero(const WorldData& data);
 	
 	// METHODS
 	void tick();
@@ -195,7 +203,7 @@ private:
 	
 	
 public:
-	Kitten();
+	Kitten(const WorldData& data);
 
 	bool canPickUp() const { return status == Pausing || status == Walking || status == Falling; }
 	bool isCarried() const { return status == Carried; }
@@ -231,7 +239,7 @@ private:
 	bool done;
 	
 public:
-	World();
+	World(const WorldData& data);
 	void run();
 
 private:

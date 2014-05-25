@@ -1,8 +1,10 @@
 #include "game.h"
 
-World::World() :
+World::World(const WorldData& data) :
 Singleton<World>(this),
-mask(gAssets.userdata("world.mask")->as<TileMask::Data>()),
+mask(data),
+hero(data),
+kitten(data),
 debugDraw(false),
 done(false)
 {

@@ -47,21 +47,21 @@ def export_native_assets(assetGroup, outpath, bpp):
 	# ASSET FILE FORMAT
 	# {
 	#   asset_hdr_count
-	# 	asset_hdr[]
-	# 	{
-	# 		texture_hdr
-	# 		{
-	#			image_hdr
-	#			frame_hdr[]
-	#		}[]
-	# 	}[]
-	#	font_hdr[]
-	#	tilemap_hdr[]
-	# 	sample_hdr[]
+	#   asset_hdr[]
+	#   {
+	#       texture_hdr
+	#       {
+	#           image_hdr
+	#           frame_hdr[]
+	#       }[]
+	#   }[]
+	#   font_hdr[]
+	#   tilemap_hdr[]
+	#   sample_hdr[]
 	#   userdata_hdr[]
-	# 	compressed_atlas_texture_data[]
-	#	compressed_font_texture_data[]
-	# 	compressed_sample_data[]
+	#   compressed_atlas_texture_data[]
+	#   compressed_font_texture_data[]
+	#   compressed_sample_data[]
 	# }
 	# 
 	################################################################################
@@ -258,11 +258,7 @@ def export_native_assets(assetGroup, outpath, bpp):
 		print 'Writing Userdata (%s)' % data.id
 		# length  : size_t
 		# data    : byte[]
-		records.append(bintools.Record(
-			data.id,
-			('I' if bpp == 32 else 'Q') + ('B' * len(data.data)),
-			[ len(data.data) ] + array.array('B', data.data).tolist()
-		))
+		records += data.records
 
 	# WRITE COMPRESSED DATA BLOCKS
 

@@ -1,9 +1,9 @@
 #include "game.h"
 
 
-Kitten::Kitten() :
+Kitten::Kitten(const WorldData& data) :
 Entity(
-	gAssets.userdata("kitten.position")->get<Vec2>() - vec(0, kSlop),
+	data.kittenPosition - vec(0, kSlop),
 	vec(kKittenWidth, kKittenHeight)
 ),
 img(gAssets.image("kitten")),

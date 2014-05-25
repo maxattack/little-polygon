@@ -374,13 +374,37 @@ class Palette:
 		self.colors = colors
 
 ################################################################################
-# USERDATA ASSET (add compression?)
+# USERDATA ASSET (Just make your own records)
 ################################################################################
 
 class Userdata:
-	def __init__(self, id, data):
-		set_id(self, id)
-		self.data = data
+	def __init__(self, records):
+		set_id(self, records[0].key)
+		self.records = records
+
+# Two predefined types of common records: RLE and Zlib-Compressed Buffer Data
+
+def raw_userdata(id, data):
+	return bintools.Record(
+		id,
+		'B' * len(data),
+		array.array('B', data).tolist()
+	)
+
+def rle_userdata(id, data):
+	return bintools.Record(
+		id, 
+		'I' + ('B' * len(data)),
+		[ len(data) ] + array.array('B', data).tolist()
+	)
+
+def compressed_userdata(id, data):
+	compressed = zlib.compress(data, 6)
+	return bintools.Record(
+		id,
+		'II' + ('B' * len(compressed))
+		[len(data), len(compressed)] + array.array('B', compressed).tolist()
+	)
 
 ################################################################################
 # DATA CONTAINER
@@ -419,13 +443,14 @@ class Assets:
 		self.hash_set = set(all_hashes)
 		assert len(all_hashes) == len(self.hash_set)
 
-	def addUserdata(self, id, data):
+	def addUserdata(self, id, format, params, *args):
+		ud = Userdata([bintools.Record(id, format, params)] + list(args))
 		if hasattr(self, "hash_set"):
-			assert not id in self.hash_set
-			self.hash_set.add(id)
-		self.userdata.append(Userdata(id, data))
+			assert not ud.id in self.hash_set
+			self.hash_set.add(ud.id)
+		self.userdata.append(ud)
 
-	def addCompressedUserdata(self, id, data):
-		self.addUserdata(id, zlib.compress(data, 6))
+	# def addCompressedUserdata(self, id, data):
+	# 	self.addUserdata(id, zlib.compress(data, 6))
 
 
