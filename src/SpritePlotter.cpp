@@ -324,8 +324,8 @@ void SpritePlotter::drawTilemap(TilemapAsset *map, Vec2 position, float z) {
 		int rawX = x+vox;
 		int rawY = y+voy;
 		if (rawX >= 0 && rawX < map->mw && rawY >= 0 && rawY < map->mh) {
-			uint8_pair_t coord = map->tileAt(rawX, rawY);
-			if (coord.x != 0xff) {
+			TileAsset coord = map->tileAt(rawX, rawY);
+			if (coord.isDefined()) {
 				Vec2 p = vec(x * map->tw, y * map->th) 
 					- vec(TILE_SLOP, TILE_SLOP) 
 					- rem + view.offset();

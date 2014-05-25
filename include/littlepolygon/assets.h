@@ -46,124 +46,151 @@
 // up against that use case yet in practice.
 //------------------------------------------------------------------------------
 
-struct TextureAsset {
-	void *compressedData; 	// zlib compressed texture data
-	int32_t w, h; 	        // size of the texture (guarenteed to be POT)
-	uint32_t 
-		compressedSize,     // size of the compressed buffer, in bytes
-		textureHandle,      // handle to the initialized texture resource
-		flags;              // extra information (wrapping, format, etc)
+struct TextureAsset
+{
+
+	void*    compressedData;  // zlib compressed texture data
+	int32_t  w, h;            // size of the texture (guarenteed to be POT)
+	uint32_t compressedSize,  // size of the compressed buffer, in bytes
+	         textureHandle,   // handle to the initialized texture resource
+	         flags;           // extra information (wrapping, format, etc)
 	
 	bool initialized() const { return textureHandle != 0; }
 	int format() const { return GL_RGBA; }
-
 	Vec2 size() const { return vec(w,h); }
 
 	void init();
 	void bind();
 	void release();
+	
 };
 
-struct FrameAsset {
-	Vec2 uv0, uv1, uv2, uv3;  // UV coordinates of the corners (necessary since the image
-	                          // might have been transposed during packing)
-	int32_t px, py, // post-trim pivot of the frame
-		w, h;	    // post-trim size of the frame
+//------------------------------------------------------------------------------
+
+struct FrameAsset
+{
+	
+	Vec2    uv0, uv1,  // UV coordinates of the corners (necessary since the image
+	        uv2, uv3;  // might have been transposed during packing)
+	int32_t px, py,    // post-trim pivot of the frame
+	        w, h;      // post-trim size of the frame
 
 	Vec2 pivot() const { return vec(px,py); }
 	Vec2 size() const { return vec(w,h); }
+	
 };
 
-struct ImageAsset {
-	TextureAsset *texture; // the texture onto which this image is packed
-	int32_t w, h,          // the logical size of the image
-		px, py,            // the logical pivot of the image
-		nframes;           // number of rendered frames
+struct ImageAsset
+{
+	
+	TextureAsset* texture; // the texture onto which this image is packed
+	int32_t       w, h,    // the logical size of the image
+	              px, py,  // the logical pivot of the image
+	              nframes; // number of rendered frames
 
 	Vec2 size() const { return vec(w,h); }
 	Vec2 pivot() const { return vec(px,py); }
 
 	FrameAsset* frame(int i) {
-		// frames are stored immediately after the image (correctly aligned)
 		ASSERT(i >= 0 && i < nframes);
 		return reinterpret_cast<FrameAsset*>(this+1) + i;
-	}	
+	}
+	
 };
 
-struct uint8_pair_t {
-	uint8_t x;
-	uint8_t y;
+//------------------------------------------------------------------------------
+
+struct TileAsset
+{
+	
+	uint8_t x, y; // Atlas Cell Location
+	
+	bool isDefined() const { return x != 0xff; }
+	
 };
 
-struct TilemapAsset {
-	uint8_pair_t *data;
-	void *compressedData;    // zlib compressed tilemap buffer
-	uint32_t tw, th,         // the size of the individual tiles
-	         mw, mh,         // the size of the tilemap
-	         compressedSize; // the byte-length of the compressed buffer
-	TextureAsset tileAtlas;  // a texture-atlas of all the tiles
+struct TilemapAsset
+{
+	
+	TileAsset*   data;           // NULL when uninitialized
+	void*        compressedData; // zlib compressed tilemap buffer
+	uint32_t     tw, th,         // the size of the individual tiles
+	             mw, mh,         // the size of the tilemap
+	             compressedSize; // the byte-length of the compressed buffer
+	TextureAsset tileAtlas;      // a texture-atlas of all the tiles
 
-	bool intialized() const { return data != 0; }
-
+	bool initialized() const { return data != 0; }
 	Vec2 tileSize() const { return vec(tw,th); }
 	Vec2 mapSize() const { return vec(mw,mh); }
-
-	uint8_pair_t tileAt(int x, int y) const {
-		ASSERT(intialized());
-		ASSERT(x >= 0 && x < mw);
-		ASSERT(y >= 0 && y < mh);
-		return data[y * mw + x];
-	}
-
+	TileAsset tileAt(int x, int y) const;
+	
 	void init();
 	void release();
 	
 	void reload();
+	void clearTile(int x, int y);
+	
 };
 
-struct GlyphAsset {
-	int32_t x, y, // texel position of this glyph
-		advance;  // pixel offset to the next character
+//------------------------------------------------------------------------------
+
+struct GlyphAsset
+{
+	
+	int32_t x, y,     // texel position of this glyph
+	        advance;  // pixel offset to the next character
+	
 };
 
-struct FontAsset {
-	int32_t height;                           // line-height of the font
-	GlyphAsset glyphs[ASCII_END-ASCII_BEGIN]; // individual glyph metrics
-	TextureAsset texture;                     // character texture-atlas
+struct FontAsset
+{
+	
+	int32_t      height;                        // line-height of the font
+	GlyphAsset   glyphs[ASCII_END-ASCII_BEGIN]; // individual glyph metrics
+	TextureAsset texture;                       // character texture-atlas
 	
 	GlyphAsset getGlyph(const char c) {
-		// glyphs are stored in ASCII-order
 		ASSERT(c >= ASCII_BEGIN && c < ASCII_END);
 		return glyphs[c-ASCII_BEGIN];
 	}
 
 	const char* measureLine(const char *msg, int *outLength) {
-		// measure the given line's total advance without rendering
 		*outLength = 0;
 		while(*msg && *msg != '\n') {
 			*outLength += getGlyph(*msg).advance;
 			++msg;
 		}
 		return msg;
-	}	
+	}
+	
 };
 
-struct SampleAsset {
-	Mix_Chunk *chunk;              // initialized as a sdl mixer "chunk"
-	void *compressedData;          // compressed PCM buffer
-	int32_t channelCount,          // PCM stereo or mono?
-		sampleWidth,               // PCM bits per sample
-		frequency;                 // PCM samples per second
-	uint32_t size, compressedSize; // byte-length of the compressed data
+//------------------------------------------------------------------------------
+
+struct SampleAsset
+{
+	
+	Mix_Chunk* chunk;           // initialized as a sdl mixer "chunk"
+	void*      compressedData;  // compressed PCM buffer
+	int32_t    channelCount,    // PCM stereo or mono?
+			   sampleWidth,     // PCM bits per sample
+			   frequency;       // PCM samples per second
+	uint32_t   size,            // byte-length of the compressed data
+	           compressedSize;
 
 	bool initialized() const { return chunk != 0; }
 
 	void init();
 	void play();
 	void release();
+	
 };
 
-struct PaletteAsset {
+//------------------------------------------------------------------------------
+
+struct PaletteAsset
+{
+	
 	uint32_t count;
 
 	Color *colors() const { return (Color*)(this+1); }
@@ -173,9 +200,14 @@ struct PaletteAsset {
 		ASSERT(i < count);
 		return colors()[i];
 	}
+	
 };
 
-struct RawUserdata {
+//------------------------------------------------------------------------------
+
+struct RawUserdata
+{
+	
 	uint32_t size;
 	
 	void *data() const { return (void*)(this+1); }
@@ -185,14 +217,18 @@ struct RawUserdata {
 	
 	template<typename T>
 	const T& get() { ASSERT(size == sizeof(T)); return *((T*)(this+1)); }
+	
 };
 
-struct CompressedUserdata {
+struct CompressedUserdata
+{
+	
 	uint32_t size;
 	uint32_t compressedSize;
-	void *compressedData;
+	void*    compressedData;
 	
 	void inflate(void* result);
+	
 };
 
 //------------------------------------------------------------------------------

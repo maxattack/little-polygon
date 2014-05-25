@@ -20,8 +20,8 @@
 void TilemapAsset::init() {
 	tileAtlas.init();
 	if (!data) {
-		uLongf size = sizeof(uint8_pair_t) * mw * mh;
-		data = (uint8_pair_t *) malloc( size );
+		uLongf size = sizeof(TileAsset) * mw * mh;
+		data = (TileAsset*) malloc( size );
 		int result = uncompress((Bytef*)data, &size, (const Bytef*)compressedData, compressedSize);
 		assert(result == Z_OK);
 	}
@@ -38,4 +38,18 @@ void TilemapAsset::reload() {
 	free(data);
 	data = 0;
 	init();
+}
+
+TileAsset TilemapAsset::tileAt(int x, int y) const {
+	ASSERT(initialized());
+	ASSERT(x >= 0 && x < mw);
+	ASSERT(y >= 0 && y < mh);
+	return data[y * mw + x];
+}
+
+void TilemapAsset::clearTile(int x, int y) {
+	ASSERT(initialized());
+	ASSERT(x >= 0 && x < mw);
+	ASSERT(y >= 0 && y < mh);
+	data[y * mw + x].x = 0xff;
 }
