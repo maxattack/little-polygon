@@ -6,20 +6,31 @@ mask(data),
 tilemap(lpAssets.tilemap("test")),
 hero(data),
 kitten(data),
+
+explosionImage(lpAssets.image("explosion")),
+
 debugDraw(false),
 done(false)
 {
-	auto color = lpAssets.palette("global")->getColor(0);
-	glClearColor(color.red(), color.green(), color.blue(), 0);
 	lpView.setSizeWithHeight(8 * kPixelsPerMeter);
 }
 
+void World::spawnExplosion(Vec2 position, float delay) {
+	explosions.alloc(kPixelsPerMeter * position, delay);
+}
 
-void World::destroyTile(int x, int y) {
-	if (x >= 0 && x < tilemap->mw && y >= 0 && y < tilemap->mh) {
-		//lpAssets.sample("explosionSfx")->play();
+bool World::destroyTile(int x, int y) {
+	if (x >= 0 && x < tilemap->mw && y >= 0 && y < tilemap->mh && tilemap->tileAt(x,y).isDefined()) {
 		tilemap->clearTile(x,y);
 		mask.clear(x,y);
+		auto tileCenter = (vec(x,y)+vec(0.5f, 0.5f));
+		camera.flash();
+		spawnExplosion(tileCenter);
+		spawnExplosion(tileCenter + randomPointInsideCircle(0.2f), randomValue(1.0f, 2.0f));
+		spawnExplosion(tileCenter + randomPointInsideCircle(0.4f), randomValue(2.5f, 4.0f));
+		return true;
+	} else {
+		return false;
 	}
 }
 
@@ -48,18 +59,26 @@ void World::tick() {
 	hero.tick();
 	kitten.tick();
 	camera.tick();
+	for(auto e=explosions.begin(); e!=explosions.end();) {
+		if (e->tick()) { ++e; } else { explosions.release(e); }
+	}
 	//gView.setOffset(gView.offset() + vec(4.0f * gTimer.deltaSeconds, 0));
 }
 
 void World::draw() {
 	
-	lpSprites.begin(lpView);
-	auto bg = lpAssets.image("background");
-	lpSprites.drawImage(bg, vec(0, lpView.height()-16));
-	lpSprites.drawTilemap(tilemap);
-	kitten.draw();
-	hero.draw();
-	lpSprites.end();
+	if (!camera.isFlashing()) {
+	
+		lpSprites.begin(lpView);
+		auto bg = lpAssets.image("background");
+		lpSprites.drawImage(bg, vec(0, lpView.height()-16));
+		lpSprites.drawTilemap(tilemap);
+		kitten.draw();
+		hero.draw();
+		for(auto& e : explosions) { e.draw(); }
+		lpSprites.end();
+		
+	}
 
 	if (debugDraw) {
 		Viewport simView(

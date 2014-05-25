@@ -258,6 +258,9 @@ inline int randInt(int x) { return rand() % x; }
 inline int randInt(int inclusiveMin, int exclusiveMax) { return inclusiveMin + randInt(exclusiveMax-inclusiveMin); }
 inline float randomValue() { return rand() / double(RAND_MAX); }
 inline float randomValue(float u, float v) { return u + randomValue() * (v - u); }
+inline float randomAngle() { return M_TAU * randomValue(); }
+inline Vec2 randomPointOnCircle(float r=1.0f) { return polarVector(r, randomAngle()); }
+inline Vec2 randomPointInsideCircle(float r=1.0f) { return polarVector(r * randomValue(), randomAngle()); }
 inline float expovariate(float avgDuration, float rmin=0.00001f, float rmax=0.99999f) { return -avgDuration*log(randomValue(rmin, rmax)); }
 	
 // handling radians sanely

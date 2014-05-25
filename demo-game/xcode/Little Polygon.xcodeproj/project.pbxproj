@@ -17,6 +17,7 @@
 		5006D7FC193060A100E79368 /* World.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5006D7FB193060A100E79368 /* World.cpp */; };
 		5006D7FE1931F40000E79368 /* Camera.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5006D7FD1931F40000E79368 /* Camera.cpp */; };
 		50333ABD192B02780098FFCC /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 50333ABC192B02780098FFCC /* Cocoa.framework */; };
+		50398C3E1932ACEA00885382 /* Explosion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50398C3D1932ACEA00885382 /* Explosion.cpp */; };
 		506F674E192B08A200BDE41D /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 506F674D192B08A200BDE41D /* main.cpp */; };
 		506F6751192B092300BDE41D /* SDL2_mixer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 506F674F192B092300BDE41D /* SDL2_mixer.framework */; };
 		506F6752192B092300BDE41D /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 506F6750192B092300BDE41D /* SDL2.framework */; };
@@ -61,6 +62,7 @@
 		50333AC1192B02780098FFCC /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		50333AC4192B02780098FFCC /* Little Polygon-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Little Polygon-Info.plist"; sourceTree = "<group>"; };
 		50333ACA192B02780098FFCC /* Little Polygon-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Little Polygon-Prefix.pch"; sourceTree = "<group>"; };
+		50398C3D1932ACEA00885382 /* Explosion.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Explosion.cpp; path = ../src/Explosion.cpp; sourceTree = "<group>"; };
 		506F674D192B08A200BDE41D /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = main.cpp; path = ../src/main.cpp; sourceTree = "<group>"; };
 		506F674F192B092300BDE41D /* SDL2_mixer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2_mixer.framework; path = ../../../../../../Library/Frameworks/SDL2_mixer.framework; sourceTree = "<group>"; };
 		506F6750192B092300BDE41D /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2.framework; path = ../../../../../../Library/Frameworks/SDL2.framework; sourceTree = "<group>"; };
@@ -170,6 +172,7 @@
 			children = (
 				5006D7FD1931F40000E79368 /* Camera.cpp */,
 				5006D7F21930529E00E79368 /* Entity.cpp */,
+				50398C3D1932ACEA00885382 /* Explosion.cpp */,
 				5006D7F11930452D00E79368 /* game.h */,
 				5006D7F5193052DE00E79368 /* Hero.cpp */,
 				5006D7F6193052DE00E79368 /* Kitten.cpp */,
@@ -277,6 +280,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				506F6777192B095800BDE41D /* utils.cpp in Sources */,
+				50398C3E1932ACEA00885382 /* Explosion.cpp in Sources */,
 				5006D7FA1930586500E79368 /* TileMask.cpp in Sources */,
 				506F6769192B095800BDE41D /* Context.cpp in Sources */,
 				5006D7EC192D868F00E79368 /* LinePlotter.cpp in Sources */,

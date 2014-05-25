@@ -18,7 +18,7 @@
 #define kKittenPause            	(1.0f)
 #define kKittenStepsPerMeter    	(6.6f)
 #define kKittenPickupTime       	(0.2f)
-#define kKittenShootSpeed       	(22.0f)
+#define kKittenShootSpeed       	(25.0f)
 #define kKittenCollisionKickback	(3.0f)
 #define kKittenCollisionHeight		(1.0f)
 #define kSlop						(0.0001f)
@@ -146,13 +146,18 @@ private:
 
 class Camera {
 private:
-	float quakeTime;
+	float quakeTime, flashTime;
+	Color restColor;
 	Vec2 position;
 	
 public:
 	Camera();
 
+	bool isFlashing() const { return flashTime > 0.0f; }
+	
 	void quake();
+	void flash();
+	
 	void tick();
 };
 
@@ -224,7 +229,22 @@ private:
 };
 
 //--------------------------------------------------------------------------------
-// FULLY COMPOSED WORLD
+// EXPLOSIONS
+
+class Explosion {
+private:
+	Vec2 position;
+	float time;
+	bool playedSfx;
+	
+public:
+	Explosion(Vec2 pos, float delay);
+	bool tick();
+	void draw();
+};
+
+//--------------------------------------------------------------------------------
+// ROOT WORLD OBJECT
 
 class World : public Singleton<World> {
 public:
@@ -235,6 +255,9 @@ public:
 	Hero hero;
 	Kitten kitten;
 	
+	ImageAsset *explosionImage;
+	CompactPool<Explosion> explosions;
+	
 private:
 	bool debugDraw;
 	bool done;
@@ -242,7 +265,8 @@ private:
 public:
 	World(const WorldData& data);
 	
-	void destroyTile(int x, int y);
+	void spawnExplosion(Vec2 position, float delay=0.0f);
+	bool destroyTile(int x, int y);
 
 	void run();
 	
