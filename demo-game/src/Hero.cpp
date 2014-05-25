@@ -10,7 +10,8 @@ Entity(
 img(gAssets.image("hero")),
 dir(1),
 animTime(0.0f), yScale(1.0f),
-grounded(true), holdingKitten(false)
+grounded(true),
+tint(rgba(0))
 {
 }
 
@@ -38,6 +39,7 @@ void Hero::tick() {
 		// PICKUP
 		gAssets.sample("pickup")->play();
 		gWorld.kitten.pickup();
+		tint = rgb(0xffffff);
 	}
 	
 	// ACTION?
@@ -77,7 +79,9 @@ void Hero::tick() {
 		yScale = easeTowards(yScale, 1.025f, 0.2f, dt);
 		
 	}
-
+	
+	// FADE OUT TINT
+	tint = easeTowards(tint, rgba(0xffffff00), 0.1f, dt);
 }
 
 void Hero::performAction() {
@@ -95,7 +99,8 @@ void Hero::draw() {
 	gSprites.drawImage(
 		img,
 		AffineMatrix(vec((2.0f-yScale) * dir,0), vec(0,yScale), pixelPosition()),
-		getFrame()
+		getFrame(),
+		tint
 	);
 }
 

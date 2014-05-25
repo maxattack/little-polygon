@@ -156,7 +156,8 @@ private:
 	ImageAsset *img;
 	int dir;
 	float animTime, yScale;
-	bool grounded, holdingKitten;
+	bool grounded;
+	Color tint;
 	
 public:
 	Hero();
