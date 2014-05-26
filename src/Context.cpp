@@ -56,6 +56,25 @@ static Viewport makeView() {
 //}
 //#endif
 
+// http://devnewton.bci.im/en/gamepad_db
+// http://dl.bci.im/gamepad_db/gamepad_db.sdl
+const char *gamepadMapping = R"SDLMAP(
+341a3608000000000000504944564944,Afterglow PS3 Controller,a:b1,b:b2,x:b0,y:b3,start:b9,guide:b12,back:b8,dpup:h0.1,dpleft:h0.8,dpdown:h0.4,dpright:h0.2,leftshoulder:b4,rightshoulder:b5,leftstick:b10,rightstick:b11,leftx:a0,lefty:a1,rightx:a2,righty:a3,lefttrigger:b6,righttrigger:b7
+0003:046D:C218,Logitech Logitech RumblePad 2 USB Controllers,a:b1,b:b2,x:b0,y:b3,start:b9,back:b8,leftshoulder:b4,rightshoulder:b5,leftx:a0,lefty:a1,rightx:a2,righty:a3,lefttrigger:b6,righttrigger:b7
+0003:07B5:0312,Mega World USB Game Controllers,a:b2,b:b3,x:b0,y:b1,start:b9,back:b8,leftshoulder:b4,rightshoulder:b6,leftx:a0,lefty:a1,rightx:a3,righty:a2,lefttrigger:b5,righttrigger:b7
+0003:06A3:0107.0008,SAITEK P220,a:b2,b:b3,x:b0,y:b1,start:b4,back:b5,leftshoulder:b6,rightshoulder:b7,leftx:a0,lefty:a1
+0003:1A34:0802,USB GAMEPAD 8116,a:b0,b:b1,x:b2,y:b3,guide:b9,back:b8,dpup:a6,dpleft:a5,dpdown:a6,dpright:a5,leftshoulder:b4,rightshoulder:b5,leftx:a0,lefty:a1,rightx:a2,righty:a3,lefttrigger:a4,righttrigger:a4
+0003:044F:B315.0006,Mega World Thrustmaster dual analog 3.2,a:b0,b:b2,x:b1,y:b3,start:b9,back:b8,dpup:h0.1,dpleft:h0.8,dpdown:h0.4,dpright:h0.2,leftshoulder:b4,rightshoulder:b6,leftstick:b10,rightstick:b11,leftx:a0,lefty:a1,rightx:a2,righty:a3,lefttrigger:b5,righttrigger:b7
+030000004f04000009d0000000010000,Thrustmaster Run'N' Drive Wireless PS3,a:b1,b:b2,x:b0,y:b3,start:b9,guide:b12,back:b8,dpup:h0.1,dpleft:h0.8,dpdown:h0.4,dpright:h0.2,leftshoulder:b4,rightshoulder:b5,leftstick:b10,rightstick:b11,leftx:a0,lefty:a1,rightx:a2,righty:a3,lefttrigger:b6,righttrigger:b7
+030000004f04000008d0000000010000,Thrustmaster Run'N' Drive Wireless,a:b1,b:b2,x:b0,y:b3,start:b9,back:b8,dpup:h0.1,dpleft:h0.8,dpdown:h0.4,dpright:h0.2,leftshoulder:b4,rightshoulder:b5,leftstick:b10,rightstick:b11,leftx:a0,lefty:a1,rightx:a2,righty:a5,lefttrigger:b6,righttrigger:b7
+6d0400000000000018c2000000000000,Logitech Rumble Gamepad F510(Mac),a:b1,b:b2,x:b0,y:b3,start:b9,back:b8,dpup:h0.1,dpleft:h0.8,dpdown:h0.4,dpright:h0.2,leftshoulder:b4,rightshoulder:b5,leftstick:b10,rightstick:b11,leftx:a0,lefty:a1,rightx:a2,righty:a3,lefttrigger:b6,righttrigger:b7
+6d0400000000000018c2000000000000,Logitech Rumble Pad 2(Mac),a:b1,b:b2,x:b0,y:b3,start:b9,back:b8,dpup:h0.1,dpleft:h0.8,dpdown:h0.4,dpright:h0.2,leftshoulder:b4,rightshoulder:b5,leftstick:b10,rightstick:b11,leftx:a0,lefty:a1,rightx:a2,righty:a3,lefttrigger:b6,righttrigger:b7
+4c050000000000006802000000000000,PLAYSTATION(R)3 Controller(Mac),a:b14,b:b13,x:b15,y:b12,start:b3,guide:b16,back:b0,dpup:b4,dpleft:b7,dpdown:b6,dpright:b5,leftshoulder:b10,rightshoulder:b11,leftstick:b1,rightstick:b2,leftx:a0,lefty:a1,rightx:a2,righty:a3,lefttrigger:b8,righttrigger:b9
+030000006d0400001ec2000020200000,Logitech Rumble Gamepad F510(Linux),a:b0,b:b1,x:b2,y:b3,start:b7,guide:b8,back:b6,dpup:h0.1,dpleft:h0.8,dpdown:h0.4,dpright:h0.2,leftshoulder:b4,rightshoulder:b5,leftstick:b9,rightstick:b10,leftx:a0,lefty:a1,rightx:a3,righty:a4,lefttrigger:a2,righttrigger:a5
+030000005e0400008e02000014010000,Microsoft Xbox 360 Gamepad (xpad) (Linux),a:b0,b:b1,x:b2,y:b3,start:b7,guide:b8,back:b6,dpup:h0.1,dpleft:h0.8,dpdown:h0.4,dpright:h0.2,leftshoulder:b4,rightshoulder:b5,leftstick:b9,rightstick:b10,leftx:a0,lefty:a1,rightx:a3,righty:a4,lefttrigger:a2,righttrigger:a5
+030000008f0e00001200000010010000,GreenAsia Inc.,a:b2,b:b1,x:b3,y:b0,start:b9,back:b8,dpup:h0.1,dpleft:h0.8,dpdown:h0.4,dpright:h0.2,leftshoulder:b6,rightshoulder:b7,leftstick:b10,rightstick:b11,leftx:a0,lefty:a1,rightx:a2,righty:a3,lefttrigger:b4,righttrigger:b5
+)SDLMAP";
+
 SDLContext::SDLContext(const char *caption, int w, int h) {
 	
 	if (w == 0) {
@@ -64,7 +83,10 @@ SDLContext::SDLContext(const char *caption, int w, int h) {
 		h = 640;
 	}
 	
+
+	
 	SDL_Init(SDL_INIT_EVERYTHING);
+	SDL_GameControllerAddMapping(gamepadMapping);
 	Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024);
 	
 //	SDL_SetEventFilter(handleAppEvents, 0);
@@ -90,6 +112,8 @@ SDLContext::SDLContext(const char *caption, int w, int h) {
 	
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	
 }
 
 SDLContext::~SDLContext() {

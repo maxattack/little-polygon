@@ -115,9 +115,11 @@ class PlayerInput {
 private:
 	int mDirX, mDirY;
 	int mPressedJump, mPressedAction;
+	SDL_GameController* gamepad;
 
 public:
 	PlayerInput();
+	~PlayerInput();
 	
 	// DPAD
 	int dirX() const { return mDirX; }
@@ -139,6 +141,8 @@ public:
 private:
 	bool handleKeyDown(const SDL_KeyboardEvent& event);
 	bool handleKeyUp(const SDL_KeyboardEvent& event);
+	bool handleButtonDown(const SDL_ControllerButtonEvent& event);
+	bool handleButtonUp(const SDL_ControllerButtonEvent& event);
 };
 
 //--------------------------------------------------------------------------------
