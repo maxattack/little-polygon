@@ -65,7 +65,7 @@ workingTexture(0)
 	
 	// setup element array buffer
 	uint16_t *indices = (uint16_t*)SDL_malloc(6 * capacity() * sizeof(uint16_t));
-	for(int i=0; i<capacity(); ++i) {
+	for(uint16_t i=0; i<capacity(); ++i) {
 		indices[6*i+0] = 4*i;
 		indices[6*i+1] = 4*i+1;
 		indices[6*i+2] = 4*i+2;
@@ -282,8 +282,8 @@ void SpritePlotter::drawTilemap(TilemapAsset *map, Vec2 position, float z) {
 	map->init();
 	
 	Vec2 cs = view.size() / vec(map->tw, map->th);
-	int latticeW = ceilf(cs.x) + 1;
-	int latticeH = ceilf(cs.y) + 1;
+	int latticeW = floorToInt(ceilf(cs.x) + 1);
+	int latticeH = floorToInt(ceilf(cs.y) + 1);
 
 	Vec2 scroll = view.offset() - position;
 	

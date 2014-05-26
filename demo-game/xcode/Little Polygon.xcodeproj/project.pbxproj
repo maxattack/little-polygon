@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		5006D7EC192D868F00E79368 /* LinePlotter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5006D7EB192D868F00E79368 /* LinePlotter.cpp */; };
 		5006D7EE192FD9AD00E79368 /* Plotter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5006D7ED192FD9AD00E79368 /* Plotter.cpp */; };
-		5006D7F0193009C400E79368 /* SplinePlotter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5006D7EF193009C400E79368 /* SplinePlotter.cpp */; };
 		5006D7F41930529E00E79368 /* Entity.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5006D7F21930529E00E79368 /* Entity.cpp */; };
 		5006D7F7193052DE00E79368 /* Hero.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5006D7F5193052DE00E79368 /* Hero.cpp */; };
 		5006D7F8193052DE00E79368 /* Kitten.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5006D7F6193052DE00E79368 /* Kitten.cpp */; };
@@ -48,7 +47,6 @@
 /* Begin PBXFileReference section */
 		5006D7EB192D868F00E79368 /* LinePlotter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = LinePlotter.cpp; path = ../../src/LinePlotter.cpp; sourceTree = "<group>"; };
 		5006D7ED192FD9AD00E79368 /* Plotter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Plotter.cpp; path = ../../src/Plotter.cpp; sourceTree = "<group>"; };
-		5006D7EF193009C400E79368 /* SplinePlotter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SplinePlotter.cpp; path = ../../src/SplinePlotter.cpp; sourceTree = "<group>"; };
 		5006D7F11930452D00E79368 /* game.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = game.h; path = ../src/game.h; sourceTree = "<group>"; };
 		5006D7F21930529E00E79368 /* Entity.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Entity.cpp; path = ../src/Entity.cpp; sourceTree = "<group>"; };
 		5006D7F5193052DE00E79368 /* Hero.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Hero.cpp; path = ../src/Hero.cpp; sourceTree = "<group>"; };
@@ -120,7 +118,6 @@
 				506F675A192B095800BDE41D /* SampleAsset.cpp */,
 				506F675B192B095800BDE41D /* Shader.cpp */,
 				506F675C192B095800BDE41D /* SimplexNoise.cpp */,
-				5006D7EF193009C400E79368 /* SplinePlotter.cpp */,
 				506F675F192B095800BDE41D /* SpritePlotter.cpp */,
 				506F6760192B095800BDE41D /* TextureAsset.cpp */,
 				506F6761192B095800BDE41D /* TilemapAsset.cpp */,
@@ -297,7 +294,6 @@
 				506F676B192B095800BDE41D /* lodepng.cpp in Sources */,
 				5006D7F7193052DE00E79368 /* Hero.cpp in Sources */,
 				506F6774192B095800BDE41D /* TilemapAsset.cpp in Sources */,
-				5006D7F0193009C400E79368 /* SplinePlotter.cpp in Sources */,
 				5006D7F8193052DE00E79368 /* Kitten.cpp in Sources */,
 				506F678B192BDFCD00BDE41D /* glew.c in Sources */,
 				506F6775192B095800BDE41D /* Timer.cpp in Sources */,

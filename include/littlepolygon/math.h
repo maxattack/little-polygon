@@ -22,6 +22,9 @@
 #endif
 #define M_TAU (M_PI+M_PI)
 
+#define kPI ((float)M_PI)
+#define kTAU ((float)M_TAU)
+
 #ifndef M_COLINEAR_SLOP
 #define M_COLINEAR_SLOP (0.0001f)
 #endif
@@ -32,8 +35,7 @@ struct Vec2 {
 	
 	Vec2() {}
 	Vec2(float ax, float ay) : x(ax), y(ay) {}
-	//Vec2(SDL_Point p) : x(p.x), y(p.y) {}
-	//Vec2(vec2f u) : x(u.x()), y(u.y()) {}
+	Vec2(SDL_Point p) : x((float)p.x), y((float)p.y) {}
 
 	#ifdef BOX2D_H
 	Vec2(b2Vec2 v) : x(v.x), y(v.y) {}
@@ -41,8 +43,6 @@ struct Vec2 {
 	#endif
 
 	void set(float ax, float ay) { x=ax; y=ay; }
-	
-	operator vec4f() const { return vec4f(x,y,0,0); }
 
 	float real() const         { return x; }
 	float imag() const         { return y; }
@@ -134,14 +134,14 @@ struct AffineMatrix {
 	float radians() const { return atan2f(u.y, u.x); }
 	Vec2 scale() const { return vec(u.magnitude(), v.magnitude()); }
 	
-	mat4f matrix() const {
-		return mat4f({
-			u.x, u.y, 0, 0,
-			v.x, v.y, 0, 0,
-			0, 0, 1, 0,
-			t.x, t.y, 0, 1
-		});
-	}
+//	mat4f matrix() const {
+//		return mat4f({
+//			u.x, u.y, 0, 0,
+//			v.x, v.y, 0, 0,
+//			0, 0, 1, 0,
+//			t.x, t.y, 0, 1
+//		});
+//	}
 
 	bool orthogonal() const { 
 		float d = dot(u,v); 
@@ -191,15 +191,15 @@ inline AffineMatrix matPolar(float r, float radians) { return matAttitude(r*cosf
 inline AffineMatrix matScale(Vec2 s) { return AffineMatrix(vec(s.x,0), vec(0,s.y), vec(0,0)); }
 inline AffineMatrix matScale(float x, float y) { return matScale(vec(x,y)); }
 inline AffineMatrix matScale(float k) { return matScale(vec(k,k)); }
-inline AffineMatrix matForeshortened(const mat4f& matrix) {
-	float buf[16];
-	matrix.store(buf);
-	return AffineMatrix(
-		vec(buf[0], buf[1]), 
-		vec(buf[4], buf[5]), 
-		vec(buf[12], buf[13])
-	);
-}
+//inline AffineMatrix matForeshortened(const mat4f& matrix) {
+//	float buf[16];
+//	matrix.store(buf);
+//	return AffineMatrix(
+//		vec(buf[0], buf[1]), 
+//		vec(buf[4], buf[5]), 
+//		vec(buf[12], buf[13])
+//	);
+//}
 
 // linear range methods
 inline float clamp(float u, float lo=0.f, float hi=1.f) { return u<lo?lo:u>hi?hi:u; }
@@ -258,22 +258,22 @@ inline int randInt(int x) { return rand() % x; }
 inline int randInt(int inclusiveMin, int exclusiveMax) { return inclusiveMin + randInt(exclusiveMax-inclusiveMin); }
 inline float randomValue() { return (float)(rand() / double(RAND_MAX)); }
 inline float randomValue(float u, float v) { return u + randomValue() * (v - u); }
-inline float randomAngle() { return (float) M_TAU * randomValue(); }
+inline float randomAngle() { return kTAU * randomValue(); }
 inline Vec2 randomPointOnCircle(float r=1.0f) { return polarVector(r, randomAngle()); }
 inline Vec2 randomPointInsideCircle(float r=1.0f) { return polarVector(r * randomValue(), randomAngle()); }
 inline float expovariate(float avgDuration, float rmin=0.00001f, float rmax=0.99999f) { return -avgDuration*logf(randomValue(rmin, rmax)); }
 	
 // handling radians sanely
 inline float normalizeAngle(float radians) {
-	radians = fmodf(radians, (float) M_TAU);
-	return radians < 0 ? radians + (float) M_TAU : radians;
+	radians = fmodf(radians, kTAU);
+	return radians < 0 ? radians + kTAU : radians;
 }
 inline float radianDiff(float lhs, float rhs) {
 	float result = normalizeAngle(lhs - rhs);
 	if (result > (float) M_PI) {
-		return result - (float) M_TAU;
-	} else if (result < -(float) M_PI) {
-		return result + (float) M_TAU;
+		return result - kTAU;
+	} else if (result < -kPI) {
+		return result + kTAU;
 	} else {
 		return result;
 	}

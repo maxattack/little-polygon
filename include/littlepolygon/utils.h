@@ -54,9 +54,6 @@ struct Timer {
 	ticks(SDL_GetTicks()), deltaTicks(0),
 	timeScale(aTimeScale), seconds(0),
 	rawDeltaSeconds(0) {
-#if EMSCRIPTEN
-		deltaSeconds = timeScale * (1.0/60.0);
-#else
 		SDL_DisplayMode dm;
 		SDL_GetWindowDisplayMode(SDL_GL_GetCurrentWindow(), &dm);
 		if (dm.refresh_rate) {
@@ -64,8 +61,12 @@ struct Timer {
 		} else {
 			deltaSeconds = timeScale * (1.0/60.0);
 		}
-#endif
 	}
+	
+	float time() const { return (float) seconds; }
+	float dt() const { return (float) deltaSeconds; }
+	float rawDt() const { return (float) rawDeltaSeconds; }
+	
 	
 	void reset() {
 		ticks = SDL_GetTicks();

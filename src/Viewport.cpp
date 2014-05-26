@@ -58,13 +58,20 @@ Vec2 Viewport::cursor() const {
 }
 
 void Viewport::setMVP(GLuint amvp) const {
-	mat4f mvp = mat4f::ortho(
-		mOffset.x, mOffset.x+mSize.x,
-		mOffset.y+mSize.y, mOffset.y,
-		128.0, -128.0
-	);
-	GLfloat buf[16];
-	mvp.store(buf);
+
+	float zfar = 128;
+	float znear = -128;
+	float fan = zfar + znear;
+	float fsn = zfar - znear;
+	Vec2 cext = mOffset + mSize;
+	Vec2 t = - (cext + mOffset) / mSize;
+	GLfloat buf[16] = {
+		2.f/mSize.x, 0, 0, 0,
+		0, -2.f/mSize.y, 0, 0,
+		0, 0, 2.f/fsn, 0,
+		t.x, -t.y, -fan/fsn, 1
+	};
+
 	glUniformMatrix4fv(amvp, 1, GL_FALSE, buf);
 }
 

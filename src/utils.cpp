@@ -115,7 +115,7 @@ void Color::toHSV(float *h, float *s, float *v) {
 	}
 
 	float chroma = r - std::min(g, b);
-	*h = 360.f * fabs(K + (g-b) / (6.f * chroma + 1e-20f));
+	*h = 360.f * fabsf(K + (g-b) / (6.f * chroma + 1e-20f));
 	*s = chroma / (r + 1e-20f);
 	*v = r;
 }

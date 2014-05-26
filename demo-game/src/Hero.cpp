@@ -16,7 +16,7 @@ tint(rgba(0))
 }
 
 void Hero::tick() {
-	float dt = lpTimer.deltaSeconds;
+	float dt = lpTimer.dt();
 	
 	// MOVEMENT
 	auto speedTarget = kHeroMoveSpeed * gWorld.input.dirX();
@@ -63,7 +63,7 @@ void Hero::tick() {
 			
 			// RUNNING FX
 			int prevFrame = getFrame();
-			animTime += kHeroStepsPerMeter * dt * abs(speed.x);
+			animTime += kHeroStepsPerMeter * dt * fabsf(speed.x);
 			int nextFrame = getFrame();
 			if (prevFrame == 1 && nextFrame == 0) {
 				lpAssets.sample("footfall")->play();

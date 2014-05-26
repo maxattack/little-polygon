@@ -76,7 +76,7 @@ void Kitten::tickPausing() {
 }
 
 void Kitten::tickWalking() {
-	float dt = lpTimer.deltaSeconds;
+	float dt = lpTimer.dt();
 	animTime += kKittenStepsPerMeter * dt;
 	if (dir > 0) {
 		position.x += dt * kKittenMoveSpeed;

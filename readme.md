@@ -33,7 +33,6 @@ Build Dependencies (python2x + pip)
 Runtime Dependencies (native)
 * sdl2 - platform abstraction
 * sdl2_mixer - music and sound effects
-* vectorial - SIMD math
 * zlib - asset decompression
 
 Modules
@@ -46,8 +45,6 @@ Modules
 * littlepolygon/assets - a simple system for packaging and loading compressed game assets
 * littlepolygon/graphics - opengl utilities
 * littlepolygon/sprites - batching sprite renderer
-* littlepolygon/splines - efficient cubic spline drawing
-* littlepolygon/trail - efficient trail renderer
 * littlepolygon/context - convenient global context setup and teardown
 
 LICENSE

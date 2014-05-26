@@ -24,40 +24,21 @@
 #include <cstring>
 #include <stdint.h>
 #include <limits.h>
-#if EMSCRIPTEN
-	#include <emscripten/emscripten.h>
-	#include <SDL/SDL.h>
+#include <SDL2/SDL.h>
+#if __IPHONEOS__
 	#include <SDL2/SDL_opengles2.h>
-	#include <SDL/SDL_mixer.h>
 #else
-	#include <SDL2/SDL.h>
-	#if __IPHONEOS__
-		#include <SDL2/SDL_opengles2.h>
-	#else
-		#if !__WIN32__
-			#define GLEW_STATIC
-		#endif
-		#include <GL/glew.h>
-		#include <SDL2/SDL_opengl.h>
+	#if !__WIN32__
+		#define GLEW_STATIC
 	#endif
-	#include <SDL2_mixer/SDL_mixer.h>
+	#include <GL/glew.h>
+	#include <SDL2/SDL_opengl.h>
 #endif
-#include <vectorial/vectorial.h>
-using namespace vectorial;
+#include <SDL2_mixer/SDL_mixer.h>
 
 // highter level conditional-compilation flags
-#if __IPHONEOS__
-	#define LITTLE_POLYGON_MOBILE 1
-#else
-	#define LITTLE_POLYGON_MOBILE 0
-#endif
-#if LITTLE_POLYGON_MOBILE || EMSCRIPTEN
-	#define LITTLE_POLYGON_OPENGL_ES 1
-	#define LITTLE_POLYGON_OPENGL_CORE 0
-#else
-	#define LITTLE_POLYGON_OPENGL_ES 0
-	#define LITTLE_POLYGON_OPENGL_CORE 1
-#endif
+#define LITTLE_POLYGON_OPENGL_ES 0
+#define LITTLE_POLYGON_OPENGL_CORE 1
 
 // handy macros
 #ifndef STATIC_ASSERT

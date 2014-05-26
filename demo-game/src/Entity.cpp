@@ -9,8 +9,8 @@ halfSize(0.5f * aSize)
 }
 
 bool Entity::overlaps(const Entity *other) {
-	auto dx = abs(position.x - other->position.x);
-	auto dy = abs(position.y - other->position.y);
+	auto dx = fabsf(position.x - other->position.x);
+	auto dy = fabsf(position.y - other->position.y);
 	return dx < halfSize.x + other->halfSize.x &&
 		dy < halfSize.y + other->halfSize.y;
 }
@@ -18,7 +18,7 @@ bool Entity::overlaps(const Entity *other) {
 void Entity::move(int* hitX, int* hitY) {
 	*hitX = 0;
 	*hitY = 0;
-	auto displacement = speed * lpTimer.deltaSeconds;
+	auto displacement = speed * lpTimer.dt();
 	auto p1 = position + displacement;
 	if (gWorld.mask.check(p1 - halfSize, p1 + halfSize)) {
 		
