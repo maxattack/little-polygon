@@ -5,12 +5,12 @@ mWidth(data.maskWidth),
 mHeight(data.maskHeight)
 {
 	int nbytes = (mWidth * mHeight + 7) >> 3;
-	bytes = (uint8_t*) malloc(nbytes);
+	bytes = (uint8_t*) SDL_malloc(nbytes);
 	memcpy(bytes, data.maskBytes, nbytes);
 }
 
 TileMask::~TileMask() {
-	free(bytes);
+	SDL_free(bytes);
 }
 
 bool TileMask::get(int x, int y) const {
