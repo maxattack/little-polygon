@@ -29,7 +29,7 @@
 	#include <SDL2/SDL_opengles2.h>
 #else
 	#if !__WIN32__
-		#define GLEW_STATIC
+	#define GLEW_STATIC
 	#endif
 	#include <GL/glew.h>
 	#include <SDL2/SDL_opengl.h>

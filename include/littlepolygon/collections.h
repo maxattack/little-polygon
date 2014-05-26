@@ -17,6 +17,29 @@
 #pragma once
 #include "base.h"
 #include <utility>
+#include <type_traits>
+
+//--------------------------------------------------------------------------------
+// POD "Storage Slot" For a value (unrestricted-union workaround :P)
+//--------------------------------------------------------------------------------
+
+template<typename T>
+struct Slot {
+    typename std::aligned_storage<sizeof(T)>::type storage;
+
+    Slot() {}
+    ~Slot() {}
+
+    template<typename... Args>
+    T* init(Args&&... args) { return new(address()) T(std::forward<Args>(args) ...); }
+    void release() { (*address()).~T(); }
+
+    const T* address() const { return static_cast<const T*>(static_cast<const void*>(&storage)); }
+	T value() const { return *address(); }
+
+	T* address() { return static_cast<T*>(static_cast<void*>(&storage)); }
+	T& reference() { return *address(); }
+};
 
 //--------------------------------------------------------------------------------
 // SIMPLE TEMPLATE QUEUE
@@ -27,14 +50,7 @@ class Queue {
 private:
 	int n;
 	int i;
-	union Slot {
-		T record;
-		Slot *next;
-
-		Slot() {}
-		~Slot() {}
-	};	
-	Slot slots[N];
+	Slot<T> slots[N];
 
 public:
 	Queue() : n(0), i(0) {}
@@ -46,33 +62,33 @@ public:
 	
 	void enqueue(const T& val) {
 		ASSERT(n < N);
-		new(&slots[(i + n) % N].record) T(val);		
+		new(slots[(i + n) % N].address()) T(val);		
 		n++;
 	}
 	
 	template<typename... Args>
 	void emplace(Args&&... args) {
 		ASSERT(n < N);
-		new(&slots[(i + n) % N].record) T(std::forward<Args>(args) ...);
+		new(slots[(i + n) % N].address()) T(std::forward<Args>(args) ...);
 		n++;
 	}
 	
 	T dequeue() {
 		ASSERT(n > 0);
-		T& result = slots[i].record;
+		T result = slots[i].value();
 		n--;
 		i = (i+1) % N;
 		return result;
 	}
 
-	T peekNext() {
+	T& peekNext() {
 		ASSERT(n > 0);
-		return slots[i].record;
+		return slots[i].reference();
 	}
 	
-	T peekLast() {
+	T& peekLast() {
 		ASSERT(n > 0);
-		return slots[(i+n-1) % N].record;
+		return slots[(i+n-1) % N].reference();
 	}
 	
 	bool tryDequeue(T* outValue) {
@@ -96,7 +112,7 @@ public:
 		bool next(T* outValue) {
 			idx++;
 			if (idx >= q->n) { return false; }
-			*outValue = q->slots[(q->i + idx) % N].record;
+			*outValue = q->slots[(q->i + idx) % N].value();
 			return true;
 		}
 	};
@@ -110,14 +126,7 @@ template<typename T, int N>
 class List {
 private:
 	int n;
-	union Slot {
-		T record;
-		Slot *next;
-
-		Slot() {}
-		~Slot() {}
-	};	
-	Slot slots[N];
+	Slot<T> slots[N];
 
 public:
 	List() : n(0) {}
@@ -129,19 +138,19 @@ public:
 	bool empty() const { return n == 0; }
 	bool full() const { return n == N; }
 
-	T* begin() const { return (T*)slots; }
+	T* begin() const { return slots->address(); }
 	T* end() const { return begin() + n; }
 	
 	T get(int i) const {
 		ASSERT(i >= 0);
 		ASSERT(i < n);
-		return slots[i].record;
+		return slots[i].value();
 	}
 
 	T& operator[](int i) {
 		ASSERT(i >= 0);
 		ASSERT(i < n);
-		return slots[i].record;
+		return slots[i].value();
 	}
 	
 	void clear() {
@@ -150,20 +159,20 @@ public:
 	
 	void append(const T& val) {
 		ASSERT(n < N);
-		new(&slots[n].record) T(val);
+		new(slots[n].address()) T(val);
 		n++;
 	}
 	
 	template<typename... Args>
 	T* alloc(Args&&... args) {
 		ASSERT(n < N);
-		auto result = new(&slots[n].record) T(args ...);
+		auto result = new(slots[n].address()) T(args ...);
 		n++;
 		return result;
 	}
 	
 	int offsetOf(T* t) {
-		auto slot = (Slot*) t;
+		auto slot = (Slot<T>*) t;
 		ASSERT(slot >= slots && slot < slots + n);
 		return slot - slots;
 	}
@@ -179,19 +188,19 @@ public:
 	
 	T& peekFirst() {
 		ASSERT(n > 0);
-		return slots[0].record;
+		return slots[0].reference();
 	}
 	
 	T& peekLast() {
 		ASSERT(n > 0);
-		return slots[n-1].record;
+		return slots[n-1].reference();
 	}
 	
 	T pop() {
 		ASSERT(n > 0);
 		n--;
-		auto result = slots[n].record;
-		slots[n].record.~T();
+		auto result = slots[n].value();
+		slots[n].release();
 		return result;
 	}
 	
@@ -199,10 +208,10 @@ public:
 		ASSERT(i >= 0);
 		ASSERT(i < n);
 		for(int j=i+1; j<n; ++j) {
-			slots[j-1].record = slots[j].record;
+			slots[j-1] = slots[j];
 		}
 		n--;
-		slots[n].record.~T();
+		slots[n].release();
 	}
 	
 	void insertAt(const T& val, int i) {
@@ -213,23 +222,23 @@ public:
 			append(val);
 		} else {
 			for(int j=n; j > i; --j) {
-				slots[j].record = slots[j-1].record;
+				slots[j] = slots[j-1];
 			}
-			slots[i].record = val;
+			slots[i].reference() = val;
 			n++;
 		}
 	}
 	
 	int findFirst(const T& val) const {
 		for(int i=0; i<n; ++i) {
-			if (slots[i].record == val) { return i; }
+			if (slots[i].value() == val) { return i; }
 		}
 		return -1;
 	}
 	
 	int findLast(const T& val) const {
 		for(int i=n-1; i>=0; --i) {
-			if (slots[i].record == val) { return i; }
+			if (slots[i].value() == val) { return i; }
 		}
 		return -1;
 	}

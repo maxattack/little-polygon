@@ -292,8 +292,8 @@ void SpritePlotter::drawTilemap(TilemapAsset *map, Vec2 position, float z) {
 	int voy = int(scroll.y/map->th);
 	
 	Vec2 rem = vec(
-		fmod(scroll.x, map->tw),
-		fmod(scroll.y, map->th)
+		fmodf(scroll.x, map->tw),
+		fmodf(scroll.y, map->th)
 	);
 	setTextureAtlas(&map->tileAtlas);
 

@@ -24,6 +24,7 @@
 // finalized with the pool, so make sure to explicitly clear() them if the
 // destructors matter.
 
+#include "collections.h"
 #include <algorithm>
 #include <utility>
 #include <vector>
@@ -39,12 +40,7 @@ public:
 
 private:
 	uint32_t mask;
-	union Slot {
-		T record;
-		Slot() {}
-		~Slot() {}
-	};
-	Slot slots[N];
+	Slot<T> slots[N];
 	
 	
 	inline static uint32_t bit(int i) {
@@ -60,11 +56,11 @@ public:
 	
 	int indexOf(T* p) const {
 		ASSERT(active(p));
-		return ((Slot*)p) - slots;
+		return p - slots->address();
 	}
 	
 	bool active(T* p) const {
-		int i = ((Slot*)p) - slots;
+		int i = p - slots->address();
 		return (mask & bit(i)) != 0;
 	}
 	
@@ -79,7 +75,7 @@ public:
 	void release(T* p) {
 		ASSERT(active(p));
 		p->~T();
-		int i = ((Slot*) p) - slots;
+		int i = p - slots->address();
 		mask ^= bit(i);
 	}
 
@@ -87,7 +83,7 @@ public:
 		while(mask) {
 			auto i = __builtin_clz(mask);
 			mask ^= bit(i);
-			slots[i].record.~T();
+			slots[i].release();
 		}
 		mask = 0;
 	}
@@ -168,7 +164,8 @@ public:
 	typedef T InstanceType;
 	
 private:
-	std::vector<T> slots;
+	// TODO: CONSIDER A NON-STL BACKING STORE :P
+	std::vector<Slot<T> > slots;
 
 public:
 	
@@ -176,16 +173,16 @@ public:
 	CompactPool(size_t n) { slots.reserve(n); }
 	
 	// const methods
-	inline T* begin() const { return (T*) slots.data(); }
-	inline T* end() const { return begin() + count(); }
+	inline const T* begin() const { return slots.begin()->address(); }
+	inline const T* end() const { return begin() + count(); }
 	
 	inline bool isEmpty() const { return slots.empty(); }
 	inline int count() const { return slots.size(); }
 	inline bool active(const T* p) const { return p >= begin() && p < end(); }
-	inline int indexOf(const T* p) const { ASSERT(active(p)); return p - slots.data(); }
+	inline int indexOf(const T* p) const { ASSERT(active(p)); return p - slots.data()->address(); }
 
 	// ordinary methods
-	inline T* begin() { return (T*) slots.data(); }
+	inline T* begin() { return slots.begin()->address(); }
 	inline T* end() { return begin() + count(); }
 	
 	inline void reserve(int n) { slots.reserve(n); }
@@ -205,8 +202,8 @@ public:
 	void release(T* p) {
 		ASSERT(active(p));
 		p->~T();
-		if (p != &slots.back()) {
-			*p = slots.back();
+		if (p != slots.back().address()) {
+			*p = slots.back().value();
 		}
 		slots.pop_back();
 	}
