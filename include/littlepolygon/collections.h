@@ -21,7 +21,7 @@
 
 //--------------------------------------------------------------------------------
 // POD "Storage Slot" For a value (unrestricted-union workaround :P)
-// The basic idea is we'd like to reserve space for an object, but eplicitly
+// The basic idea is we'd like to reserve space for an object, but explicitly
 // call it's constructor and destructor.
 //--------------------------------------------------------------------------------
 
