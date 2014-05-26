@@ -8,6 +8,7 @@ hero(data),
 kitten(data),
 
 explosionImage(lpAssets.image("explosion")),
+explosions(8),
 
 debugDraw(false),
 done(false)
@@ -28,6 +29,7 @@ bool World::destroyTile(int x, int y) {
 		spawnExplosion(tileCenter);
 		spawnExplosion(tileCenter + randomPointInsideCircle(0.2f), randomValue(1.0f, 2.0f));
 		spawnExplosion(tileCenter + randomPointInsideCircle(0.4f), randomValue(2.5f, 4.0f));
+		lpAssets.sample("explosionSfx")->play();
 		return true;
 	} else {
 		return false;

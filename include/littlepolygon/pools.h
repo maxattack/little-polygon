@@ -29,106 +29,11 @@
 #include <vector>
 
 //------------------------------------------------------------------------------
-// BITSET POOL
-//------------------------------------------------------------------------------
-
-template<typename T, int N>
-class BitsetPool {
-public:
-	typedef T InstanceType;
-private:
-	Bitset<N> mask;
-	union Slot {
-		T record;
-		Slot() {}
-		~Slot() {}
-	};
-	Slot slots[N];
-
-public:
-	
-	template<typename... Args>
-	T* alloc(Args&&... args) {
-		unsigned index;
-		if (!(~mask).findFirst(index)) {
-			return 0;
-		}
-		mask.mark(index);
-		return new(&slots[index].record) T(args ...);
-	}
-
-	void release(T* p) {
-		ASSERT(contains(p));
-		Slot *slot = (Slot*) p;
-		ASSERT(mask[slot-slots]);
-		p->~T();
-		mask.clear(slot-slots);
-	}
-
-	class iterator {
-	friend class BitsetPool<T,N>;
-	private:
-		T *slots;
-		T *curr;
-		typename Bitset<N>::iterator biterator;
-
-		iterator(const BitsetPool *pool) :
-			slots((T*)pool->slots),
-			biterator(&pool->mask) {}
-
-	public:
-		bool next() {
-			unsigned idx;
-			if (biterator.next(idx)) {
-				curr = slots + idx;
-				return true;
-			} else {
-				curr = 0;
-				return false;
-			}
-		}
-		
-		T* operator->() { return curr; }
-		operator T*() { return curr; }
-		
-	};
-	
-	bool contains(void *p) { return p >= slots && p < slots + N; }
-	
-	T& operator[](int i) {
-		ASSERT(mask[i]);
-		return slots[i].record;
-	}
-	
-	bool active(T* record) const {
-		int index = record - (T*)slots;
-		ASSERT(index >= 0 && index < N);
-		return mask[index];
-	}
-	
-	int indexOf(T* record) const {
-		ASSERT(active(record));
-		return record - (T*)slots;
-	}
-	
-	bool full() const { return mask.full(); }
-
-	iterator list() { return iterator(this); }
-	iterator list(Bitset<N> subset) { return iterator(this, subset); }
-	
-	void clear() {
-		for(auto i=list(); i.next();) { i->~T(); }
-		mask.reset();
-	}
-	
-};
-
-//------------------------------------------------------------------------------
-// BITSET POOL (noodled for 32 elements, because 32-bit, amiright?)
+// BITSET POOL (Max 32 Elems)
 //------------------------------------------------------------------------------
 
 template<typename T, int N=32>
-class BitsetPool32 {
+class BitsetPool {
 public:
 	typedef T InstanceType;
 
@@ -188,7 +93,7 @@ public:
 	}
 	
 	class Subset {
-	friend class BitsetPool32<T>;
+	friend class BitsetPool<T>;
 	private:
 		uint32_t mask;
 		
@@ -202,24 +107,24 @@ public:
 		void clear() { mask = 0; }
 		void fill() { mask = 0xffffffff; }
 		Subset intersect(Subset other) { return mask & other.mask; }
-		void cull(BitsetPool32<T> *p) { mask &= p->mask; }
+		void cull(BitsetPool<T> *p) { mask &= p->mask; }
 	};
 	
 	
 
 	class iterator {
-	friend class BitsetPool32<T>;
+	friend class BitsetPool<T>;
 	private:
 		T *slots;
 		T *curr;
 		uint32_t remainder;
 
-		iterator(const BitsetPool32<T> *pool) :
+		iterator(const BitsetPool<T> *pool) :
 		slots((T*)pool->slots),
 		remainder(pool->mask) {
 		}
 		
-		iterator(const BitsetPool32<T> *pool, Subset filter) :
+		iterator(const BitsetPool<T> *pool, Subset filter) :
 		slots((T*)pool->slots),
 		remainder(pool->mask & filter.mask) {
 		}
@@ -250,193 +155,6 @@ public:
 };
 
 //------------------------------------------------------------------------------
-// DYNAMIC POOL
-// Starts with 32 elements and then doubles-on-overflow up to capacity, for when
-// you don't want to statically preallocate all the slots on init for all your
-// pools.
-//------------------------------------------------------------------------------
-
-template<typename T, int N=1024>
-class DynamicPool {
-public:
-	typedef T InstanceType;
-	
-private:
-	friend class iterator;
-	union Slot {
-		T record;
-		Slot() {}
-		~Slot() {}
-	};
-	typedef Slot* SlotPtr;
-	
-	// Similar to a bitset pool, but we only allocate 32 instances
-	// in-place.  Beyond that we lazily malloc additiona
-	// instances, doubling capacity every time we overflow.
-	
-	Bitset<N> mask;
-	Slot baseSlots[32];
-	SlotPtr extendedSlots[5];
-	
-public:
-	DynamicPool() {
-		memset(extendedSlots, 0, 5 * sizeof(SlotPtr));
-	}
-	
-	~DynamicPool() {
-		// free memory
-		for(int i=0; i<5 && extendedSlots[i]; ++i) {
-			free(extendedSlots[i]);
-		}
-	}
-	
-	inline bool empty() const { return mask.empty(); }
-	inline bool active(T *s) const { return mask[getIndex((Slot*)s)]; }
-	
-	template<typename... Args>
-	T* alloc(Args&&... args) {
-		
-		// find the lowest zero in the mask
-		unsigned index;
-		if (!(~mask).findFirst(index)) {
-			return 0;
-		}
-		
-		// allocate a slot
-		Slot *slot;
-		if (index < 32) {
-			slot = baseSlots + index;
-		} else {
-			auto buf = indexToBuffer(index);
-			if (!extendedSlots[buf]) {
-				allocateBuffer(buf);
-			}
-			slot = extendedSlots[buf] + localIndex(index, buf);
-		}
-		
-		// placement new
-		auto result = new(slot) T(args ...);
-		
-		// we mark the slot after constructing the object, so that
-		// they can check if they're "first", and trigger side-effects
-		// in that case.
-		mask.mark(index);
-		
-		return result;
-		
-	}
-	
-	void release(T* p) {
-		
-		// clear from mask
-		int i = getIndex((Slot*)p);
-		ASSERT(mask[i]);
-		mask.clear(i);
-		
-		// logically release
-		p->~T();
-		
-	}
-	
-	// iteration
-	
-	class iterator {
-		friend class DynamicPool<T>;
-	private:
-		DynamicPool<T> *pool;
-		T *curr;
-		typename Bitset<1024>::iterator biterator;
-		
-		iterator(DynamicPool *apool) :
-		pool(apool), biterator(&pool->mask) {}
-		
-	public:
-		bool next() {
-			unsigned idx;
-			if (biterator.next(idx)) {
-				curr = (T*) pool->getSlot(idx);
-				return true;
-			} else {
-				curr = 0;
-				return false;
-			}
-		}
-		
-		T* operator->() { return curr; }
-		operator T*() { return curr; }
-		
-	};
-	
-	iterator list() { return iterator(this); }
-	
-private:
-	
-	inline Slot* getSlot(int i) {
-		ASSERT(i >= 0);
-		// check if we're preallocated or dynamically allocated
-		if (i < 32) {
-			return baseSlots + i;
-		} else {
-			int buf = indexToBuffer(i);
-			return extendedSlots[buf] + localIndex(i, buf);
-		}
-	}
-	
-	inline int indexToBuffer(int i) const {
-		ASSERT(i >= 32);
-		
-		// previous-power-of-two since lengths double
-		return (31 - __builtin_clz(i))-5;
-	}
-	
-	inline int lengthOfBuffer(int buf) const {
-		ASSERT(buf >= 0);
-		ASSERT(buf < 5);
-		
-		// Each buffers doubles the size of the pool
-		return 32 << buf;
-	}
-	
-	inline int firstIndex(int buf) const {
-		// Because doubling, first is length
-		return lengthOfBuffer(buf);
-	}
-	
-	inline int localIndex(int i, int buf) const {
-		ASSERT(buf >= 0);
-		ASSERT(buf < 5);
-		ASSERT(i >= 0);
-		ASSERT(i < 1024);
-		return i - firstIndex(buf);
-	}
-	
-	inline void allocateBuffer(int i) {
-		ASSERT(i >= 0 && i < 5);
-		ASSERT(extendedSlots[i] == 0);
-		extendedSlots[i] = (Slot*) malloc(sizeof(Slot) * lengthOfBuffer(i));
-	}
-	
-	inline int getIndex(Slot* p) const {
-		// because we don't know where malloc put things, we need to do a dumb
-		// lookup here.
-		if (p >= baseSlots && p < baseSlots + 32) {
-			return p - baseSlots;
-		}
-		
-		for(int i=0; i<arraysize(extendedSlots) && extendedSlots[i]; ++i) {
-			auto len = lengthOfBuffer(i);
-			if (p >= extendedSlots[i] && p < extendedSlots[i] + len) {
-				return len + (p - extendedSlots[i]);
-			}
-		}
-		// we're assuming here that we found the instance
-		ASSERT(false);
-		return -1;
-	}
-	
-};
-
-//------------------------------------------------------------------------------
 // COMPACT POOL
 // Faster iteration and no upper-bound on size, but records are not guarenteed
 // to remain at fixed memory addresses (either because of reallocation or
@@ -460,7 +178,7 @@ private:
 public:
 	
 	CompactPool() {}
-	CompactPool(size_t n) : slots(n) {}
+	CompactPool(size_t n) { slots.reserve(n); }
 	
 	// const methods
 	inline T* begin() const { return (T*) slots.data(); }

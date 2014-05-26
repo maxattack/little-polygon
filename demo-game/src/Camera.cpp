@@ -15,7 +15,7 @@ void Camera::quake() {
 
 void Camera::flash() {
 	glClearColor(1, 1, 1, 1);
-	flashTime = 0.1f;
+	flashTime = 0.115f;
 }
 
 void Camera::tick() {
@@ -33,6 +33,7 @@ void Camera::tick() {
 		flashTime -= lpTimer.deltaSeconds;
 		if (flashTime <= 0.0f) {
 			glClearColor(restColor.red(), restColor.green(), restColor.blue(), 0);
+			quake();
 		}
 	}
 }

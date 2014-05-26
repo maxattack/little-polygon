@@ -235,7 +235,6 @@ class Explosion {
 private:
 	Vec2 position;
 	float time;
-	bool playedSfx;
 	
 public:
 	Explosion(Vec2 pos, float delay);

@@ -122,8 +122,8 @@ void Kitten::tickShooting() {
 		int tileX = floorToInt(position.x + 0.5f * hitX);
 		int tileY = floorToInt(position.y);
 		gWorld.destroyTile(tileX, tileY)       ||
-			gWorld.destroyTile(tileX, tileY+1) ||
-			gWorld.destroyTile(tileX, tileY-1);
+			gWorld.destroyTile(tileX, tileY-1) ||
+			gWorld.destroyTile(tileX, tileY+1);
 	}
 }
 
