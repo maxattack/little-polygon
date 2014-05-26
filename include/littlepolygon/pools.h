@@ -173,7 +173,7 @@ public:
 	CompactPool(size_t n) { slots.reserve(n); }
 	
 	// const methods
-	inline const T* begin() const { return slots.begin()->address(); }
+	inline const T* begin() const { return slots.data()->address(); }
 	inline const T* end() const { return begin() + count(); }
 	
 	inline bool isEmpty() const { return slots.empty(); }
@@ -182,7 +182,7 @@ public:
 	inline int indexOf(const T* p) const { ASSERT(active(p)); return p - begin(); }
 
 	// ordinary methods
-	inline T* begin() { return slots.begin()->address(); }
+	inline T* begin() { return slots.data()->address(); }
 	inline T* end() { return begin() + count(); }
 	
 	inline void reserve(int n) { slots.reserve(n); }
