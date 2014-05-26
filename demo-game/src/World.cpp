@@ -39,12 +39,12 @@ bool World::destroyTile(int x, int y) {
 void World::run() {
 	
 	for(int i=0; i<MIX_CHANNELS; ++i) {
-		Mix_Volume(i, 33);
+		Mix_Volume(i, 50);
 	}
-//	auto mus = Mix_LoadMUS("song.mid");
-//	if (mus) {
-//		Mix_PlayMusic(mus, -1);
-//	}
+	auto mus = Mix_LoadMUS("song.mid");
+	if (mus) {
+		Mix_PlayMusic(mus, -1);
+	}
 	
 	while(!done) {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
