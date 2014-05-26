@@ -79,7 +79,7 @@ inline Vec2 vec(float ax, float ay) { return Vec2(ax, ay); }
 
 // Vec2 helpers
 inline Vec2 operator*(float k, Vec2 q) { return Vec2(k*q.x, k*q.y); }
-inline Vec2 operator*(double k, Vec2 q) { return Vec2(k*q.x, k*q.y); }
+inline Vec2 operator*(double k, Vec2 q) { return Vec2((float)k*q.x, (float)k*q.y); }
 inline float dot(Vec2 u, Vec2 v) { return u.x*v.x + u.y*v.y; }
 inline float cross(Vec2 u, Vec2 v) { return u.x * v.y - v.x* u.y; }
 inline Vec2 lerp(Vec2 u, Vec2 v, float t) { return u + t * (v - u); }
@@ -224,12 +224,12 @@ inline Vec2 cdiv(Vec2 u, Vec2 v) {
 inline Vec2 polarVector(float radius, float radians) { return radius * Vec2(cosf(radians), sinf(radians)); }
 inline Vec2 unitVector(float radians) { return Vec2(cosf(radians), sinf(radians)); }
 
-inline int floorToInt(float x) { return floorf(x); }
+inline int floorToInt(float x) { return (int) floorf(x); }
 
 // easing functions
 inline float easeOut2(float u) {
 	u=1.0f-u;
-	return 1.0 - u*u;
+	return 1.0f - u*u;
 }
 inline float easeOut4(float u) {
 	u=1.0f-u;
@@ -237,16 +237,16 @@ inline float easeOut4(float u) {
 }
 inline float easeInOutBack(float t) {
 	auto v = t + t;
-	auto s = 1.70158 * 1.525;
+	auto s = 1.70158f * 1.525f;
 	if (v < 1.0) {
-		return 0.5 * (v * v * ((s + 1.0) * v - s));
+		return 0.5f * (v * v * ((s + 1.0f) * v - s));
 	} else {
 		v -= 2.0;
-		return 0.5 * (v * v * ((s + 1.0) * v + s) + 2.0);
+		return 0.5f * (v * v * ((s + 1.0f) * v + s) + 2.0f);
 	}
 }
 inline float easeInOutQuad(float t) { return t<0.5f ? 2.0f*t*t : -1.0f+(4.0f-t-t)*t; }
-inline float easeOutBack(float t) { t-=1.0; return t*t*((1.70158+1.0)*t + 1.70158) + 1.0; }
+inline float easeOutBack(float t) { t-=1.0; return t*t*((1.70158f+1.0f)*t + 1.70158f) + 1.0f; }
 
 inline float timeIndependentEasing(float easing, float dt) { return 1.0f - powf(1.0f-easing, 60.0f * dt); }
 inline float easeTowards(float curr, float target, float easing, float dt) { return curr + (target - curr) * timeIndependentEasing(easing, dt); }
@@ -256,30 +256,30 @@ inline Vec2 easeTowards(Vec2 curr, Vec2 target, float easing, float dt)    { ret
 // random number functions
 inline int randInt(int x) { return rand() % x; }
 inline int randInt(int inclusiveMin, int exclusiveMax) { return inclusiveMin + randInt(exclusiveMax-inclusiveMin); }
-inline float randomValue() { return rand() / double(RAND_MAX); }
+inline float randomValue() { return (float)(rand() / double(RAND_MAX)); }
 inline float randomValue(float u, float v) { return u + randomValue() * (v - u); }
-inline float randomAngle() { return M_TAU * randomValue(); }
+inline float randomAngle() { return (float) M_TAU * randomValue(); }
 inline Vec2 randomPointOnCircle(float r=1.0f) { return polarVector(r, randomAngle()); }
 inline Vec2 randomPointInsideCircle(float r=1.0f) { return polarVector(r * randomValue(), randomAngle()); }
-inline float expovariate(float avgDuration, float rmin=0.00001f, float rmax=0.99999f) { return -avgDuration*log(randomValue(rmin, rmax)); }
+inline float expovariate(float avgDuration, float rmin=0.00001f, float rmax=0.99999f) { return -avgDuration*logf(randomValue(rmin, rmax)); }
 	
 // handling radians sanely
 inline float normalizeAngle(float radians) {
-	radians = fmodf(radians, M_TAU);
-	return radians < 0 ? radians + M_TAU : radians;
+	radians = fmodf(radians, (float) M_TAU);
+	return radians < 0 ? radians + (float) M_TAU : radians;
 }
 inline float radianDiff(float lhs, float rhs) {
 	float result = normalizeAngle(lhs - rhs);
-	if (result > M_PI) {
-		return result - M_TAU;
-	} else if (result < -M_PI) {
-		return result + M_TAU;
+	if (result > (float) M_PI) {
+		return result - (float) M_TAU;
+	} else if (result < -(float) M_PI) {
+		return result + (float) M_TAU;
 	} else {
 		return result;
 	}
 }
 inline float easeRadians(float curr, float target, float easing, float dt) {
-	return curr + powf(easing, clampd(1.0/(60.0*dt))) * radianDiff(target, curr);
+	return curr + powf(easing, clamp(1.0f/(60.0f*dt))) * radianDiff(target, curr);
 }
 
 // I USE THIS A LOT O____O
@@ -331,9 +331,9 @@ struct Color {
 // handy verbose constructors
 inline Color rgba(uint32_t hex) { return Color( (0xff000000&hex)>>24, (0xff0000&hex)>>16, (0xff00&hex)>>8, 0xff&hex ); }
 inline Color rgb(uint32_t hex) { return Color( (0xff0000&hex)>>16, (0xff00&hex)>>8, 0xff&hex, 0xff ); }
-inline Color rgb(float r, float g, float b) { return Color(0xff*r, 0xff*g, 0xff*b); }
-inline Color rgba(float r, float g, float b, float a) { return Color(0xff*r, 0xff*g, 0xff*b, 0xff*a); }
-inline Color rgba(Color c, float a) { c.a = 0xff * a; return c; }
+inline Color rgb(float r, float g, float b) { return Color((uint8_t)floorToInt(0xff*r), (uint8_t)floorToInt(0xff*g), (uint8_t)floorToInt(0xff*b)); }
+inline Color rgba(float r, float g, float b, float a) { return Color((uint8_t)floorToInt(0xff*r), (uint8_t)floorToInt(0xff*g), (uint8_t)floorToInt(0xff*b), (uint8_t)floorToInt(0xff*a)); }
+inline Color rgba(Color c, float a) { c.a = (uint8_t)floorToInt(0xff * a); return c; }
 Color hsv(float h, float s, float v);
 inline Color hsva(float h, float s, float v, float a) { return rgba(hsv(h,s,v), a); }
 

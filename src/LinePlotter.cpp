@@ -122,7 +122,7 @@ void LinePlotter::plotLittleBox(Vec2 p, float r, Color c) {
 void LinePlotter::plotArrow(Vec2 p0, Vec2 p1, float r, Color c) {
 	plot(p0, p1, c);
 	auto delta = r * (p0 - p1).normalized();
-	auto r0 = unitVector(0.25 * M_PI);
+	auto r0 = unitVector(0.25f * (float) M_PI);
 	plot(p1, p1 + cmul(delta, r0), c);
 	plot(p1, p1 + cmul(delta, r0.conjugate()), c);
 }

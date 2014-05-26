@@ -54,11 +54,11 @@ public:
 	
 	void setFromWindow();
 	void setSize(Vec2 sz) { mSize = sz; }
-	void setSize(double w, double h) { mSize.set(w,h); }
-	void setSizeWithHeight(double h);
-	void setSizeWithWidth(double w);
+	void setSize(float w, float h) { mSize.set(w,h); }
+	void setSizeWithHeight(float h);
+	void setSizeWithWidth(float w);
 	void setOffset(Vec2 off) { mOffset = off; }
-	void setOffset(double x, double y) { mOffset.set(x,y); }
+	void setOffset(float x, float y) { mOffset.set(x,y); }
 	
 	Vec2 windowToViewport(Vec2 p) const;
 	Vec2 viewportToWindow(Vec2 vp) const;

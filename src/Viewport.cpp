@@ -26,13 +26,13 @@ void Viewport::setFromWindow() {
 	mOffset = vec(0,0);
 }
 
-void Viewport::setSizeWithHeight(double h) {
+void Viewport::setSizeWithHeight(float h) {
 	int ww, wh;
 	SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &ww, &wh);
 	mSize = vec(h * float(ww) / float(wh), h);
 }
 
-void Viewport::setSizeWithWidth(double w) {
+void Viewport::setSizeWithWidth(float w) {
 	int ww, wh;
 	SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &ww, &wh);
 	mSize = vec(w, w * float(wh) / float(ww));

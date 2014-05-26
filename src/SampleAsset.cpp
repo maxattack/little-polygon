@@ -35,12 +35,12 @@ struct WaveHeader {
 	uint32_t Subchunk2Size;
 	
 	void init(int numChannels, int sampleRate, int sampleWidth, int numSamples) {
-		NumChannels = numChannels;
+		NumChannels = (uint16_t) numChannels;
 		SampleRate = sampleRate;
 		
 		ByteRate = sampleRate * numChannels * sampleWidth;
-		BlockAlign = numChannels * sampleWidth;
-		BitsPerSample = (sampleWidth<<3);
+		BlockAlign = (uint16_t) (numChannels * sampleWidth);
+		BitsPerSample = (uint16_t) (sampleWidth<<3);
 		Subchunk2Size = numSamples * numChannels * sampleWidth;
 		ChunkSize = 36 + Subchunk2Size;
 	}
