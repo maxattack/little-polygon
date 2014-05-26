@@ -41,17 +41,16 @@ public:
 	Plotter plotter;
 	LinePlotter lines;
 	SpritePlotter sprites;
-	//SplinePlotter splines;
 	
 	LPContext(const char *caption, int w, int h, const char *assetPath, int plotterCap, int linesCap);
 };
 
 inline void lpInitialize(const char *caption, int w, int h, const char *assetPath=0, int plotterCap=1024, int linesCap=128) {
-	new LPContext(caption, w, h, assetPath, plotterCap, linesCap);
+	new(SDL_malloc(sizeof(LPContext))) LPContext(caption, w, h, assetPath, plotterCap, linesCap);
 }
 
 inline void lpFinalize() {
-	delete LPContext::getInstancePtr();
+	SDL_free(LPContext::getInstancePtr());
 }
 
 #define lpWindow  (LPContext::getInstance().window)
@@ -62,4 +61,3 @@ inline void lpFinalize() {
 #define lpLines   (LPContext::getInstance().lines)
 #define lpSprites (LPContext::getInstance().sprites)
 #define lpBatch   (LPContext::getInstance().batch)
-//#define lpSplines (LPContext::getInstance().splines)

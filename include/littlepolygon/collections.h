@@ -29,7 +29,7 @@ template<typename T>
 struct Slot {
 	// This is better than a char[] because it handles alignment
 	// correctly and portably ;)
-    typename std::aligned_storage<sizeof(T)>::type storage;
+    typename std::aligned_storage<sizeof(T), alignof(T)>::type storage;
 
     Slot() {}
     ~Slot() {}

@@ -8,6 +8,7 @@ int main(int argc, char *argv[]) {
 	world.run();
 
 	lpFinalize();
+	
 	return 0;
 }
 

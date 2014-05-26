@@ -179,24 +179,23 @@ public:
 	inline bool isEmpty() const { return slots.empty(); }
 	inline int count() const { return slots.size(); }
 	inline bool active(const T* p) const { return p >= begin() && p < end(); }
-	inline int indexOf(const T* p) const { ASSERT(active(p)); return p - slots.data()->address(); }
+	inline int indexOf(const T* p) const { ASSERT(active(p)); return p - begin(); }
 
 	// ordinary methods
 	inline T* begin() { return slots.begin()->address(); }
 	inline T* end() { return begin() + count(); }
 	
 	inline void reserve(int n) { slots.reserve(n); }
-	inline T& operator[](int i) { ASSERT(i >= 0 && i < count()); return slots[i].record; }
 	
 	void clear() {
-		for(auto& slot : slots) { slot.record.~T(); }
+		for(auto& slot : slots) { slot.release(); }
 		slots.clear();
 	}
 
 	template<typename... Args>
 	T* alloc(Args&&... args) {
 		slots.emplace_back();
-		return new (&slots.back()) T(args...);
+		return slots.back().init(args...);
 	}
 
 	void release(T* p) {
