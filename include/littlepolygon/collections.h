@@ -22,7 +22,7 @@
 //--------------------------------------------------------------------------------
 // POD "Storage Slot" For a value (unrestricted-union workaround :P)
 // The basic idea is we'd like to reserve space for an object, but explicitly
-// call it's constructor and destructor.
+// call its constructor and destructor.
 //--------------------------------------------------------------------------------
 
 template<typename T>
