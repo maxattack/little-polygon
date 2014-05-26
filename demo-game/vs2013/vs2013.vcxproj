@@ -50,12 +50,12 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Users\max\Documents\GitHub\little-polygon\deps\win32\include\SDL2_mixer;C:\Users\max\Documents\GitHub\little-polygon\deps\win32\include\SDL2;C:\Users\max\Documents\GitHub\little-polygon\deps\win32\include;C:\Users\max\Documents\GitHub\little-polygon\vectorial\include;C:\Users\max\Documents\GitHub\little-polygon\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\deps\win32\include\SDL2_mixer;..\..\deps\win32\include\SDL2;..\..\deps\win32\include;..\..\vectorial\include;..\..\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2_mixer.lib;zdll.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\Users\max\Documents\GitHub\little-polygon\deps\win32\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\deps\win32\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <SubSystem>Console</SubSystem>
     </Link>
     <ProjectReference>
@@ -72,13 +72,13 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Users\max\Documents\GitHub\little-polygon\deps\win32\include\SDL2_mixer;C:\Users\max\Documents\GitHub\little-polygon\deps\win32\include\SDL2;C:\Users\max\Documents\GitHub\little-polygon\deps\win32\include;C:\Users\max\Documents\GitHub\little-polygon\vectorial\include;C:\Users\max\Documents\GitHub\little-polygon\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\deps\win32\include\SDL2_mixer;..\..\deps\win32\include\SDL2;..\..\deps\win32\include;..\..\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>C:\Users\max\Documents\GitHub\little-polygon\deps\win32\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\deps\win32\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2_mixer.lib;zdll.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
     </Link>
