@@ -7,7 +7,7 @@ Release
 
 #Visual Studio files
 *.[Oo]bj
-*.user
+#*.user
 *.aps
 *.pch
 *.vspscc
