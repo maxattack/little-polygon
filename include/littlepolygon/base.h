@@ -27,16 +27,17 @@
 #include <SDL2/SDL.h>
 #if __IPHONEOS__
 	#include <SDL2/SDL_opengles2.h>
+	#define LITTLE_POLYGON_OPENGL_ES 1
+	#define LITTLE_POLYGON_OPENGL_CORE 0
 #else
 	#define GLEW_STATIC
 	#include <GL/glew.h>
 	#include <SDL2/SDL_opengl.h>
+	#define LITTLE_POLYGON_OPENGL_ES 0
+	#define LITTLE_POLYGON_OPENGL_CORE 1
 #endif
 #include <SDL2_mixer/SDL_mixer.h>
 
-// highter level conditional-compilation flags
-#define LITTLE_POLYGON_OPENGL_ES 0
-#define LITTLE_POLYGON_OPENGL_CORE 1
 
 // handy macros
 #ifndef STATIC_ASSERT
