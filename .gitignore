@@ -1,7 +1,3 @@
-bin
-lib
-obj
-
 _old
 *.pyc
 
