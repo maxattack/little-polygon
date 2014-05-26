@@ -20,7 +20,7 @@
 
 #include "events.h"
 #include "sprites.h"
-#include "splines.h"
+//#include "splines.h"
 #include "utils.h"
 
 class SDLContext {
@@ -41,7 +41,7 @@ public:
 	Plotter plotter;
 	LinePlotter lines;
 	SpritePlotter sprites;
-	SplinePlotter splines;
+	//SplinePlotter splines;
 	
 	LPContext(const char *caption, int w, int h, const char *assetPath, int plotterCap, int linesCap);
 };
@@ -62,4 +62,4 @@ inline void lpFinalize() {
 #define lpLines   (LPContext::getInstance().lines)
 #define lpSprites (LPContext::getInstance().sprites)
 #define lpBatch   (LPContext::getInstance().batch)
-#define lpSplines (LPContext::getInstance().splines)
+//#define lpSplines (LPContext::getInstance().splines)

@@ -32,8 +32,8 @@ struct Vec2 {
 	
 	Vec2() {}
 	Vec2(float ax, float ay) : x(ax), y(ay) {}
-	Vec2(SDL_Point p) : x(p.x), y(p.y) {}
-	Vec2(vec2f u) : x(u.x()), y(u.y()) {}
+	//Vec2(SDL_Point p) : x(p.x), y(p.y) {}
+	//Vec2(vec2f u) : x(u.x()), y(u.y()) {}
 
 	#ifdef BOX2D_H
 	Vec2(b2Vec2 v) : x(v.x), y(v.y) {}

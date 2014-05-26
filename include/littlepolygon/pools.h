@@ -168,12 +168,7 @@ public:
 	typedef T InstanceType;
 	
 private:
-	union Slot {
-		T record;
-		Slot() {}
-		~Slot() {}
-	};
-	std::vector<Slot> slots;
+	std::vector<T> slots;
 
 public:
 	
@@ -209,10 +204,9 @@ public:
 
 	void release(T* p) {
 		ASSERT(active(p));
-		auto slot = (Slot*) p;
 		p->~T();
-		if (slot != &slots.back()) {
-			*slot = slots.back();
+		if (p != &slots.back()) {
+			*p = slots.back();
 		}
 		slots.pop_back();
 	}

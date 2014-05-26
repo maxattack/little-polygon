@@ -108,8 +108,12 @@ SDLContext::SDLContext(const char *caption, int w, int h) {
 	
 	gl = SDL_GL_CreateContext(window);
 	glewExperimental = GL_TRUE;
-	glewInit();
-	
+	auto err = glewInit();
+	if (err != GLEW_OK) {
+		LOG_MSG("FAILED TO INIT GLEW :*(");
+		exit(-1);
+	}
+
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -130,7 +134,7 @@ assets(assetPath),
 view(makeView()),
 plotter(plotterCap),
 lines(linesCap),
-sprites(&plotter),
-splines(&plotter)
+sprites(&plotter)
+//splines(&plotter)
 {
 }

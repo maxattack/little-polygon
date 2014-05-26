@@ -64,7 +64,7 @@ workingTexture(0)
 	aColor = shader.attribLocation("aColor");
 	
 	// setup element array buffer
-	uint16_t indices[6 * capacity()];
+	uint16_t *indices = (uint16_t*)SDL_malloc(6 * capacity() * sizeof(uint16_t));
 	for(int i=0; i<capacity(); ++i) {
 		indices[6*i+0] = 4*i;
 		indices[6*i+1] = 4*i+1;
@@ -82,7 +82,8 @@ workingTexture(0)
 		GL_STATIC_DRAW
 	);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-	
+	SDL_free(indices);
+
 	// initialize vbos
 	glGenVertexArrays(3, vao);
 	for(int i=0; i<3; ++i) {
@@ -169,25 +170,6 @@ void SpritePlotter::drawImage(ImageAsset *img, const AffineMatrix& xform, int fr
 	slice[1].set(xform.transformPoint(p1), z, fr->uv1, c);
 	slice[2].set(xform.transformPoint(p2), z, fr->uv2, c);
 	slice[3].set(xform.transformPoint(p3), z, fr->uv3, c);
-
-	++count;	
-}
-
-void SpritePlotter::drawImage(ImageAsset *img, const mat4f& xform, int frame, Color c, float z) {
-	ASSERT(isBound());
-	setTextureAtlas(img->texture);
-	auto slice = nextSlice();
-	FrameAsset *fr = img->frame(frame);
-
-	vec3f p0 = -vec3f(fr->px, fr->py, 0);
-	vec3f p1 = p0 + vec3f(0, fr->h, 0);
-	vec3f p2 = p0 + vec3f(fr->w, 0, 0);
-	vec3f p3 = p0 + vec3f(fr->w, fr->h, 0);
-
-	slice[0].set(transformPoint(xform, p0).xy(), z, fr->uv0, c);
-	slice[1].set(transformPoint(xform, p1).xy(), z, fr->uv1, c);
-	slice[2].set(transformPoint(xform, p2).xy(), z, fr->uv2, c);
-	slice[3].set(transformPoint(xform, p3).xy(), z, fr->uv3, c);
 
 	++count;	
 }

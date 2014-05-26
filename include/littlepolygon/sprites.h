@@ -73,7 +73,6 @@ public:
 	void drawImage(ImageAsset *image, Vec2 position, int frame=0, Color color=rgba(0), float z=0);
 	void drawImage(ImageAsset *image, Vec2 position, Vec2 u, int frame=0, Color color=rgba(0), float z=0);
 	void drawImage(ImageAsset *image, const AffineMatrix& xform, int frame=0, Color color=rgba(0), float z=0);
-	void drawImage(ImageAsset *image, const mat4f& xform, int frame=0, Color color=rgba(0), float z=0);
 	void drawQuad(ImageAsset *image, Vec2 p0, Vec2 p1, Vec2 p2, Vec2 p3, int frame=0, Color color=rgba(0), float z=0);
 	void drawLabel(FontAsset *font, Vec2 p, Color c, const char *msg, float z=0);
 	void drawLabelCentered(FontAsset *font, Vec2 p, Color c, const char *msg, float z=0);

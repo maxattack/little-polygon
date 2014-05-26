@@ -22,7 +22,8 @@ void Viewport::setFromWindow() {
 	SDL_Window *win = SDL_GL_GetCurrentWindow();
 	SDL_Point sz;
 	SDL_GetWindowSize(win, &sz.x, &sz.y);
-	mSize = sz;
+	mSize.x = (float)sz.x;
+	mSize.y = (float)sz.y;
 	mOffset = vec(0,0);
 }
 
@@ -40,9 +41,8 @@ void Viewport::setSizeWithWidth(float w) {
 
 Vec2 Viewport::windowToViewport(Vec2 p) const {
 	SDL_Window *win = SDL_GL_GetCurrentWindow();
-	SDL_Point sz;
-	SDL_GetWindowSize(win, &sz.x, &sz.y);
-	return mSize * p / Vec2(sz) + mOffset;
+	int szx, szy;  SDL_GetWindowSize(win, &szx, &szy);
+	return mSize * p / Vec2((float) szx, (float)szy) + mOffset;
 }
 
 Vec2 Viewport::viewportToWindow(Vec2 vp) const {

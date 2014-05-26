@@ -1,0 +1,131 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Common Source Files">
+      <UniqueIdentifier>{44e63770-81c1-4f98-86a0-2868d89b6a40}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\AssetBundle.cpp">
+      <Filter>Common Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Context.cpp">
+      <Filter>Common Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\LinePlotter.cpp">
+      <Filter>Common Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Plotter.cpp">
+      <Filter>Common Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\SampleAsset.cpp">
+      <Filter>Common Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Shader.cpp">
+      <Filter>Common Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\SimplexNoise.cpp">
+      <Filter>Common Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\SpritePlotter.cpp">
+      <Filter>Common Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\TextureAsset.cpp">
+      <Filter>Common Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\TilemapAsset.cpp">
+      <Filter>Common Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Timer.cpp">
+      <Filter>Common Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\utils.cpp">
+      <Filter>Common Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Viewport.cpp">
+      <Filter>Common Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Camera.cpp">
+      <Filter>Game Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Entity.cpp">
+      <Filter>Game Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Explosion.cpp">
+      <Filter>Game Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Hero.cpp">
+      <Filter>Game Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Kitten.cpp">
+      <Filter>Game Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\main.cpp">
+      <Filter>Game Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\PlayerInput.cpp">
+      <Filter>Game Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TileMask.cpp">
+      <Filter>Game Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\World.cpp">
+      <Filter>Game Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\game.h">
+      <Filter>Game Source Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\deps\win32\lib\libFLAC-8.dll">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\deps\win32\lib\libmikmod-2.dll">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\deps\win32\lib\libmodplug-1.dll">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\deps\win32\lib\libogg-0.dll">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\deps\win32\lib\libvorbis-0.dll">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\deps\win32\lib\libvorbisfile-3.dll">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\deps\win32\lib\SDL2.dll">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\deps\win32\lib\SDL2_mixer.dll">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\deps\win32\lib\smpeg2.dll">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\deps\win32\lib\zlib1.dll">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\assets\assets.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\assets\song.mid">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
+</Project>

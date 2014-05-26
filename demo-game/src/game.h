@@ -241,6 +241,7 @@ private:
 	float time;
 	
 public:
+	Explosion() {}
 	Explosion(Vec2 pos, float delay);
 	bool tick();
 	void draw();

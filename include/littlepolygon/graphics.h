@@ -105,9 +105,9 @@ struct Vertex {
 		x = p.x; y = p.y; z = az; u = uv.x; v = uv.y; color = c;
 	}
 	
-	inline void set(vec3f p, Vec2 uv, Color c) {
-		p.load(&x); u = uv.x; v = uv.y; color = c;
-	}
+	//inline void set(vec3f p, Vec2 uv, Color c) {
+	//	p.load(&x); u = uv.x; v = uv.y; color = c;
+	//}
 	
 };
 
