@@ -206,5 +206,12 @@ public:
 		}
 		slots.pop_back();
 	}
-
+	
+	template<bool (T::*Func)()>
+	void cull() {
+		for(auto inst=begin(); inst!=end();) {
+			if ((inst->*Func)()) { release(inst); } else { ++inst; }
+		}
+	}
+	
 };
