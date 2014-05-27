@@ -304,6 +304,10 @@ def export_native_assets(assetGroup, outpath, bpp):
 		f.write(data)
 		f.write(pointers)
 
+	print '-' * 80
+	print 'WROTE ASSETS TO PATH: %s' % outpath
+	print '-' * 80
+
 	# SHOW PROOFS
 	# for texture in textures:
 	# 	texture.image.show()
