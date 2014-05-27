@@ -23,8 +23,18 @@ from psd_tools import PSDImage
 import array, base64, collections, math, os, string, struct, sys, zlib, yaml
 import lxml, lxml.etree
 
+def xyrange(x, y):
+	return product(xrange(x), xrange(y))
+
 def _sanitize_rgba(im):
-	return im if im.mode == 'RGBA' else im.convert('RGBA')
+	if im.mode != 'RGBA': 
+		im = im.convert('RGBA')
+	px = im.load()
+	for x,y in xyrange(*im.size):
+		r,g,b,a = px[x,y]
+		if a < 2:
+			px[x,y] = (0,0,0,0)
+	return im
 
 def _pad_left_top(im, left, top, sw, sh):
 	result = new_image(sw, sh)
@@ -54,9 +64,6 @@ def open_image_layers(path):
 
 def new_image(w,h):
 	return Image.new('RGBA', (w,h), (0,0,0,0))
-
-def xyrange(x, y):
-	return product(xrange(x), xrange(y))
 
 def npot(n):
 	n -= 1

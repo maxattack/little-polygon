@@ -85,7 +85,13 @@ SDLContext::SDLContext(const char *caption, int w, int h) {
 	
 
 	
-	SDL_Init(SDL_INIT_EVERYTHING);
+	auto result = SDL_Init(
+		SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER | SDL_INIT_EVENTS
+	);
+	if (result != 0) {
+		LOG(("SDL INIT FAILED: %s\n", SDL_GetError()));
+		exit(-1);
+	}
 	SDL_GameControllerAddMapping(gamepadMapping);
 	Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024);
 	
@@ -106,14 +112,29 @@ SDLContext::SDLContext(const char *caption, int w, int h) {
 		w, h, SDL_WINDOW_OPENGL
 	);
 	
+	if (!window) {
+		LOG(("OPEN WINDOW FAILED: %s\n", SDL_GetError()));
+		exit(-1);
+	}
+	
 	gl = SDL_GL_CreateContext(window);
+	
+	if (!window) {
+		LOG(("START OPENGL FAILED: %s\n", SDL_GetError()));
+		exit(-1);
+	}
+	
 	glewExperimental = GL_TRUE;
 	auto err = glewInit();
 	if (err != GLEW_OK) {
-		LOG_MSG("FAILED TO INIT GLEW :*(");
+		LOG_MSG("START GLEW FAILED");
 		exit(-1);
 	}
 
+	SDL_GL_SetSwapInterval(1);
+	
+	glDisable(GL_DEPTH_TEST);
+	
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 

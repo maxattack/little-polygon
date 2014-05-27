@@ -49,31 +49,36 @@ struct Slot {
 // SIMPLE TEMPLATE QUEUE
 //--------------------------------------------------------------------------------
 
-template<typename T, int N>
+template<typename T>
 class Queue {
 private:
-	int n;
-	int i;
-	Slot<T> slots[N];
+	int cap, n, i;
+	Slot<T> *slots;
 
 public:
-	Queue() : n(0), i(0) {}
+	Queue(int aCapacity) : cap(aCapacity), n(0), i(0) {
+		slots = (Slot<T>*) SDL_calloc(cap, sizeof(T));
+	}
 	
-	int capacity() const { return N; }
+	~Queue() {
+		SDL_free(slots);
+	}
+	
+	int capacity() const { return cap; }
 	int count() const { return n; }
 	bool empty() const { return n == 0; }
-	bool full() const { return n == N; }
+	bool full() const { return n == cap; }
 	
 	void enqueue(const T& val) {
-		ASSERT(n < N);
-		new(slots[(i + n) % N].address()) T(val);		
+		ASSERT(n < cap);
+		new(slots[(i + n) % cap].address()) T(val);
 		n++;
 	}
 	
 	template<typename... Args>
 	void emplace(Args&&... args) {
-		ASSERT(n < N);
-		new(slots[(i + n) % N].address()) T(std::forward<Args>(args) ...);
+		ASSERT(n < cap);
+		new(slots[(i + n) % cap].address()) T(std::forward<Args>(args) ...);
 		n++;
 	}
 	
@@ -81,7 +86,7 @@ public:
 		ASSERT(n > 0);
 		T result = slots[i].value();
 		n--;
-		i = (i+1) % N;
+		i = (i+1) % cap;
 		return result;
 	}
 
@@ -92,7 +97,7 @@ public:
 	
 	T& peekLast() {
 		ASSERT(n > 0);
-		return slots[(i+n-1) % N].reference();
+		return slots[(i+n-1) % cap].reference();
 	}
 	
 	bool tryDequeue(T* outValue) {
@@ -116,7 +121,7 @@ public:
 		bool next(T* outValue) {
 			idx++;
 			if (idx >= q->n) { return false; }
-			*outValue = q->slots[(q->i + idx) % N].value();
+			*outValue = q->slots[(q->i + idx) % q->cap].value();
 			return true;
 		}
 	};
@@ -126,21 +131,27 @@ public:
 // SIMPLE TEMPLATE LIST/STACK
 //--------------------------------------------------------------------------------
 
-template<typename T, int N>
+template<typename T>
 class List {
 private:
-	int n;
-	Slot<T> slots[N];
+	int cap, n;
+	Slot<T>* slots;
 
 public:
-	List() : n(0) {}
+	List(int aCapacity) : cap(aCapacity), n(0) {
+		slots = (Slot<T>*) SDL_calloc(cap, sizeof(T));
+	}
 	
-	int capacity() const { return N; }
+	~List() {
+		SDL_free(slots);
+	}
+	
+	int capacity() const { return cap; }
 	int count() const { return n; }
-	size_t rawCapacity() const { return N * sizeof(T); }
+	size_t rawCapacity() const { return cap * sizeof(T); }
 	size_t rawSize() const { return n * sizeof(T); }
 	bool empty() const { return n == 0; }
-	bool full() const { return n == N; }
+	bool full() const { return n == cap; }
 
 	T* begin() const { return slots->address(); }
 	T* end() const { return begin() + n; }
@@ -154,7 +165,7 @@ public:
 	T& operator[](int i) {
 		ASSERT(i >= 0);
 		ASSERT(i < n);
-		return slots[i].value();
+		return slots[i].reference();
 	}
 	
 	void clear() {
@@ -162,14 +173,14 @@ public:
 	}
 	
 	void append(const T& val) {
-		ASSERT(n < N);
+		ASSERT(n < cap);
 		new(slots[n].address()) T(val);
 		n++;
 	}
 	
 	template<typename... Args>
 	T* alloc(Args&&... args) {
-		ASSERT(n < N);
+		ASSERT(n < cap);
 		auto result = new(slots[n].address()) T(args ...);
 		n++;
 		return result;
@@ -182,7 +193,7 @@ public:
 	}
 	
 	bool tryAppend(const T& val) {
-		if (n < N) {
+		if (n < cap) {
 			append(val);
 			return true;
 		} else {
@@ -221,7 +232,7 @@ public:
 	void insertAt(const T& val, int i) {
 		ASSERT(i >= 0);
 		ASSERT(i <= n);
-		ASSERT(n < N);
+		ASSERT(n < cap);
 		if (i == n) {
 			append(val);
 		} else {
@@ -231,6 +242,10 @@ public:
 			slots[i].reference() = val;
 			n++;
 		}
+	}
+	
+	void fill(const T& val) {
+		while(n < cap) { append(val); }
 	}
 	
 	int findFirst(const T& val) const {

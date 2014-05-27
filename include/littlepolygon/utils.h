@@ -34,6 +34,7 @@
 #define COROUTINE_YIELD               {_line=__LINE__; return; case __LINE__:;}
 #define COROUTINE_YIELD_RESULT(_x)    {_line=__LINE__;return (_x); case __LINE__:;}
 #define COROUTINE_END                 _line=-1;default:;}
+#define COROUTINE_FINISHED            (_line == -1)
 
 //--------------------------------------------------------------------------------
 // TIMING & ANIMATION UTILITIES

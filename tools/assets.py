@@ -148,6 +148,8 @@ def load_frames_with_path(path, num_frames):
 	else:
 		# we have a filmstrip
 		im = open_image(path)
+		if '@' in path:
+			num_frames = int(os.path.splitext(path)[0].split('@')[1])
 		if num_frames == 1:
 			frames = [ im ]
 		else:
@@ -167,6 +169,7 @@ def load_pivot_from_string(pivot, w, h):
 	elif ',' in pivot:
 		px, py = map(int, pivot.split(','))
 	else:
+		pivot = pivot.lower()
 		if 'center' in pivot:
 			px = w >> 1
 			py = h >> 1

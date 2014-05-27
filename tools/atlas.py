@@ -53,9 +53,12 @@ def render_atlas(images):
 	for image in images:
 		total_area += image.area()
 	pitch = 128
+	for image in images:
+		while image.w > pitch:
+			pitch += pitch
 	while pitch*pitch < total_area:
 		pitch += pitch
-		if pitch > 2048:
+		if pitch > 4096:
 			raise ImagesDontFit(0)
 
 	# brute-force place images
@@ -103,6 +106,7 @@ def render_atlas(images):
 	for image in images:
 		image.computeUVs(pitch)
 		image.renderTo(result, pitch)
+
 	# premultiply alpha?
 	# pixels = result.load()
 	# w,h = result.size
@@ -113,6 +117,9 @@ def render_atlas(images):
 	# 	g = int(g * u)
 	# 	b = int(b * u)
 	# 	pixels[x,y] = (r,g,b,a)
+
+	# result.show()
+
 	return (result, images)
 
 class AtlasImage:
@@ -167,29 +174,35 @@ class AtlasImage:
 				px[x,y] = c
 
 		# double-up top/bottom
+		def getPx(x,y):
+			if x >= 0 and x < pitch and y >= 0 and y < pitch:
+				return px[x,y]
+			else:
+				return (0,0,0,0)
+
 		for x in xrange(self.w):
-			plot(self.x+x, self.y-1, px[self.x+x, self.y])
-			plot(self.x+x, self.y+self.h, px[self.x+x, self.y+self.h-1])
+			plot(self.x+x, self.y-1, getPx(self.x+x, self.y))
+			plot(self.x+x, self.y+self.h, getPx(self.x+x, self.y+self.h-1))
 
 		# double-up left/right
 		for y in xrange(self.h):
-			plot(self.x-1, self.y+y, px[self.x, self.y+y])
-			plot(self.x+self.w, self.y+y, px[self.x+self.w-1, self.y+y])
+			plot(self.x-1, self.y+y, getPx(self.x, self.y+y))
+			plot(self.x+self.w, self.y+y, getPx(self.x+self.w-1, self.y+y))
 
 		# double-up opposite corners (since the most common case with
 		# artifacts is tiling)
 
 		# top-left
-		plot(self.x-1, self.y-1, px[self.x, self.y])
+		plot(self.x-1, self.y-1, getPx(self.x, self.y))
 
 		# bottom-left
-		plot(self.x-1, self.y+self.h, px[self.x, self.y+self.h-1])
+		plot(self.x-1, self.y+self.h, getPx(self.x, self.y+self.h-1))
 
 		# top-right
-		plot(self.x+self.w, self.y-1, px[self.x+self.w-1, self.y])
+		plot(self.x+self.w, self.y-1, getPx(self.x+self.w-1, self.y))
 
 		# bottom-right
-		plot(self.x+self.w, self.y+self.h, px[self.x+self.w-1, self.y+self.h-1])
+		plot(self.x+self.w, self.y+self.h, getPx(self.x+self.w-1, self.y+self.h-1))
 
 	def computeUVs(self, pitch):
 		# a tiny bit that the UVs are "snuggled" in, to avoid

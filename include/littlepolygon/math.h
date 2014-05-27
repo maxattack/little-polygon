@@ -308,7 +308,7 @@ struct Color {
 	union {
 		uint32_t abgr; // big-endian opengl byte order :P
 		struct {
-			uint8_t r, g, b, a; // little endian
+			uint8_t r, g, b, a;
 		};
 	};
 
@@ -325,6 +325,12 @@ struct Color {
 	float green() { return g * (1.f/255.f); }
 	float blue() { return b * (1.f/255.f); }
 	float alpha() { return a * (1.f/255.f); }
+	
+	void setRed(float ar) { r = (uint8_t) floorToInt(255.0f * ar); }
+	void setGreen(float ag) { g = (uint8_t) floorToInt(255.0f * ag); }
+	void setBlue(float ab) { b = (uint8_t) floorToInt(255.0f * ab); }
+	void setAlpha(float aa) { a = (uint8_t) floorToInt(255.0f * aa); }
+	
 	void toHSV(float *h, float *s, float *v);
 };
 
