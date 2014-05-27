@@ -124,16 +124,16 @@ def export_native_assets(assetGroup, outpath, bpp):
 			print "Encoding Image(%s)" % image.id
 			nframes = len(image.frames)
 			# Texture    : Texture*
-			# Width      : int
-			# Height     : int
-			# PivotX     : int
-			# PivotY     : int
+			# Width      : float
+			# Height     : float
+			# PivotX     : float
+			# PivotY     : float
 			# NumFrames  : int
 			records.append(bintools.Record(
 				image.id,
-				'#iiiii', (texture.id, image.w, image.h, image.px, image.py, nframes)
+				'#ffffi', (texture.id, image.w, image.h, image.px, image.py, nframes)
 			))
-			format = 'ffffffffiiii' * nframes
+			format = 'ffffffffffff' * nframes
 			parameters = tuple()
 			for frame_index, atlas_image in enumerate(image.atlas_images):
 				# Frames[]

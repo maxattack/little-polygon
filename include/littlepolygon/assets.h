@@ -70,13 +70,11 @@ struct TextureAsset
 struct FrameAsset
 {
 	
-	Vec2    uv0, uv1,  // UV coordinates of the corners (necessary since the image
-	        uv2, uv3;  // might have been transposed during packing)
-	int32_t px, py,    // post-trim pivot of the frame
-	        w, h;      // post-trim size of the frame
+	Vec2 uv0, uv1,  // UV coordinates of the corners (necessary since the image
+	     uv2, uv3,  // might have been transposed during packing)
+	     pivot,    // post-trim pivot of the frame
+	     size;      // post-trim size of the frame
 
-	Vec2 pivot() const { return vec(px,py); }
-	Vec2 size() const { return vec(w,h); }
 	
 };
 
@@ -84,12 +82,8 @@ struct ImageAsset
 {
 	
 	TextureAsset* texture; // the texture onto which this image is packed
-	int32_t       w, h,    // the logical size of the image
-	              px, py,  // the logical pivot of the image
-	              nframes; // number of rendered frames
-
-	Vec2 size() const { return vec(w,h); }
-	Vec2 pivot() const { return vec(px,py); }
+	Vec2 size, pivot;
+	uint32_t nframes;
 
 	FrameAsset* frame(int i) {
 		ASSERT(i >= 0 && i < nframes);

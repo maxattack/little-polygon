@@ -191,15 +191,9 @@ inline AffineMatrix matPolar(float r, float radians) { return matAttitude(r*cosf
 inline AffineMatrix matScale(Vec2 s) { return AffineMatrix(vec(s.x,0), vec(0,s.y), vec(0,0)); }
 inline AffineMatrix matScale(float x, float y) { return matScale(vec(x,y)); }
 inline AffineMatrix matScale(float k) { return matScale(vec(k,k)); }
-//inline AffineMatrix matForeshortened(const mat4f& matrix) {
-//	float buf[16];
-//	matrix.store(buf);
-//	return AffineMatrix(
-//		vec(buf[0], buf[1]), 
-//		vec(buf[4], buf[5]), 
-//		vec(buf[12], buf[13])
-//	);
-//}
+
+inline AffineMatrix matAttitudeTranslation(Vec2 dir, Vec2 pos) { return AffineMatrix(dir, vec(-dir.y, dir.x), pos); }
+
 
 // linear range methods
 inline float clamp(float u, float lo=0.f, float hi=1.f) { return u<lo?lo:u>hi?hi:u; }

@@ -165,14 +165,11 @@ def load_frames_with_path(path, num_frames):
 def load_pivot_from_string(pivot, w, h):
 	px, py = 0, 0
 	if type(pivot) == list:
-		px, py = map(int, pivot[:2])
-	elif ',' in pivot:
-		px, py = map(int, pivot.split(','))
+		px, py = map(float, pivot[:2])
 	else:
-		pivot = pivot.lower()
 		if 'center' in pivot:
-			px = w >> 1
-			py = h >> 1
+			px = w / 2.0
+			py = h / 2.0
 		if 'top' in pivot:
 			py = 0
 		elif 'bottom' in pivot:

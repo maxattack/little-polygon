@@ -126,12 +126,12 @@ void SpritePlotter::drawImage(ImageAsset *img, Vec2 pos, int frame, Color c, flo
 	auto slice = nextSlice();
 	FrameAsset *fr = img->frame(frame);
 
-	pos -= fr->pivot();
+	pos -= fr->pivot;
 	
 	slice[0].set(pos,               z, fr->uv0, c);
-	slice[1].set(pos+vec(0,fr->h),  z, fr->uv1, c);
-	slice[2].set(pos+vec(fr->w, 0), z, fr->uv2, c);
-	slice[3].set(pos+fr->size(),    z, fr->uv3, c);
+	slice[1].set(pos+vec(0,fr->size.y),  z, fr->uv1, c);
+	slice[2].set(pos+vec(fr->size.x, 0), z, fr->uv2, c);
+	slice[3].set(pos+fr->size,    z, fr->uv3, c);
 
 	++count;
 }
@@ -142,10 +142,10 @@ void SpritePlotter::drawImage(ImageAsset *img, Vec2 pos, Vec2 u, int frame, Colo
 	auto slice = nextSlice();
 	FrameAsset *fr = img->frame(frame);
 
-	Vec2 p0 = -fr->pivot();
-	Vec2 p1 = p0 + vec(0, fr->h);
-	Vec2 p2 = p0 + vec(fr->w, 0);
-	Vec2 p3 = p0 + fr->size();
+	Vec2 p0 = -fr->pivot;
+	Vec2 p1 = p0 + vec(0, fr->size.y);
+	Vec2 p2 = p0 + vec(fr->size.x, 0);
+	Vec2 p3 = p0 + fr->size;
 
 	slice[0].set(pos+cmul(p0,u), z, fr->uv0, c);
 	slice[1].set(pos+cmul(p1,u), z, fr->uv1, c);
@@ -161,10 +161,10 @@ void SpritePlotter::drawImage(ImageAsset *img, const AffineMatrix& xform, int fr
 	auto slice = nextSlice();
 	FrameAsset *fr = img->frame(frame);
 
-	Vec2 p0 = -fr->pivot();
-	Vec2 p1 = p0 + vec(0, fr->h);
-	Vec2 p2 = p0 + vec(fr->w, 0);
-	Vec2 p3 = p0 + fr->size();
+	Vec2 p0 = -fr->pivot;
+	Vec2 p1 = p0 + vec(0, fr->size.y);
+	Vec2 p2 = p0 + vec(fr->size.x, 0);
+	Vec2 p3 = p0 + fr->size;
 	
 	slice[0].set(xform.transformPoint(p0), z, fr->uv0, c);
 	slice[1].set(xform.transformPoint(p1), z, fr->uv1, c);
