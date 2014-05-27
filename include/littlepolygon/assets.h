@@ -57,7 +57,7 @@ struct TextureAsset
 	
 	bool initialized() const { return textureHandle != 0; }
 	int format() const { return GL_RGBA; }
-	Vec2 size() const { return vec(w,h); }
+	Vec2 size() const { return vec((float)w,(float)h); }
 
 	void init();
 	void bind();
@@ -114,8 +114,8 @@ struct TilemapAsset
 	TextureAsset tileAtlas;      // a texture-atlas of all the tiles
 
 	bool initialized() const { return data != 0; }
-	Vec2 tileSize() const { return vec(tw,th); }
-	Vec2 mapSize() const { return vec(mw,mh); }
+	Vec2 tileSize() const { return vec((float)tw,(float)th); }
+	Vec2 mapSize() const { return vec((float)mw,(float)mh); }
 	TileAsset tileAt(int x, int y) const;
 	
 	void init();
@@ -239,8 +239,6 @@ private:
 public:
 	AssetBundle(const char* path=0, uint32_t crc=0);
 	~AssetBundle();
-
-	operator bool() const { return data; }
 
 	// Assets are keyed by name-hashes (fnv-1a)
 	// inlined so that the compiler can constant-fold over string literals :)

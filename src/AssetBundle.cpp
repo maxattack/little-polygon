@@ -104,7 +104,7 @@ void AssetBundle::setFallback(AssetBundle *aFallback) {
 
 void AssetBundle::init() {
 	if (data && data->assetCount) { 
-		for(int i=0; i<data->assetCount; ++i) {
+		for(unsigned i=0; i<data->assetCount; ++i) {
 			switch(data->headers[i].type) {
 				case ASSET_TYPE_TEXTURE:
 					((TextureAsset*)data->headers[i].data)->init();
@@ -127,7 +127,7 @@ void AssetBundle::init() {
 
 void AssetBundle::release() {
 	if (data && data->assetCount) { 
-		for(int i=0; i<data->assetCount; ++i) {
+		for(unsigned i=0; i<data->assetCount; ++i) {
 			switch(data->headers[i].type) {
 				case ASSET_TYPE_TEXTURE:
 					((TextureAsset*)data->headers[i].data)->release();
