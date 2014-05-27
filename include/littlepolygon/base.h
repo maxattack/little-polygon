@@ -30,7 +30,9 @@
 	#define LITTLE_POLYGON_OPENGL_ES 1
 	#define LITTLE_POLYGON_OPENGL_CORE 0
 #else
+	#if !__WINDOWS__
 	#define GLEW_STATIC
+	#endif
 	#include <GL/glew.h>
 	#include <SDL2/SDL_opengl.h>
 	#define LITTLE_POLYGON_OPENGL_ES 0

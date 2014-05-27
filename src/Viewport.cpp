@@ -49,12 +49,12 @@ Vec2 Viewport::viewportToWindow(Vec2 vp) const {
 	SDL_Window *win = SDL_GL_GetCurrentWindow();
 	int w,h;
 	SDL_GetWindowSize(win, &w, &h);
-	return Vec2(w,h) / mSize * (vp - mOffset);
+	return vec((float)w,(float)h) / mSize * (vp - mOffset);
 }
 
 Vec2 Viewport::cursor() const {
 	int x,y; SDL_GetMouseState(&x, &y);
-	return windowToViewport(vec(x, y));
+	return windowToViewport(vec((float)x, (float)y));
 }
 
 void Viewport::setMVP(GLuint amvp) const {

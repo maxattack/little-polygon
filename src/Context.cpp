@@ -18,7 +18,7 @@
 
 static Viewport makeView() {
 	int w, h; SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &w, &h);
-	return Viewport(w, h, 0, 0);
+	return Viewport((float)w, (float)h, 0, 0);
 }
 
 //#if LITTLE_POLYGON_MOBILE

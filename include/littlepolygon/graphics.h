@@ -83,7 +83,7 @@ struct Shader {
 	Shader(const GLchar *vsrc, const GLchar *fsrc);
 	~Shader();
 
-	bool isValid() const { return prog; }
+	bool isValid() const { return prog != 0; }
 	void use() { ASSERT(prog); glUseProgram(prog); }
 	GLuint uniformLocation(const char *name) { ASSERT(prog); return glGetUniformLocation(prog, name); }
 	GLuint attribLocation(const char *name) { ASSERT(prog); return glGetAttribLocation(prog, name); }

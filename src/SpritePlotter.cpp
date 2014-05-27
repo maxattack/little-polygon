@@ -197,7 +197,7 @@ void SpritePlotter::plotGlyph(const GlyphAsset& g, float x, float y, float z, fl
 
 	auto slice = nextSlice();
 	float k = 1.f / workingTexture->w;
-	Vec2 uv = k * vec(g.x, g.y);
+	Vec2 uv = k * vec((float)g.x, (float)g.y);
 	float du = k * (g.advance-UV_LABEL_SLOP);
 	float dv = k * h;
 
@@ -218,7 +218,7 @@ void SpritePlotter::drawLabel(FontAsset *font, Vec2 p, Color c, const char *msg,
 	while(*msg) {
 		if (*msg != '\n') {
 			GlyphAsset g = font->getGlyph(*msg);
-			plotGlyph( g, px, py, z, font->height, c);
+			plotGlyph( g, px, py, z, (float) font->height, c);
 			px += g.advance;
 		} else {
 			px = p.x;
@@ -239,7 +239,7 @@ void SpritePlotter::drawLabelCentered(FontAsset *font, Vec2 p, Color c, const ch
 		float px = p.x - (length>>1);
 		while(msg != next) {
 			GlyphAsset g = font->getGlyph(*msg);
-			plotGlyph( g, px, py, z, font->height, c);
+			plotGlyph( g, px, py, z, (float) font->height, c);
 			px += g.advance;
 			msg++;
 		}
@@ -260,7 +260,7 @@ void SpritePlotter::drawLabelRightJustified(FontAsset *font, Vec2 p, Color c, co
 		float px = p.x - length;
 		while(msg != next) {
 			GlyphAsset g = font->getGlyph(*msg);
-			plotGlyph( g, px, py, z, font->height, c);
+			plotGlyph( g, px, py, z, (float) font->height, c);
 			px += g.advance;
 			msg++;
 		}
@@ -281,7 +281,7 @@ void SpritePlotter::drawTilemap(TilemapAsset *map, Vec2 position, float z) {
 	// make sure the map is initialized
 	map->init();
 	
-	Vec2 cs = view.size() / vec(map->tw, map->th);
+	Vec2 cs = view.size() / vec((float)map->tw, (float)map->th);
 	int latticeW = floorToInt(ceilf(cs.x) + 1);
 	int latticeH = floorToInt(ceilf(cs.y) + 1);
 
@@ -292,8 +292,8 @@ void SpritePlotter::drawTilemap(TilemapAsset *map, Vec2 position, float z) {
 	int voy = int(scroll.y/map->th);
 	
 	Vec2 rem = vec(
-		fmodf(scroll.x, map->tw),
-		fmodf(scroll.y, map->th)
+		fmodf(scroll.x, (float)map->tw),
+		fmodf(scroll.y, (float)map->th)
 	);
 	setTextureAtlas(&map->tileAtlas);
 
@@ -305,15 +305,15 @@ void SpritePlotter::drawTilemap(TilemapAsset *map, Vec2 position, float z) {
 	for(int x=0; x<latticeW; ++x) {
 		int rawX = x+vox;
 		int rawY = y+voy;
-		if (rawX >= 0 && rawX < map->mw && rawY >= 0 && rawY < map->mh) {
+		if (rawX >= 0 && rawX < (int)map->mw && rawY >= 0 && rawY < (int)map->mh) {
 			TileAsset coord = map->tileAt(rawX, rawY);
 			if (coord.isDefined()) {
-				Vec2 p = vec(x * map->tw, y * map->th) 
+				Vec2 p = vec((float) x * map->tw, (float) y * map->th) 
 					- vec(TILE_SLOP, TILE_SLOP) 
 					- rem + view.offset();
 				Vec2 uv = 
-					(vec(map->tw * coord.x, map->th * coord.y) + vec(TILE_SLOP, TILE_SLOP))
-					/ vec(map->tileAtlas.w, map->tileAtlas.h);
+					(vec(map->tw * coord.x + TILE_SLOP, map->th * coord.y + TILE_SLOP))
+					/ vec((float) map->tileAtlas.w, (float) map->tileAtlas.h);
 				auto slice = nextSlice();
 
 				slice[0].set(p, z, uv, rgba(0));
