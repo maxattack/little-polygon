@@ -1,5 +1,29 @@
+#!/usr/bin/python
+
+# Little Polygon SDK
+# Copyright (C) 2013 Max Kaufmann
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 from lputil import *
 import json
+
+# Loads a character rig from Spine's JSON Format.
+# For our consideration (pending need): 
+# * generalize to other kinds of rig formats?
+# * procedural interface?
+
 
 def _name_dict(li):
 	return dict( (elem.name, elem) for elem in li )
@@ -9,35 +33,44 @@ def _hashes_unique(li):
 
 class Rig:
 	def __init__(self, path):
+		assert os.path.exists(path)
+		self.src = open(path, 'r').read()
+		self.doc = json.loads(self.src)
 
-		self.doc = json.load(open(path, 'r'))
-
-		self.bones = [ _Bone(self, b) for b in self.doc.get('bones', []) ]
+		self.bones = [ Bone(self, b) for b in self.doc.get('bones', []) ]
 		assert _hashes_unique(self.bones)
 		self.name_to_bone = _name_dict(self.bones)
 		self.name_to_bone[''] = None
 		for b in self.bones: 
 			b.parent = self.name_to_bone[b.parent_name]
 
-		self.slots = [ _Slot(self, s) for s in self.doc.get('slots', []) ]
+		self.slots = [ Slot(self, s) for s in self.doc.get('slots', []) ]
 		self.name_to_slot = _name_dict(self.slots)
 
-		self.skins = [ _Skin(self, key, val) for key, val in self.doc.get('skins', {}).iteritems() ]
+		self.skins = [ Skin(self, key, val) for key, val in self.doc.get('skins', {}).iteritems() ]
 		self.name_to_skin = _name_dict(self.skins)
 		assert self.skins[0].name == 'default'
-		self.attachments = [ a for s in self.skins for a in s.attachments ]
 
-		self.events = [ _Event(self, key, val) for key, val in self.doc.get('events', {}).iteritems() ]
+		self.attachments = [ 
+			attachment 
+			for skin in self.skins 
+			for adict in skin.slot_to_attachments.itervalues() 
+			for attachment in adict.itervalues() 
+		]
+
+		# TODO: SORT ATTACHMENTS IN DRAW ORDER (json.loads() munges this) FROM SRC
+
+		self.events = [ Event(self, key, val) for key, val in self.doc.get('events', {}).iteritems() ]
 		assert _hashes_unique(self.events)
 		self.name_to_event = _name_dict(self.events)
 
-		self.anims = [ _Animation(self, key, val) for key, val in self.doc.get('animations', {}).iteritems() ]
+		self.anims = [ Animation(self, key, val) for key, val in self.doc.get('animations', {}).iteritems() ]
 		assert _hashes_unique(self.anims)
 		self.name_to_anim = _name_dict(self.anims)
 
 
 
-class _Bone:
+class Bone:
 	def __init__(self, rig, doc):
 		self.rig = rig
 		self.name = doc.get('name')
@@ -58,7 +91,7 @@ def _unpack_color(color):
 		int(color[6:8], 16)
 	)
 
-class _Slot:
+class Slot:
 	def __init__(self, rig, doc):
 		self.rig = rig
 		self.name = doc.get('name')
@@ -68,16 +101,21 @@ class _Slot:
 		self.color = _unpack_color(doc.get('color', 'FFFFFFFF'))
 
 
-class _Skin:
+class Skin:
 	def __init__ (self, rig, name, doc):
 		self.rig = rig
 		self.name = name
 
-		self.attachments = [ _Attachment(self,k,v) for k,v in doc.iteritems() ]
-		self.name_to_attachment = _name_dict(self.attachments)
+		self.slot_to_attachments = dict()
+		for slot_name, attachments_dict in doc.iteritems():
+			slot = rig.name_to_slot[slot_name]
+			self.slot_to_attachments[slot] = dict(
+				(key, Attachment(self, key,val))
+				for key,val in attachments_dict.iteritems()
+			)
 
 
-class _Attachment:
+class Attachment:
 	def __init__ (self, skin, name, doc):
 		self.skin = skin
 		self.name = name
@@ -85,6 +123,8 @@ class _Attachment:
 		# just handle ordinary images for now
 		type = doc.get('type', 'region')
 		assert type == 'region'
+
+		self.image_id = doc.get('name', name)
 
 		self.x = doc.get('x', 0)
 		self.y = doc.get('y', 0)
@@ -96,7 +136,7 @@ class _Attachment:
 		self.width = doc.get('width', 0)
 		self.height = doc.get('height', 0)
 
-class _Event:
+class Event:
 	def __init__(self, rig, name, doc):
 		self.rig = rig
 		self.name = name
@@ -107,17 +147,17 @@ class _Event:
 		self.stringValue = doc.get('string', '')
 
 
-class _Animation:
+class Animation:
 	def __init__(self, rig, name, doc): 
 		self.rig = rig
 		self.name = name
 		self.hash = fnv32a(self.name)
 
-		self.bone_animations = [ 
-			_BoneAnimation(self,k,v) 
+		self.boneanimations = [ 
+			BoneAnimation(self,k,v) 
 			for k,v in doc.get('bones',{}).iteritems() 
 		]
-		self.bone_to_animation = dict((anim.bone, anim) for anim in self.bone_animations)
+		self.bone_to_animation = dict((anim.bone, anim) for anim in self.boneanimations)
 
 		def unpack_event(e):
 			time = e['time']
@@ -126,23 +166,23 @@ class _Animation:
 			floatValue = e.get('float', event.floatValue)
 			stringValue = e.get('string', event.stringValue)
 			return (time, event, intValue, floatValue, stringValue)
-		self.event_animation = map(unpack_event, doc.get('events', []))
+		self.eventanimation = map(unpack_event, doc.get('events', []))
 
-		self.slot_animations = [
-			_SlotAnimation(self,k,v)
+		self.slotanimations = [
+			SlotAnimation(self,k,v)
 			for k,v in doc.get('slots',{}).iteritems()
 		]
-		self.slot_to_animation = dict((anim.slot, anim) for anim in self.slot_animations)
+		self.slot_toanimation = dict((anim.slot, anim) for anim in self.slotanimations)
 
 		if 'draworder' in doc:
 			print 'WARNING: IGNORING DRAWORDER ANIMATIONS (for now)'
 
 		duration = 0
-		for anim in self.bone_animations: duration = max(duration, anim.duration)
-		for anim in self.slot_animations: duration = max(duration, anim.duration)
+		for anim in self.boneanimations: duration = max(duration, anim.duration)
+		for anim in self.slotanimations: duration = max(duration, anim.duration)
 		self.duration = duration
 
-class _BoneAnimation:
+class BoneAnimation:
 	def __init__(self, anim, bone_name, doc):
 		self.anim = anim
 		self.bone = anim.rig.name_to_bone[bone_name]
@@ -170,7 +210,7 @@ class _BoneAnimation:
 		for time,_,_ in self.scale_keys: duration = max(duration, time)
 		self.duration = duration
 
-class _SlotAnimation:
+class SlotAnimation:
 	def __init__(self, anim, slot_name, doc):
 		self.anim = anim
 		self.slot = anim.rig.name_to_slot[slot_name]

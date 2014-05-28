@@ -17,13 +17,61 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from lputil import *
-import atlas, bintools, fontsheet, trim_image, tmx, wave
+import atlas, bintools, fontsheet, rig, trim_image, tmx, wave
+
+# TODO
+# This file is a bit of a disaster area -- should move some of the deep functions
+# related to textures, images, etc into separate portable loaders, and just implement
+# "adaptors" here that do validation and put everything in the correct interface for 
+# the exporter.
+# See e.g. how 'RigAsset' is handled - this should be the model for other objects.
+
+
+class Assets:
+	def __init__(self, path):
+		with open(path, 'r') as f: 
+			self.dir = os.path.split(path)[0]
+			self.doc = yaml.load(f.read())
+
+		def list_items(name): 
+			prefix = name + '/'
+			for k,v in self.doc.iteritems():
+				if k.startswith(prefix):
+					yield k[len(prefix):], v
+
+
+		self.userdata = []
+
+		self.textures = [_parse_yaml_texture(self, k, v) for k,v in list_items('texture')]
+		self.fonts = [_parse_yaml_font(self, k, v) for k,v in list_items('font')]
+		self.samples = [_parse_yaml_sample(self, k, v) for k,v in list_items('sample')]
+		self.tilemaps = [_parse_yaml_tilemap(self, k, v) for k,v in list_items('tilemap')]
+		self.palettes = [_parse_yaml_palette(self, k, v) for k,v in list_items('palette')]
+		self.rigs = [_parse_yaml_rig(self,k,v) for k,v in list_items('rig')]
+
+		all_hashes = \
+			[ t.hash for t in self.textures ] + \
+			[ i.hash for t in self.textures for i in t.images ] + \
+			[ f.hash for f in self.fonts ] +    \
+			[ s.hash for s in self.samples ] +  \
+			[ t.hash for t in self.tilemaps ] + \
+			[ p.hash for p in self.palettes ] + \
+			[ r.hash for r in self.rigs ]
+
+		self.hash_set = set(all_hashes)
+		assert len(all_hashes) == len(self.hash_set)
+
+	def addUserdata(self, id, format, params, *args):
+		ud = Userdata([bintools.Record(id, format, params)] + list(args))
+		if hasattr(self, "hash_set"):
+			assert not ud.id in self.hash_set
+			self.hash_set.add(ud.id)
+		self.userdata.append(ud)
 
 ################################################################################
 # HELPER METHODS
-################################################################################
 
-def set_id(obj, id):
+def _set_id(obj, id):
 	obj.id = id
 	obj.hash = fnv32a(id)
 
@@ -33,7 +81,7 @@ def list_yaml_items(params, name):
 	else:
 		return tuple()
 
-def load_yaml_path(context, local_path):
+def _parse_yaml_path(context, local_path):
 	if local_path.startswith('/'):
 		result = local_path
 	else:
@@ -42,14 +90,29 @@ def load_yaml_path(context, local_path):
 
 ################################################################################
 # TEXTURE ASSET
-################################################################################
 
 TEXTURE_FLAG_FILTER = 0x01
 TEXTURE_FLAG_REPEAT = 0x02
 TEXTURE_FLAG_LUM    = 0x04
 TEXTURE_FLAG_RGB    = 0x08
 
-def composite_texture(images):
+def _parse_yaml_texture(context, id, params):
+	if isinstance(params, dict):
+		images = [
+			_parse_yaml_image(context, k, v)
+			for k,v in params.iteritems() 
+			if k.startswith('image/') or k.startswith('animation/')
+		]
+		assert len(images) > 0
+		compositedImage = _composite_texture(images)
+		filter = params.get('filter', '')
+	else:
+		images = []
+		compositedImage = open_image(_parse_yaml_path(context, params))
+		filter = 'linear'
+	return Texture(id, compositedImage, images, filter)
+
+def _composite_texture(images):
 	result, regions = atlas.render_atlas( 
 		frame for image in images for frame in image.frames 
 	)
@@ -61,32 +124,9 @@ def composite_texture(images):
 		image.atlas_images[frame_number] = atlas_image
 	return result
 
-def load_yaml_texture(context, id, params):
-	if isinstance(params, dict):
-		images = [
-			load_yaml_image(context, k, v)
-			for k,v in params.iteritems() 
-			if k.startswith('image/') or k.startswith('animation/')
-		]
-		iter_struct = [
-			load_yaml_structured_image(context, k, v) 
-			for k,v in params.iteritems() 
-			if k.startswith('struct/')
-		]
-		for ims in iter_struct: 
-			images += ims
-		assert len(images) > 0
-		compositedImage = composite_texture(images)
-		filter = params.get('filter', '')
-	else:
-		images = []
-		compositedImage = open_image(load_yaml_path(context, params))
-		filter = 'linear'
-	return Texture(id, compositedImage, images, filter)
-
 class Texture:
 	def __init__(self, id, compositedImage, images, filter):
-		set_id(self, id)
+		_set_id(self, id)
 		self.image = compositedImage
 		cleanup_transparent_pixels(self.image)
 		self.images = images
@@ -98,9 +138,21 @@ class Texture:
 
 ################################################################################
 # IMAGE ASSET
-################################################################################
 
-def load_frames_with_path(path, num_frames):
+def _parse_yaml_image(context, namespace_id, params):
+	t,id = namespace_id.split('/')
+	if isinstance(params, dict):
+		return _create_image(
+			id, 
+			_parse_yaml_path(context, params['path']), 
+			params.get('pivot', ''), 
+			bool(params.get('pad', True)),
+			t == 'animation'
+		)
+	else:
+		return _create_image(id, _parse_yaml_path(context, params), '', False)
+
+def _load_frames(path):
 	if path.lower().endswith('.gif'):
 		# animated gif
 		im = open_image(path)
@@ -118,29 +170,28 @@ def load_frames_with_path(path, num_frames):
 				curr_frame += 1
 			except EOFError:
 				break
-	elif '##' in path:
+	elif '%%' in path:
 		# we have several images
 		def i_to_s(i):
 			return '0' + str(i) if i < 10 else str(i)
 		count = 0
-		while(os.path.exists(path.replace('##', i_to_s(count)))):
+		while(os.path.exists(path.replace('%%', i_to_s(count)))):
 			count += 1
 		assert count > 0
-		frames = [ open_image(path.replace('##', i_to_s(i))) for i in xrange(count) ]
+		frames = [ open_image(path.replace('%%', i_to_s(i))) for i in xrange(count) ]
 
-	elif '#' in path:
+	elif '%' in path:
 		# we have several images
 		count = 0
-		while(os.path.exists(path.replace('#', str(count)))):
+		while(os.path.exists(path.replace('%', str(count)))):
 			count += 1
 		assert count > 0
-		frames = [ open_image(path.replace('#', str(i))) for i in xrange(count) ]
+		frames = [ open_image(path.replace('%', str(i))) for i in xrange(count) ]
 
 	else:
 		# we have a filmstrip
 		im = open_image(path)
-		if '@' in path:
-			num_frames = int(os.path.splitext(path)[0].split('@')[1])
+		num_frames = int(os.path.splitext(path)[0].split('@')[1]) if '@' in path else 1
 		if num_frames == 1:
 			frames = [ im ]
 		else:
@@ -153,7 +204,7 @@ def load_frames_with_path(path, num_frames):
 
 	return frames
 
-def load_pivot_from_string(pivot, w, h):
+def _get_pivot(pivot, w, h):
 	px, py = 0, 0
 	if type(pivot) == list:
 		px, py = map(float, pivot[:2])
@@ -171,7 +222,7 @@ def load_pivot_from_string(pivot, w, h):
 			px = w
 	return px,py
 
-def trim_frames(frames):
+def _trim_frames(frames):
 	w, h = 0, 0
 	result = []
 	for i,frame in enumerate(frames):
@@ -183,56 +234,15 @@ def trim_frames(frames):
 		result.append(trimmed)
 	return w,h,result
 
-def create_image(id, path, pivot, num_frames, pad, animated):
-	frames = open_image_layers(path) if animated else load_frames_with_path(path, num_frames)
-	w, h, frames = trim_frames(frames)
-	px, py = load_pivot_from_string(pivot, w, h)
+def _create_image(id, path, pivot, pad, animated):
+	frames = open_image_layers(path) if animated else _load_frames(path)
+	w, h, frames = _trim_frames(frames)
+	px, py = _get_pivot(pivot, w, h)
 	return Image(id, w, h, px, py, frames, pad)
-
-def load_yaml_image(context, namespace_id, params):
-	t,id = namespace_id.split('/')
-	if isinstance(params, dict):
-		return create_image(
-			id, 
-			load_yaml_path(context, params['path']), 
-			params.get('pivot', ''), 
-			int(params.get('frames', '1')),
-			bool(params.get('pad', True)),
-			t == 'animation'
-		)
-	else:
-		return create_image(id, load_yaml_path(context, params), '', 1, False)
-
-def load_yaml_structured_image(context, namespace_id, param):
-	t,id = namespace_id.split('/')
-	path = load_yaml_path(context, param)
-	im = PSDImage.load(path)
-
-	def centerX(bbox): return 0.5*(bbox.x1+bbox.x2)
-	def centerY(bbox): return 0.5*(bbox.y1+bbox.y2)
-
-	locations = ( loc for l in im.layers if l.name == u'locations' for loc in l.layers )
-	for loc in locations:
-		x,y = centerX(loc.bbox), centerY(loc.bbox)
-		context.addUserdata(
-			"%s.%s" % (id, loc.name), 
-			struct.pack("ff", x, y)
-		)
-
-	anchorGroup = next( l for l in im.layers if l.name == u'anchors' )
-
-	def imageOf(name):
-		return rasterize_psd_layer(im, next( l for l in im.layers if l.name == name ))
-	def create_result(layer):
-		img,px,py = imageOf(layer.name), centerX(layer.bbox), centerY(layer.bbox)
-		w, h, frames = trim_frames([img])
-		return Image("%s.%s" % (id,layer.name), w, h, px, py, frames, False)
-
-	return map(create_result, anchorGroup.layers)
 
 class Image:
 	def __init__(self, id, w, h, px, py, frames, pad):
-		set_id(self, id)
+		_set_id(self, id)
 		self.w, self.h, self.px, self.py = w, h, px, py
 		self.frames, self.pad = frames, pad
 		for x in frames: 
@@ -243,27 +253,25 @@ class Image:
 
 ################################################################################
 # FONT ASSET
-################################################################################
 
-def load_yaml_font(context, id, params):
-	return Font(id, load_yaml_path(context, params['path']), int(params.get('size', '8')))
+def _parse_yaml_font(context, id, params):
+	return Font(id, _parse_yaml_path(context, params['path']), int(params.get('size', '8')))
 
 class Font:
 	def __init__(self, id, path, fontsize):
-		set_id(self, id)
+		_set_id(self, id)
 		self.texture, self.height, self.metrics = fontsheet.render_fontsheet(path, fontsize)
 		self.data = zlib.compress(self.texture.tostring(), 6)
 
 ################################################################################
 # SAMPLE ASSET
-################################################################################
 
-def load_yaml_sample(context, id, params):
-	return Sample(id, load_yaml_path(context, params))
+def _parse_yaml_sample(context, id, params):
+	return Sample(id, _parse_yaml_path(context, params))
 
 class Sample:
 	def __init__(self, id, path):
-		set_id(self, id)
+		_set_id(self, id)
 		self.path = path
 
 		wav = wave.open(path, 'rb')
@@ -274,14 +282,13 @@ class Sample:
 
 ################################################################################
 # TILEMAP ASSET
-################################################################################
 
-def load_yaml_tilemap(context, id, params):
-	return Tilemap(id, load_yaml_path(context, params))
+def _parse_yaml_tilemap(context, id, params):
+	return Tilemap(id, _parse_yaml_path(context, params))
 
 class Tilemap:
 	def __init__(self, id, path):
-		set_id(self, id)
+		_set_id(self, id)
 
 		print '-' * 80
 		print 'RENDERING TILEMAP'
@@ -316,9 +323,8 @@ class Tilemap:
 
 ################################################################################
 # PALETTE ASSET
-################################################################################
 
-def load_yaml_palette(context, id, params):
+def _parse_yaml_palette(context, id, params):
 
 	if isinstance(params, list):
 		# color values are in the text of the asset
@@ -361,16 +367,15 @@ def load_yaml_palette(context, id, params):
 
 class Palette:
 	def __init__(self, id, colors):
-		set_id(self, id)
+		_set_id(self, id)
 		self.colors = colors
 
 ################################################################################
-# USERDATA ASSET (Just make your own records)
-################################################################################
+# USERDATA ASSET (Game Script supplies the Formatted Records)
 
 class Userdata:
 	def __init__(self, records):
-		set_id(self, records[0].key)
+		_set_id(self, records[0].key)
 		self.records = records
 
 # Two predefined types of common records: RLE and Zlib-Compressed Buffer Data
@@ -397,51 +402,32 @@ def compressed_userdata(id, data):
 		[len(data), len(compressed)] + array.array('B', compressed).tolist()
 	)
 
+
 ################################################################################
-# DATA CONTAINER
-################################################################################
+# RIG ASSET (based on Spine)
 
-class Assets:
-	def __init__(self, path):
-		with open(path, 'r') as f: 
-			self.dir = os.path.split(path)[0]
-			self.doc = yaml.load(f.read())
+def _parse_yaml_rig(context, id, params):
+	return RigAsset(context, id, _parse_yaml_path(context, params))
 
-		def list_items(name): 
-			prefix = name + '/'
-			for k,v in self.doc.iteritems():
-				if k.startswith(prefix):
-					yield k[len(prefix):], v
+class RigAsset:
+	def __init__(self, context, id, path):
+		self.context = context
+		_set_id(self, id)
+		self.rig = rig.Rig(path)
+
+		# LINK ATTACHMENTS TO IMAGES
+		failed = False
+		id_to_img = dict( (img.id, img) for tex in context.textures for img in tex.images )
+		for attachment in self.rig.attachments:
+			attachment.image = id_to_img.get(attachment.image_id, None)
+			if not attachment.image:
+				print "ERROR: IMAGE MISSING FOR RIG (%s | %s)" % (id, attachment.image_id)
+				failed = True
+		if failed:
+			exit(-1)
 
 
-		self.userdata = []
 
-		self.textures = [load_yaml_texture(self, k, v) for k,v in list_items('texture')]
-		self.fonts = [load_yaml_font(self, k, v) for k,v in list_items('font')]
-		self.samples = [load_yaml_sample(self, k, v) for k,v in list_items('sample')]
-		self.tilemaps = [load_yaml_tilemap(self, k, v) for k,v in list_items('tilemap')]
-		self.palettes = [load_yaml_palette(self, k, v) for k,v in list_items('palette')]
 
-		all_hashes = \
-			[ t.hash for t in self.textures ] + \
-			[ i.hash for t in self.textures for i in t.images ] + \
-			[ f.hash for f in self.fonts ] +    \
-			[ s.hash for s in self.samples ] +  \
-			[ t.hash for t in self.tilemaps ] + \
-			[ p.hash for p in self.palettes ] + \
-			[ d.hash for d in self.userdata ]
-
-		self.hash_set = set(all_hashes)
-		assert len(all_hashes) == len(self.hash_set)
-
-	def addUserdata(self, id, format, params, *args):
-		ud = Userdata([bintools.Record(id, format, params)] + list(args))
-		if hasattr(self, "hash_set"):
-			assert not ud.id in self.hash_set
-			self.hash_set.add(ud.id)
-		self.userdata.append(ud)
-
-	# def addCompressedUserdata(self, id, data):
-	# 	self.addUserdata(id, zlib.compress(data, 6))
 
 
