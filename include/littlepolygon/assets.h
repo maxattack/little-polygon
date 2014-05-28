@@ -38,6 +38,7 @@
 #define ASSET_TYPE_TILEMAP   5
 #define ASSET_TYPE_PALETTE   6
 #define ASSET_TYPE_USERDATA  7
+#define ASSET_TYPE_RIG       8
 
 //------------------------------------------------------------------------------
 // ASSET RECORDS
@@ -223,6 +224,124 @@ struct CompressedUserdata
 	
 	void inflate(void* result);
 	
+};
+
+//------------------------------------------------------------------------------
+
+// TODO: EASING CURVES
+
+struct RigTransform;
+struct RigBone;
+struct RigSlot;
+struct RigAttachment;
+struct RigTranslationKeyframe;
+struct RigScaleKeyframe;
+struct RigRotationKeyframe;
+struct RigSlotKeyframe;
+struct RigEvent;
+struct RigBoneAnimation;
+struct RigSlotAnimation;
+struct RigAnimation;
+
+struct RigTransform {
+	Vec2 translation;
+	Vec2 scale;
+	float degrees;
+};
+
+struct RigBone
+{
+	uint32_t hash;
+	RigTransform rest;
+};
+
+struct RigSlot
+{
+	uint32_t hash;
+	RigBone *bone;
+	RigAttachment *rest;
+	Color color;
+};
+
+struct RigAttachment
+{
+	uint32_t hash;
+	RigSlot *slot;
+	uint32_t skin;
+	ImageAsset *image;
+	RigTransform xform;
+};
+
+struct RigTranslationKeyframe
+{
+	float time;
+	Vec2 translation;
+};
+
+struct RigScaleKeyframe
+{
+	float time;
+	Vec2 scale;
+};
+
+struct RigRotationKeyframe
+{
+	float time;
+	float degrees;
+};
+
+struct RigSlotKeyframe
+{
+	float time;
+	Color color;
+	RigAttachment *attachment;
+};
+
+struct RigEvent
+{
+	float time;
+	uint32_t hash;
+};
+
+struct RigBoneAnimation
+{
+	RigBone *bone;
+	uint32_t ntkeys;
+	uint32_t nrkeys;
+	uint32_t nskeys;
+	RigTranslationKeyframe *tkeys;
+	RigRotationKeyframe *rkeys;
+	RigScaleKeyframe *skeys;
+};
+
+struct RigSlotAnimation
+{
+	RigSlot *slot;
+	uint32_t nkeys;
+	RigSlotKeyframe *keys;
+};
+
+struct RigAnimation
+{
+	uint32_t hash;
+	uint32_t nbones;
+	uint32_t nslots;
+	uint32_t nevents;
+	RigBoneAnimation *bones;
+	RigSlotAnimation *slots;
+	RigEvent *events;
+};
+
+struct RigAsset
+{
+	uint32_t nbones;
+	uint32_t nslots;
+	uint32_t nattachments;
+	uint32_t nanims;
+	RigBone *bones;
+	RigSlot *slots;
+	RigAttachment *attachments;
+	RigAnimation *animations;
 };
 
 //------------------------------------------------------------------------------
