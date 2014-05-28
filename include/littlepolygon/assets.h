@@ -231,17 +231,17 @@ struct CompressedUserdata
 // TODO: EASING CURVES
 
 struct RigTransform;
-struct RigBone;
-struct RigSlot;
-struct RigAttachment;
+struct RigBoneAsset;
+struct RigSlotAsset;
+struct RigAttachmentAsset;
 struct RigTranslationKeyframe;
 struct RigScaleKeyframe;
 struct RigRotationKeyframe;
 struct RigSlotKeyframe;
-struct RigEvent;
-struct RigBoneAnimation;
-struct RigSlotAnimation;
-struct RigAnimation;
+struct RigEventKeyframe;
+struct RigBoneAnimationAsset;
+struct RigSlotAnimationAsset;
+struct RigAnimationAsset;
 
 struct RigTransform {
 	Vec2 translation;
@@ -249,24 +249,23 @@ struct RigTransform {
 	float degrees;
 };
 
-struct RigBone
+struct RigBoneAsset
 {
 	uint32_t hash;
+	RigBoneAsset *parent;
 	RigTransform rest;
 };
 
-struct RigSlot
+struct RigSlotAsset
 {
-	uint32_t hash;
-	RigBone *bone;
-	RigAttachment *rest;
+	RigBoneAsset *bone;
+	RigAttachmentAsset *rest;
 	Color color;
 };
 
-struct RigAttachment
+struct RigAttachmentAsset
 {
-	uint32_t hash;
-	RigSlot *slot;
+	RigSlotAsset *slot;
 	uint32_t skin;
 	ImageAsset *image;
 	RigTransform xform;
@@ -294,18 +293,18 @@ struct RigSlotKeyframe
 {
 	float time;
 	Color color;
-	RigAttachment *attachment;
+	RigAttachmentAsset *attachment;
 };
 
-struct RigEvent
+struct RigEventKeyframe
 {
 	float time;
 	uint32_t hash;
 };
 
-struct RigBoneAnimation
+struct RigBoneAnimationAsset
 {
-	RigBone *bone;
+	RigBoneAsset *bone;
 	uint32_t ntkeys;
 	uint32_t nrkeys;
 	uint32_t nskeys;
@@ -314,22 +313,22 @@ struct RigBoneAnimation
 	RigScaleKeyframe *skeys;
 };
 
-struct RigSlotAnimation
+struct RigSlotAnimationAsset
 {
-	RigSlot *slot;
+	RigSlotAsset *slot;
 	uint32_t nkeys;
 	RigSlotKeyframe *keys;
 };
 
-struct RigAnimation
+struct RigAnimationAsset
 {
 	uint32_t hash;
 	uint32_t nbones;
 	uint32_t nslots;
 	uint32_t nevents;
-	RigBoneAnimation *bones;
-	RigSlotAnimation *slots;
-	RigEvent *events;
+	RigBoneAnimationAsset *bones;
+	RigSlotAnimationAsset *slots;
+	RigEventKeyframe *events;
 };
 
 struct RigAsset
@@ -338,10 +337,10 @@ struct RigAsset
 	uint32_t nslots;
 	uint32_t nattachments;
 	uint32_t nanims;
-	RigBone *bones;
-	RigSlot *slots;
-	RigAttachment *attachments;
-	RigAnimation *animations;
+	RigBoneAsset *bones;
+	RigSlotAsset *slots;
+	RigAttachmentAsset *attachments;
+	RigAnimationAsset *animations;
 };
 
 //------------------------------------------------------------------------------

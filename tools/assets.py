@@ -23,15 +23,6 @@ import atlas, bintools, fontsheet, trim_image, tmx, wave
 # HELPER METHODS
 ################################################################################
 
-def fnv32a( str ):
-    hval = 0x811c9dc5
-    fnv_32_prime = 0x01000193
-    uint32_max = 2 ** 32
-    for s in str:
-        hval = hval ^ ord(s)
-        hval = (hval * fnv_32_prime) % uint32_max
-    return hval
-
 def set_id(obj, id):
 	obj.id = id
 	obj.hash = fnv32a(id)
