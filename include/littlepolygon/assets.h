@@ -239,21 +239,21 @@ struct RigTransform
 	float radians;
 	
 	AffineMatrix concatenatedMatrix() const {
-		auto uv = unitVector(-radians);
-		return AffineMatrix(scale.x * uv, scale.y * uv.anticlockwise(), vec(translation.x, -translation.y));
+		auto uv = unitVector(radians);
+		return AffineMatrix(scale.x * uv, scale.y * uv.anticlockwise(), translation);
 	}
 };
 
 struct RigBoneAsset
 {
-	RigBoneAsset *parent;
+	uint32_t parentIndex;
 	uint32_t hash;
 	RigTransform defaultTransform;
 };
 
 struct RigSlotAsset
 {
-	RigBoneAsset *bone;
+	uint32_t boneIndex;
 	uint32_t defaultAttachment;
 	Color defaultColor;
 };
@@ -264,7 +264,34 @@ struct RigAttachmentAsset
 	ImageAsset *image;
 	uint32_t hash;
 	uint32_t layerHash;
-	RigTransform xform;
+	AffineMatrix xform;
+};
+
+struct RigTranslationTimeline
+{
+	float *times;
+	Vec2 *translations;
+	uint32_t animHash;
+	uint32_t boneIndex;
+	uint32_t nkeyframes;
+};
+
+struct RigRotationTimeline
+{
+	float *times;
+	float *rotations;
+	uint32_t animHash;
+	uint32_t boneIndex;
+	uint32_t nkeyframes;
+};
+
+struct RigScaleTimeline
+{
+	float *times;
+	float *scales;
+	uint32_t animHash;
+	uint32_t boneIndex;
+	uint32_t nkeyframes;
 };
 
 struct RigAsset

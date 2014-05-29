@@ -238,25 +238,18 @@ def export_native_assets(assetGroup, outpath, bpp):
 
 
 		# RIG::BONE FORMAT
-		# parent  : Bone*
-		# hash    : uint32
-		# tx      : float32
-		# ty      : float32
-		# sx      : float32
-		# sy      : float32
-		# radians : float32
+		# parentIdx  : uint32
+		# hash       : uint32
+		# tx         : float32
+		# ty         : float32
+		# sx         : float32
+		# sy         : float32
+		# radians    : float32
 		for bone in rig.model.bones:
-			if bone.parent:
-				fmt = "#Ifffff"
-				parent_id = bone_name(bone.parent)
-			else:
-				fmt = "PIfffff"
-				parent_id = 0
-
 			records.append(bintools.Record(
-				bone_name(bone), fmt,
+				bone_name(bone), 'IIfffff',
 				(
-					parent_id,
+					bone.parent.index if bone.parent else 0,
 					bone.hash,
 					bone.x,
 					bone.y,
@@ -267,7 +260,7 @@ def export_native_assets(assetGroup, outpath, bpp):
 			))
 
 		# RIG::SLOT FORMAT
-		# bone          : Bone*
+		# boneIdx       : uint32
 		# defaultAttach : uint32
 		# r             : uint8
 		# g             : uint8
@@ -275,8 +268,8 @@ def export_native_assets(assetGroup, outpath, bpp):
 		# a             : uint8
 		for slot in rig.model.slots:
 			records.append(bintools.Record(
-				slot_name(slot), "#IBBBB",
-				(bone_name(slot.bone), slot.default_attachment_hash) + slot.color
+				slot_name(slot), "IIBBBB",
+				(slot.bone.index, slot.default_attachment_hash) + slot.color
 			))
 
 		# RIG::ATTACHMENT FORMAT
@@ -284,24 +277,24 @@ def export_native_assets(assetGroup, outpath, bpp):
 		# image     : *Image
 		# hash      : uint32
 		# layerHash : uint32
+		# ux        : float32
+		# uy        : float32
+		# vx        : float32
+		# vy        : float32
 		# tx        : float32
 		# ty        : float32
-		# sx        : float32
-		# sy        : float32
-		# radians   : float32
 		for attachment  in rig.model.attachments:
+			s,c = math.sin(attachment.radians), math.cos(attachment.radians)
 			records.append(bintools.Record(
-				attach_name(attachment), "##IIfffff",
+				attach_name(attachment), "##IIffffff",
 				(
 					slot_name(attachment.slot),
 					attachment.image.id,
 					attachment.hash,
 					attachment.layer.hash,
-					attachment.x,
-					attachment.y,
-					attachment.scaleX,
-					attachment.scaleY,
-					attachment.radians
+					attachment.scaleX * c, attachment.scaleX * s,
+					-attachment.scaleY * s, attachment.scaleY * c,
+					attachment.x, attachment.y
 				)
 			))
 

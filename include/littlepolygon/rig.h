@@ -23,7 +23,6 @@ private:
 	AffineMatrix* mLocalTransforms;
 	AffineMatrix** mParents;
 	AffineMatrix* mWorldTransforms;
-	AffineMatrix* mAttachTransforms;
 	
 	uint32_t currentLayer;
 	
@@ -42,8 +41,6 @@ public:
 	void draw(SpritePlotter* plotter);
 	
 private:
-	
-	int getIndex(const RigBoneAsset* bone) const { return (int) (bone - mAsset->bones); }
 	
 	void computeWorldTransforms();
 

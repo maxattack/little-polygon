@@ -31,6 +31,10 @@ def _name_dict(li):
 def _hashes_unique(li):
 	return len(li) == len(set(elem.hash for elem in li))
 
+# Convert coordinates from Y = Up to Y = Down
+def _fixup_angle(angle): return -angle * math.pi / 180.0
+def _fixup_position(x,y): return x,-y
+
 class Rig:
 	def __init__(self, path):
 		assert os.path.exists(path)
@@ -94,9 +98,8 @@ class Bone:
 		self.name = doc.get('name')
 		self.hash = fnv32a(self.name)
 
-		self.x = doc.get('x', 0)
-		self.y = doc.get('y', 0)
-		self.radians = doc.get('rotation', 0) * math.pi / 180.0
+		self.x, self.y = _fixup_position(doc.get('x', 0), doc.get('y', 0))
+		self.radians = _fixup_angle(doc.get('rotation', 0))
 		self.scaleX = doc.get('scaleX', 1)
 		self.scaleY = doc.get('scaleY', 1)
 		self.parent_name = doc.get('parent', '')
@@ -148,9 +151,8 @@ class Attachment:
 
 		self.image_id = doc.get('name', name)
 
-		self.x = doc.get('x', 0)
-		self.y = doc.get('y', 0)
-		self.radians = doc.get('rotation', 0) * math.pi / 180.0
+		self.x, self.y = _fixup_position(doc.get('x', 0), doc.get('y', 0))
+		self.radians = _fixup_angle(doc.get('rotation', 0))
 		self.scaleX = doc.get('scaleX', 1)
 		self.scaleY = doc.get('scaleY', 1)
 
@@ -212,12 +214,12 @@ class BoneAnimation:
 		# TODO: CURVES
 		
 		self.rotate_keys = [ 
-			(k['time'], k['angle'] * math.pi / 180.0) 
+			(k['time'], _fixup_angle(k['angle'])) 
 			for k in doc.get('rotate', []) 
 		]
 
 		self.translate_keys = [ 
-			(k['time'], k['x'], k['y']) 
+			(k['time'],) + _fixup_position(k['x'], k['y']) 
 			for k in doc.get('translate', []) 
 		]
 

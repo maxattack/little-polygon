@@ -19,10 +19,9 @@
 Rig::Rig(const RigAsset* asset) :
 
 mAsset(asset),
-mLocalTransforms( (AffineMatrix*) SDL_calloc(asset->nbones, sizeof(AffineMatrix)) ),
-mParents( (AffineMatrix**) SDL_calloc(asset->nbones, sizeof(AffineMatrix*)) ),
-mWorldTransforms( (AffineMatrix*) SDL_calloc(asset->nbones, sizeof(AffineMatrix)) ),
-mAttachTransforms( (AffineMatrix*) SDL_calloc(asset->nattachments, sizeof(AffineMatrix)) ),
+mLocalTransforms( (AffineMatrix*)  SDL_calloc(asset->nbones, sizeof(AffineMatrix))  ),
+mParents(         (AffineMatrix**) SDL_calloc(asset->nbones, sizeof(AffineMatrix*)) ),
+mWorldTransforms( (AffineMatrix*)  SDL_calloc(asset->nbones, sizeof(AffineMatrix))  ),
 
 currentLayer(asset->defaultLayer)
 
@@ -34,24 +33,19 @@ currentLayer(asset->defaultLayer)
 		if (i == 0) {
 			mParents[i] = 0;
 		} else {
-			ASSERT(bone.parent != 0);
-			mParents[i] = mWorldTransforms + getIndex(bone.parent);
+			mParents[i] = mWorldTransforms + bone.parentIndex;
 		}
 	}
 	
-	for(int i=0; i<mAsset->nattachments; ++i) {
-		mAttachTransforms[i] = mAsset->attachments[i].xform.concatenatedMatrix();
-	}
-	
-	
+	// just set dirty bit?
 	setRootTransform(matIdentity());
 }
 
-Rig::~Rig() {
+Rig::~Rig()
+{
 	SDL_free(mLocalTransforms);
 	SDL_free(mParents);
 	SDL_free(mWorldTransforms);
-	SDL_free(mAttachTransforms);
 }
 
 void Rig::setRootTransform(const AffineMatrix& mat)
@@ -80,7 +74,7 @@ void Rig::draw(SpritePlotter* plotter)
 		if (attach.layerHash == 0 || attach.layerHash == currentLayer) {
 			plotter->drawImage(
 				attach.image,
-				mWorldTransforms[getIndex(attach.slot->bone)] * mAttachTransforms[i]
+				mWorldTransforms[attach.slot->boneIndex] * attach.xform
 			);
 		}
 	}
@@ -88,6 +82,7 @@ void Rig::draw(SpritePlotter* plotter)
 
 void Rig::computeWorldTransforms()
 {
+	// skip root
 	for(int i=1; i<mAsset->nbones; ++i) {
 		mWorldTransforms[i] = (*mParents[i]) * mLocalTransforms[i];
 	}
