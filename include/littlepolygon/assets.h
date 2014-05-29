@@ -239,8 +239,8 @@ struct RigTransform
 	float radians;
 	
 	AffineMatrix concatenatedMatrix() const {
-		auto uv = unitVector(radians);
-		return AffineMatrix(scale.x * uv, scale.y * uv.anticlockwise(), translation);
+		auto uv = unitVector(-radians);
+		return AffineMatrix(scale.x * uv, scale.y * uv.anticlockwise(), vec(translation.x, -translation.y));
 	}
 };
 
@@ -312,15 +312,19 @@ public:
 	#endif
 
 	// lookup assets by name
-	TextureAsset *texture(const char *name) { ASSET_RESULT_VERIFY(texture(hash(name))) }
-	ImageAsset *image(const char *name) { ASSET_RESULT_VERIFY(image(hash(name))) }
-	TilemapAsset *tilemap(const char *name) { ASSET_RESULT_VERIFY(tilemap(hash(name))) }
-	FontAsset *font(const char *name) { ASSET_RESULT_VERIFY(font(hash(name))) }
-	SampleAsset *sample(const char *name) { ASSET_RESULT_VERIFY(sample(hash(name))) }
-	PaletteAsset *palette(const char *name) { ASSET_RESULT_VERIFY(palette(hash(name))) }
+	TextureAsset *texture(const char *name) { ASSET_RESULT_VERIFY(texture(hash(name))); }
+	ImageAsset *image(const char *name) { ASSET_RESULT_VERIFY(image(hash(name))); }
+	TilemapAsset *tilemap(const char *name) { ASSET_RESULT_VERIFY(tilemap(hash(name))); }
+	FontAsset *font(const char *name) { ASSET_RESULT_VERIFY(font(hash(name))); }
+	SampleAsset *sample(const char *name) { ASSET_RESULT_VERIFY(sample(hash(name))); }
+	PaletteAsset *palette(const char *name) { ASSET_RESULT_VERIFY(palette(hash(name))); }
+	RigAsset *rig(const char *name) { ASSET_RESULT_VERIFY(rig(hash(name))); }
 	
 	template<typename T>
 	T *userdata(const char *name) { ASSET_RESULT_VERIFY(userdata<T>(hash(name))) }
+
+	
+	#undef ASSET_RESULT_VERIFY
 
 	// lookup assets by hash
 	TextureAsset *texture(uint32_t hash) { return (TextureAsset*) findHeader(hash, ASSET_TYPE_TEXTURE); }
@@ -329,11 +333,10 @@ public:
 	FontAsset *font(uint32_t hash) { return (FontAsset*) findHeader(hash, ASSET_TYPE_FONT); }
 	SampleAsset *sample(uint32_t hash) { return (SampleAsset*) findHeader(hash, ASSET_TYPE_SAMPLE); }
 	PaletteAsset *palette(uint32_t hash) { return (PaletteAsset*) findHeader(hash, ASSET_TYPE_PALETTE); }
+	RigAsset *rig(uint32_t hash) { return (RigAsset*) findHeader(hash, ASSET_TYPE_RIG); }
 	
 	template<typename T>
 	T *userdata(uint32_t hash) { return (T*) findHeader(hash, ASSET_TYPE_USERDATA); }
-
-	#undef ASSET_RESULT_VERIFY
 
 	// headers are sorted by hash, so lookup is LOG(N)
 	void* findHeader(uint32_t hash, uint32_t assetType);
