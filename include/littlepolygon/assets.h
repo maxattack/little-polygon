@@ -83,12 +83,13 @@ struct ImageAsset
 {
 	
 	TextureAsset* texture; // the texture onto which this image is packed
+	FrameAsset *frames;
 	Vec2 size, pivot;
 	uint32_t nframes;
-
+	
 	FrameAsset* frame(int i) {
 		ASSERT(i >= 0 && i < nframes);
-		return reinterpret_cast<FrameAsset*>(this+1) + i;
+		return frames + i;
 	}
 	
 };
@@ -204,14 +205,15 @@ struct RawUserdata
 {
 	
 	uint32_t size;
+	uint8_t firstByte[1];
 	
-	void *data() const { return (void*)(this+1); }
+	void *data() const { return (void*) firstByte; }
 
 	template<typename T>
-	const T* as() { return (T*)(this+1); }
+	const T* as() { return (T*)(firstByte); }
 	
 	template<typename T>
-	const T& get() { ASSERT(size == sizeof(T)); return *((T*)(this+1)); }
+	const T& get() { ASSERT(size == sizeof(T)); return *((T*)(firstByte)); }
 	
 };
 
@@ -230,117 +232,50 @@ struct CompressedUserdata
 
 // TODO: EASING CURVES
 
-struct RigTransform;
-struct RigBoneAsset;
-struct RigSlotAsset;
-struct RigAttachmentAsset;
-struct RigTranslationKeyframe;
-struct RigScaleKeyframe;
-struct RigRotationKeyframe;
-struct RigSlotKeyframe;
-struct RigEventKeyframe;
-struct RigBoneAnimationAsset;
-struct RigSlotAnimationAsset;
-struct RigAnimationAsset;
-
-struct RigTransform {
+struct RigTransform
+{
 	Vec2 translation;
 	Vec2 scale;
-	float degrees;
+	float radians;
+	
+	AffineMatrix concatenatedMatrix() const {
+		auto uv = unitVector(radians);
+		return AffineMatrix(scale.x * uv, scale.y * uv.anticlockwise(), translation);
+	}
 };
 
 struct RigBoneAsset
 {
-	uint32_t hash;
 	RigBoneAsset *parent;
-	RigTransform rest;
+	uint32_t hash;
+	RigTransform defaultTransform;
 };
 
 struct RigSlotAsset
 {
 	RigBoneAsset *bone;
-	RigAttachmentAsset *rest;
-	Color color;
+	uint32_t defaultAttachment;
+	Color defaultColor;
 };
 
 struct RigAttachmentAsset
 {
 	RigSlotAsset *slot;
-	uint32_t skin;
 	ImageAsset *image;
+	uint32_t hash;
+	uint32_t layerHash;
 	RigTransform xform;
-};
-
-struct RigTranslationKeyframe
-{
-	float time;
-	Vec2 translation;
-};
-
-struct RigScaleKeyframe
-{
-	float time;
-	Vec2 scale;
-};
-
-struct RigRotationKeyframe
-{
-	float time;
-	float degrees;
-};
-
-struct RigSlotKeyframe
-{
-	float time;
-	Color color;
-	RigAttachmentAsset *attachment;
-};
-
-struct RigEventKeyframe
-{
-	float time;
-	uint32_t hash;
-};
-
-struct RigBoneAnimationAsset
-{
-	RigBoneAsset *bone;
-	uint32_t ntkeys;
-	uint32_t nrkeys;
-	uint32_t nskeys;
-	RigTranslationKeyframe *tkeys;
-	RigRotationKeyframe *rkeys;
-	RigScaleKeyframe *skeys;
-};
-
-struct RigSlotAnimationAsset
-{
-	RigSlotAsset *slot;
-	uint32_t nkeys;
-	RigSlotKeyframe *keys;
-};
-
-struct RigAnimationAsset
-{
-	uint32_t hash;
-	uint32_t nbones;
-	uint32_t nslots;
-	uint32_t nevents;
-	RigBoneAnimationAsset *bones;
-	RigSlotAnimationAsset *slots;
-	RigEventKeyframe *events;
 };
 
 struct RigAsset
 {
+	uint32_t defaultLayer;
 	uint32_t nbones;
 	uint32_t nslots;
 	uint32_t nattachments;
-	uint32_t nanims;
 	RigBoneAsset *bones;
 	RigSlotAsset *slots;
 	RigAttachmentAsset *attachments;
-	RigAnimationAsset *animations;
 };
 
 //------------------------------------------------------------------------------

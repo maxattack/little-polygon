@@ -413,12 +413,13 @@ class RigAsset:
 	def __init__(self, context, id, path):
 		self.context = context
 		_set_id(self, id)
-		self.rig = rig.Rig(path)
+		self.model = rig.Rig(path)
+		self.model.asset = self
 
 		# LINK ATTACHMENTS TO IMAGES
 		failed = False
 		id_to_img = dict( (img.id, img) for tex in context.textures for img in tex.images )
-		for attachment in self.rig.attachments:
+		for attachment in self.model.attachments:
 			attachment.image = id_to_img.get(attachment.image_id, None)
 			if not attachment.image:
 				print "ERROR: IMAGE MISSING FOR RIG (%s | %s)" % (id, attachment.image_id)

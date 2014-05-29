@@ -37,33 +37,51 @@ class Rig:
 		self.src = open(path, 'r').read()
 		self.doc = json.loads(self.src)
 
+		# BONES
 		self.bones = [ Bone(self, b) for b in self.doc.get('bones', []) ]
 		assert _hashes_unique(self.bones)
 		self.name_to_bone = _name_dict(self.bones)
 		self.name_to_bone[''] = None
-		for b in self.bones: 
+		for i,b in enumerate(self.bones): 
+			b.index = i
 			b.parent = self.name_to_bone[b.parent_name]
+			assert b.parent == None or b.parent.index < b.index
 
+		# SLOTS
 		self.slots = [ Slot(self, s) for s in self.doc.get('slots', []) ]
 		self.name_to_slot = _name_dict(self.slots)
+		for i,slot in enumerate(self.slots):
+			slot.index = i
 
-		self.skins = [ Skin(self, key, val) for key, val in self.doc.get('skins', {}).iteritems() ]
-		self.name_to_skin = _name_dict(self.skins)
-		assert self.skins[0].name == 'default'
+		# LAYERS
+		# Spine calls these "skins" but that makes me think of vertex skinning,
+		# so I've renamed them "layers" which is what most other animation systems
+		# call this sort of thing.
+		self.layers = [ Layer(self, key, val) for key, val in self.doc.get('skins', {}).iteritems() ]
+		self.name_to_layer = _name_dict(self.layers)
+		assert self.layers[0].name == 'default'
+		self.layers[0].hash = 0
+		self.defaultLayer = self.layers[1] if len(self.layers) > 1 else self.layers[0]
+		assert _hashes_unique(self.layers)
 
+		# Flatten attachments to a list
 		self.attachments = [ 
 			attachment 
-			for skin in self.skins 
-			for adict in skin.slot_to_attachments.itervalues() 
+			for layer in self.layers 
+			for adict in layer.slot_to_attachments.itervalues() 
 			for attachment in adict.itervalues() 
 		]
+		for i,attach in enumerate(self.attachments):
+			attach.index = i
 
 		# TODO: SORT ATTACHMENTS IN DRAW ORDER (json.loads() munges this) FROM SRC
 
+		# EVENTS
 		self.events = [ Event(self, key, val) for key, val in self.doc.get('events', {}).iteritems() ]
 		assert _hashes_unique(self.events)
 		self.name_to_event = _name_dict(self.events)
 
+		# ANIMATIONS
 		self.anims = [ Animation(self, key, val) for key, val in self.doc.get('animations', {}).iteritems() ]
 		assert _hashes_unique(self.anims)
 		self.name_to_anim = _name_dict(self.anims)
@@ -78,7 +96,7 @@ class Bone:
 
 		self.x = doc.get('x', 0)
 		self.y = doc.get('y', 0)
-		self.rotation = doc.get('rotation', 0)
+		self.radians = doc.get('rotation', 0) * math.pi / 180.0
 		self.scaleX = doc.get('scaleX', 1)
 		self.scaleY = doc.get('scaleY', 1)
 		self.parent_name = doc.get('parent', '')
@@ -97,28 +115,32 @@ class Slot:
 		self.name = doc.get('name')
 
 		self.bone = rig.name_to_bone[doc.get('bone')]
-		self.setup_attachment_name = doc.get('attachment', '')
+		self.default_attachment_name = doc.get('attachment', '')
+		self.default_attachment_hash = fnv32a(self.default_attachment_name)
 		self.color = _unpack_color(doc.get('color', 'FFFFFFFF'))
 
 
-class Skin:
+class Layer:
 	def __init__ (self, rig, name, doc):
 		self.rig = rig
 		self.name = name
+		self.hash = fnv32a(self.name)
 
 		self.slot_to_attachments = dict()
 		for slot_name, attachments_dict in doc.iteritems():
 			slot = rig.name_to_slot[slot_name]
 			self.slot_to_attachments[slot] = dict(
-				(key, Attachment(self, key,val))
+				(key, Attachment(self, slot, key,val))
 				for key,val in attachments_dict.iteritems()
 			)
 
 
 class Attachment:
-	def __init__ (self, skin, name, doc):
-		self.skin = skin
+	def __init__ (self, layer, slot, name, doc):
+		self.layer = layer
+		self.slot = slot
 		self.name = name
+		self.hash = fnv32a(self.name)
 
 		# just handle ordinary images for now
 		type = doc.get('type', 'region')
@@ -128,7 +150,7 @@ class Attachment:
 
 		self.x = doc.get('x', 0)
 		self.y = doc.get('y', 0)
-		self.rotation = doc.get('rotation', 0)
+		self.radians = doc.get('rotation', 0) * math.pi / 180.0
 		self.scaleX = doc.get('scaleX', 1)
 		self.scaleY = doc.get('scaleY', 1)
 
@@ -153,11 +175,11 @@ class Animation:
 		self.name = name
 		self.hash = fnv32a(self.name)
 
-		self.boneanimations = [ 
+		self.bone_animations = [ 
 			BoneAnimation(self,k,v) 
 			for k,v in doc.get('bones',{}).iteritems() 
 		]
-		self.bone_to_animation = dict((anim.bone, anim) for anim in self.boneanimations)
+		self.bone_to_animation = dict((anim.bone, anim) for anim in self.bone_animations)
 
 		def unpack_event(e):
 			time = e['time']
@@ -168,18 +190,18 @@ class Animation:
 			return (time, event, intValue, floatValue, stringValue)
 		self.eventanimation = map(unpack_event, doc.get('events', []))
 
-		self.slotanimations = [
+		self.slot_animations = [
 			SlotAnimation(self,k,v)
 			for k,v in doc.get('slots',{}).iteritems()
 		]
-		self.slot_toanimation = dict((anim.slot, anim) for anim in self.slotanimations)
+		self.slot_toanimation = dict((anim.slot, anim) for anim in self.slot_animations)
 
 		if 'draworder' in doc:
 			print 'WARNING: IGNORING DRAWORDER ANIMATIONS (for now)'
 
 		duration = 0
-		for anim in self.boneanimations: duration = max(duration, anim.duration)
-		for anim in self.slotanimations: duration = max(duration, anim.duration)
+		for anim in self.bone_animations: duration = max(duration, anim.duration)
+		for anim in self.slot_animations: duration = max(duration, anim.duration)
 		self.duration = duration
 
 class BoneAnimation:
@@ -190,7 +212,7 @@ class BoneAnimation:
 		# TODO: CURVES
 		
 		self.rotate_keys = [ 
-			(k['time'], k['angle']) 
+			(k['time'], k['angle'] * math.pi / 180.0) 
 			for k in doc.get('rotate', []) 
 		]
 

@@ -29,167 +29,116 @@ ASSET_TYPE_SAMPLE = 4
 ASSET_TYPE_TILEMAP = 5
 ASSET_TYPE_PALETTE = 6
 ASSET_TYPE_USERDATA = 7
+ASSET_TYPE_RIG = 8
 
 def export_native_assets(assetGroup, outpath, bpp):
 	print '-' * 80
 	print 'BUILDING BINARY IMAGE'
 	print '-' * 80
 
-	textures = assetGroup.textures
-	fonts = assetGroup.fonts
-	samples = assetGroup.samples
-	tilemaps = assetGroup.tilemaps
-	palettes = assetGroup.palettes
-	userdata = assetGroup.userdata
-
-	################################################################################
-	# 
-	# ASSET FILE FORMAT
-	# {
-	#   asset_hdr_count
-	#   asset_hdr[]
-	#   {
-	#       texture_hdr
-	#       {
-	#           image_hdr
-	#           frame_hdr[]
-	#       }[]
-	#   }[]
-	#   font_hdr[]
-	#   tilemap_hdr[]
-	#   sample_hdr[]
-	#   userdata_hdr[]
-	#   compressed_atlas_texture_data[]
-	#   compressed_font_texture_data[]
-	#   compressed_sample_data[]
-	# }
-	# 
-	################################################################################
-
-	header_count = 1  +\
-		len(textures) +\
-		len(fonts)    +\
-		len(tilemaps) +\
-		len(samples)  +\
-		len(palettes) +\
-		len(userdata)
-	for t in textures:
-		header_count += 2 * len(t.images) # one record for image, one record for frame[]
-
 	# WRITE HEADERS
 
-	asset_header = []
-
-	for texture in textures:
-		asset_header.append((texture.hash, ASSET_TYPE_TEXTURE, texture.id))
+	headers = []
+	for texture in assetGroup.textures:
+		headers.append((texture.hash, ASSET_TYPE_TEXTURE, texture.id))
 		for image in texture.images:
-			asset_header.append((image.hash, ASSET_TYPE_IMAGE, image.id))
-	for font in fonts:
-		asset_header.append((font.hash, ASSET_TYPE_FONT, font.id))
-	for tilemap in tilemaps:
-		asset_header.append((tilemap.hash, ASSET_TYPE_TILEMAP, tilemap.id))
-	for sample in samples:
-		asset_header.append((sample.hash, ASSET_TYPE_SAMPLE, sample.id))
-	for palette in palettes:
-		asset_header.append((palette.hash, ASSET_TYPE_PALETTE, palette.id))
-	for data in userdata:
-		asset_header.append((data.hash, ASSET_TYPE_USERDATA, data.id))
+			headers.append((image.hash, ASSET_TYPE_IMAGE, image.id))
+	for font in assetGroup.fonts:
+		headers.append((font.hash, ASSET_TYPE_FONT, font.id))
+	for tilemap in assetGroup.tilemaps:
+		headers.append((tilemap.hash, ASSET_TYPE_TILEMAP, tilemap.id))
+	for sample in assetGroup.samples:
+		headers.append((sample.hash, ASSET_TYPE_SAMPLE, sample.id))
+	for palette in assetGroup.palettes:
+		headers.append((palette.hash, ASSET_TYPE_PALETTE, palette.id))
+	for rig in assetGroup.rigs:
+		headers.append((rig.hash, ASSET_TYPE_RIG, rig.id))
+	for data in assetGroup.userdata:
+		headers.append((data.hash, ASSET_TYPE_USERDATA, data.id))
 
 	# sort by hash, so we can bin-search at runtime
-	asset_header.sort(key = lambda tup: tup[0])
-
+	headers.sort(key = lambda tup: tup[0])
 	records = [bintools.Record(
 		'assertHeaders',
-		'II#' * len(asset_header),
-		tuple(e for t in asset_header for e in t)
+		'II#' * len(headers),
+		tuple(e for t in headers for e in t)
 	)]
 
-	for idx,texture in enumerate(textures):
+	for idx,texture in enumerate(assetGroup.textures):
+
 		print "Encoding Texture(%s)" % texture.id
 		w,h = texture.image.size
 		px = texture.image.load()
 		texture_location = len(records)
+		# TEXTURE FORMAT
 		# *data
-		# Width         : int
-		# Height        : int
-		# DataLength    : uint
-		# TextureHandle : uint (0)
-		# Flags         : uint
+		# Width         : int32
+		# Height        : int32
+		# DataLength    : uint32
+		# TextureHandle : uint32 (0)
+		# Flags         : uint32
 		records.append(bintools.Record(
 			texture.id,
 			'#iiIII', 
 			("%s_data" % texture.id, w, h, len(texture.data), 0, texture.flags))
 		)
+
 		for image in texture.images:
+
 			print "Encoding Image(%s)" % image.id
 			nframes = len(image.frames)
+			frames_name = "%s_frames" % (image.id)
+			# IMAGE FORMAT
 			# Texture    : Texture*
-			# Width      : float
-			# Height     : float
-			# PivotX     : float
-			# PivotY     : float
-			# NumFrames  : int
+			# Frames     : Frame*
+			# Width      : float32
+			# Height     : float32
+			# PivotX     : float32
+			# PivotY     : float32
+			# NumFrames  : int32
 			records.append(bintools.Record(
 				image.id,
-				'#ffffi', (texture.id, image.w, image.h, image.px, image.py, nframes)
+				'##ffffi', (texture.id, frames_name, image.w, image.h, image.px, image.py, nframes)
 			))
-			format = 'ffffffffffff' * nframes
-			parameters = tuple()
+
+			# FRAME FORMAT
+			# u0        : float32
+			# v0        : float32
+			# u1        : float32
+			# v1        : float32
+			# u2        : float32
+			# v2        : float32
+			# u3        : float32
+			# v3        : float32
+			# PivotX    : float32
+			# PivotY    : float32
+			# Width     : float32
+			# Height    : float32
+			frames_params = tuple()
 			for frame_index, atlas_image in enumerate(image.atlas_images):
-				# Frames[]
-				# u0        : float
-				# v0        : float
-				# u1        : float
-				# v1        : float
-				# u2        : float
-				# v2        : float
-				# u3        : float
-				# v3        : float
-				# PivotX    : int
-				# PivotY    : int
-				# Width     : int
-				# Height    : int
 				frame_image = image.frames[frame_index]
 				fw, fh = frame_image.size
 				trimx, trimy = frame_image.trim_offset
-				# u0, v0 = atlas_image.x / float(w), atlas_image.y / float(h)
-				# du, dv = fw / float(w), fh / float(h)
-				# # vertex order: top left, bottom left, top right, bottom right
-				# if atlas_image.transposed:
-				# 	u1 = u0 + dv
-				# 	v1 = v0
-				# 	u2 = u0
-				# 	v2 = v0 + du
-				# 	u3 = u0 + dv
-				# 	v3 = v0 + du
-				# else:
-				# 	u1 = u0
-				# 	v1 = v0 + dv
-				# 	u2 = u0 + du
-				# 	v2 = v0
-				# 	u3 = u0 + du
-				# 	v3 = v0 + dv
-				parameters += (
+				frames_params += (
 					atlas_image.u0, atlas_image.v0, atlas_image.u1, atlas_image.v1, 
 					atlas_image.u2, atlas_image.v2, atlas_image.u3, atlas_image.v3,
 					image.px-trimx, image.py-trimy,
 					fw, fh
 				)
-			records.append(bintools.Record(
-				"%s_frames" % (image.id),
-				format, parameters
-			))
+			records.append(bintools.Record(frames_name, 'ffffffffffff'*nframes, frames_params))
 
-	for idx,font in enumerate(fonts):
+	for idx,font in enumerate(assetGroup.fonts):
+
 		print "Encoding Font(%s)" % font.id
-		# height          : int
-		# Glyphs          : int3[GEND-GBEGIN]
+		# FONT FORMAT
+		# height          : int32
+		# Glyphs          : int32[3][GEND-GBEGIN]
 		# T:*data
-		# T:Width         : int
-		# T:Height        : int
-		# T:DataLength    : uint
-		# T:TextureHandle : uint (0)
-		# T:flags         : uint (0)
+		# T:Width         : int32
+		# T:Height        : int32
+		# T:DataLength    : uint32
+		# T:TextureHandle : uint32 (0)
+		# T:flags         : uint32 (0)
 		records.append(bintools.Record(
 			font.id,
 			'i' + 'iii'*len(fontsheet.CHARSET) + '#iiIII', \
@@ -198,21 +147,23 @@ def export_native_assets(assetGroup, outpath, bpp):
 			("%s_data" % font.id,) + font.texture.size + (len(font.data), 0, 0)
 		))
 
-	for idx,tilemap in enumerate(tilemaps):
+	for idx,tilemap in enumerate(assetGroup.tilemaps):
+
 		print "Encoding Tilemap(%s)" % tilemap.id
+		# TILEMAP FORMAT
 		# *data            : *uint8(0)
 		# *MapData         : *uint8
-		# TileWidth        : int
-		# TileHeight       : int
-		# MapWidth         : int
-		# MapHeight        : int
-		# CompressedLen    : int
+		# TileWidth        : int32
+		# TileHeight       : int32
+		# MapWidth         : int32
+		# MapHeight        : int32
+		# CompressedLen    : int32
 		# TA:*data
-		# TA:Width         : int
-		# TA:Height        : int
-		# TA:DataLength    : uint
-		# TA:TextureHandle : uint (0)
-		# TA:flags         : uint (0)
+		# TA:Width         : int32
+		# TA:Height        : int32
+		# TA:DataLength    : uint32
+		# TA:TextureHandle : uint32 (0)
+		# TA:flags         : uint32 (0)
 		mw, mh = tilemap.mapSize
 		records.append(bintools.Record(
 			tilemap.id,
@@ -222,15 +173,17 @@ def export_native_assets(assetGroup, outpath, bpp):
 		))
 
 
-	for idx,sample in enumerate(samples):
+	for idx,sample in enumerate(assetGroup.samples):
+
 		print 'Encoding Sample(%s)' % sample.id
-		# bufferHandle : uint (0)
+		# SAMPLE FORMAT
+		# bufferHandle : uint32 (0)
 		# *data
-		# channelCount  : int
-		# sampleWidth   : int
-		# freq          : int
-		# length        : uint
-		# compressedLen : uint
+		# channelCount  : int32
+		# sampleWidth   : int32
+		# freq          : int32
+		# length        : uint32
+		# compressedLen : uint32
 		records.append(bintools.Record(
 			sample.id,
 			'P#iiiII', (
@@ -244,39 +197,135 @@ def export_native_assets(assetGroup, outpath, bpp):
 			)
 		))
 
-	for palette in palettes:
+	for palette in assetGroup.palettes:
+
 		print 'Writing Palette (%s)' % palette.id
-		# length : int
-		# colors : byte[] (RGBARGBA...)
+		# PALETTE FORMAT
+		# length : int32
+		# colors : uint8[] (RGBARGBA...)
 		records.append(bintools.Record(
 			palette.id,
 			'I' + 'B' * (4*len(palette.colors)),
 			(len(palette.colors),) + tuple(c for color in palette.colors for c in color)
 		))
 
-	for data in userdata:
-		print 'Writing Userdata (%s)' % data.id
-		# length  : size_t
-		# data    : byte[]
+	for rig in assetGroup.rigs:
+		def bone_name(bone): return "%s.bone[%d]" % (bone.rig.asset.id, bone.index)
+		def slot_name(slot): return "%s.slot[%d]" % (slot.rig.asset.id, slot.index)
+		def attach_name(attachment): return "%s.attachment[%d]" % (attachment.slot.rig.asset.id, attachment.index)
+
+		print 'Writing Rig (%s)' % rig.id
+		# RIG FORMAT
+		# defaultLayer : uint32
+		# nbones       : uint32
+		# nslots       : uint32
+		# nattachments : uint32
+		# bones        : Bone*
+		# slots        : Slot*
+		# attachments  : Attachment*
+		records.append(bintools.Record(
+			rig.id, 'IIII###',
+			(
+				rig.model.defaultLayer.hash, 
+				len(rig.model.bones), 
+				len(rig.model.slots), 
+				len(rig.model.attachments), 
+				bone_name(rig.model.bones[0]), 
+				slot_name(rig.model.slots[0]), 
+				attach_name(rig.model.attachments[0])
+			)
+		))
+
+
+		# RIG::BONE FORMAT
+		# parent  : Bone*
+		# hash    : uint32
+		# tx      : float32
+		# ty      : float32
+		# sx      : float32
+		# sy      : float32
+		# radians : float32
+		for bone in rig.model.bones:
+			if bone.parent:
+				fmt = "#Ifffff"
+				parent_id = bone_name(bone.parent)
+			else:
+				fmt = "PIfffff"
+				parent_id = 0
+
+			records.append(bintools.Record(
+				bone_name(bone), fmt,
+				(
+					parent_id,
+					bone.hash,
+					bone.x,
+					bone.y,
+					bone.scaleX,
+					bone.scaleY,
+					bone.radians
+				)
+			))
+
+		# RIG::SLOT FORMAT
+		# bone          : Bone*
+		# defaultAttach : uint32
+		# r             : uint8
+		# g             : uint8
+		# b             : uint8
+		# a             : uint8
+		for slot in rig.model.slots:
+			records.append(bintools.Record(
+				slot_name(slot), "#IBBBB",
+				(bone_name(slot.bone), slot.default_attachment_hash) + slot.color
+			))
+
+		# RIG::ATTACHMENT FORMAT
+		# slot      : *Slot
+		# image     : *Image
+		# hash      : uint32
+		# layerHash : uint32
+		# tx        : float32
+		# ty        : float32
+		# sx        : float32
+		# sy        : float32
+		# radians   : float32
+		for attachment  in rig.model.attachments:
+			records.append(bintools.Record(
+				attach_name(attachment), "##IIfffff",
+				(
+					slot_name(attachment.slot),
+					attachment.image.id,
+					attachment.hash,
+					attachment.layer.hash,
+					attachment.x,
+					attachment.y,
+					attachment.scaleX,
+					attachment.scaleY,
+					attachment.radians
+				)
+			))
+
+	for data in assetGroup.userdata:
+		print 'Writing assetGroup.Userdata (%s)' % data.id
 		records += data.records
 
 	# WRITE COMPRESSED DATA BLOCKS
 
-	for texture in textures:
+	for texture in assetGroup.textures:
 		records.append(bintools.Record(
 			"%s_data" % texture.id,
 			'B'*len(texture.data), 
 			array.array('B', texture.data).tolist()
 		))
 
-	for font in fonts:
+	for font in assetGroup.fonts:
 		records.append(bintools.Record(
 			"%s_data" % font.id,
 			'B'*len(font.data), 
 			array.array('B', font.data).tolist()
 		))
 
-	for tilemap in tilemaps:
+	for tilemap in assetGroup.tilemaps:
 		records.append(bintools.Record(
 			'%s_mapData' % tilemap.id,
 			'B'*len(tilemap.mapData), 
@@ -288,7 +337,7 @@ def export_native_assets(assetGroup, outpath, bpp):
 			array.array('B', tilemap.atlasData).tolist()
 		))
 
-	for sample in samples:
+	for sample in assetGroup.samples:
 		records.append(bintools.Record(
 			'%s_data' % sample.id,
 			'B'*len(sample.data), 
@@ -300,17 +349,13 @@ def export_native_assets(assetGroup, outpath, bpp):
 	# WRITE FILE (sizes, payload, pointers)
 
 	with open(outpath, 'wb') as f : 
-		f.write(struct.pack('III', bpp, len(data), len(asset_header)))
+		f.write(struct.pack('III', bpp, len(data), len(headers)))
 		f.write(data)
 		f.write(pointers)
 
 	print '-' * 80
 	print 'WROTE ASSETS TO PATH: %s' % outpath
 	print '-' * 80
-
-	# SHOW PROOFS
-	# for texture in textures:
-	# 	texture.image.show()
 
 ################################################################################
 
