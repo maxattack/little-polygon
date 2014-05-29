@@ -51,6 +51,7 @@ Rig::~Rig() {
 	SDL_free(mLocalTransforms);
 	SDL_free(mParents);
 	SDL_free(mWorldTransforms);
+	SDL_free(mAttachTransforms);
 }
 
 void Rig::setRootTransform(const AffineMatrix& mat)
