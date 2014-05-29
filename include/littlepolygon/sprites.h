@@ -17,17 +17,112 @@
 #pragma once
 
 #include "graphics.h"
-#include "pools.h"
+
+//------------------------------------------------------------------------------
+// ASSETS
+
+#define ASCII_BEGIN          32
+#define ASCII_END            127
+
+
+struct FrameAsset
+{
+	Vec2 uv0, uv1,  // UV coordinates of the corners (necessary since the image
+	     uv2, uv3,  // might have been transposed during packing)
+	     pivot,    // post-trim pivot of the frame
+	     size;      // post-trim size of the frame
+	
+	
+};
+
+struct ImageAsset
+{
+	TextureAsset* texture; // the texture onto which this image is packed
+	FrameAsset *frames;
+	Vec2 size, pivot;
+	uint32_t nframes;
+	
+	FrameAsset* frame(int i) {
+		ASSERT(i >= 0 && i < nframes);
+		return frames + i;
+	}
+	
+};
+
+//------------------------------------------------------------------------------
+
+struct TileAsset
+{
+	
+	uint8_t x, y; // Atlas Cell Location
+	
+	bool isDefined() const { return x != 0xff; }
+	
+};
+
+struct TilemapAsset
+{
+	
+	TileAsset*   data;           // NULL when uninitialized
+	void*        compressedData; // zlib compressed tilemap buffer
+	uint32_t     tw, th,         // the size of the individual tiles
+	mw, mh,         // the size of the tilemap
+	compressedSize; // the byte-length of the compressed buffer
+	TextureAsset tileAtlas;      // a texture-atlas of all the tiles
+	
+	bool initialized() const { return data != 0; }
+	Vec2 tileSize() const { return vec((float)tw,(float)th); }
+	Vec2 mapSize() const { return vec((float)mw,(float)mh); }
+	TileAsset tileAt(int x, int y) const;
+	
+	void init();
+	void release();
+	
+	void reload();
+	void clearTile(int x, int y);
+	
+};
+
+//------------------------------------------------------------------------------
+
+struct GlyphAsset
+{
+	
+	int32_t x, y,     // texel position of this glyph
+	advance;  // pixel offset to the next character
+	
+};
+
+struct FontAsset
+{
+	
+	int32_t      height;                        // line-height of the font
+	GlyphAsset   glyphs[ASCII_END-ASCII_BEGIN]; // individual glyph metrics
+	TextureAsset texture;                       // character texture-atlas
+	
+	GlyphAsset getGlyph(const char c) {
+		ASSERT(c >= ASCII_BEGIN && c < ASCII_END);
+		return glyphs[c-ASCII_BEGIN];
+	}
+	
+	const char* measureLine(const char *msg, int *outLength) {
+		*outLength = 0;
+		while(*msg && *msg != '\n') {
+			*outLength += getGlyph(*msg).advance;
+			++msg;
+		}
+		return msg;
+	}
+	
+};
 
 //------------------------------------------------------------------------------
 // FORWARD DECLARATIONS
-//------------------------------------------------------------------------------
 
 class SpritePlotter;
 
 //------------------------------------------------------------------------------
 // SPRITE PLOTTER
-//------------------------------------------------------------------------------
 
 // This object can render lots of sprites in a small number of batched draw calls
 // by coalescing adjacent draws into larger logical draws.

@@ -18,9 +18,8 @@
 
 // THIS IS STRICTLY A CONVENIENCE MODULE :P
 
+#include "assets.h"
 #include "events.h"
-#include "sprites.h"
-//#include "splines.h"
 #include "utils.h"
 
 class SDLContext {
@@ -46,11 +45,7 @@ public:
 };
 
 inline void lpInitialize(const char *caption, int w, int h, const char *assetPath=0, int plotterCap=1024, int linesCap=128) {
-	new(SDL_malloc(sizeof(LPContext))) LPContext(caption, w, h, assetPath, plotterCap, linesCap);
-}
-
-inline void lpFinalize() {
-	SDL_free(LPContext::getInstancePtr());
+	static LPContext ctxt(caption, w, h, assetPath, plotterCap, linesCap);
 }
 
 #define lpWindow  (LPContext::getInstance().window)

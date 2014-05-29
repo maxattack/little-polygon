@@ -15,20 +15,12 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
-#include "base.h"
-#include "math.h"
+#include "graphics.h"
+#include "sprites.h"
+#include "rig.h"
 
 //------------------------------------------------------------------------------
 // CONSTANTS
-//------------------------------------------------------------------------------
-
-#define ASCII_BEGIN          32
-#define ASCII_END            127
-
-#define TEXTURE_FLAG_FILTER  0x1
-#define TEXTURE_FLAG_REPEAT  0x2
-#define TEXTURE_FLAG_LUM     0x4
-#define TEXTURE_FLAG_RGB     0x8
 
 #define ASSET_TYPE_UNDEFINED 0
 #define ASSET_TYPE_TEXTURE   1
@@ -41,127 +33,7 @@
 #define ASSET_TYPE_RIG       8
 
 //------------------------------------------------------------------------------
-// ASSET RECORDS
-// These records are directly mapped into memory from the asset binary.  We 
-// should be able to construct these procedurally as well, though I haven't run
-// up against that use case yet in practice.
-//------------------------------------------------------------------------------
-
-struct TextureAsset
-{
-
-	void*    compressedData;  // zlib compressed texture data
-	int32_t  w, h;            // size of the texture (guarenteed to be POT)
-	uint32_t compressedSize,  // size of the compressed buffer, in bytes
-	         textureHandle,   // handle to the initialized texture resource
-	         flags;           // extra information (wrapping, format, etc)
-	
-	bool initialized() const { return textureHandle != 0; }
-	int format() const { return GL_RGBA; }
-	Vec2 size() const { return vec((float)w,(float)h); }
-
-	void init();
-	void bind();
-	void release();
-	
-};
-
-//------------------------------------------------------------------------------
-
-struct FrameAsset
-{
-	
-	Vec2 uv0, uv1,  // UV coordinates of the corners (necessary since the image
-	     uv2, uv3,  // might have been transposed during packing)
-	     pivot,    // post-trim pivot of the frame
-	     size;      // post-trim size of the frame
-
-	
-};
-
-struct ImageAsset
-{
-	
-	TextureAsset* texture; // the texture onto which this image is packed
-	FrameAsset *frames;
-	Vec2 size, pivot;
-	uint32_t nframes;
-	
-	FrameAsset* frame(int i) {
-		ASSERT(i >= 0 && i < nframes);
-		return frames + i;
-	}
-	
-};
-
-//------------------------------------------------------------------------------
-
-struct TileAsset
-{
-	
-	uint8_t x, y; // Atlas Cell Location
-	
-	bool isDefined() const { return x != 0xff; }
-	
-};
-
-struct TilemapAsset
-{
-	
-	TileAsset*   data;           // NULL when uninitialized
-	void*        compressedData; // zlib compressed tilemap buffer
-	uint32_t     tw, th,         // the size of the individual tiles
-	             mw, mh,         // the size of the tilemap
-	             compressedSize; // the byte-length of the compressed buffer
-	TextureAsset tileAtlas;      // a texture-atlas of all the tiles
-
-	bool initialized() const { return data != 0; }
-	Vec2 tileSize() const { return vec((float)tw,(float)th); }
-	Vec2 mapSize() const { return vec((float)mw,(float)mh); }
-	TileAsset tileAt(int x, int y) const;
-	
-	void init();
-	void release();
-	
-	void reload();
-	void clearTile(int x, int y);
-	
-};
-
-//------------------------------------------------------------------------------
-
-struct GlyphAsset
-{
-	
-	int32_t x, y,     // texel position of this glyph
-	        advance;  // pixel offset to the next character
-	
-};
-
-struct FontAsset
-{
-	
-	int32_t      height;                        // line-height of the font
-	GlyphAsset   glyphs[ASCII_END-ASCII_BEGIN]; // individual glyph metrics
-	TextureAsset texture;                       // character texture-atlas
-	
-	GlyphAsset getGlyph(const char c) {
-		ASSERT(c >= ASCII_BEGIN && c < ASCII_END);
-		return glyphs[c-ASCII_BEGIN];
-	}
-
-	const char* measureLine(const char *msg, int *outLength) {
-		*outLength = 0;
-		while(*msg && *msg != '\n') {
-			*outLength += getGlyph(*msg).advance;
-			++msg;
-		}
-		return msg;
-	}
-	
-};
-
-//------------------------------------------------------------------------------
+// GENERAL ASSETS
 
 struct SampleAsset
 {
@@ -182,8 +54,6 @@ struct SampleAsset
 	
 };
 
-//------------------------------------------------------------------------------
-
 struct PaletteAsset
 {
 	
@@ -199,24 +69,6 @@ struct PaletteAsset
 	
 };
 
-//------------------------------------------------------------------------------
-
-struct RawUserdata
-{
-	
-	uint32_t size;
-	uint8_t firstByte[1];
-	
-	void *data() const { return (void*) firstByte; }
-
-	template<typename T>
-	const T* as() { return (T*)(firstByte); }
-	
-	template<typename T>
-	const T& get() { ASSERT(size == sizeof(T)); return *((T*)(firstByte)); }
-	
-};
-
 struct CompressedUserdata
 {
 	
@@ -228,86 +80,9 @@ struct CompressedUserdata
 	
 };
 
-//------------------------------------------------------------------------------
-
-// TODO: EASING CURVES
-
-struct RigTransform
-{
-	Vec2 translation;
-	Vec2 scale;
-	float radians;
-	
-	AffineMatrix concatenatedMatrix() const {
-		auto uv = unitVector(radians);
-		return AffineMatrix(scale.x * uv, scale.y * uv.anticlockwise(), translation);
-	}
-};
-
-struct RigBoneAsset
-{
-	uint32_t parentIndex;
-	uint32_t hash;
-	RigTransform defaultTransform;
-};
-
-struct RigSlotAsset
-{
-	uint32_t boneIndex;
-	uint32_t defaultAttachment;
-	Color defaultColor;
-};
-
-struct RigAttachmentAsset
-{
-	RigSlotAsset *slot;
-	ImageAsset *image;
-	uint32_t hash;
-	uint32_t layerHash;
-	AffineMatrix xform;
-};
-
-struct RigTranslationTimeline
-{
-	float *times;
-	Vec2 *translations;
-	uint32_t animHash;
-	uint32_t boneIndex;
-	uint32_t nkeyframes;
-};
-
-struct RigRotationTimeline
-{
-	float *times;
-	float *rotations;
-	uint32_t animHash;
-	uint32_t boneIndex;
-	uint32_t nkeyframes;
-};
-
-struct RigScaleTimeline
-{
-	float *times;
-	float *scales;
-	uint32_t animHash;
-	uint32_t boneIndex;
-	uint32_t nkeyframes;
-};
-
-struct RigAsset
-{
-	uint32_t defaultLayer;
-	uint32_t nbones;
-	uint32_t nslots;
-	uint32_t nattachments;
-	RigBoneAsset *bones;
-	RigSlotAsset *slots;
-	RigAttachmentAsset *attachments;
-};
 
 //------------------------------------------------------------------------------
 // MAIN INTERFACE
-//------------------------------------------------------------------------------
 
 struct AssetData;
 
@@ -320,18 +95,6 @@ public:
 	AssetBundle(const char* path=0, uint32_t crc=0);
 	~AssetBundle();
 
-	// Assets are keyed by name-hashes (fnv-1a)
-	// inlined so that the compiler can constant-fold over string literals :)
-	inline static uint32_t hash(const char* name) {
-	    uint32_t hval = 0x811c9dc5;
-	    while(*name) {
-	        hval ^= (*name);
-	        hval *= 0x01000193;
-	        ++name;
-	    }
-	    return hval;
-	}
-
 	#ifdef DEBUG
 	#define ASSET_RESULT_VERIFY(expr) auto res = (expr); if (!res) { LOG(("ASSET UNDEFINED: %s\n", name)); } return res;
 	#else
@@ -339,16 +102,16 @@ public:
 	#endif
 
 	// lookup assets by name
-	TextureAsset *texture(const char *name) { ASSET_RESULT_VERIFY(texture(hash(name))); }
-	ImageAsset *image(const char *name) { ASSET_RESULT_VERIFY(image(hash(name))); }
-	TilemapAsset *tilemap(const char *name) { ASSET_RESULT_VERIFY(tilemap(hash(name))); }
-	FontAsset *font(const char *name) { ASSET_RESULT_VERIFY(font(hash(name))); }
-	SampleAsset *sample(const char *name) { ASSET_RESULT_VERIFY(sample(hash(name))); }
-	PaletteAsset *palette(const char *name) { ASSET_RESULT_VERIFY(palette(hash(name))); }
-	RigAsset *rig(const char *name) { ASSET_RESULT_VERIFY(rig(hash(name))); }
+	TextureAsset *texture(const char *name) { ASSET_RESULT_VERIFY(texture(fnv1a(name))); }
+	ImageAsset *image(const char *name) { ASSET_RESULT_VERIFY(image(fnv1a(name))); }
+	TilemapAsset *tilemap(const char *name) { ASSET_RESULT_VERIFY(tilemap(fnv1a(name))); }
+	FontAsset *font(const char *name) { ASSET_RESULT_VERIFY(font(fnv1a(name))); }
+	SampleAsset *sample(const char *name) { ASSET_RESULT_VERIFY(sample(fnv1a(name))); }
+	PaletteAsset *palette(const char *name) { ASSET_RESULT_VERIFY(palette(fnv1a(name))); }
+	RigAsset *rig(const char *name) { ASSET_RESULT_VERIFY(rig(fnv1a(name))); }
 	
 	template<typename T>
-	T *userdata(const char *name) { ASSET_RESULT_VERIFY(userdata<T>(hash(name))) }
+	T *userdata(const char *name) { ASSET_RESULT_VERIFY(userdata<T>(fnv1a(name))) }
 
 	
 	#undef ASSET_RESULT_VERIFY
@@ -377,3 +140,5 @@ public:
 	void release();
 
 };
+
+

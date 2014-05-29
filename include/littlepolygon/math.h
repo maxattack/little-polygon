@@ -29,6 +29,9 @@
 #define M_COLINEAR_SLOP (0.0001f)
 #endif
 
+//--------------------------------------------------------------------------------
+// VEC2
+
 // easy to use two-dimensional vector with shorthand operators
 struct Vec2 {
 	float x, y;
@@ -89,6 +92,9 @@ inline Vec2 slerp(Vec2 u, Vec2 v, float t) {
 	return (sinf((1-t)*theta)*s)*u + (sinf(t*theta)*s)*v;
 }
 
+//--------------------------------------------------------------------------------
+// AFFINE MATRIX
+
 // simple 2d affine transform
 struct AffineMatrix {
 	union {
@@ -134,15 +140,6 @@ struct AffineMatrix {
 	float radians() const { return atan2f(u.y, u.x); }
 	Vec2 scale() const { return vec(u.magnitude(), v.magnitude()); }
 	
-//	mat4f matrix() const {
-//		return mat4f({
-//			u.x, u.y, 0, 0,
-//			v.x, v.y, 0, 0,
-//			0, 0, 1, 0,
-//			t.x, t.y, 0, 1
-//		});
-//	}
-
 	bool orthogonal() const { 
 		float d = dot(u,v); 
 		return -M_COLINEAR_SLOP < d && d < M_COLINEAR_SLOP; 
@@ -193,6 +190,9 @@ inline AffineMatrix matScale(float x, float y) { return matScale(vec(x,y)); }
 inline AffineMatrix matScale(float k) { return matScale(vec(k,k)); }
 
 inline AffineMatrix matAttitudeTranslation(Vec2 dir, Vec2 pos) { return AffineMatrix(dir, vec(-dir.y, dir.x), pos); }
+
+//--------------------------------------------------------------------------------
+// MISC FUNCTIONS
 
 
 // linear range methods
@@ -295,8 +295,7 @@ Vec2 cubicHermite(Vec2 p0, Vec2 m0, Vec2 p1, Vec2 m1, float u);
 Vec2 cubicHermiteDeriv(Vec2 p0, Vec2 m0, Vec2 p1, Vec2 m1, float u);
 
 //--------------------------------------------------------------------------------
-// COLOR HELPER
-//--------------------------------------------------------------------------------
+// COLOR
 
 struct Color {
 	union {

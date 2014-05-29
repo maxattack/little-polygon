@@ -16,6 +16,68 @@
 
 #pragma once
 #include "sprites.h"
+#include "utils.h"
+
+//------------------------------------------------------------------------------
+// ASSETS
+
+struct RigTransform
+{
+	Vec2 translation;
+	Vec2 scale;
+	float radians;
+	
+	AffineMatrix concatenatedMatrix() const {
+		auto uv = unitVector(radians);
+		return AffineMatrix(scale.x * uv, scale.y * uv.anticlockwise(), translation);
+	}
+};
+
+struct RigBoneAsset
+{
+	uint32_t parentIndex;
+	uint32_t hash;
+	RigTransform defaultTransform;
+};
+
+struct RigSlotAsset
+{
+	uint32_t boneIndex;
+	uint32_t defaultAttachment;
+	Color defaultColor;
+};
+
+struct RigAttachmentAsset
+{
+	RigSlotAsset *slot;
+	ImageAsset *image;
+	uint32_t hash;
+	uint32_t layerHash;
+	AffineMatrix xform;
+};
+
+struct RigTimeline
+{
+	float *times;
+	float *values;
+	uint32_t nkeyframes;
+	uint32_t animHash;
+	uint32_t boneIndex;
+};
+
+struct RigAsset
+{
+	uint32_t defaultLayer;
+	uint32_t nbones;
+	uint32_t nslots;
+	uint32_t nattachments;
+	RigBoneAsset *bones;
+	RigSlotAsset *slots;
+	RigAttachmentAsset *attachments;
+};
+
+//------------------------------------------------------------------------------
+// RUNTIME CONTROLLER
 
 class Rig {
 private:
@@ -34,7 +96,7 @@ public:
 	void setRootTransform(const AffineMatrix& mat);
 	
 	const AffineMatrix* findTransform(const char* boneName) const {
-		return findTransform(AssetBundle::hash(boneName));
+		return findTransform(fnv1a(boneName));
 	}
 	const AffineMatrix* findTransform(uint32_t hash) const;
 	
@@ -46,3 +108,4 @@ private:
 
 	
 };
+

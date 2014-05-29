@@ -18,12 +18,23 @@
 #include "base.h"
 #include "math.h"
 
-// A garbage-bin of additional helpful utilities not necessarily required by LPAAT,
-// which I've accumulated and rolled over from project to project :P
+//--------------------------------------------------------------------------------
+// HASHING
+
+// inlined so that the compiler can constant-fold over string literals :)
+inline static uint32_t fnv1a(const char* name) {
+	uint32_t hval = 0x811c9dc5;
+	while(*name) {
+		hval ^= (*name);
+		hval *= 0x01000193;
+		++name;
+	}
+	return hval;
+}
+
 
 //--------------------------------------------------------------------------------
 // COROUTINE MACROS
-//--------------------------------------------------------------------------------
 
 #define COROUTINE_PARAMETER           int _line;
 #define COROUTINE_RESET               _line=0;
@@ -38,7 +49,6 @@
 
 //--------------------------------------------------------------------------------
 // TIMING & ANIMATION UTILITIES
-//--------------------------------------------------------------------------------
 
 struct Timer {
 	// sdl ticks since the timer started

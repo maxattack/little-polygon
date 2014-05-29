@@ -16,16 +16,38 @@
 
 #pragma once
 
-#include "assets.h"
-#include <functional>
+#include "base.h"
+#include "math.h"
 
 //------------------------------------------------------------------------------
-// UTIL FUNCTIONS.
-//------------------------------------------------------------------------------
+// ASSETS
 
-// initialize everything the asset system needs (SDL, MIXER, etc).  Uses atexit()
-// to register teardown.
-SDL_Window *initContext(const char *caption, int w=0, int h=0);
+#define TEXTURE_FLAG_FILTER  0x1
+#define TEXTURE_FLAG_REPEAT  0x2
+#define TEXTURE_FLAG_LUM     0x4
+#define TEXTURE_FLAG_RGB     0x8
+
+struct TextureAsset
+{
+	
+	void*    compressedData;  // zlib compressed texture data
+	int32_t  w, h;            // size of the texture (guarenteed to be POT)
+	uint32_t compressedSize,  // size of the compressed buffer, in bytes
+	textureHandle,   // handle to the initialized texture resource
+	flags;           // extra information (wrapping, format, etc)
+	
+	bool initialized() const { return textureHandle != 0; }
+	int format() const { return GL_RGBA; }
+	Vec2 size() const { return vec((float)w,(float)h); }
+	
+	void init();
+	void bind();
+	void release();
+	
+};
+
+//------------------------------------------------------------------------------
+// VIEWPORT
 
 class Viewport {
 private:
@@ -75,6 +97,9 @@ public:
 	}
 };
 
+//------------------------------------------------------------------------------
+// SHADER
+
 #define GLSL(src) "#version 150 core\n" #src
 
 struct Shader {
@@ -90,8 +115,14 @@ struct Shader {
 
 };
 
+//------------------------------------------------------------------------------
+// TEXTURES
+
 typedef Color (*TextureGenerator)(double, double);
 GLuint generateTexture(TextureGenerator cb, int w=256, int h=256);
+
+//------------------------------------------------------------------------------
+// DYNAMIC PLOTTER
 
 struct Vertex {
 	float x,y,z,u,v;
@@ -104,10 +135,6 @@ struct Vertex {
 	inline void set(Vec2 p, float az, Vec2 uv, Color c) {
 		x = p.x; y = p.y; z = az; u = uv.x; v = uv.y; color = c;
 	}
-	
-	//inline void set(vec3f p, Vec2 uv, Color c) {
-	//	p.load(&x); u = uv.x; v = uv.y; color = c;
-	//}
 	
 };
 
@@ -131,6 +158,9 @@ public:
 	
 	void bufferData(int count);
 };
+
+//------------------------------------------------------------------------------
+// POST-PROCESSING
 
 //int createRenderToTextureFramebuffer(GLsizei w, GLsizei h, GLuint *outTexture, GLuint *outFramebuffer);
 //
@@ -158,8 +188,6 @@ public:
 
 //------------------------------------------------------------------------------
 // DEBUG LINE RENDERING
-//------------------------------------------------------------------------------
-
 
 class LinePlotter {
 private:
