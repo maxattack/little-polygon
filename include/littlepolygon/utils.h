@@ -94,7 +94,7 @@ struct Timer {
 		ticks += deltaTicks;
 		rawDeltaSeconds = timeScale * (0.001 * deltaTicks);
 		seconds += rawDeltaSeconds;
-		deltaSeconds = lerpd(deltaSeconds , rawDeltaSeconds, 0.025);
+		deltaSeconds = lerpd(deltaSeconds , rawDeltaSeconds, 0.05);
 	}
 };
 

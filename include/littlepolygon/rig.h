@@ -26,23 +26,19 @@
 //------------------------------------------------------------------------------
 // ASSETS
 
-struct RigTransform
-{
-	Vec2 translation;
-	Vec2 scale;
-	float radians;
-	
-	AffineMatrix concatenatedMatrix() const {
-		auto uv = unitVector(radians);
-		return AffineMatrix(scale.x * uv, scale.y * uv.anticlockwise(), translation);
-	}
-};
-
 struct RigBoneAsset
 {
 	uint32_t parentIndex;
 	uint32_t hash;
-	RigTransform defaultTransform;
+	
+	Vec2 translation;
+	Vec2 scale;
+	float radians;
+
+	AffineMatrix concatenatedMatrix() const {
+		auto uv = unitVector(radians);
+		return AffineMatrix(scale.x * uv, scale.y * uv.anticlockwise(), translation);
+	}
 };
 
 struct RigSlotAsset
@@ -106,10 +102,16 @@ struct RigAsset
 class Rig {
 private:
 	const RigAsset* data;
-	
+
 	struct Attitude {
 		float radians;
 		Vec2 scale;
+		
+		void applyTo(AffineMatrix& mat) {
+			auto u = unitVector(radians);
+			mat.u = scale.x * u;
+			mat.v = scale.y * u.anticlockwise();
+		}
 	};
 	
 	// Structure-of-Arrays:
@@ -117,7 +119,6 @@ private:
 	// (indexed by bone)
 	Attitude* localAttitudes;
 	AffineMatrix* localTransforms;
-	AffineMatrix** parents;
 	AffineMatrix* worldTransforms;
 	
 	// (indexed by timeline)
@@ -125,9 +126,10 @@ private:
 	int* currentKeyframes;
 	
 	uint32_t currentLayer;
-	uint32_t currentAnimation;
+	RigAnimationAsset* currentAnimation;
 	float currentTime;
 	
+	bool xformDirty;
 	
 public:
 	Rig(const RigAsset* asset);
@@ -135,26 +137,25 @@ public:
 	
 	void setRootTransform(const AffineMatrix& mat);
 	
-	const AffineMatrix* findTransform(const char* boneName) const {
-		return findTransform(fnv1a(boneName));
-	}
 	
+	void refreshTransforms();
+	const AffineMatrix* findTransform(const char* boneName) const;
 	void draw(SpritePlotter* plotter);
 	
-	void setAnimation(const char *animName) {
-		setAnimation(fnv1a(animName));
-	}
+	void setLayer(const char *layerName);
+	void setAnimation(const char *animName);
 	
-	void tick(float dt);
 	void resetPose();
+	void resetTime();
+	void tick(float dt);
 	
-	
+	bool playing() const { return currentAnimation != 0; }
 private:
 	
-	const AffineMatrix* findTransform(uint32_t hash) const;
+	void setDefaultPose();
 	void computeWorldTransforms();
-
-	void setAnimation(uint32_t hash);
+	void updateTimeline(int i);
+	void applyTimeline(int i);
 	
 };
 

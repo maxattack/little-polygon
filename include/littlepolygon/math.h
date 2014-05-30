@@ -86,7 +86,8 @@ inline Vec2 operator*(double k, Vec2 q) { return Vec2((float)k*q.x, (float)k*q.y
 inline float dot(Vec2 u, Vec2 v) { return u.x*v.x + u.y*v.y; }
 inline float cross(Vec2 u, Vec2 v) { return u.x * v.y - v.x* u.y; }
 inline Vec2 lerp(Vec2 u, Vec2 v, float t) { return u + t * (v - u); }
-inline Vec2 slerp(Vec2 u, Vec2 v, float t) {
+inline Vec2 slerp(Vec2 u, Vec2 v, float t)
+{
 	float theta = acosf(dot(u,v));
 	float s = 1.f/sinf(theta);
 	return (sinf((1-t)*theta)*s)*u + (sinf(t*theta)*s)*v;
@@ -208,7 +209,8 @@ inline double inverseLerpd(double u, double v, double t) { return (t-u) / (v-u);
 inline Vec2  cmul(Vec2  u, Vec2  v) { return Vec2 (u.x*v.x-u.y*v.y, u.x*v.y+u.y*v.x); }
 
 // complex division
-inline Vec2 cdiv(Vec2 u, Vec2 v) {
+inline Vec2 cdiv(Vec2 u, Vec2 v)
+{
 	float normInv = 1.0f/v.norm();
 	return Vec2((u.x*v.x+u.y*v.y)*normInv, (v.x*u.y-u.x*v.y)*normInv);
 }
@@ -221,15 +223,20 @@ inline Vec2 unitVector(float radians) { return Vec2(cosf(radians), sinf(radians)
 inline int floorToInt(float x) { return (int) floorf(x); }
 
 // easing functions
-inline float easeOut2(float u) {
+inline float easeOut2(float u)
+{
 	u=1.0f-u;
 	return 1.0f - u*u;
 }
-inline float easeOut4(float u) {
+
+inline float easeOut4(float u)
+{
 	u=1.0f-u;
 	return 1.0f - u*u*u*u;
 }
-inline float easeInOutBack(float t) {
+
+inline float easeInOutBack(float t)
+{
 	auto v = t + t;
 	auto s = 1.70158f * 1.525f;
 	if (v < 1.0) {
@@ -258,11 +265,14 @@ inline Vec2 randomPointInsideCircle(float r=1.0f) { return polarVector(r * rando
 inline float expovariate(float avgDuration, float rmin=0.00001f, float rmax=0.99999f) { return -avgDuration*logf(randomValue(rmin, rmax)); }
 	
 // handling radians sanely
-inline float normalizeAngle(float radians) {
+inline float normalizeAngle(float radians)
+{
 	radians = fmodf(radians, kTAU);
 	return radians < 0 ? radians + kTAU : radians;
 }
-inline float radianDiff(float lhs, float rhs) {
+
+inline float radianDiff(float lhs, float rhs)
+{
 	float result = normalizeAngle(lhs - rhs);
 	if (result > (float) M_PI) {
 		return result - kTAU;
@@ -272,7 +282,14 @@ inline float radianDiff(float lhs, float rhs) {
 		return result;
 	}
 }
-inline float easeRadians(float curr, float target, float easing, float dt) {
+
+inline float lerpRadians(float a0, float a1, float t)
+{
+	return a0 + t * radianDiff(a1, a0);
+}
+
+inline float easeRadians(float curr, float target, float easing, float dt)
+{
 	return curr + powf(easing, clamp(1.0f/(60.0f*dt))) * radianDiff(target, curr);
 }
 
@@ -337,7 +354,8 @@ Color hsv(float h, float s, float v);
 inline Color hsva(float h, float s, float v, float a) { return rgba(hsv(h,s,v), a); }
 
 // interpolate in linear-color space
-inline Color lerp(Color a, Color b, float u) {
+inline Color lerp(Color a, Color b, float u)
+{
 	return rgba(
 		lerp(a.red(), b.red(), u),
 		lerp(a.green(), b.green(), u),
@@ -346,7 +364,8 @@ inline Color lerp(Color a, Color b, float u) {
 	);
 }
 
-inline Color easeTowards(Color curr, Color target, float easing, float dt) {
+inline Color easeTowards(Color curr, Color target, float easing, float dt)
+{
 	return lerp(curr, target, timeIndependentEasing(easing, dt));
 }
 

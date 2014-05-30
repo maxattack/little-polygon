@@ -337,6 +337,8 @@ def export_native_assets(assetGroup, outpath, bpp):
 					timeline.kind
 				)
 			))
+		for timeline in rig.model.timelines:
+			tlname = timeline_name(timeline)			
 			records.append(bintools.Record(
 				tlname+".times", "f" * len(timeline.times), timeline.times
 			))

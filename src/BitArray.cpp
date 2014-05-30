@@ -33,7 +33,7 @@ bool BitArray::operator[](unsigned i) const
 void BitArray::getIndices(unsigned idx, unsigned* outWord, unsigned *outIndex) const
 {
 	*outWord = idx >> 5;
-	*outIndex = idx - ((*outWord) << 5);
+	*outIndex = idx % 32;
 
 }
 

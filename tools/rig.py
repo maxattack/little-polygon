@@ -38,6 +38,11 @@ def _hashes_unique(li):
 def _fixup_angle(angle): return -angle * math.pi / 180.0
 def _fixup_position(x,y): return x,-y
 
+def _make_index(li): 
+	for i,elem in enumerate(li): elem.index = i
+def _vadd(u, v): return (u[0] + v[0], u[1] + v[1])
+def _vmul(u, v): return (u[0] * v[0], u[1] * v[1])
+
 class Rig:
 	def __init__(self, path):
 		assert os.path.exists(path)
@@ -57,8 +62,7 @@ class Rig:
 		# SLOTS
 		self.slots = [ Slot(self, s) for s in self.doc.get('slots', []) ]
 		self.name_to_slot = _name_dict(self.slots)
-		for i,slot in enumerate(self.slots):
-			slot.index = i
+		_make_index(self.slots)
 
 		# LAYERS
 		# Spine calls these "skins" but that makes me think of vertex skinning,
@@ -78,8 +82,7 @@ class Rig:
 			for adict in layer.slot_to_attachments.itervalues() 
 			for attachment in adict.itervalues() 
 		]
-		for i,attach in enumerate(self.attachments):
-			attach.index = i
+		_make_index(self.attachments)
 
 		# TODO: SORT ATTACHMENTS IN DRAW ORDER (json.loads() munges this) FROM SRC
 
@@ -92,8 +95,7 @@ class Rig:
 		self.anims = [ Animation(self, key, val) for key, val in self.doc.get('animations', {}).iteritems() ]
 		assert _hashes_unique(self.anims)
 		self.name_to_anim = _name_dict(self.anims)
-		for i,anim in enumerate(self.anims):
-			anim.index = i
+		_make_index(self.anims)
 
 		# Flatten timelines list
 		self.timelines = [
@@ -102,8 +104,7 @@ class Rig:
 			for bone_anim in anim.bone_animations
 			for timeline in bone_anim.timelines
 		]
-		for i,tl in enumerate(self.timelines):
-			tl.index = i
+		_make_index(self.timelines)
 
 class Bone:
 	def __init__(self, rig, doc):
@@ -112,9 +113,11 @@ class Bone:
 		self.hash = fnv32a(self.name)
 
 		self.x, self.y = _fixup_position(doc.get('x', 0), doc.get('y', 0))
+		self.pos = (self.x, self.y)
 		self.radians = _fixup_angle(doc.get('rotation', 0))
 		self.scaleX = doc.get('scaleX', 1)
 		self.scaleY = doc.get('scaleY', 1)
+		self.scale = (self.scaleX, self.scaleY)
 		self.parent_name = doc.get('parent', '')
 
 def _unpack_color(color):
@@ -237,15 +240,16 @@ class BoneAnimation:
 class Timeline:
 	def __init__(self, bone_anim, kind, keys):
 		self.bone_anim = bone_anim
+		self.bone = bone_anim.bone
 		self.kind = kind
 		self.times = [ k['time'] for k in keys ]
 		# TODO: CURVES		
 		if kind == TimelineTranslation:
-			self.values = [ comp for k in keys for comp in _fixup_position(k['x'], k['y']) ]
+			self.values = [ comp for k in keys for comp in _vadd(self.bone.pos, _fixup_position(k['x'], k['y'])) ]
 		elif kind == TimelineRotation:
-			self.values = [ _fixup_angle(k['angle']) for k in keys ]
+			self.values = [ self.bone.radians + _fixup_angle(k['angle']) for k in keys ]
 		elif kind == TimelineScale:
-			self.values = [ comp for k in keys for comp in (k['x'], k['y']) ]
+			self.values = [ comp for k in keys for comp in _vmul(self.bone.scale, (k['x'], k['y'])) ]
 
 class SlotAnimation:
 	def __init__(self, anim, slot_name, doc):
