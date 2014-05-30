@@ -19,7 +19,51 @@
 #include "littlepolygon/graphics.h"
 #include <algorithm>
 
-bool linearIntersection(Vec2 u0, Vec2 u1, Vec2 v0, Vec2 v1, float& u) {
+//--------------------------------------------------------------------------------
+// TIMING
+
+Timer::Timer(float aTimeScale) :
+ticks(SDL_GetTicks()),
+deltaTicks(0),
+timeScale(aTimeScale),
+seconds(0),
+rawDeltaSeconds(0)
+{
+	SDL_DisplayMode dm;
+	SDL_GetWindowDisplayMode(SDL_GL_GetCurrentWindow(), &dm);
+	if (dm.refresh_rate) {
+		deltaSeconds = timeScale * 0.001f * dm.refresh_rate;
+	} else {
+		deltaSeconds = timeScale * (1.0f/60.0f);
+	}
+}
+
+void Timer::reset()
+{
+	ticks = SDL_GetTicks();
+	seconds = 0.0f;
+}
+
+void Timer::skipTicks()
+{
+	ticks = SDL_GetTicks();
+}
+
+void Timer::tick()
+{
+	deltaTicks = SDL_GetTicks() - ticks;
+	ticks += deltaTicks;
+	rawDeltaSeconds = timeScale * (0.001f * deltaTicks);
+	seconds += rawDeltaSeconds;
+	deltaSeconds = lerp(deltaSeconds , rawDeltaSeconds, 0.05);
+}
+
+
+//--------------------------------------------------------------------------------
+// MISC MATH FUNCS
+
+bool linearIntersection(Vec2 u0, Vec2 u1, Vec2 v0, Vec2 v1, float& u)
+{
 	float norm = (v1.y - v0.y)*(u1.x-u0.x) - (v1.x-v0.x)*(u1.y-u0.y);
 	if (norm > -M_COLINEAR_SLOP && norm < M_COLINEAR_SLOP) {
 		// lines are parallel
@@ -30,7 +74,8 @@ bool linearIntersection(Vec2 u0, Vec2 u1, Vec2 v0, Vec2 v1, float& u) {
 	return true;  
 }
 
-bool linearIntersection(Vec2 u0, Vec2 u1, Vec2 v0, Vec2 v1, float& u, float& v) {
+bool linearIntersection(Vec2 u0, Vec2 u1, Vec2 v0, Vec2 v1, float& u, float& v)
+{
 	float norm = (v1.y - v0.y)*(u1.x-u0.x) - (v1.x-v0.x)*(u1.y-u0.y);
 	if (norm > -M_COLINEAR_SLOP && norm < M_COLINEAR_SLOP) {
 		// lines are parallel
@@ -42,22 +87,26 @@ bool linearIntersection(Vec2 u0, Vec2 u1, Vec2 v0, Vec2 v1, float& u, float& v) 
 	return true;  
 }
 
-Vec2 quadraticBezier(Vec2 p0, Vec2 p1, Vec2 p2, float u) {
+Vec2 quadraticBezier(Vec2 p0, Vec2 p1, Vec2 p2, float u)
+{
 	return ((1.0f-u)*(1.0f-u))*p0 + (2.0f*(1.0f-u)*u)*p1 + (u*u)*p2;
 }
     
-Vec2 quadraticBezierDeriv(Vec2 p0, Vec2 p1, Vec2 p2, float u) {
+Vec2 quadraticBezierDeriv(Vec2 p0, Vec2 p1, Vec2 p2, float u)
+{
 	return (2.0f*(1.0f-u))*(p1-p0) + (2.0f*u)*(p2-p1);
 }
 
-Vec2 cubicBezier(Vec2 p0, Vec2 p1, Vec2 p2, Vec2 p3, float u) {
+Vec2 cubicBezier(Vec2 p0, Vec2 p1, Vec2 p2, Vec2 p3, float u)
+{
 	return ((1.0f-u) * (1.0f-u) * (1.0f-u)) * p0 +
 		(3.0f * (1.0f-u) * (1.0f-u) * u) * p1 +
 		(3.0f * (1.0f-u) * u * u) * p2 +
 		(u * u * u) * p3;
 }
 
-Vec2 cubicBezierDeriv(Vec2 p0, Vec2 p1, Vec2 p2, Vec2 p3, float u){
+Vec2 cubicBezierDeriv(Vec2 p0, Vec2 p1, Vec2 p2, Vec2 p3, float u)
+{
 	return 3.0f * (
 		(-(1.0f-u) * (1.0f-u)) * p0 +
 		(1.0f - 4.0f * u + 3.0f * u * u) * p1 +
@@ -65,21 +114,24 @@ Vec2 cubicBezierDeriv(Vec2 p0, Vec2 p1, Vec2 p2, Vec2 p3, float u){
 		(u * u) * p3
 	);
 }
-Vec2 cubicHermite(Vec2 p0, Vec2 m0, Vec2 p1, Vec2 m1, float u) {
+Vec2 cubicHermite(Vec2 p0, Vec2 m0, Vec2 p1, Vec2 m1, float u)
+{
 	return (2.f*u*u*u - 3.f*u*u + 1.f) * p0 +
 		(u*u*u - 2.f*u*u + u) * m0 +
 		(-2.f*u*u*u + 3.f *u*u) * p1 +
 		(u*u*u - u*u) * m1;
 }
 
-Vec2 CubicHermiteDeriv(Vec2 p0, Vec2 m0, Vec2 p1, Vec2 m1, float u) {
+Vec2 CubicHermiteDeriv(Vec2 p0, Vec2 m0, Vec2 p1, Vec2 m1, float u)
+{
 	return (6.f*(u*u - u)) * p0 +
 		(3.f*u*u - 4.f*u + 1.f) * m0 +
 		(6.f*(u - u*u)) * p1 +
 		(3.f*u*u - 2.f*u) * m1;
 }
 
-Color hsv(float h, float s, float v) {
+Color hsv(float h, float s, float v)
+{
 	if(s > 0.001f) {
 		h /= 60;
 		int i = int(h);
@@ -100,7 +152,8 @@ Color hsv(float h, float s, float v) {
 	}
 }
 
-void Color::toHSV(float *h, float *s, float *v) {
+void Color::toHSV(float *h, float *s, float *v)
+{
 	float r = red();
 	float g = green();
 	float b = blue();
@@ -120,7 +173,11 @@ void Color::toHSV(float *h, float *s, float *v) {
 	*v = r;
 }
 
-GLuint generateTexture(TextureGenerator cb, int w, int h) {
+//--------------------------------------------------------------------------------
+// MISC GRAPHICS FUNCS
+
+GLuint generateTexture(TextureGenerator cb, int w, int h)
+{
 	GLuint result;
 	glGenTextures(1, &result);
 	glBindTexture(GL_TEXTURE_2D, result);

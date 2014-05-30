@@ -21,8 +21,8 @@
 //--------------------------------------------------------------------------------
 // HASHING
 
-// inlined so that the compiler can constant-fold over string literals :)
-inline static uint32_t fnv1a(const char* name) {
+inline uint32_t fnv1a(const char* name) {
+	// inlined so that the compiler can constant-fold over string literals
 	uint32_t hval = 0x811c9dc5;
 	while(*name) {
 		hval ^= (*name);
@@ -61,64 +61,18 @@ struct Timer {
 	float rawDeltaSeconds;
 	float deltaSeconds;
 	
-	Timer(double aTimeScale=1) :
-	ticks(SDL_GetTicks()), deltaTicks(0),
-	timeScale(aTimeScale), seconds(0),
-	rawDeltaSeconds(0) {
-		SDL_DisplayMode dm;
-		SDL_GetWindowDisplayMode(SDL_GL_GetCurrentWindow(), &dm);
-		if (dm.refresh_rate) {
-			deltaSeconds = timeScale * 0.001f * dm.refresh_rate;
-		} else {
-			deltaSeconds = timeScale * (1.0f/60.0f);
-		}
-	}
-	
-	void reset() {
-		ticks = SDL_GetTicks();
-		seconds = 0.0f;
-	}
+	Timer(float aTimeScale=1.0f);
+	void reset();
+	void tick();
 
-	void skipTicks() {
-		// for things, like, coming back from pause
-		ticks = SDL_GetTicks();
-	}
-
-	void tick() {
-		deltaTicks = SDL_GetTicks() - ticks;
-		ticks += deltaTicks;
-		rawDeltaSeconds = timeScale * (0.001f * deltaTicks);
-		seconds += rawDeltaSeconds;
-		deltaSeconds = lerp(deltaSeconds , rawDeltaSeconds, 0.05);
-	}
+	// for things, like, coming back from pause
+	void skipTicks();
 };
 
 inline int pingPong(int i, int n) {
 	i  = i % (n + n - 2);
 	return i >= n ? 2 * (n-1) - i : i;
 }
-
-struct Timeout {
-	double current, target;
-	
-	Timeout() : current(0), target(1) {}
-	Timeout(double aTarget) : current(0), target(aTarget) {}
-	
-	double progress() const { return current / target; }
-	
-	void reset() { current = 0; }
-	void reset(double newTarget) { current = 0; target = newTarget; }
-	
-	bool tick(double dt) {
-		current += dt;
-		if (current >= target) {
-			current = target;
-			return true;
-		} else {
-			return false;
-		}
-	}
-};
 
 //------------------------------------------------------------------------------
 // Singleton Template

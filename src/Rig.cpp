@@ -19,12 +19,12 @@
 Rig::Rig(const RigAsset* asset) :
 
 data(asset),
-localAttitudes(  (Attitude*)  SDL_calloc(data->nbones, sizeof(Attitude))  ),
-localTransforms( (AffineMatrix*)  SDL_calloc(data->nbones, sizeof(AffineMatrix))  ),
-worldTransforms( (AffineMatrix*)  SDL_calloc(data->nbones, sizeof(AffineMatrix))  ),
+localAttitudes((Attitude*)      SDL_calloc(data->nbones, sizeof(Attitude))),
+localTransforms((AffineMatrix*) SDL_calloc(data->nbones, sizeof(AffineMatrix))),
+worldTransforms((AffineMatrix*) SDL_calloc(data->nbones, sizeof(AffineMatrix))),
 
 timelineMask(data->ntimeslines),
-currentKeyframes( (int*) SDL_calloc(data->ntimeslines, sizeof(int)) ),
+currentKeyframes((int*)         SDL_calloc(data->ntimeslines, sizeof(int))),
 
 currentLayer(data->defaultLayer),
 currentAnimation(0),
@@ -159,7 +159,6 @@ void Rig::tick(float dt)
 		// (just wrapping for now)
 		currentTime = fmodf(currentTime + dt, currentAnimation->duration);
 		if (currentTime < 0.0f) { currentTime += currentAnimation->duration; }
-//		currentTime += 0.01f * dt;
 		
 		// UPDATE TIMELINES
 		for(BitLister i(&timelineMask); i.next(); ) {
