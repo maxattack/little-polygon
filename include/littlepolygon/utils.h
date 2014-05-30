@@ -56,10 +56,10 @@ struct Timer {
 	int deltaTicks;
 	
 	// virtually scaled "seconds" since the timer started
-	double timeScale;
-	double seconds;
-	double rawDeltaSeconds;
-	double deltaSeconds;
+	float timeScale;
+	float seconds;
+	float rawDeltaSeconds;
+	float deltaSeconds;
 	
 	Timer(double aTimeScale=1) :
 	ticks(SDL_GetTicks()), deltaTicks(0),
@@ -68,20 +68,15 @@ struct Timer {
 		SDL_DisplayMode dm;
 		SDL_GetWindowDisplayMode(SDL_GL_GetCurrentWindow(), &dm);
 		if (dm.refresh_rate) {
-			deltaSeconds = timeScale * 0.001 * dm.refresh_rate;
+			deltaSeconds = timeScale * 0.001f * dm.refresh_rate;
 		} else {
-			deltaSeconds = timeScale * (1.0/60.0);
+			deltaSeconds = timeScale * (1.0f/60.0f);
 		}
 	}
 	
-	float time() const { return (float) seconds; }
-	float dt() const { return (float) deltaSeconds; }
-	float rawDt() const { return (float) rawDeltaSeconds; }
-	
-	
 	void reset() {
 		ticks = SDL_GetTicks();
-		seconds = 0;
+		seconds = 0.0f;
 	}
 
 	void skipTicks() {
@@ -92,9 +87,9 @@ struct Timer {
 	void tick() {
 		deltaTicks = SDL_GetTicks() - ticks;
 		ticks += deltaTicks;
-		rawDeltaSeconds = timeScale * (0.001 * deltaTicks);
+		rawDeltaSeconds = timeScale * (0.001f * deltaTicks);
 		seconds += rawDeltaSeconds;
-		deltaSeconds = lerpd(deltaSeconds , rawDeltaSeconds, 0.05);
+		deltaSeconds = lerp(deltaSeconds , rawDeltaSeconds, 0.05);
 	}
 };
 
