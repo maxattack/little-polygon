@@ -267,3 +267,42 @@ public:
 	}
 };
 
+//--------------------------------------------------------------------------------
+// SIMPLE BITSET
+
+class BitArray {
+friend class BitLister;
+private:
+	unsigned capacity;
+	uint32_t *words;
+	
+public:
+	BitArray(unsigned cap);
+	~BitArray();
+	
+	void clear();
+	void clear(unsigned i);
+	void mark(unsigned i);
+
+	bool operator[](unsigned i) const;
+	
+private:
+	unsigned nwords() const { return (capacity + 31) >> 5; }
+	static uint32_t bit(unsigned i);
+	void getIndices(unsigned idx, unsigned* outWord, unsigned *outIndex) const;
+};
+
+class BitLister {
+private:
+	const BitArray *pArray;
+	unsigned currentWord;
+	unsigned currentIndex;
+	uint32_t remainder;
+	
+public:
+	BitLister(const BitArray *arr);
+	bool next();
+	
+	unsigned index() const { ASSERT(currentIndex != -1); return (currentWord<<5) + currentIndex; }
+};
+

@@ -213,6 +213,8 @@ def export_native_assets(assetGroup, outpath, bpp):
 		def bone_name(bone): return "%s.bone[%d]" % (bone.rig.asset.id, bone.index)
 		def slot_name(slot): return "%s.slot[%d]" % (slot.rig.asset.id, slot.index)
 		def attach_name(attachment): return "%s.attachment[%d]" % (attachment.slot.rig.asset.id, attachment.index)
+		def anim_name(anim): return "%s.anim[%d]" % (anim.rig.asset.id, anim.index)
+		def timeline_name(timeline): return "%s.timeline[%d]" % (timeline.bone_anim.anim.rig.asset.id, timeline.index)
 
 		print 'Writing Rig (%s)' % rig.id
 		# RIG FORMAT
@@ -220,19 +222,27 @@ def export_native_assets(assetGroup, outpath, bpp):
 		# nbones       : uint32
 		# nslots       : uint32
 		# nattachments : uint32
+		# nanimations  : uint32
+		# ntimelines   : uint32
 		# bones        : Bone*
 		# slots        : Slot*
 		# attachments  : Attachment*
+		# animations   : Animation*
+		# timelines    : Timeline*
 		records.append(bintools.Record(
-			rig.id, 'IIII###',
+			rig.id, 'IIIIII#####',
 			(
 				rig.model.defaultLayer.hash, 
 				len(rig.model.bones), 
 				len(rig.model.slots), 
 				len(rig.model.attachments), 
+				len(rig.model.anims),
+				len(rig.model.timelines),
 				bone_name(rig.model.bones[0]), 
 				slot_name(rig.model.slots[0]), 
-				attach_name(rig.model.attachments[0])
+				attach_name(rig.model.attachments[0]),
+				anim_name(rig.model.anims[0]),
+				timeline_name(rig.model.timelines[0])
 			)
 		))
 
@@ -297,6 +307,43 @@ def export_native_assets(assetGroup, outpath, bpp):
 					attachment.x, attachment.y
 				)
 			))
+
+		# RIG::ANIMATION FORMAT
+		# hash     : uint32
+		# duration : float
+		for anim in rig.model.anims:
+			records.append(bintools.Record(
+				anim_name(anim), "If",
+				(anim.hash, anim.duration)
+			))
+
+		# RIG::TIMELINE FORMAT
+		# times      : *float
+		# values     : *void
+		# nkeyframes : uint32
+		# animHash   : uint32
+		# targetIdx  : uint32
+		# kind       : uint32
+		for timeline in rig.model.timelines:
+			tlname = timeline_name(timeline)
+			records.append(bintools.Record(
+				tlname, "##IIII",
+				(
+					tlname+".times",
+					tlname+".values",
+					len(timeline.times),
+					timeline.bone_anim.anim.hash,
+					timeline.bone_anim.bone.index,
+					timeline.kind
+				)
+			))
+			records.append(bintools.Record(
+				tlname+".times", "f" * len(timeline.times), timeline.times
+			))
+			records.append(bintools.Record(
+				tlname+".values", "f" * len(timeline.values), timeline.values
+			))
+
 
 	for data in assetGroup.userdata:
 		print 'Writing assetGroup.Userdata (%s)' % data.id

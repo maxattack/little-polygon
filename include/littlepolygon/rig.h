@@ -16,7 +16,12 @@
 
 #pragma once
 #include "sprites.h"
+#include "collections.h"
 #include "utils.h"
+
+#define kTimelineTranslation   1
+#define kTimelineRotation      2
+#define kTimelineScale         3
 
 //------------------------------------------------------------------------------
 // ASSETS
@@ -56,13 +61,28 @@ struct RigAttachmentAsset
 	AffineMatrix xform;
 };
 
-struct RigTimeline
+struct RigAnimationAsset
+{
+	uint32_t hash;
+	float duration;
+};
+
+struct RigTimelineAsset
 {
 	float *times;
-	float *values;
+	union {
+		float *rotationValues;
+		Vec2 *translationValues;
+		Vec2 *scaleValues;
+		int *attachmentValues;
+	};
 	uint32_t nkeyframes;
 	uint32_t animHash;
-	uint32_t boneIndex;
+	union {
+		uint32_t boneIndex;
+		uint32_t slotIndex;
+	};
+	uint32_t kind;
 };
 
 struct RigAsset
@@ -71,9 +91,13 @@ struct RigAsset
 	uint32_t nbones;
 	uint32_t nslots;
 	uint32_t nattachments;
+	uint32_t nanims;
+	uint32_t ntimeslines;
 	RigBoneAsset *bones;
 	RigSlotAsset *slots;
 	RigAttachmentAsset *attachments;
+	RigAnimationAsset *anims;
+	RigTimelineAsset *timelines;
 };
 
 //------------------------------------------------------------------------------
@@ -81,12 +105,28 @@ struct RigAsset
 
 class Rig {
 private:
-	const RigAsset* mAsset;
-	AffineMatrix* mLocalTransforms;
-	AffineMatrix** mParents;
-	AffineMatrix* mWorldTransforms;
+	const RigAsset* data;
+	
+	struct Attitude {
+		float radians;
+		Vec2 scale;
+	};
+	
+	// Structure-of-Arrays:
+	
+	// (indexed by bone)
+	Attitude* localAttitudes;
+	AffineMatrix* localTransforms;
+	AffineMatrix** parents;
+	AffineMatrix* worldTransforms;
+	
+	// (indexed by timeline)
+	BitArray timelineMask;
+	int* currentKeyframes;
 	
 	uint32_t currentLayer;
+	uint32_t currentAnimation;
+	float currentTime;
 	
 	
 public:
@@ -98,14 +138,23 @@ public:
 	const AffineMatrix* findTransform(const char* boneName) const {
 		return findTransform(fnv1a(boneName));
 	}
-	const AffineMatrix* findTransform(uint32_t hash) const;
 	
 	void draw(SpritePlotter* plotter);
 	
+	void setAnimation(const char *animName) {
+		setAnimation(fnv1a(animName));
+	}
+	
+	void tick(float dt);
+	void resetPose();
+	
+	
 private:
 	
+	const AffineMatrix* findTransform(uint32_t hash) const;
 	void computeWorldTransforms();
 
+	void setAnimation(uint32_t hash);
 	
 };
 

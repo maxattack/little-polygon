@@ -24,6 +24,9 @@ import json
 # * generalize to other kinds of rig formats?
 # * procedural interface?
 
+TimelineTranslation = 1
+TimelineRotation = 2
+TimelineScale = 3
 
 def _name_dict(li):
 	return dict( (elem.name, elem) for elem in li )
@@ -89,8 +92,18 @@ class Rig:
 		self.anims = [ Animation(self, key, val) for key, val in self.doc.get('animations', {}).iteritems() ]
 		assert _hashes_unique(self.anims)
 		self.name_to_anim = _name_dict(self.anims)
+		for i,anim in enumerate(self.anims):
+			anim.index = i
 
-
+		# Flatten timelines list
+		self.timelines = [
+			timeline 
+			for anim in self.anims 
+			for bone_anim in anim.bone_animations
+			for timeline in bone_anim.timelines
+		]
+		for i,tl in enumerate(self.timelines):
+			tl.index = i
 
 class Bone:
 	def __init__(self, rig, doc):
@@ -178,7 +191,7 @@ class Animation:
 		self.hash = fnv32a(self.name)
 
 		self.bone_animations = [ 
-			BoneAnimation(self,k,v) 
+			BoneAnimation(self,rig.name_to_bone[k],v) 
 			for k,v in doc.get('bones',{}).iteritems() 
 		]
 		self.bone_to_animation = dict((anim.bone, anim) for anim in self.bone_animations)
@@ -207,32 +220,32 @@ class Animation:
 		self.duration = duration
 
 class BoneAnimation:
-	def __init__(self, anim, bone_name, doc):
+	def __init__(self, anim, bone, doc):
 		self.anim = anim
-		self.bone = anim.rig.name_to_bone[bone_name]
+		self.bone = bone
 
-		# TODO: CURVES
-		
-		self.rotate_keys = [ 
-			(k['time'], _fixup_angle(k['angle'])) 
-			for k in doc.get('rotate', []) 
-		]
-
-		self.translate_keys = [ 
-			(k['time'],) + _fixup_position(k['x'], k['y']) 
-			for k in doc.get('translate', []) 
-		]
-
-		self.scale_keys = [ 
-			(k['time'], k['x'], k['y']) 
-			for k in doc.get('scale', []) 
-		]
+		self.timelines = []
+		if 'rotate' in doc: self.timelines.append(Timeline(self, TimelineRotation, doc['rotate']))
+		if 'translate' in doc: self.timelines.append(Timeline(self, TimelineTranslation, doc['translate']))
+		if 'scale' in doc: self.timelines.append(Timeline(self, TimelineScale, doc['scale']))
 
 		duration = 0
-		for time,_ in self.rotate_keys:	duration = max(duration, time)
-		for time,_,_ in self.translate_keys: duration = max(duration, time)
-		for time,_,_ in self.scale_keys: duration = max(duration, time)
+		times = (t for tl in self.timelines for t in tl.times)
+		for time in times: duration = max(duration, time)
 		self.duration = duration
+
+class Timeline:
+	def __init__(self, bone_anim, kind, keys):
+		self.bone_anim = bone_anim
+		self.kind = kind
+		self.times = [ k['time'] for k in keys ]
+		# TODO: CURVES		
+		if kind == TimelineTranslation:
+			self.values = [ comp for k in keys for comp in _fixup_position(k['x'], k['y']) ]
+		elif kind == TimelineRotation:
+			self.values = [ _fixup_angle(k['angle']) for k in keys ]
+		elif kind == TimelineScale:
+			self.values = [ comp for k in keys for comp in (k['x'], k['y']) ]
 
 class SlotAnimation:
 	def __init__(self, anim, slot_name, doc):

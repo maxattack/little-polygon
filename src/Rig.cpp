@@ -18,23 +18,26 @@
 
 Rig::Rig(const RigAsset* asset) :
 
-mAsset(asset),
-mLocalTransforms( (AffineMatrix*)  SDL_calloc(asset->nbones, sizeof(AffineMatrix))  ),
-mParents(         (AffineMatrix**) SDL_calloc(asset->nbones, sizeof(AffineMatrix*)) ),
-mWorldTransforms( (AffineMatrix*)  SDL_calloc(asset->nbones, sizeof(AffineMatrix))  ),
+data(asset),
+localAttitudes(  (Attitude*)  SDL_calloc(asset->nbones, sizeof(Attitude))  ),
+localTransforms( (AffineMatrix*)  SDL_calloc(asset->nbones, sizeof(AffineMatrix))  ),
+parents(         (AffineMatrix**) SDL_calloc(asset->nbones, sizeof(AffineMatrix*)) ),
+worldTransforms( (AffineMatrix*)  SDL_calloc(asset->nbones, sizeof(AffineMatrix))  ),
 
-currentLayer(asset->defaultLayer)
+timelineMask(asset->ntimeslines),
+currentKeyframes( (int*) SDL_calloc(asset->ntimeslines, sizeof(int)) ),
+
+currentLayer(asset->defaultLayer),
+currentAnimation(0)
 
 {
 	// INITIALIZE REST POSE
-	for(int i=0; i<mAsset->nbones; ++i) {
-		auto& bone = mAsset->bones[i];
-		mLocalTransforms[i] = bone.defaultTransform.concatenatedMatrix();
-		if (i == 0) {
-			mParents[i] = 0;
-		} else {
-			mParents[i] = mWorldTransforms + bone.parentIndex;
-		}
+	for(int i=0; i<data->nbones; ++i) {
+		auto& bone = data->bones[i];
+		localAttitudes[i].radians = bone.defaultTransform.radians;
+		localAttitudes[i].scale = bone.defaultTransform.scale;
+		localTransforms[i] = bone.defaultTransform.concatenatedMatrix();
+		parents[i] = worldTransforms + bone.parentIndex;
 	}
 	
 	// just set dirty bit?
@@ -43,23 +46,24 @@ currentLayer(asset->defaultLayer)
 
 Rig::~Rig()
 {
-	SDL_free(mLocalTransforms);
-	SDL_free(mParents);
-	SDL_free(mWorldTransforms);
+	SDL_free(localTransforms);
+	SDL_free(parents);
+	SDL_free(worldTransforms);
+	SDL_free(currentKeyframes);
 }
 
 void Rig::setRootTransform(const AffineMatrix& mat)
 {
-	mLocalTransforms[0] = mat;
-	mWorldTransforms[0] = mat;
+	localTransforms[0] = mat;
+	worldTransforms[0] = mat;
 	computeWorldTransforms();
 }
 
 const AffineMatrix* Rig::findTransform(uint32_t hash) const
 {
-	for(int i=0; i<mAsset->nbones; ++i) {
-		if (mAsset->bones[i].hash == hash) {
-			return mWorldTransforms + i;
+	for(int i=0; i<data->nbones; ++i) {
+		if (data->bones[i].hash == hash) {
+			return worldTransforms + i;
 		}
 	}
 	return 0;
@@ -67,14 +71,13 @@ const AffineMatrix* Rig::findTransform(uint32_t hash) const
 
 void Rig::draw(SpritePlotter* plotter)
 {
-	// TODO: SLOT FLIPBOOKING
-	for(int i=0; i<mAsset->nattachments; ++i)
+	for(int i=0; i<data->nattachments; ++i)
 	{
-		auto& attach = mAsset->attachments[i];
+		auto& attach = data->attachments[i];
 		if (attach.layerHash == 0 || attach.layerHash == currentLayer) {
 			plotter->drawImage(
 				attach.image,
-				mWorldTransforms[attach.slot->boneIndex] * attach.xform
+				worldTransforms[attach.slot->boneIndex] * attach.xform
 			);
 		}
 	}
@@ -83,8 +86,50 @@ void Rig::draw(SpritePlotter* plotter)
 void Rig::computeWorldTransforms()
 {
 	// skip root
-	for(int i=1; i<mAsset->nbones; ++i) {
-		mWorldTransforms[i] = (*mParents[i]) * mLocalTransforms[i];
+	for(int i=1; i<data->nbones; ++i) {
+		worldTransforms[i] = (*parents[i]) * localTransforms[i];
 	}
 }
+
+void Rig::setAnimation(uint32_t hash)
+{
+	// VERIFY THAT HASH IS VALID
+	if (hash == currentAnimation) {
+		return;
+	} else {
+		for(int i=0; i<data->nanims; ++i) {
+			if (hash == data->anims[i].hash) {
+				goto Validated;
+			}
+		}
+		return;
+	}
+Validated:
+	
+	// RESET TIMER, UPDATE TIMELINE MASK
+	currentAnimation = hash;
+	currentTime = 0.0f;
+	timelineMask.clear();
+	for(int i=0; i<data->ntimeslines; ++i) {
+		if (data->timelines[i].animHash == hash) {
+			timelineMask.mark(i);
+			currentKeyframes[i] = 0;
+		}
+	}
+	
+	// APPLY FIRST FRAME
+	// TODO
+}
+
+void Rig::tick(float dt)
+{
+	// TODO
+}
+
+void Rig::resetPose()
+{
+	// TODO
+}
+
+
 
