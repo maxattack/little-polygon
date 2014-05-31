@@ -51,7 +51,11 @@ remainder(0)
 }
 
 #if __WINDOWS__
-#define CLZ(x) __lzcnt(x)
+inline uint32_t CLZ(uint32_t value)
+{
+	DWORD leading_zero = 0;
+	return _BitScanReverse(&leading_zero, value) ? 31 - leading_zero : 32;
+}
 #else
 #define CLZ(x) __builtin_clz(x)
 #endif
