@@ -183,7 +183,7 @@ GLuint generateTexture(TextureGenerator cb, int w, int h)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	Color *scratch = (Color*) malloc( sizeof(Color) * w * h );
+	Color *scratch = (Color*) calloc( w*h, sizeof(Color) );
 	double dx = 1.0 / (w-1.0);
 	double dy = 1.0 / (h - 1.0);
 	for(int y=0; y<h; ++y)

@@ -53,7 +53,7 @@ vertices(0)
 	uMVP = shader.uniformLocation("mvp");
 	aPosition = shader.attribLocation("aPosition");
 	aColor = shader.attribLocation("aColor");
-	vertices = (Vertex*) malloc(2*sizeof(Vertex) * capacity);
+	vertices = (Vertex*) calloc(2*capacity, sizeof(Vertex));
 	
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);

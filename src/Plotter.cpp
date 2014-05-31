@@ -18,7 +18,7 @@
 Plotter::Plotter(int cap) :
 capacity(cap),
 currentArray(0) {
-	vertices = (Vertex*) malloc(sizeof(Vertex) * capacity);
+	vertices = (Vertex*) calloc(capacity, sizeof(Vertex));
 	glGenBuffers(3, vbo);
 	
 	for(int i=0; i<3; ++i) {

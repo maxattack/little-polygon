@@ -36,7 +36,7 @@ void TextureAsset::init() {
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		}
 		uLongf size = 4 * w * h;
-		Bytef *scratch = (Bytef *) malloc(size);
+		Bytef *scratch = (Bytef *) calloc(w*h, 4);
 		int result = uncompress(scratch, &size, (const Bytef*)compressedData, compressedSize);
 		assert(result == Z_OK);
 		int fmt = format();
