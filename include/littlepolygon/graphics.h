@@ -34,8 +34,8 @@ struct TextureAsset
 	void*    compressedData;  // zlib compressed texture data
 	int32_t  w, h;            // size of the texture (guarenteed to be POT)
 	uint32_t compressedSize,  // size of the compressed buffer, in bytes
-	textureHandle,   // handle to the initialized texture resource
-	flags;           // extra information (wrapping, format, etc)
+	         textureHandle,   // handle to the initialized texture resource
+	         flags;           // extra information (wrapping, format, etc)
 	
 	bool initialized() const { return textureHandle != 0; }
 	int format() const { return GL_RGBA; }
