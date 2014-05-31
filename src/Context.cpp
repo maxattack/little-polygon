@@ -109,7 +109,12 @@ SDLContext::SDLContext(const char *caption, int w, int h) {
 	window = SDL_CreateWindow(
 		caption ? caption : "Little Polygon Context",
 		SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-		w, h, SDL_WINDOW_OPENGL //| SDL_WINDOW_FULLSCREEN_DESKTOP
+		w, h,
+#if DEBUG
+		SDL_WINDOW_OPENGL
+#else
+		SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN_DESKTOP
+#endif
 	);
 	
 	if (!window) {

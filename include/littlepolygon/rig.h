@@ -139,6 +139,7 @@ public:
 	
 	
 	void refreshTransforms();
+	const AffineMatrix& rootTransform() const { return worldTransforms[0]; }
 	const AffineMatrix* findTransform(const char* boneName) const;
 	void draw(SpritePlotter* plotter);
 	
