@@ -17,7 +17,6 @@
 #pragma once
 
 #include "base.h"
-#include "bitset.h"
 
 // Several different common/simple object pools that index into a linear
 // array of preallocated slots.  Objects in the pool are not automatically
