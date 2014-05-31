@@ -24,7 +24,7 @@ localTransforms((AffineMatrix*) SDL_calloc(data->nbones, sizeof(AffineMatrix))),
 worldTransforms((AffineMatrix*) SDL_calloc(data->nbones, sizeof(AffineMatrix))),
 
 timelineMask(data->ntimeslines),
-currentKeyframes((int*)         SDL_calloc(data->ntimeslines, sizeof(int))),
+currentKeyframes((unsigned*)    SDL_calloc(data->ntimeslines, sizeof(unsigned))),
 
 currentLayer(data->defaultLayer),
 currentAnimation(0),
@@ -54,7 +54,7 @@ void Rig::setRootTransform(const AffineMatrix& mat)
 const AffineMatrix* Rig::findTransform(const char *name) const
 {
 	uint32_t hash = fnv1a(name);
-	for(int i=0; i<data->nbones; ++i) {
+	for(unsigned i=0; i<data->nbones; ++i) {
 		if (data->bones[i].hash == hash) {
 			return worldTransforms + i;
 		}
@@ -77,7 +77,7 @@ void Rig::draw(SpritePlotter* plotter)
 	// - maintain a layer-mask over attachments?
 
 	refreshTransforms();
-	for(int i=0; i<data->nattachments; ++i)
+	for(unsigned i=0; i<data->nattachments; ++i)
 	{
 		auto& attach = data->attachments[i];
 		if (attach.layerHash == 0 || attach.layerHash == currentLayer) {
@@ -103,7 +103,7 @@ void Rig::setAnimation(const char *animName)
 		return;
 	} else {
 		bool found = false;
-		for(int i=0; i<data->nanims; ++i) {
+		for(unsigned i=0; i<data->nanims; ++i) {
 			if (hash == data->anims[i].hash) {
 				currentAnimation = data->anims + i;
 				found = true;
@@ -119,7 +119,7 @@ void Rig::setAnimation(const char *animName)
 	// RESET TIMER, UPDATE TIMELINE MASK
 	currentTime = 0.0f;
 	timelineMask.clear();
-	for(int i=0; i<data->ntimeslines; ++i) {
+	for(unsigned i=0; i<data->ntimeslines; ++i) {
 		if (data->timelines[i].animHash == hash) {
 			timelineMask.mark(i);
 			currentKeyframes[i] = 0;
@@ -244,7 +244,7 @@ void Rig::applyTimeline(int i)
 
 void Rig::setDefaultPose()
 {
-	for(int i=0; i<data->nbones; ++i) {
+	for(unsigned i=0; i<data->nbones; ++i) {
 		auto& bone = data->bones[i];
 		localAttitudes[i].radians = bone.radians;
 		localAttitudes[i].scale = bone.scale;
@@ -259,7 +259,7 @@ void Rig::computeWorldTransforms()
 	// OPTIMIZATION CANDIDATES:
 	// - maintain a dirty-mask over bones?
 	
-	for(int i=1; i<data->nbones; ++i) {
+	for(unsigned i=1; i<data->nbones; ++i) {
 		worldTransforms[i] = worldTransforms[data->bones[i].parentIndex] * localTransforms[i];
 	}
 	xformDirty = false;

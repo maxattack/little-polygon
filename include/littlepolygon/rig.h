@@ -123,7 +123,7 @@ private:
 	
 	// (indexed by timeline)
 	BitArray timelineMask;
-	int* currentKeyframes;
+	unsigned* currentKeyframes;
 	
 	uint32_t currentLayer;
 	RigAnimationAsset* currentAnimation;

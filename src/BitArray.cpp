@@ -50,10 +50,16 @@ remainder(0)
 {
 }
 
+#if __WINDOWS__
+#define CLZ(x) __lzcnt(x)
+#else
+#define CLZ(x) __builtin_clz(x)
+#endif
+
 bool BitLister::next()
 {
 	if (remainder) {
-		currentIndex = __builtin_clz(remainder);
+		currentIndex = CLZ(remainder);
 		remainder ^= BitArray::bit(currentIndex);
 		return true;
 	} else {
@@ -62,7 +68,7 @@ bool BitLister::next()
 		} while(currentWord < pArray->nwords() && pArray->words[currentWord] == 0);
 		if (currentWord < pArray->nwords()) {
 			remainder = pArray->words[currentWord];
-			currentIndex = __builtin_clz(remainder);
+			currentIndex = CLZ(remainder);
 			remainder ^= BitArray::bit(currentIndex);
 			return true;
 		} else {
