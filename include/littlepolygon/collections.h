@@ -174,16 +174,15 @@ public:
 	
 	void append(const T& val) {
 		ASSERT(n < cap);
-		new(slots[n].address()) T(val);
-		n++;
+		++n;
+		new(slots[n-1].address()) T(val);
 	}
 	
 	template<typename... Args>
 	T* alloc(Args&&... args) {
 		ASSERT(n < cap);
-		auto result = new(slots[n].address()) T(args ...);
-		n++;
-		return result;
+		++n;
+		return new(slots[n-1].address()) T(args ...);
 	}
 	
 	int offsetOf(T* t) {
