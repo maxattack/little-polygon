@@ -46,6 +46,72 @@ struct Slot {
 };
 
 //--------------------------------------------------------------------------------
+// ARRAY THAT CHECKS BOUNDS IN DEBUG
+//--------------------------------------------------------------------------------
+
+template<typename T>
+class Array {
+private:
+	#if DEBUG
+	unsigned n;
+	#endif
+	T* buf;
+	
+public:
+	Array(int length)
+	{
+		#if DEBUG
+		n = length;
+		#endif
+		buf = (T*) calloc(length, sizeof(T));
+	}
+	
+	~Array()
+	{
+		free(buf);
+	}
+	
+	T& operator[](int i)
+	{
+		ASSERT(i >= 0);
+		ASSERT(i < n);
+		return buf[i];
+	}
+	
+	const T& operator[](int i) const
+	{
+		ASSERT(i >= 0);
+		ASSERT(i < n);
+		return buf[i];
+	}
+	
+	T* operator+(int i)
+	{
+		ASSERT(i >= 0);
+		ASSERT(i < n);
+		return buf + i;
+	}
+	
+	const T* operator+(int i) const
+	{
+		ASSERT(i >= 0);
+		ASSERT(i < n);
+		return buf + i;
+	}
+	
+	T* ptr()
+	{
+		return buf;
+	}
+	
+	const T* ptr() const
+	{
+		return buf;
+	}
+	
+};
+
+//--------------------------------------------------------------------------------
 // SIMPLE TEMPLATE QUEUE
 //--------------------------------------------------------------------------------
 

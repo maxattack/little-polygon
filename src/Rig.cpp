@@ -19,12 +19,12 @@
 Rig::Rig(const RigAsset* asset) :
 
 data(asset),
-localAttitudes((Attitude*)      calloc(data->nbones, sizeof(Attitude))),
-localTransforms((AffineMatrix*) calloc(data->nbones, sizeof(AffineMatrix))),
-worldTransforms((AffineMatrix*) calloc(data->nbones, sizeof(AffineMatrix))),
+localAttitudes(data->nbones),
+localTransforms(data->nbones),
+worldTransforms(data->nbones),
 
 timelineMask(data->ntimeslines),
-currentKeyframes((unsigned*)    calloc(data->ntimeslines, sizeof(unsigned))),
+currentKeyframes(data->ntimeslines),
 
 currentLayer(data->defaultLayer),
 currentAnimation(0),
@@ -34,14 +34,6 @@ xformDirty(true)
 {
 	setDefaultPose();
 	setRootTransform(matIdentity());
-}
-
-Rig::~Rig()
-{
-	free(localAttitudes);
-	free(localTransforms);
-	free(worldTransforms);
-	free(currentKeyframes);
 }
 
 void Rig::setRootTransform(const AffineMatrix& mat)

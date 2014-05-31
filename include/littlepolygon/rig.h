@@ -117,13 +117,13 @@ private:
 	// Structure-of-Arrays:
 	
 	// (indexed by bone)
-	Attitude* localAttitudes;
-	AffineMatrix* localTransforms;
-	AffineMatrix* worldTransforms;
+	Array<Attitude> localAttitudes;
+	Array<AffineMatrix> localTransforms;
+	Array<AffineMatrix> worldTransforms;
 	
 	// (indexed by timeline)
 	BitArray timelineMask;
-	unsigned* currentKeyframes;
+	Array<unsigned> currentKeyframes;
 	
 	uint32_t currentLayer;
 	RigAnimationAsset* currentAnimation;
@@ -133,7 +133,6 @@ private:
 	
 public:
 	Rig(const RigAsset* asset);
-	~Rig();
 	
 	void setRootTransform(const AffineMatrix& mat);
 	

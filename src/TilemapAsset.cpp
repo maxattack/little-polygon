@@ -21,8 +21,8 @@ void TilemapAsset::init()
 {
 	tileAtlas.init();
 	if (!data) {
+		data = (TileAsset*) calloc( mw * mh, sizeof(TileAsset) );
 		uLongf size = sizeof(TileAsset) * mw * mh;
-		data = (TileAsset*) malloc( size );
 		int result = uncompress((Bytef*)data, &size, (const Bytef*)compressedData, compressedSize);
 		assert(result == Z_OK);
 	}

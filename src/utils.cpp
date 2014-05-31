@@ -183,15 +183,14 @@ GLuint generateTexture(TextureGenerator cb, int w, int h)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	Color *scratch = (Color*) calloc( w*h, sizeof(Color) );
+	Array<Color> scratch(w*h);
 	double dx = 1.0 / (w-1.0);
 	double dy = 1.0 / (h - 1.0);
 	for(int y=0; y<h; ++y)
 	for(int x=0; x<w; ++x) {
 		scratch[x + y * w] = cb(x*dx, y*dy);
 	}
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, scratch);	
-	free(scratch);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, scratch.ptr());
 	return result;
 }
 

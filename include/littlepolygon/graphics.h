@@ -18,6 +18,7 @@
 
 #include "base.h"
 #include "math.h"
+#include "collections.h"
 
 //------------------------------------------------------------------------------
 // ASSETS
@@ -143,7 +144,7 @@ private:
 	int capacity;
 	int currentArray;
 	GLuint vbo[3];
-	Vertex *vertices;
+	Array<Vertex> vertices;
 	
 public:
 	Plotter(int capacity);
@@ -195,7 +196,7 @@ private:
 	Shader shader;
 	GLuint vao, vbo, uMVP, aPosition, aColor;
 
-	struct Vertex {
+	struct LineVertex {
 		Vec2 position;
 		Color color;
 
@@ -205,11 +206,10 @@ private:
 		}
 	};
 
-	Vertex *vertices;
+	Array<LineVertex> vertices;
 
 public:
 	LinePlotter(int capacity);
-	~LinePlotter();
 
 	void begin(const Viewport& viewport);
 	void plot(Vec2 p0, Vec2 p1, Color c);

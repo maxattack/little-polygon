@@ -17,9 +17,9 @@
 
 Plotter::Plotter(int cap) :
 capacity(cap),
-currentArray(0)
+currentArray(0),
+vertices(cap)
 {
-	vertices = (Vertex*) calloc(capacity, sizeof(Vertex));
 	glGenBuffers(3, vbo);
 	
 	for(int i=0; i<3; ++i) {
@@ -31,7 +31,6 @@ currentArray(0)
 
 Plotter::~Plotter()
 {
-	free(vertices);
 	glDeleteBuffers(3, vbo);
 }
 
@@ -43,6 +42,6 @@ void Plotter::swapBuffer()
 void Plotter::bufferData(int count)
 {
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[currentArray]);
-	glBufferSubData(GL_ARRAY_BUFFER, 0, count*sizeof(Vertex), vertices);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, count*sizeof(Vertex), vertices.ptr());
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }

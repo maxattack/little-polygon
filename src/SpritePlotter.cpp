@@ -66,7 +66,7 @@ workingTexture(0)
 	aColor = shader.attribLocation("aColor");
 	
 	// setup element array buffer
-	uint16_t *indices = (uint16_t*)malloc(6 * capacity() * sizeof(uint16_t));
+	Array<uint16_t> indices(6 * capacity());
 	for(uint16_t i=0; i<capacity(); ++i) {
 		indices[6*i+0] = 4*i;
 		indices[6*i+1] = 4*i+1;
@@ -80,11 +80,10 @@ workingTexture(0)
 	glBufferData(
 		GL_ELEMENT_ARRAY_BUFFER, 
 		6 * capacity() * sizeof(uint16_t),
-		indices, 
+		indices.ptr(),
 		GL_STATIC_DRAW
 	);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-	free(indices);
 
 	// initialize vbos
 	glGenVertexArrays(3, vao);
