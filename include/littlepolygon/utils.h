@@ -58,7 +58,6 @@ struct Timer {
 	// virtually scaled "seconds" since the timer started
 	float timeScale;
 	float seconds;
-	float rawDeltaSeconds;
 	float deltaSeconds;
 	
 	Timer(float aTimeScale=1.0f);

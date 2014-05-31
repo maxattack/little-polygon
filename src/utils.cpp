@@ -26,8 +26,7 @@ Timer::Timer(float aTimeScale) :
 ticks(SDL_GetTicks()),
 deltaTicks(0),
 timeScale(aTimeScale),
-seconds(0),
-rawDeltaSeconds(0)
+seconds(0)
 {
 	SDL_DisplayMode dm;
 	SDL_GetWindowDisplayMode(SDL_GL_GetCurrentWindow(), &dm);
@@ -53,9 +52,8 @@ void Timer::tick()
 {
 	deltaTicks = SDL_GetTicks() - ticks;
 	ticks += deltaTicks;
-	rawDeltaSeconds = timeScale * (0.001f * deltaTicks);
-	seconds += rawDeltaSeconds;
-	deltaSeconds = lerp(deltaSeconds , rawDeltaSeconds, 0.05);
+	deltaSeconds = timeScale * (0.001f * deltaTicks);
+	seconds += deltaSeconds;
 }
 
 
