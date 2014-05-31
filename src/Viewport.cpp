@@ -18,7 +18,8 @@
 #include "littlepolygon/utils.h"
 #include <algorithm>
 
-void Viewport::setFromWindow() {
+void Viewport::setFromWindow()
+{
 	SDL_Window *win = SDL_GL_GetCurrentWindow();
 	SDL_Point sz;
 	SDL_GetWindowSize(win, &sz.x, &sz.y);
@@ -27,38 +28,43 @@ void Viewport::setFromWindow() {
 	mOffset = vec(0,0);
 }
 
-void Viewport::setSizeWithHeight(float h) {
+void Viewport::setSizeWithHeight(float h)
+{
 	int ww, wh;
 	SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &ww, &wh);
 	mSize = vec(h * float(ww) / float(wh), h);
 }
 
-void Viewport::setSizeWithWidth(float w) {
+void Viewport::setSizeWithWidth(float w)
+{
 	int ww, wh;
 	SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &ww, &wh);
 	mSize = vec(w, w * float(wh) / float(ww));
 }
 
-Vec2 Viewport::windowToViewport(Vec2 p) const {
+Vec2 Viewport::windowToViewport(Vec2 p) const
+{
 	SDL_Window *win = SDL_GL_GetCurrentWindow();
 	int szx, szy;  SDL_GetWindowSize(win, &szx, &szy);
 	return mSize * p / Vec2((float) szx, (float)szy) + mOffset;
 }
 
-Vec2 Viewport::viewportToWindow(Vec2 vp) const {
+Vec2 Viewport::viewportToWindow(Vec2 vp) const
+{
 	SDL_Window *win = SDL_GL_GetCurrentWindow();
 	int w,h;
 	SDL_GetWindowSize(win, &w, &h);
 	return vec((float)w,(float)h) / mSize * (vp - mOffset);
 }
 
-Vec2 Viewport::cursor() const {
+Vec2 Viewport::cursor() const
+{
 	int x,y; SDL_GetMouseState(&x, &y);
 	return windowToViewport(vec((float)x, (float)y));
 }
 
-void Viewport::setMVP(GLuint amvp) const {
-
+void Viewport::setMVP(GLuint amvp) const
+{
 	float zfar = 128;
 	float znear = -128;
 	float fan = zfar + znear;
@@ -71,7 +77,6 @@ void Viewport::setMVP(GLuint amvp) const {
 		0, 0, 2.f/fsn, 0,
 		t.x, -t.y, -fan/fsn, 1
 	};
-
 	glUniformMatrix4fv(amvp, 1, GL_FALSE, buf);
 }
 

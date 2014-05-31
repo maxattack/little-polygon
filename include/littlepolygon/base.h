@@ -60,6 +60,16 @@
 #define MAX(a,b)   ((a) > (b) ? (a) : (b))
 #endif
 
+#if __WINDOWS__
+inline uint32_t CLZ(uint32_t value)
+{
+	DWORD leading_zero = 0;
+	return _BitScanReverse(&leading_zero, value) ? 31 - leading_zero : 32;
+}
+#else
+#define CLZ(x) __builtin_clz(x)
+#endif
+
 #ifdef DEBUG
 #   define ASSERT(cond)     (assert(cond))
 #   define LOG(_x)          printf _x

@@ -21,41 +21,6 @@ static Viewport makeView() {
 	return Viewport((float)w, (float)h, 0, 0);
 }
 
-//#if LITTLE_POLYGON_MOBILE
-//static int handleAppEvents(void *userdata, SDL_Event *event) {
-//	switch (event->type) {
-//		case SDL_QUIT:
-//			exit(0);
-//			break;
-//			
-//		case SDL_APP_TERMINATING:
-//			// shut down everything
-//			return 0;
-//			
-//		case SDL_APP_LOWMEMORY:
-//			// release as much as possible?
-//			return 0;
-//			
-//		case SDL_APP_WILLENTERBACKGROUND:
-//			return 0;
-//			
-//		case SDL_APP_DIDENTERBACKGROUND:
-//			// 5s to save state or you are dead
-//			return 0;
-//			
-//		case SDL_APP_WILLENTERFOREGROUND:
-//			return 0;
-//			
-//		case SDL_APP_DIDENTERFOREGROUND:
-//			return 0;
-//			
-//		default:
-//			// just put event on the queue
-//			return 1;
-//	}
-//}
-//#endif
-
 // http://devnewton.bci.im/en/gamepad_db
 // http://dl.bci.im/gamepad_db/gamepad_db.sdl
 const char *gamepadMapping = R"SDLMAP(
@@ -75,7 +40,8 @@ const char *gamepadMapping = R"SDLMAP(
 030000008f0e00001200000010010000,GreenAsia Inc.,a:b2,b:b1,x:b3,y:b0,start:b9,back:b8,dpup:h0.1,dpleft:h0.8,dpdown:h0.4,dpright:h0.2,leftshoulder:b6,rightshoulder:b7,leftstick:b10,rightstick:b11,leftx:a0,lefty:a1,rightx:a2,righty:a3,lefttrigger:b4,righttrigger:b5
 )SDLMAP";
 
-SDLContext::SDLContext(const char *caption, int w, int h) {
+SDLContext::SDLContext(const char *caption, int w, int h)
+{
 	
 	if (w == 0) {
 		// iphone 5 resolution :P
@@ -94,14 +60,6 @@ SDLContext::SDLContext(const char *caption, int w, int h) {
 	}
 	SDL_GameControllerAddMapping(gamepadMapping);
 	Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024);
-	
-//	SDL_SetEventFilter(handleAppEvents, 0);
-//	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-//	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-//	SDL_Window *pWindow = SDL_CreateWindow(
-//		"", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 0, 0,
-//		SDL_WINDOW_OPENGL|SDL_WINDOW_FULLSCREEN|SDL_WINDOW_BORDERLESS|SDL_WINDOW_SHOWN
-//	);
 	
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
@@ -146,7 +104,8 @@ SDLContext::SDLContext(const char *caption, int w, int h) {
 	
 }
 
-SDLContext::~SDLContext() {
+SDLContext::~SDLContext()
+{
 	SDL_GL_DeleteContext(gl);
 	SDL_DestroyWindow(window);
 	Mix_CloseAudio();
@@ -161,6 +120,5 @@ view(makeView()),
 plotter(plotterCap),
 lines(linesCap),
 sprites(&plotter)
-//splines(&plotter)
 {
 }

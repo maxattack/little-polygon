@@ -185,7 +185,7 @@ public:
 		return new(slots[n-1].address()) T(args ...);
 	}
 	
-	int offsetOf(T* t) {
+	int offsetOf(const T* t) {
 		auto slot = (Slot<T>*) t;
 		ASSERT(slot >= slots && slot < slots + n);
 		return slot - slots;

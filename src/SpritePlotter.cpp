@@ -25,7 +25,8 @@ in vec4 aColor;
 out vec2 uv;
 out vec4 color;
 
-void main() {
+void main()
+{
 	gl_Position = mvp * vec4(aPosition, 1.0);
 	color = aColor;
 	uv = aUv;
@@ -40,7 +41,8 @@ in vec2 uv;
 in vec4 color;
 out vec4 outColor;
 
-void main() {
+void main()
+{
 	vec4 baseColor = texture(atlas, uv);
 	outColor = vec4(mix(baseColor.rgb, color.rgb, color.a), baseColor.a);
 	//outColor = vec4(mix(baseColor.rgb, baseColor.a * color.rgb, color.a), baseColor.a);
@@ -107,12 +109,14 @@ workingTexture(0)
 	
 }
 
-SpritePlotter::~SpritePlotter() {
+SpritePlotter::~SpritePlotter()
+{
 	glDeleteBuffers(1, &elementBuf);
 	glDeleteVertexArrays(3, vao);
 }
 
-void SpritePlotter::begin(const Viewport& aView) {
+void SpritePlotter::begin(const Viewport& aView)
+{
 	ASSERT(!isBound());
 	count = 0;
 	view = aView;
@@ -120,7 +124,8 @@ void SpritePlotter::begin(const Viewport& aView) {
 	view.setMVP(uMVP);
 }
 
-void SpritePlotter::drawImage(ImageAsset *img, Vec2 pos, int frame, Color c, float z) {
+void SpritePlotter::drawImage(ImageAsset *img, Vec2 pos, int frame, Color c, float z)
+{
 	ASSERT(isBound());
 	setTextureAtlas(img->texture);
 	auto slice = nextSlice();
@@ -136,7 +141,8 @@ void SpritePlotter::drawImage(ImageAsset *img, Vec2 pos, int frame, Color c, flo
 	++count;
 }
 
-void SpritePlotter::drawImage(ImageAsset *img, Vec2 pos, Vec2 u, int frame, Color c, float z) {
+void SpritePlotter::drawImage(ImageAsset *img, Vec2 pos, Vec2 u, int frame, Color c, float z)
+{
 	ASSERT(isBound());
 	setTextureAtlas(img->texture);
 	auto slice = nextSlice();
@@ -155,7 +161,8 @@ void SpritePlotter::drawImage(ImageAsset *img, Vec2 pos, Vec2 u, int frame, Colo
 	++count;
 }
 
-void SpritePlotter::drawImage(ImageAsset *img, const AffineMatrix& xform, int frame, Color c, float z) {
+void SpritePlotter::drawImage(ImageAsset *img, const AffineMatrix& xform, int frame, Color c, float z)
+{
 	ASSERT(isBound());
 	setTextureAtlas(img->texture);
 	auto slice = nextSlice();
@@ -174,7 +181,8 @@ void SpritePlotter::drawImage(ImageAsset *img, const AffineMatrix& xform, int fr
 	++count;	
 }
 
-void SpritePlotter::drawQuad(ImageAsset *img, Vec2 p0, Vec2 p1, Vec2 p2, Vec2 p3, int frame, Color c, float z) {
+void SpritePlotter::drawQuad(ImageAsset *img, Vec2 p0, Vec2 p1, Vec2 p2, Vec2 p3, int frame, Color c, float z)
+{
 	ASSERT(isBound());
 	setTextureAtlas(img->texture);
 	auto slice = nextSlice();
@@ -190,7 +198,8 @@ void SpritePlotter::drawQuad(ImageAsset *img, Vec2 p0, Vec2 p1, Vec2 p2, Vec2 p3
 
 #define UV_LABEL_SLOP (0.0001f)
 
-void SpritePlotter::plotGlyph(const GlyphAsset& g, float x, float y, float z, float h, Color c) {
+void SpritePlotter::plotGlyph(const GlyphAsset& g, float x, float y, float z, float h, Color c)
+{
 	if (count == capacity()) {
 		commitBatch();
 	}
@@ -209,7 +218,8 @@ void SpritePlotter::plotGlyph(const GlyphAsset& g, float x, float y, float z, fl
 	++count;
 }
 
-void SpritePlotter::drawLabel(FontAsset *font, Vec2 p, Color c, const char *msg, float z) {
+void SpritePlotter::drawLabel(FontAsset *font, Vec2 p, Color c, const char *msg, float z)
+{
 	ASSERT(isBound());
 	setTextureAtlas(&(font->texture));
 
@@ -229,7 +239,8 @@ void SpritePlotter::drawLabel(FontAsset *font, Vec2 p, Color c, const char *msg,
 
 }
 
-void SpritePlotter::drawLabelCentered(FontAsset *font, Vec2 p, Color c, const char *msg, float z) {
+void SpritePlotter::drawLabelCentered(FontAsset *font, Vec2 p, Color c, const char *msg, float z)
+{
 	ASSERT(isBound());
 	setTextureAtlas(&(font->texture) );
 	float py = p.y;
@@ -250,7 +261,8 @@ void SpritePlotter::drawLabelCentered(FontAsset *font, Vec2 p, Color c, const ch
 	}
 }
 
-void SpritePlotter::drawLabelRightJustified(FontAsset *font, Vec2 p, Color c, const char *msg, float z) {
+void SpritePlotter::drawLabelRightJustified(FontAsset *font, Vec2 p, Color c, const char *msg, float z)
+{
 	ASSERT(isBound());
 	setTextureAtlas(&(font->texture) );
 	float py = p.y;
@@ -275,7 +287,8 @@ void SpritePlotter::drawLabelRightJustified(FontAsset *font, Vec2 p, Color c, co
 
 #define TILE_SLOP (0.001f)
 
-void SpritePlotter::drawTilemap(TilemapAsset *map, Vec2 position, float z) {
+void SpritePlotter::drawTilemap(TilemapAsset *map, Vec2 position, float z)
+{
 	ASSERT(isBound());
 
 	// make sure the map is initialized
@@ -329,14 +342,16 @@ void SpritePlotter::drawTilemap(TilemapAsset *map, Vec2 position, float z) {
 	}	
 }
 
-void SpritePlotter::flush() {
+void SpritePlotter::flush()
+{
 	ASSERT(isBound()); 
 	if (count > 0) { 
 		commitBatch(); 
 	}
 }
 
-void SpritePlotter::end() {
+void SpritePlotter::end()
+{
 	ASSERT(isBound());
 	flush();
 	count = -1;
@@ -345,7 +360,8 @@ void SpritePlotter::end() {
 	glUseProgram(0);
 }
 
-void SpritePlotter::commitBatch() {
+void SpritePlotter::commitBatch()
+{
 	ASSERT(count > 0);
 	
 	plotter->bufferData(count<<2);
@@ -358,7 +374,8 @@ void SpritePlotter::commitBatch() {
 	count = 0;
 }
 
-void SpritePlotter::setTextureAtlas(TextureAsset *texture) {
+void SpritePlotter::setTextureAtlas(TextureAsset *texture)
+{
 	bool atlasChange = texture != workingTexture;
 	
 	// emit a draw call if we're at SPRITE_CAPACITY of if the atlas is changing.

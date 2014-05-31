@@ -23,13 +23,11 @@ struct AssetHeader {
 
 struct AssetData {
 	size_t assetCount;
-
-	// if we fail to find an asset, optionally check a fallback
-	// (for "pusinging" level content on top of shared content)
 	AssetHeader headers[1];
 };
 
-AssetBundle::AssetBundle(const char* path, uint32_t crc) : data(0), fallback(0) {
+AssetBundle::AssetBundle(const char* path, uint32_t crc) : data(0), fallback(0)
+{
 	if (path == 0 || strlen(path) == 0) {
 		return;
 	}
@@ -68,14 +66,16 @@ AssetBundle::AssetBundle(const char* path, uint32_t crc) : data(0), fallback(0) 
 	data->assetCount = count;
 }
 
-AssetBundle::~AssetBundle() {
+AssetBundle::~AssetBundle()
+{
 	if (data) {
 		release();
 		free(data);
 	}
 }
 
-void* AssetBundle::findHeader(uint32_t hash, uint32_t assetType) {
+void* AssetBundle::findHeader(uint32_t hash, uint32_t assetType)
+{
 	if (data) {
 		// headers are sorted on their hash, so we can binary search
 		int imin = 0;
@@ -98,11 +98,13 @@ void* AssetBundle::findHeader(uint32_t hash, uint32_t assetType) {
 	return fallback ? fallback->findHeader(hash, assetType) : 0;
 }
 
-void AssetBundle::setFallback(AssetBundle *aFallback) {
+void AssetBundle::setFallback(AssetBundle *aFallback)
+{
 	fallback = aFallback;
 }
 
-void AssetBundle::init() {
+void AssetBundle::init()
+{
 	if (data && data->assetCount) { 
 		for(unsigned i=0; i<data->assetCount; ++i) {
 			switch(data->headers[i].type) {
@@ -125,7 +127,8 @@ void AssetBundle::init() {
 	}
 }
 
-void AssetBundle::release() {
+void AssetBundle::release()
+{
 	if (data && data->assetCount) { 
 		for(unsigned i=0; i<data->assetCount; ++i) {
 			switch(data->headers[i].type) {

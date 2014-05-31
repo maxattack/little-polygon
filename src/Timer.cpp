@@ -16,7 +16,8 @@
 
 #include <littlepolygon/events.h>
 
-void TimerQueue::enqueue(TimerListener *newListener, double duration) {
+void TimerQueue::enqueue(TimerListener *newListener, double duration)
+{
 	ASSERT(!newListener->isBound());
 	if (hasQueue()) {
 		
@@ -47,7 +48,8 @@ void TimerQueue::enqueue(TimerListener *newListener, double duration) {
 		
 }
 
-void TimerQueue::tick(double dt) {
+void TimerQueue::tick(double dt)
+{
 	if (hasQueue()) {
 		
 		// dequeue everything that's passed below the time threshold

@@ -17,7 +17,8 @@
 #include "littlepolygon/assets.h"
 #include <zlib.h>
 
-void TextureAsset::init() {
+void TextureAsset::init()
+{
 	if(textureHandle == 0) {
 		glGenTextures(1, &textureHandle);
 		glBindTexture(GL_TEXTURE_2D, textureHandle);
@@ -45,14 +46,16 @@ void TextureAsset::init() {
 	}
 }
 
-void TextureAsset::release() {
+void TextureAsset::release()
+{
 	if (textureHandle) {
 		glDeleteTextures(1, &textureHandle);
 		textureHandle = 0;
 	}
 }
 
-void TextureAsset::bind() {
+void TextureAsset::bind()
+{
 	init();
 	glBindTexture(GL_TEXTURE_2D, textureHandle);
 }

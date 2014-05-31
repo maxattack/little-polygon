@@ -1,14 +1,18 @@
 #include "littlepolygon/collections.h"
 
-BitArray::BitArray(unsigned cap) : capacity(cap) {
+BitArray::BitArray(unsigned cap) :
+capacity(cap)
+{
 	words = (uint32_t*) calloc(nwords(), sizeof(uint32_t));
 }
 
-BitArray::~BitArray() {
+BitArray::~BitArray()
+{
 	free(words);
 }
 
-void BitArray::clear() {
+void BitArray::clear()
+{
 	SDL_memset(words, 0, nwords() * sizeof(uint32_t));
 }
 
@@ -49,16 +53,6 @@ currentIndex(-1),
 remainder(0)
 {
 }
-
-#if __WINDOWS__
-inline uint32_t CLZ(uint32_t value)
-{
-	DWORD leading_zero = 0;
-	return _BitScanReverse(&leading_zero, value) ? 31 - leading_zero : 32;
-}
-#else
-#define CLZ(x) __builtin_clz(x)
-#endif
 
 bool BitLister::next()
 {

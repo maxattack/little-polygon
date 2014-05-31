@@ -42,7 +42,8 @@ private:
 	Slot<T> slots[N];
 	
 	
-	inline static uint32_t bit(int i) {
+	inline static uint32_t bit(int i)
+	{
 		ASSERT(i >= 0);
 		ASSERT(i < 32);
 		return 0x80000000>>i;
@@ -53,34 +54,39 @@ public:
 	bool empty() const { return mask == 0; }
 	bool full() const { return mask == (1<<N)-1; }
 	
-	int indexOf(T* p) const {
+	int indexOf(T* p) const
+	{
 		ASSERT(active(p));
 		return p - slots->address();
 	}
 	
-	bool active(T* p) const {
+	bool active(T* p) const
+	{
 		int i = p - slots->address();
 		return (mask & bit(i)) != 0;
 	}
 	
 	template<typename... Args>
-	T* alloc(Args&&... args) {
+	T* alloc(Args&&... args)
+	{
 		ASSERT(mask != 0xffffffff);
-		auto i = __builtin_clz(~mask);
+		auto i = CLZ(~mask);
 		mask |= bit(i);
 		return new(&slots[i].record) T(args ...);
 	}
 	
-	void release(T* p) {
+	void release(T* p)
+	{
 		ASSERT(active(p));
 		p->~T();
 		int i = p - slots->address();
 		mask ^= bit(i);
 	}
 
-	void clear() {
+	void clear()
+	{
 		while(mask) {
-			auto i = __builtin_clz(mask);
+			auto i = CLZ(mask);
 			mask ^= bit(i);
 			slots[i].release();
 		}
@@ -116,19 +122,17 @@ public:
 
 		iterator(const BitsetPool<T> *pool) :
 		slots((T*)pool->slots),
-		remainder(pool->mask) {
-		}
+		remainder(pool->mask) {}
 		
 		iterator(const BitsetPool<T> *pool, Subset filter) :
 		slots((T*)pool->slots),
-		remainder(pool->mask & filter.mask) {
-		}
-		
+		remainder(pool->mask & filter.mask) {}
 
 	public:
-		bool next() {
+		bool next()
+		{
 			if (remainder) {
-				auto i = __builtin_clz(remainder);
+				auto i = CLZ(remainder);
 				remainder ^= bit(i);
 				curr = slots + i;
 				return true;
@@ -186,18 +190,21 @@ public:
 	
 	inline void reserve(int n) { slots.reserve(n); }
 	
-	void clear() {
+	void clear()
+	{
 		for(auto& slot : slots) { slot.release(); }
 		slots.clear();
 	}
 
 	template<typename... Args>
-	T* alloc(Args&&... args) {
+	T* alloc(Args&&... args)
+	{
 		slots.emplace_back();
 		return slots.back().init(args...);
 	}
 
-	void release(T* p) {
+	void release(T* p)
+	{
 		ASSERT(active(p));
 		p->~T();
 		if (p != slots.back().address()) {
@@ -207,7 +214,8 @@ public:
 	}
 	
 	template<bool (T::*Func)()>
-	void cull() {
+	void cull()
+	{
 		for(auto inst=begin(); inst!=end();) {
 			if ((inst->*Func)()) { release(inst); } else { ++inst; }
 		}

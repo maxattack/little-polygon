@@ -16,7 +16,8 @@
 
 #include "littlepolygon/graphics.h"
 
-Shader::Shader(const GLchar *vsrc, const GLchar *fsrc) {
+Shader::Shader(const GLchar *vsrc, const GLchar *fsrc)
+{
 	prog = glCreateProgram();
 	vert = glCreateShader(GL_VERTEX_SHADER);
 	frag = glCreateShader(GL_FRAGMENT_SHADER);
@@ -86,7 +87,8 @@ Shader::Shader(const GLchar *vsrc, const GLchar *fsrc) {
 
 }
 
-Shader::~Shader() {
+Shader::~Shader()
+{
 	if (prog) {
 		glDeleteProgram(prog);
 		glDeleteShader(vert);

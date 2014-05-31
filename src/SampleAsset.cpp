@@ -46,7 +46,8 @@ struct WaveHeader {
 	}
 };
 
-void SampleAsset::init() {
+void SampleAsset::init()
+{
 	if (chunk == 0) {
 		// Allocate a buffer for the RW_ops structure to read from 
 		Bytef *scratch = (Bytef*) malloc(size + sizeof(WaveHeader));
@@ -72,14 +73,16 @@ void SampleAsset::init() {
 	}
 }
 
-void SampleAsset::release() {
+void SampleAsset::release()
+{
 	if (chunk) {
 		Mix_FreeChunk(chunk);
 		chunk = 0;
 	}
 }
 
-void SampleAsset::play() {
+void SampleAsset::play()
+{
 	init();
 	Mix_PlayChannel(-1, chunk, 0);
 }

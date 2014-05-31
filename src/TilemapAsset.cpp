@@ -17,7 +17,8 @@
 #include "littlepolygon/assets.h"
 #include <zlib.h>
 
-void TilemapAsset::init() {
+void TilemapAsset::init()
+{
 	tileAtlas.init();
 	if (!data) {
 		uLongf size = sizeof(TileAsset) * mw * mh;
@@ -28,26 +29,30 @@ void TilemapAsset::init() {
 
 }
 
-void TilemapAsset::release() {
+void TilemapAsset::release()
+{
 	tileAtlas.release();
 	free(data);
 	data = 0;
 }
 
-void TilemapAsset::reload() {
+void TilemapAsset::reload()
+{
 	free(data);
 	data = 0;
 	init();
 }
 
-TileAsset TilemapAsset::tileAt(int x, int y) const {
+TileAsset TilemapAsset::tileAt(int x, int y) const
+{
 	ASSERT(initialized());
 	ASSERT(x >= 0 && x < mw);
 	ASSERT(y >= 0 && y < mh);
 	return data[y * mw + x];
 }
 
-void TilemapAsset::clearTile(int x, int y) {
+void TilemapAsset::clearTile(int x, int y)
+{
 	ASSERT(initialized());
 	ASSERT(x >= 0 && x < mw);
 	ASSERT(y >= 0 && y < mh);
