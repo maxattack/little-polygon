@@ -53,7 +53,7 @@ vertices(0)
 	uMVP = shader.uniformLocation("mvp");
 	aPosition = shader.attribLocation("aPosition");
 	aColor = shader.attribLocation("aColor");
-	vertices = (Vertex*) SDL_malloc(2*sizeof(Vertex) * capacity);
+	vertices = (Vertex*) malloc(2*sizeof(Vertex) * capacity);
 	
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
@@ -82,7 +82,7 @@ vertices(0)
 
 
 LinePlotter::~LinePlotter() {
-	SDL_free(vertices);
+	free(vertices);
 }
 
 void LinePlotter::begin(const Viewport& viewport) {

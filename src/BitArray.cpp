@@ -1,11 +1,11 @@
 #include "littlepolygon/collections.h"
 
 BitArray::BitArray(unsigned cap) : capacity(cap) {
-	words = (uint32_t*) SDL_calloc(nwords(), sizeof(uint32_t));
+	words = (uint32_t*) calloc(nwords(), sizeof(uint32_t));
 }
 
 BitArray::~BitArray() {
-	SDL_free(words);
+	free(words);
 }
 
 void BitArray::clear() {

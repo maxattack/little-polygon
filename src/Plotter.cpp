@@ -18,7 +18,7 @@
 Plotter::Plotter(int cap) :
 capacity(cap),
 currentArray(0) {
-	vertices = (Vertex*) SDL_malloc(sizeof(Vertex) * capacity);
+	vertices = (Vertex*) malloc(sizeof(Vertex) * capacity);
 	glGenBuffers(3, vbo);
 	
 	for(int i=0; i<3; ++i) {
@@ -29,7 +29,7 @@ currentArray(0) {
 }
 
 Plotter::~Plotter() {
-	SDL_free(vertices);
+	free(vertices);
 	glDeleteBuffers(3, vbo);
 }
 

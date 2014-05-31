@@ -57,11 +57,11 @@ private:
 
 public:
 	Queue(int aCapacity) : cap(aCapacity), n(0), i(0) {
-		slots = (Slot<T>*) SDL_calloc(cap, sizeof(T));
+		slots = (Slot<T>*) calloc(cap, sizeof(T));
 	}
 	
 	~Queue() {
-		SDL_free(slots);
+		free(slots);
 	}
 	
 	int capacity() const { return cap; }
@@ -139,11 +139,11 @@ private:
 
 public:
 	List(int aCapacity) : cap(aCapacity), n(0) {
-		slots = (Slot<T>*) SDL_calloc(cap, sizeof(T));
+		slots = (Slot<T>*) calloc(cap, sizeof(T));
 	}
 	
 	~List() {
-		SDL_free(slots);
+		free(slots);
 	}
 	
 	int capacity() const { return cap; }
