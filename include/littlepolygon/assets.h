@@ -56,7 +56,7 @@ struct SampleAsset
 
 struct PaletteAsset
 {
-	uint32_t count;
+	int32_t count;
 	
 	Color*   colors() const { return (Color*)(this+1); }
 

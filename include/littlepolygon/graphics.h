@@ -32,8 +32,8 @@ struct TextureAsset
 {
 	
 	void*    compressedData;  // zlib compressed texture data
-	uint32_t w, h,            // size of the texture (guarenteed to be POT)
-	         compressedSize,  // size of the compressed buffer, in bytes
+	int32_t  w, h;            // size of the texture (guarenteed to be POT)
+	uint32_t compressedSize,  // size of the compressed buffer, in bytes
 	         handle,          // handle to the initialized texture resource
 	         flags;           // extra information (wrapping, format, etc)
 	

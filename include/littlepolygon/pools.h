@@ -135,24 +135,26 @@ public:
 		slot->attachAfter(&idle);
 	}
 	
-	void each(void (T::*f)())
+	template<typename ...Args>
+	void each(void (T::*Func)(Args...), Args... args)
 	{
 		auto p = active.next;
 		while(p != &active) {
 			bookmark.attachAfter(p);
-			(getStorage(p).reference().*f)();
+			(getStorage(p).reference().*Func)(args...);
 			p = bookmark.next;
 			bookmark.unbind();
 		}
 	}
 	
-	void cull(bool (T::*f)())
+	template<typename ...Args>
+	void cull(bool (T::*Func)(Args...), Args... args)
 	{
 		auto p = active.next;
 		while(p != &active) {
 			bookmark.attachAfter(p);
 			auto ptr = getStorage(p).address();
-			if ((ptr->*f)()) { release(ptr); }
+			if ((ptr->*Func)(args...)) { release(ptr); }
 			p = bookmark.next;
 			bookmark.unbind();
 		}
@@ -211,18 +213,19 @@ public:
 		slots.pop_back();
 	}
 	
-	void each(void (T::*Func)())
+	template<typename ...Args>
+	void each(void (T::*Func)(Args...), Args... args)
 	{
 		for(auto inst=begin(); inst!=end(); ++inst) {
-			(inst->*Func)();
+			(inst->*Func)(args...);
 		}
 	}
 
-	
-	void cull(bool (T::*Func)())
+	template<typename ...Args>
+	void cull(bool (T::*Func)(Args...), Args... args)
 	{
 		for(auto inst=begin(); inst!=end();) {
-			if ((inst->*Func)()) { release(inst); } else { ++inst; }
+			if ((inst->*Func)(args...)) { release(inst); } else { ++inst; }
 		}
 	}
 	

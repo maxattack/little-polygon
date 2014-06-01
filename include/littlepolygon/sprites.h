@@ -40,7 +40,7 @@ struct ImageAsset
 	TextureAsset* texture; // the texture onto which this image is packed
 	FrameAsset *frames;
 	Vec2 size, pivot;
-	uint32_t nframes;
+	int32_t    nframes;
 	
 	FrameAsset* frame(int i) {
 		ASSERT(i >= 0 && i < nframes);

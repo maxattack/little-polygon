@@ -79,7 +79,7 @@ def export_native_assets(assetGroup, outpath, bpp):
 		# Flags         : uint32
 		records.append(bintools.Record(
 			texture.id,
-			'#IIIII', 
+			'#iiIII', 
 			("%s_data" % texture.id, w, h, len(texture.data), 0, texture.flags))
 		)
 
@@ -205,7 +205,7 @@ def export_native_assets(assetGroup, outpath, bpp):
 		# colors : uint8[] (RGBARGBA...)
 		records.append(bintools.Record(
 			palette.id,
-			'I' + 'B' * (4*len(palette.colors)),
+			'i' + 'B' * (4*len(palette.colors)),
 			(len(palette.colors),) + tuple(c for color in palette.colors for c in color)
 		))
 
