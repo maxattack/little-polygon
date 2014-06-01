@@ -213,6 +213,15 @@ public:
 		slots.pop_back();
 	}
 	
+	template<void (T::*Func)()>
+	void each()
+	{
+		for(auto inst=begin(); inst!=end(); ++inst) {
+			(inst->*Func)();
+		}
+	}
+
+	
 	template<bool (T::*Func)()>
 	void cull()
 	{
