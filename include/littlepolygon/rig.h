@@ -114,8 +114,6 @@ private:
 		}
 	};
 	
-	// Structure-of-Arrays:
-	
 	// (indexed by bone)
 	Array<Attitude> localAttitudes;
 	Array<AffineMatrix> localTransforms;
@@ -125,8 +123,8 @@ private:
 	BitArray timelineMask;
 	Array<unsigned> currentKeyframes;
 	
-	uint32_t currentLayer;
 	RigAnimationAsset* currentAnimation;
+	uint32_t currentLayer;
 	float currentTime;
 	
 	bool xformDirty;
@@ -134,22 +132,29 @@ private:
 public:
 	Rig(const RigAsset* asset);
 	
-	void setRootTransform(const AffineMatrix& mat);
+	// GETTERS
 	
-	
-	void refreshTransforms();
+	bool playing() const { return currentAnimation != 0; }
+	float time() const { return currentTime; }
+	bool showingLayer(const char* name) const { return currentLayer == fnv1a(name); }
+	bool showingAnimation(const char* name) const { return currentAnimation->hash == fnv1a(name); }
 	const AffineMatrix& rootTransform() const { return worldTransforms[0]; }
 	const AffineMatrix* findTransform(const char* boneName) const;
-	void draw(SpritePlotter* plotter);
 	
+	// SETTERS
+	
+	void setRootTransform(const AffineMatrix& mat);
 	void setLayer(const char *layerName);
 	void setAnimation(const char *animName);
 	
+	// METHODS
+	
 	void resetPose();
 	void resetTime();
+	void refreshTransforms();
 	void tick(float dt);
+	void draw(SpritePlotter* plotter);
 	
-	bool playing() const { return currentAnimation != 0; }
 private:
 	
 	void setDefaultPose();

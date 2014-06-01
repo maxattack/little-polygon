@@ -24,134 +24,145 @@
 // destructors matter.
 
 #include "collections.h"
-#include <algorithm>
-#include <utility>
 #include <vector>
 
 //------------------------------------------------------------------------------
-// BITSET POOL (Max 32 Elems)
+// POOL
+// Allocates objects in arrays with a doubling strategy.  Doesn't allocate
+// anything if you never use it.
 //------------------------------------------------------------------------------
 
-template<typename T, int N=32>
-class BitsetPool {
+struct Link {
+	Link *prev, *next;
+	
+	void init() {
+		next = this;
+		prev = this;
+	}
+	
+	void attachAfter(Link *before) {
+		next = before->next;
+		prev = before;
+		before->next = this;
+		next->prev = this;
+	}
+	
+	void attachBefore(Link *after) {
+		next = after;
+		prev = after->prev;
+		after->prev = this;
+		prev->next = this;
+	}
+	
+	void unbind() {
+		next->prev = prev;
+		prev->next = next;
+		next = this;
+		prev = this;
+	}
+	
+	bool isBound() const {
+		return next != this;
+	}
+};
+
+template<typename T>
+class Pool {
 public:
 	typedef T InstanceType;
-
+	
 private:
-	uint32_t mask;
-	Slot<T> slots[N];
+	// NOTHING TO SEE HERE, MOVE ALONG :P
+	struct PoolSlot : Link { Slot<T> storage; };
+	static Slot<T>& getStorage(Link* link) { return static_cast<PoolSlot*>(link)->storage; }
+	static PoolSlot* getSlot(T* p) { return static_cast<PoolSlot*>(static_cast<Link*>((void*)p)-1); }
 	
-	
-	inline static uint32_t bit(int i)
-	{
-		ASSERT(i >= 0);
-		ASSERT(i < 32);
-		return 0x80000000>>i;
-	}
+	unsigned bufferCount;
+	PoolSlot *buffers[7];
+	Link active, idle, bookmark;
 	
 public:
-	
-	bool empty() const { return mask == 0; }
-	bool full() const { return mask == (1<<N)-1; }
-	
-	int indexOf(T* p) const
+	Pool() : bufferCount(0)
 	{
-		ASSERT(active(p));
-		return p - slots->address();
+		memset(buffers, 0, 7 * sizeof(PoolSlot*));
+		active.init();
+		idle.init();
+		bookmark.init();
 	}
 	
-	bool active(T* p) const
+	~Pool()
 	{
-		int i = p - slots->address();
-		return (mask & bit(i)) != 0;
+		for(int i=0; i<7; ++i) {
+			free(buffers[i]);
+		}
+	}
+	
+	bool isEmpty() const { return !active.isBound(); }
+	
+	void clear()
+	{
+		while(active.isBound()) {
+			release(getStorage(active.next).address());
+		}
 	}
 	
 	template<typename... Args>
 	T* alloc(Args&&... args)
 	{
-		ASSERT(mask != 0xffffffff);
-		auto i = CLZ(~mask);
-		mask |= bit(i);
-		return new(&slots[i].record) T(args ...);
+		if (!idle.isBound()) {
+			ASSERT(bufferCount < (7-1));
+			int cnt = 8<<bufferCount;
+			auto buf = buffers[bufferCount] = (PoolSlot*) calloc(cnt, sizeof(PoolSlot));
+			for(int i=0; i<cnt; ++i) {
+				buf[i].init();
+				buf[i].attachBefore(&idle);
+			}
+			++bufferCount;
+		}
+		
+		auto slot = idle.next;
+		slot->unbind();
+		slot->attachBefore(&active);
+		return new(getStorage(slot).address()) T(std::forward<Args>(args) ...);
 	}
 	
 	void release(T* p)
 	{
-		ASSERT(active(p));
-		p->~T();
-		int i = p - slots->address();
-		mask ^= bit(i);
+		auto slot = getSlot(p);
+		ASSERT(slot->isBound());
+		getStorage(slot).release();
+		slot->unbind();
+		slot->attachAfter(&idle);
 	}
-
-	void clear()
+	
+	template<void (T::*Func)()>
+	void each()
 	{
-		while(mask) {
-			auto i = CLZ(mask);
-			mask ^= bit(i);
-			slots[i].release();
+		auto p = active.next;
+		while(p != &active) {
+			bookmark.attachAfter(p);
+			(getStorage(p).reference().*Func)();
+			p = bookmark.next;
+			bookmark.unbind();
 		}
-		mask = 0;
 	}
 	
-	class Subset {
-	friend class BitsetPool<T>;
-	private:
-		uint32_t mask;
-		
-		Subset(uint32_t aMask) : mask(aMask) {}
-		
-	public:
-		Subset() : mask(0) {}
-		
-		void add(int i) { mask |= bit(i); }
-		void remove(int i) { mask &= ~bit(i); }
-		void clear() { mask = 0; }
-		void fill() { mask = 0xffffffff; }
-		Subset intersect(Subset other) { return mask & other.mask; }
-		void cull(BitsetPool<T> *p) { mask &= p->mask; }
-	};
-	
-	
-
-	class iterator {
-	friend class BitsetPool<T>;
-	private:
-		T *slots;
-		T *curr;
-		uint32_t remainder;
-
-		iterator(const BitsetPool<T> *pool) :
-		slots((T*)pool->slots),
-		remainder(pool->mask) {}
-		
-		iterator(const BitsetPool<T> *pool, Subset filter) :
-		slots((T*)pool->slots),
-		remainder(pool->mask & filter.mask) {}
-
-	public:
-		bool next()
-		{
-			if (remainder) {
-				auto i = CLZ(remainder);
-				remainder ^= bit(i);
-				curr = slots + i;
-				return true;
-			} else {
-				curr = 0;
-				return false;
-			}
+	template<bool (T::*Func)()>
+	void cull()
+	{
+		auto p = active.next;
+		while(p != &active) {
+			bookmark.attachAfter(p);
+			auto ptr = getStorage(p).address();
+			if ((ptr->*Func)()) { release(ptr); }
+			p = bookmark.next;
+			bookmark.unbind();
 		}
-		
-		T* operator->() { return curr; }
-		operator T*() { return curr; }
-		
-	};
-
-	iterator list() { return iterator(this); }
-	iterator list(Subset filter) { return iterator(this, filter); }
-
+			
+	}
 
 };
+
 
 //------------------------------------------------------------------------------
 // COMPACT POOL
@@ -173,22 +184,11 @@ private:
 public:
 	
 	CompactPool() {}
-	CompactPool(size_t n) { slots.reserve(n); }
-	
-	// const methods
-	inline const T* begin() const { return slots.data()->address(); }
-	inline const T* end() const { return begin() + count(); }
 	
 	inline bool isEmpty() const { return slots.empty(); }
-	inline int count() const { return slots.size(); }
-	inline bool active(const T* p) const { return p >= begin() && p < end(); }
-	inline int indexOf(const T* p) const { ASSERT(active(p)); return p - begin(); }
-
-	// ordinary methods
+	inline bool active(const T* p) const { return p >= slots.data()->address() && p < slots.data()->address() + slots.size(); }
 	inline T* begin() { return slots.data()->address(); }
-	inline T* end() { return begin() + count(); }
-	
-	inline void reserve(int n) { slots.reserve(n); }
+	inline T* end() { return begin() + slots.size(); }
 	
 	void clear()
 	{
