@@ -78,8 +78,8 @@ private:
 	static PoolSlot* getSlot(T* p) { return static_cast<PoolSlot*>(static_cast<Link*>((void*)p)-1); }
 	
 	unsigned bufferCount;
-	PoolSlot *buffers[7];
 	Link active, idle, bookmark;
+	PoolSlot *buffers[7];
 	
 public:
 	Pool() : bufferCount(0)
@@ -122,7 +122,7 @@ public:
 		
 		auto slot = idle.next;
 		slot->unbind();
-		slot->attachBefore(&active);
+		slot->attachAfter(&active);
 		return new(getStorage(slot).address()) T(std::forward<Args>(args) ...);
 	}
 	
@@ -135,26 +135,24 @@ public:
 		slot->attachAfter(&idle);
 	}
 	
-	template<void (T::*Func)()>
-	void each()
+	void each(void (T::*f)())
 	{
 		auto p = active.next;
 		while(p != &active) {
 			bookmark.attachAfter(p);
-			(getStorage(p).reference().*Func)();
+			(getStorage(p).reference().*f)();
 			p = bookmark.next;
 			bookmark.unbind();
 		}
 	}
 	
-	template<bool (T::*Func)()>
-	void cull()
+	void cull(bool (T::*f)())
 	{
 		auto p = active.next;
 		while(p != &active) {
 			bookmark.attachAfter(p);
 			auto ptr = getStorage(p).address();
-			if ((ptr->*Func)()) { release(ptr); }
+			if ((ptr->*f)()) { release(ptr); }
 			p = bookmark.next;
 			bookmark.unbind();
 		}
@@ -213,8 +211,7 @@ public:
 		slots.pop_back();
 	}
 	
-	template<void (T::*Func)()>
-	void each()
+	void each(void (T::*Func)())
 	{
 		for(auto inst=begin(); inst!=end(); ++inst) {
 			(inst->*Func)();
@@ -222,8 +219,7 @@ public:
 	}
 
 	
-	template<bool (T::*Func)()>
-	void cull()
+	void cull(bool (T::*Func)())
 	{
 		for(auto inst=begin(); inst!=end();) {
 			if ((inst->*Func)()) { release(inst); } else { ++inst; }

@@ -16,7 +16,7 @@
 
 #include <littlepolygon/events.h>
 
-void TimerQueue::enqueue(TimerListener *newListener, double duration)
+void TimerQueue::enqueue(TimerCallback *newListener, float duration)
 {
 	ASSERT(!newListener->isBound());
 	if (hasQueue()) {
@@ -30,7 +30,7 @@ void TimerQueue::enqueue(TimerListener *newListener, double duration)
 		} else {
 			auto p = &head;
 			while(p->nextTime() < newListener->time) {
-				p = static_cast<TimerListener*>(p->next);
+				p = static_cast<TimerCallback*>(p->next);
 			}
 			newListener->attachAfter(p);
 		}
@@ -48,7 +48,7 @@ void TimerQueue::enqueue(TimerListener *newListener, double duration)
 		
 }
 
-void TimerQueue::tick(double dt)
+void TimerQueue::tick(float dt)
 {
 	if (hasQueue()) {
 		

@@ -70,7 +70,7 @@ public:
 	static Action callMethod(T* context) {
 		return Action(context, &methodStub<T, TMethod>);
 	}
-	
+
 	template<void (*TFunc)(Args...)>
 	static Action callFunc() {
 		return Action(0, &funcStub<TFunc>);
@@ -95,7 +95,7 @@ public:
 
 // Forward declarations
 
-template<typename... Args> struct EventListener;
+template<typename... Args> struct EventCallback;
 template<typename... Args> class EventDispatcher;
 
 // EventListener is a control block for a single logical listener.  Multiple
@@ -103,8 +103,8 @@ template<typename... Args> class EventDispatcher;
 // the are iterated using a simple doubly-linked list.
 
 template<typename... Args>
-struct EventListener {
-	typedef EventListener<Args...>* SiblingLink;
+struct EventCallback {
+	typedef EventCallback<Args...>* SiblingLink;
 	typedef Action<Args...> Delegate;
 
 	Delegate callback;
@@ -112,20 +112,20 @@ struct EventListener {
 	
 	// Probably makes sense to typedef this as a concrete instantiation to
 	// make it easier to type.
-	EventListener(Delegate aCallback) :
+	EventCallback(Delegate aCallback) :
 		callback(aCallback), prev(this), next(this) {}
-	~EventListener() { unbind(); }
+	~EventCallback() { unbind(); }
 	
 	inline bool isBound() const { return prev != this; }
 
-	void attachAfter(EventListener *before) {
+	void attachAfter(EventCallback *before) {
 		next = before->next;
 		prev = before;
 		before->next = this;
 		next->prev = this;
 	}
 	
-	void attachBefore(EventListener *after) {
+	void attachBefore(EventCallback *after) {
 		next = after;
 		prev = after->prev;
 		after->prev = this;
@@ -147,7 +147,7 @@ struct EventListener {
 template<typename... Args>
 class EventDispatcher {
 public:
-	typedef EventListener<Args...> Listener;
+	typedef EventCallback<Args...> Listener;
 
 private:
 	Listener head;
@@ -156,7 +156,7 @@ public:
 	EventDispatcher() : head(Listener::Delegate::none()) {}
 	~EventDispatcher() { unbind(); }
 
-	void bind(EventListener<Args...>* listener) {
+	void bind(EventCallback<Args...>* listener) {
 		
 		// always add to the head of the list, so that new event subscriptions
 		// made as a side-effect of emit() are not invoked for that dispatch.
@@ -169,7 +169,7 @@ public:
 	inline bool isBound() { return head.isBound(); }
 	void unbind() { while(isBound()) { head.next->unbind(); } }
 
-	void emit(Args&&... args) {
+	void emit(Args... args) {
 		
 		// we use a bookmark to allow events to be unsubscribed gracefully
 		// without losing our place in the list (since the bookmark will not
@@ -195,16 +195,16 @@ public:
 // Timer listeners are a special event listener that carries a timeout which
 // the timer queue uses to sort listeners.
 
-class TimerListener : public EventListener<> {
+class TimerCallback : public EventCallback<> {
 friend class TimerQueue;
 private:
-	double time;
+	float time;
 	
 public:
-	TimerListener(Action<> aCallback) : EventListener<>(aCallback), time(0) {}
+	TimerCallback(Action<> aCallback) : EventCallback<>(aCallback), time(0.0f) {}
 	
-	double nextTime() const { return static_cast<TimerListener*>(next)->time; }
-	double prevTime() const { return static_cast<TimerListener*>(prev)->time; }
+	float nextTime() const { return static_cast<TimerCallback*>(next)->time; }
+	float prevTime() const { return static_cast<TimerCallback*>(prev)->time; }
 };
 
 // Multiplexes several timeouts to deduplicate timeout work and simply defered
@@ -212,18 +212,18 @@ public:
 
 class TimerQueue {
 private:
-	double time;
-	TimerListener head;
+	float time;
+	TimerCallback head;
 	
 public:
-	TimerQueue() : time(0), head(Action<>::none()) {}
+	TimerQueue() : time(0.0f), head(Action<>::none()) {}
 	~TimerQueue() { clear(); }
 	
 	inline bool hasQueue() const { return head.isBound(); }
 
 	void clear() { while(hasQueue()) { head.next->unbind(); } }
-	void enqueue(TimerListener* newListener, double duration);
-	void tick(double dt);
+	void enqueue(TimerCallback* newListener, float duration);
+	void tick(float dt);
 };
 
 

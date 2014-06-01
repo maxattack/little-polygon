@@ -95,6 +95,7 @@ void* AssetBundle::findHeader(uint32_t hash, uint32_t assetType)
 			}
 		}
 	}
+	
 	return fallback ? fallback->findHeader(hash, assetType) : 0;
 }
 
