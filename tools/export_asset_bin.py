@@ -72,14 +72,14 @@ def export_native_assets(assetGroup, outpath, bpp):
 		texture_location = len(records)
 		# TEXTURE FORMAT
 		# *data
-		# Width         : int32
-		# Height        : int32
+		# Width         : uint32
+		# Height        : uint32
 		# DataLength    : uint32
 		# TextureHandle : uint32 (0)
 		# Flags         : uint32
 		records.append(bintools.Record(
 			texture.id,
-			'#iiIII', 
+			'#IIIII', 
 			("%s_data" % texture.id, w, h, len(texture.data), 0, texture.flags))
 		)
 

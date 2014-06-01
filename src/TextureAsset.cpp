@@ -19,9 +19,9 @@
 
 void TextureAsset::init()
 {
-	if(textureHandle == 0) {
-		glGenTextures(1, &textureHandle);
-		glBindTexture(GL_TEXTURE_2D, textureHandle);
+	if(handle == 0) {
+		glGenTextures(1, &handle);
+		glBindTexture(GL_TEXTURE_2D, handle);
 		if (flags & TEXTURE_FLAG_FILTER) {
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -48,15 +48,15 @@ void TextureAsset::init()
 
 void TextureAsset::release()
 {
-	if (textureHandle) {
-		glDeleteTextures(1, &textureHandle);
-		textureHandle = 0;
+	if (handle) {
+		glDeleteTextures(1, &handle);
+		handle = 0;
 	}
 }
 
 void TextureAsset::bind()
 {
 	init();
-	glBindTexture(GL_TEXTURE_2D, textureHandle);
+	glBindTexture(GL_TEXTURE_2D, handle);
 }
 

@@ -66,8 +66,8 @@ struct TilemapAsset
 	TileAsset*   data;           // NULL when uninitialized
 	void*        compressedData; // zlib compressed tilemap buffer
 	uint32_t     tw, th,         // the size of the individual tiles
-	mw, mh,         // the size of the tilemap
-	compressedSize; // the byte-length of the compressed buffer
+	             mw, mh,         // the size of the tilemap
+	             compressedSize; // the byte-length of the compressed buffer
 	TextureAsset tileAtlas;      // a texture-atlas of all the tiles
 	
 	bool initialized() const { return data != 0; }
@@ -89,7 +89,7 @@ struct GlyphAsset
 {
 	
 	int32_t x, y,     // texel position of this glyph
-	advance;  // pixel offset to the next character
+	        advance;  // pixel offset to the next character
 	
 };
 
@@ -115,11 +115,6 @@ struct FontAsset
 	}
 	
 };
-
-//------------------------------------------------------------------------------
-// FORWARD DECLARATIONS
-
-class SpritePlotter;
 
 //------------------------------------------------------------------------------
 // SPRITE PLOTTER

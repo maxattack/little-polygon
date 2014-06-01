@@ -32,12 +32,12 @@ struct TextureAsset
 {
 	
 	void*    compressedData;  // zlib compressed texture data
-	int32_t  w, h;            // size of the texture (guarenteed to be POT)
-	uint32_t compressedSize,  // size of the compressed buffer, in bytes
-	         textureHandle,   // handle to the initialized texture resource
+	uint32_t w, h,            // size of the texture (guarenteed to be POT)
+	         compressedSize,  // size of the compressed buffer, in bytes
+	         handle,          // handle to the initialized texture resource
 	         flags;           // extra information (wrapping, format, etc)
 	
-	bool initialized() const { return textureHandle != 0; }
+	bool initialized() const { return handle != 0; }
 	int format() const { return GL_RGBA; }
 	Vec2 size() const { return vec((float)w,(float)h); }
 	

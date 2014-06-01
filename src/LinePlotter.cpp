@@ -46,7 +46,7 @@ LinePlotter::LinePlotter(int aCapacity) :
 count(-1),
 capacity(aCapacity),
 shader(LINE_VERT, LINE_FRAG),
-vertices(2*aCapacity)
+vertices(2*capacity)
 
 {
 	shader.use();
@@ -59,18 +59,18 @@ vertices(2*aCapacity)
 	
 	glGenBuffers(1, &vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, 2*sizeof(Vertex) * capacity, 0, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, 2*sizeof(LineVertex) * capacity, 0, GL_DYNAMIC_DRAW);
 	
 	glEnableVertexAttribArray(aPosition);
 	glEnableVertexAttribArray(aColor);
 	glVertexAttribPointer(
 		aPosition, 2, GL_FLOAT, GL_FALSE,
-		sizeof(Vertex),
+		sizeof(LineVertex),
 		(void*) 0
 	);
 	glVertexAttribPointer(
 		aColor, 4, GL_UNSIGNED_BYTE, GL_TRUE,
-		sizeof(Vertex),
+		sizeof(LineVertex),
 		(void*) 8
 	);
 	
@@ -133,7 +133,7 @@ void LinePlotter::end() {
 void LinePlotter::commitBatch() {
 	ASSERT(count > 0);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferSubData(GL_ARRAY_BUFFER, 0, 2*count*sizeof(Vertex), vertices.ptr());
+	glBufferSubData(GL_ARRAY_BUFFER, 0, 2*count*sizeof(LineVertex), vertices.ptr());
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(vao);
 	glDrawArrays(GL_LINES, 0, 2*count);
