@@ -179,7 +179,7 @@ public:
 	
 private:
 	// TODO: CONSIDER A NON-STL BACKING STORE :P
-	std::vector<Slot<T> > slots;
+	std::vector< Slot<T> > slots;
 
 public:
 	
@@ -208,7 +208,7 @@ public:
 		ASSERT(active(p));
 		p->~T();
 		if (p != slots.back().address()) {
-			*p = slots.back().value();
+			memcpy(p, &slots.back(), sizeof(T));
 		}
 		slots.pop_back();
 	}

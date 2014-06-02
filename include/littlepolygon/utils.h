@@ -55,6 +55,9 @@ struct Timer {
 	int ticks;
 	int deltaTicks;
 	
+	float rawSeconds() const { return 0.001f * ticks; }
+	float rawDeltaSeconds() const { return 0.001f * deltaTicks; }
+	
 	// virtually scaled "seconds" since the timer started
 	float timeScale;
 	float seconds;

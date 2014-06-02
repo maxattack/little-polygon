@@ -52,7 +52,7 @@ void Timer::tick()
 {
 	deltaTicks = SDL_GetTicks() - ticks;
 	ticks += deltaTicks;
-	deltaSeconds = timeScale * (0.001f * deltaTicks);
+	deltaSeconds = timeScale * rawDeltaSeconds();
 	seconds += deltaSeconds;
 }
 
