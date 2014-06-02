@@ -371,3 +371,41 @@ public:
 	unsigned index() const { ASSERT(currentIndex != -1); return (currentWord<<5) + currentIndex; }
 };
 
+//--------------------------------------------------------------------------------
+// SIMPLE LINKED-LIST HEADER
+
+struct Link {
+	Link *prev, *next;
+	
+	void init() {
+		next = this;
+		prev = this;
+	}
+	
+	void attachAfter(Link *before) {
+		next = before->next;
+		prev = before;
+		before->next = this;
+		next->prev = this;
+	}
+	
+	void attachBefore(Link *after) {
+		next = after;
+		prev = after->prev;
+		after->prev = this;
+		prev->next = this;
+	}
+	
+	void unbind() {
+		next->prev = prev;
+		prev->next = next;
+		next = this;
+		prev = this;
+	}
+	
+	bool isBound() const {
+		return next != this;
+	}
+};
+
+

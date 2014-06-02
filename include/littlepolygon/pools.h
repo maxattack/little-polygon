@@ -23,85 +23,51 @@
 // finalized with the pool, so make sure to explicitly clear() them if the
 // destructors matter.
 
-#include "collections.h"
-
 //------------------------------------------------------------------------------
 // POOL
 // Allocates objects in arrays with a doubling strategy.  Doesn't allocate
 // anything if you never use it.
 //------------------------------------------------------------------------------
 
-struct Link {
-	Link *prev, *next;
-	
-	void init() {
-		next = this;
-		prev = this;
-	}
-	
-	void attachAfter(Link *before) {
-		next = before->next;
-		prev = before;
-		before->next = this;
-		next->prev = this;
-	}
-	
-	void attachBefore(Link *after) {
-		next = after;
-		prev = after->prev;
-		after->prev = this;
-		prev->next = this;
-	}
-	
-	void unbind() {
-		next->prev = prev;
-		prev->next = next;
-		next = this;
-		prev = this;
-	}
-	
-	bool isBound() const {
-		return next != this;
-	}
-};
-
 template<typename T>
 class Pool {
 public:
+	static const unsigned kBufferCapacity = 8;
+	static const unsigned kDefaultReserve = 8;
 	typedef T InstanceType;
 	
 private:
-	// NOTHING TO SEE HERE, MOVE ALONG :P
-	struct PoolSlot : Link { Slot<T> storage; };
-	static Slot<T>& getStorage(Link* link) { return static_cast<PoolSlot*>(link)->storage; }
-	static PoolSlot* getSlot(T* p) { return static_cast<PoolSlot*>(static_cast<Link*>((void*)p)-1); }
-	
-	unsigned bufferCount;
+	struct PoolSlot : Link, T {};
+	unsigned bufferCount, bufferSize;
 	Link active, idle, bookmark;
-	PoolSlot *buffers[7];
+	PoolSlot *buffers[kBufferCapacity];
 	
 public:
-	Pool() : bufferCount(0)
+	Pool(unsigned reserve=0) : bufferCount(0), bufferSize(0)
 	{
-		memset(buffers, 0, 7 * sizeof(PoolSlot*));
+		memset(buffers, 0, kBufferCapacity * sizeof(PoolSlot*));
 		active.init();
 		idle.init();
 		bookmark.init();
+		if (reserve) { allocBuffer(reserve); }
 	}
 	
 	~Pool()
 	{
-		for(int i=0; i<7; ++i) {
+		for(int i=0; i<bufferCount; ++i) {
 			free(buffers[i]);
 		}
 	}
 	
-	bool isEmpty() const { return !active.isBound(); }
+	bool isEmpty() const
+	{
+		return !active.isBound();
+	}
 	
 	void clear()
 	{
 		while(active.isBound()) {
-			release(getStorage(active.next).address());
+			release(getStorage(active.next));
 		}
 	}
 	
@@ -109,27 +75,19 @@ public:
 	T* alloc(Args&&... args)
 	{
 		if (!idle.isBound()) {
-			ASSERT(bufferCount < (7-1));
-			int cnt = 8<<bufferCount;
-			auto buf = buffers[bufferCount] = (PoolSlot*) calloc(cnt, sizeof(PoolSlot));
-			for(int i=0; i<cnt; ++i) {
-				buf[i].init();
-				buf[i].attachBefore(&idle);
-			}
-			++bufferCount;
+			allocBuffer(bufferSize > 0 ? (bufferSize + bufferSize) : kDefaultReserve);
 		}
-		
 		auto slot = idle.next;
 		slot->unbind();
 		slot->attachAfter(&active);
-		return new(getStorage(slot).address()) T(std::forward<Args>(args) ...);
+		return new(getStorage(slot)) T(std::forward<Args>(args) ...);
 	}
 	
 	void release(T* p)
 	{
 		auto slot = getSlot(p);
 		ASSERT(slot->isBound());
-		getStorage(slot).release();
+		getStorage(slot)->~T();
 		slot->unbind();
 		slot->attachAfter(&idle);
 	}
@@ -140,7 +98,7 @@ public:
 		auto p = active.next;
 		while(p != &active) {
 			bookmark.attachAfter(p);
-			(getStorage(p).reference().*Func)(args...);
+			(getStorage(p)->*Func)(args...);
 			p = bookmark.next;
 			bookmark.unbind();
 		}
@@ -160,6 +118,28 @@ public:
 			
 	}
 
+private:
+	void allocBuffer(unsigned size) {
+		ASSERT(bufferCount < kBufferCapacity);
+		bufferSize = size;
+		auto buf = buffers[bufferCount] = (PoolSlot*) calloc(size, sizeof(PoolSlot));
+		for(int i=0; i<size; ++i) {
+			buf[i].init();
+			buf[i].attachBefore(&idle);
+		}
+		++bufferCount;
+	}
+	
+	static T* getStorage(Link* link)
+	{
+		return static_cast<T*>(static_cast<PoolSlot*>(link));
+	}
+	
+	static PoolSlot* getSlot(T* p)
+	{
+		return static_cast<PoolSlot*>(p);
+	}
+	
 };
 
 
@@ -175,21 +155,41 @@ template<typename T>
 class CompactPool {
 public:
 	typedef T InstanceType;
+	static const int kDefaultReserve = 8;
 	
 private:
-	// TODO: CONSIDER A NON-STL BACKING STORE :P
 	int count, capacity;
 	T* slots;
 
 public:
 	
-	CompactPool() : count(0), capacity(0), slots(0) {}
+	CompactPool(unsigned reserve=0) : count(0), capacity(reserve), slots(0) {
+		if (reserve) {
+			slots = (T*) calloc(reserve, sizeof(T));
+		}
+	}
+	
 	~CompactPool() { free(slots); }
 	
-	inline bool isEmpty() const { return count == 0; }
-	inline bool active(const T* p) const { return p >= slots && p < slots + count; }
-	inline T* begin() { return slots; }
-	inline T* end() { return slots + count; }
+	inline bool isEmpty() const
+	{
+		return count == 0;
+	}
+	
+	inline bool active(const T* p) const
+	{
+		return p >= slots && p < slots + count;
+	}
+	
+	inline T* begin()
+	{
+		return slots;
+	}
+	
+	inline T* end()
+	{
+		return slots + count;
+	}
 	
 	void clear()
 	{
@@ -203,15 +203,11 @@ public:
 	{
 		if (count == capacity) {
 			if (capacity == 0) {
-				capacity = 8;
+				capacity = kDefaultReserve;
 				slots = (T*) calloc(capacity, sizeof(T));
 			} else {
-				auto newCapacity = (capacity<<1);
-				auto newSlots = (T*) calloc(newCapacity, sizeof(T));
-				memcpy(newSlots, slots, capacity * sizeof(T));
-				free(slots);
-				capacity = newCapacity;
-				slots = newSlots;
+				capacity += capacity;
+				slots = (T*) realloc(slots, capacity * sizeof(T));
 			}
 		}
 		++count;
