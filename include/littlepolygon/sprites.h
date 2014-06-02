@@ -65,9 +65,9 @@ struct TilemapAsset
 	
 	TileAsset*   data;           // NULL when uninitialized
 	void*        compressedData; // zlib compressed tilemap buffer
-	uint32_t     tw, th,         // the size of the individual tiles
-	             mw, mh,         // the size of the tilemap
-	             compressedSize; // the byte-length of the compressed buffer
+	int32_t      tw, th,         // the size of the individual tiles
+	             mw, mh;         // the size of the tilemap
+	uint32_t     compressedSize; // the byte-length of the compressed buffer
 	TextureAsset tileAtlas;      // a texture-atlas of all the tiles
 	
 	bool initialized() const { return data != 0; }

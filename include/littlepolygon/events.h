@@ -154,7 +154,6 @@ private:
 
 public:
 	EventDispatcher() : head(Listener::Delegate::none()) {}
-	~EventDispatcher() { unbind(); }
 
 	void bind(EventCallback<Args...>* listener) {
 		

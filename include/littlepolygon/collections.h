@@ -53,7 +53,7 @@ template<typename T>
 class Array {
 private:
 	#if DEBUG
-	unsigned n;
+	int n;
 	#endif
 	T* buf;
 	
