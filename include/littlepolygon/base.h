@@ -27,17 +27,17 @@
 
 #include <SDL2/SDL.h>
 #if __IPHONEOS__
-	#include <SDL2/SDL_opengles2.h>
-	#define LITTLE_POLYGON_OPENGL_ES 1
-	#define LITTLE_POLYGON_OPENGL_CORE 0
+#	include <SDL2/SDL_opengles2.h>
+#	define LITTLE_POLYGON_OPENGL_ES 1
+#	define LITTLE_POLYGON_OPENGL_CORE 0
 #else
-	#if !__WINDOWS__
-	#define GLEW_STATIC
-	#endif
-	#include <GL/glew.h>
-	#include <SDL2/SDL_opengl.h>
-	#define LITTLE_POLYGON_OPENGL_ES 0
-	#define LITTLE_POLYGON_OPENGL_CORE 1
+#	if !__WINDOWS__
+#		define GLEW_STATIC
+#	endif
+#	include <GL/glew.h>
+#	include <SDL2/SDL_opengl.h>
+#	define LITTLE_POLYGON_OPENGL_ES 0
+#	define LITTLE_POLYGON_OPENGL_CORE 1
 #endif
 #include <SDL2_mixer/SDL_mixer.h>
 

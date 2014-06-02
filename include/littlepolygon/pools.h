@@ -24,7 +24,6 @@
 // destructors matter.
 
 #include "collections.h"
-#include <vector>
 
 //------------------------------------------------------------------------------
 // POOL
@@ -179,38 +178,54 @@ public:
 	
 private:
 	// TODO: CONSIDER A NON-STL BACKING STORE :P
-	std::vector< Slot<T> > slots;
+	int count, capacity;
+	T* slots;
 
 public:
 	
-	CompactPool() {}
+	CompactPool() : count(0), capacity(0), slots(0) {}
+	~CompactPool() { free(slots); }
 	
-	inline bool isEmpty() const { return slots.empty(); }
-	inline bool active(const T* p) const { return p >= slots.data()->address() && p < slots.data()->address() + slots.size(); }
-	inline T* begin() { return slots.data()->address(); }
-	inline T* end() { return begin() + slots.size(); }
+	inline bool isEmpty() const { return count == 0; }
+	inline bool active(const T* p) const { return p >= slots && p < slots + count; }
+	inline T* begin() { return slots; }
+	inline T* end() { return slots + count; }
 	
 	void clear()
 	{
-		for(auto& slot : slots) { slot.release(); }
-		slots.clear();
+		if (slots) {
+			while(count > 0) { release(&slots[count-1]); }
+		}
 	}
 
 	template<typename... Args>
 	T* alloc(Args&&... args)
 	{
-		slots.emplace_back();
-		return slots.back().init(args...);
+		if (count == capacity) {
+			if (capacity == 0) {
+				capacity = 8;
+				slots = (T*) calloc(capacity, sizeof(T));
+			} else {
+				auto newCapacity = (capacity<<1);
+				auto newSlots = (T*) calloc(newCapacity, sizeof(T));
+				memcpy(newSlots, slots, capacity * sizeof(T));
+				free(slots);
+				capacity = newCapacity;
+				slots = newSlots;
+			}
+		}
+		++count;
+		return new (&slots[count-1]) T(args...);
 	}
 
 	void release(T* p)
 	{
 		ASSERT(active(p));
 		p->~T();
-		if (p != slots.back().address()) {
-			memcpy(p, &slots.back(), sizeof(T));
+		--count;
+		if (p != slots + count) {
+			memcpy(p, slots+count, sizeof(T));
 		}
-		slots.pop_back();
 	}
 	
 	template<typename ...Args>

@@ -71,7 +71,7 @@ SDLContext::SDLContext(const char *caption, int w, int h)
 #if DEBUG || __WINDOWS__
 		SDL_WINDOW_OPENGL
 #else
-		SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN_DESKTOP
+		SDL_WINDOW_OPENGL //| SDL_WINDOW_FULLSCREEN_DESKTOP
 #endif
 	);
 	
