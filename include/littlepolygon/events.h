@@ -103,22 +103,30 @@ template<typename... Args> class EventDispatcher;
 // the are iterated using a simple doubly-linked list.
 
 template<typename... Args>
-struct EventCallback {
+class EventCallback {
+public:
 	typedef EventCallback<Args...>* SiblingLink;
 	typedef Action<Args...> Delegate;
 
+	friend class EventDispatcher<Args...>;
 	Delegate callback;
+
+protected:
 	SiblingLink prev, next;
 	
-	// Probably makes sense to typedef this as a concrete instantiation to
-	// make it easier to type.
+public:
 	EventCallback(Delegate aCallback) :
-		callback(aCallback), prev(this), next(this) {}
+		callback(aCallback), prev(this), next(this) {
+		
+		}
+
 	~EventCallback() { unbind(); }
 	
 	inline bool isBound() const { return prev != this; }
 
 	void attachAfter(EventCallback *before) {
+		ASSERT(prev == this);
+		ASSERT(next == this);
 		next = before->next;
 		prev = before;
 		before->next = this;
@@ -126,6 +134,8 @@ struct EventCallback {
 	}
 	
 	void attachBefore(EventCallback *after) {
+		ASSERT(prev == this);
+		ASSERT(next == this);
 		next = after;
 		prev = after->prev;
 		after->prev = this;
@@ -133,6 +143,8 @@ struct EventCallback {
 	}
 	
 	void unbind() {
+		ASSERT(next != 0);
+		ASSERT(prev != 0);
 		next->prev = prev;
 		prev->next = next;
 		next = this;
@@ -200,7 +212,10 @@ private:
 	float time;
 	
 public:
-	TimerCallback(Action<> aCallback) : EventCallback<>(aCallback), time(0.0f) {}
+	TimerCallback(Action<> aCallback) : EventCallback<>(aCallback), time(0.0f) {
+		ASSERT(next == this);
+		ASSERT(prev == this);
+	}
 	
 	float nextTime() const { return static_cast<TimerCallback*>(next)->time; }
 	float prevTime() const { return static_cast<TimerCallback*>(prev)->time; }

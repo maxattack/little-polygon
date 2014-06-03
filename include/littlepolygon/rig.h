@@ -153,7 +153,7 @@ public:
 	void resetTime();
 	void refreshTransforms();
 	void tick(float dt);
-	void draw(SpritePlotter* plotter);
+	void draw(SpritePlotter* plotter, Color c=rgba(0));
 	
 private:
 	

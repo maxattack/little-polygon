@@ -63,7 +63,7 @@ void Rig::refreshTransforms()
 	}
 }
 
-void Rig::draw(SpritePlotter* plotter)
+void Rig::draw(SpritePlotter* plotter, Color c)
 {
 	// OPTIMIZATION CANDIDATES:
 	// - maintain a layer-mask over attachments?
@@ -75,7 +75,8 @@ void Rig::draw(SpritePlotter* plotter)
 		if (attach.layerHash == 0 || attach.layerHash == currentLayer) {
 			plotter->drawImage(
 				attach.image,
-				worldTransforms[attach.slot->boneIndex] * attach.xform
+				worldTransforms[attach.slot->boneIndex] * attach.xform,
+				0, c
 			);
 		}
 	}

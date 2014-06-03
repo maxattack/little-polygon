@@ -377,7 +377,7 @@ public:
 struct Link {
 	Link *prev, *next;
 	
-	void init() {
+	void initLink() {
 		next = this;
 		prev = this;
 	}

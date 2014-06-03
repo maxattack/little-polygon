@@ -35,9 +35,10 @@ public:
 	static const unsigned kBufferCapacity = 8;
 	static const unsigned kDefaultReserve = 8;
 	typedef T InstanceType;
+	typedef Slot<T> StorageType;
 	
 private:
-	struct PoolSlot : Link, T {};
+	struct PoolSlot : Link, StorageType {};
 	unsigned bufferCount, bufferSize;
 	Link active, idle, bookmark;
 	PoolSlot *buffers[kBufferCapacity];
@@ -46,9 +47,9 @@ public:
 	Pool(unsigned reserve=0) : bufferCount(0), bufferSize(0)
 	{
 		memset(buffers, 0, kBufferCapacity * sizeof(PoolSlot*));
-		active.init();
-		idle.init();
-		bookmark.init();
+		active.initLink();
+		idle.initLink();
+		bookmark.initLink();
 		if (reserve) { allocBuffer(reserve); }
 	}
 	
@@ -92,8 +93,20 @@ public:
 		slot->attachAfter(&idle);
 	}
 	
-	template<typename ...Args>
-	void each(void (T::*Func)(Args...), Args... args)
+	void each(void (Func)(T*))
+	{
+		auto p = active.next;
+		while(p != &active) {
+			bookmark.attachAfter(p);
+			Func(getStorage(p));
+			p = bookmark.next;
+			bookmark.unbind();
+		}
+		
+	}
+	
+	template<typename T0, typename ...Args>
+	void each(void (T0::*Func)(Args...), Args... args)
 	{
 		auto p = active.next;
 		while(p != &active) {
@@ -104,13 +117,13 @@ public:
 		}
 	}
 	
-	template<typename ...Args>
-	void cull(bool (T::*Func)(Args...), Args... args)
+	template<typename T0, typename ...Args>
+	void cull(bool (T0::*Func)(Args...), Args... args)
 	{
 		auto p = active.next;
 		while(p != &active) {
 			bookmark.attachAfter(p);
-			auto ptr = getStorage(p).address();
+			auto ptr = getStorage(p);
 			if ((ptr->*Func)(args...)) { release(ptr); }
 			p = bookmark.next;
 			bookmark.unbind();
@@ -124,7 +137,7 @@ private:
 		bufferSize = size;
 		auto buf = buffers[bufferCount] = (PoolSlot*) calloc(size, sizeof(PoolSlot));
 		for(int i=0; i<size; ++i) {
-			buf[i].init();
+			buf[i].initLink();
 			buf[i].attachBefore(&idle);
 		}
 		++bufferCount;
@@ -132,12 +145,12 @@ private:
 	
 	static T* getStorage(Link* link)
 	{
-		return static_cast<T*>(static_cast<PoolSlot*>(link));
+		return static_cast<StorageType*>(static_cast<PoolSlot*>(link))->address();
 	}
 	
 	static PoolSlot* getSlot(T* p)
 	{
-		return static_cast<PoolSlot*>(p);
+		return static_cast<PoolSlot*>(static_cast<StorageType*>((void*)p));
 	}
 	
 };
@@ -224,16 +237,16 @@ public:
 		}
 	}
 	
-	template<typename ...Args>
-	void each(void (T::*Func)(Args...), Args... args)
+	template<typename T0, typename ...Args>
+	void each(void (T0::*Func)(Args...), Args... args)
 	{
 		for(auto inst=begin(); inst!=end(); ++inst) {
 			(inst->*Func)(args...);
 		}
 	}
 
-	template<typename ...Args>
-	void cull(bool (T::*Func)(Args...), Args... args)
+	template<typename T0, typename ...Args>
+	void cull(bool (T0::*Func)(Args...), Args... args)
 	{
 		for(auto inst=begin(); inst!=end();) {
 			if ((inst->*Func)(args...)) { release(inst); } else { ++inst; }

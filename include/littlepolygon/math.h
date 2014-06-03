@@ -25,6 +25,9 @@
 #define kPI ((float)M_PI)
 #define kTAU ((float)M_TAU)
 
+#define RAD2DEG(rad) (180.0f*(rad)/kPI)
+#define DEG2RAD(deg) (kPI*(deg)/180.0f)
+
 #ifndef M_COLINEAR_SLOP
 #define M_COLINEAR_SLOP (0.0001f)
 #endif

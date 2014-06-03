@@ -19,6 +19,7 @@
 BitArray::BitArray(unsigned cap) :
 capacity(cap)
 {
+	LOG_INT(nwords());
 	words = (uint32_t*) calloc(nwords(), sizeof(uint32_t));
 }
 
