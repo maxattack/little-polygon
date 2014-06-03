@@ -18,11 +18,6 @@
 
 #include "base.h"
 
-// Several different common/simple object pools that index into a linear
-// array of preallocated slots.  Objects in the pool are not automatically
-// finalized with the pool, so make sure to explicitly clear() them if the
-// destructors matter.
-
 //------------------------------------------------------------------------------
 // POOL
 // Allocates objects in arrays with a doubling strategy.  Doesn't allocate
@@ -55,6 +50,7 @@ public:
 	
 	~Pool()
 	{
+		clear();
 		for(unsigned i=0; i<bufferCount; ++i) {
 			free(buffers[i]);
 		}
@@ -182,7 +178,10 @@ public:
 		}
 	}
 	
-	~CompactPool() { free(slots); }
+	~CompactPool() {
+		clear();
+		free(slots);
+	}
 	
 	inline bool isEmpty() const
 	{
