@@ -17,19 +17,13 @@
 #include "littlepolygon/collections.h"
 
 BitArray::BitArray(unsigned cap) :
-capacity(cap)
+capacity(cap), words(cap)
 {
-	words = (uint32_t*) calloc(nwords(), sizeof(uint32_t));
-}
-
-BitArray::~BitArray()
-{
-	free(words);
 }
 
 void BitArray::clear()
 {
-	SDL_memset(words, 0, nwords() * sizeof(uint32_t));
+	memset(words.ptr(), 0, nwords() * sizeof(uint32_t));
 }
 
 void BitArray::clear(unsigned i)

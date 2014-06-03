@@ -30,21 +30,19 @@ public:
 	static const unsigned kBufferCapacity = 8;
 	static const unsigned kDefaultReserve = 8;
 	typedef T InstanceType;
-	typedef Slot<T> StorageType;
 	
 private:
-	struct PoolSlot : Link, StorageType {};
+	typedef Linkable<T> Slot;
 	unsigned bufferCount, bufferSize;
-	Link active, idle, bookmark;
-	PoolSlot *buffers[kBufferCapacity];
+	Link active, idle;
+	Slot *buffers[kBufferCapacity];
 	
 public:
 	Pool(unsigned reserve=0) : bufferCount(0), bufferSize(0)
 	{
-		memset(buffers, 0, kBufferCapacity * sizeof(PoolSlot*));
+		memset(buffers, 0, kBufferCapacity * sizeof(Slot*));
 		active.initLink();
 		idle.initLink();
-		bookmark.initLink();
 		if (reserve) { allocBuffer(reserve); }
 	}
 	
@@ -64,7 +62,7 @@ public:
 	void clear()
 	{
 		while(active.isBound()) {
-			release(getStorage(active.next));
+			release(Slot::getValue(active.next));
 		}
 	}
 	
@@ -74,23 +72,25 @@ public:
 		if (!idle.isBound()) {
 			allocBuffer(bufferSize > 0 ? (bufferSize + bufferSize) : kDefaultReserve);
 		}
-		auto slot = idle.next;
-		slot->unbind();
-		slot->attachAfter(&active);
-		return new(getStorage(slot)) T(std::forward<Args>(args) ...);
+		auto link = idle.next;
+		link->unbind();
+		link->attachAfter(&active);
+		return new(Slot::getValue(link)) T(std::forward<Args>(args) ...);
 	}
 	
 	void release(T* p)
 	{
-		auto slot = getSlot(p);
-		ASSERT(slot->isBound());
-		getStorage(slot)->~T();
-		slot->unbind();
-		slot->attachAfter(&idle);
+		auto link = Slot::getLink(p);
+		ASSERT(link->isBound());
+		p->~T();
+		link->unbind();
+		link->attachAfter(&idle);
 	}
 	
 	void each(void (Func)(T*))
 	{
+		Link bookmark;
+		bookmark.initLink();
 		auto p = active.next;
 		while(p != &active) {
 			bookmark.attachAfter(p);
@@ -104,10 +104,12 @@ public:
 	template<typename T0, typename ...Args>
 	void each(void (T0::*Func)(Args...), Args... args)
 	{
+		Link bookmark;
+		bookmark.initLink();
 		auto p = active.next;
 		while(p != &active) {
 			bookmark.attachAfter(p);
-			(getStorage(p)->*Func)(args...);
+			(Slot::getValue(p)->*Func)(args...);
 			p = bookmark.next;
 			bookmark.unbind();
 		}
@@ -116,10 +118,12 @@ public:
 	template<typename T0, typename ...Args>
 	void cull(bool (T0::*Func)(Args...), Args... args)
 	{
+		Link bookmark;
+		bookmark.initLink();		
 		auto p = active.next;
 		while(p != &active) {
 			bookmark.attachAfter(p);
-			auto ptr = getStorage(p);
+			auto ptr = Slot::getValue(p);
 			if ((ptr->*Func)(args...)) { release(ptr); }
 			p = bookmark.next;
 			bookmark.unbind();
@@ -131,22 +135,12 @@ private:
 	void allocBuffer(unsigned size) {
 		ASSERT(bufferCount < kBufferCapacity);
 		bufferSize = size;
-		auto buf = buffers[bufferCount] = (PoolSlot*) calloc(size, sizeof(PoolSlot));
+		auto buf = buffers[bufferCount] = (Slot*) calloc(size, sizeof(Slot));
 		for(unsigned i=0; i<size; ++i) {
 			buf[i].initLink();
 			buf[i].attachBefore(&idle);
 		}
 		++bufferCount;
-	}
-	
-	static T* getStorage(Link* link)
-	{
-		return static_cast<StorageType*>(static_cast<PoolSlot*>(link))->address();
-	}
-	
-	static PoolSlot* getSlot(T* p)
-	{
-		return static_cast<PoolSlot*>(static_cast<StorageType*>((void*)p));
 	}
 	
 };

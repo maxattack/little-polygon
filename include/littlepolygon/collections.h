@@ -20,34 +20,7 @@
 #include <type_traits>
 
 //--------------------------------------------------------------------------------
-// POD "Storage Slot" For a value (unrestricted-union workaround :P)
-// The basic idea is we'd like to reserve space for an object, but explicitly
-// call its constructor and destructor.
-//--------------------------------------------------------------------------------
-
-template<typename T>
-struct Slot {
-	// This is better than a char[] because it handles alignment
-	// correctly and portably ;)
-    typename std::aligned_storage<sizeof(T), __alignof(T)>::type storage;
-
-    Slot() {}
-    ~Slot() {}
-
-    template<typename... Args>
-    T* init(Args&&... args) { return new(address()) T(std::forward<Args>(args) ...); }
-    void release() { (*address()).~T(); }
-
-    const T* address() const { return static_cast<const T*>(static_cast<const void*>(&storage)); }
-	T value() const { return *address(); }
-
-	T* address() { return static_cast<T*>(static_cast<void*>(&storage)); }
-	T& reference() { return *address(); }
-};
-
-//--------------------------------------------------------------------------------
 // ARRAY THAT CHECKS BOUNDS IN DEBUG
-//--------------------------------------------------------------------------------
 
 template<typename T>
 class Array {
@@ -113,21 +86,23 @@ public:
 
 //--------------------------------------------------------------------------------
 // SIMPLE TEMPLATE QUEUE
-//--------------------------------------------------------------------------------
 
 template<typename T>
 class Queue {
 private:
 	int cap, n, i;
-	Slot<T> *slots;
+	Array<T> slots;
 
 public:
-	Queue(int aCapacity) : cap(aCapacity), n(0), i(0) {
-		slots = (Slot<T>*) calloc(cap, sizeof(T));
+	Queue(int aCapacity) : cap(aCapacity), n(0), i(0), slots(cap) {
 	}
 	
 	~Queue() {
-		free(slots);
+		while(n > 0) {
+			slots[i].~T();
+			n--;
+			i = (i+1) % cap;
+		}
 	}
 	
 	int capacity() const { return cap; }
@@ -137,20 +112,20 @@ public:
 	
 	void enqueue(const T& val) {
 		ASSERT(n < cap);
-		new(slots[(i + n) % cap].address()) T(val);
+		new(&slots[(i + n) % cap]) T(val);
 		n++;
 	}
 	
 	template<typename... Args>
 	void emplace(Args&&... args) {
 		ASSERT(n < cap);
-		new(slots[(i + n) % cap].address()) T(std::forward<Args>(args) ...);
+		new(&slots[(i + n) % cap]) T(std::forward<Args>(args) ...);
 		n++;
 	}
 	
 	T dequeue() {
 		ASSERT(n > 0);
-		T result = slots[i].value();
+		T result = slots[i];
 		n--;
 		i = (i+1) % cap;
 		return result;
@@ -158,12 +133,12 @@ public:
 
 	T& peekNext() {
 		ASSERT(n > 0);
-		return slots[i].reference();
+		return slots[i];
 	}
 	
 	T& peekLast() {
 		ASSERT(n > 0);
-		return slots[(i+n-1) % cap].reference();
+		return slots[(i+n-1) % cap];
 	}
 	
 	bool tryDequeue(T* outValue) {
@@ -187,7 +162,7 @@ public:
 		bool next(T* outValue) {
 			idx++;
 			if (idx >= q->n) { return false; }
-			*outValue = q->slots[(q->i + idx) % q->cap].value();
+			*outValue = q->slots[(q->i + idx) % q->cap];
 			return true;
 		}
 	};
@@ -201,15 +176,17 @@ template<typename T>
 class List {
 private:
 	int cap, n;
-	Slot<T>* slots;
+	Array<T> slots;
 
 public:
-	List(int aCapacity) : cap(aCapacity), n(0) {
-		slots = (Slot<T>*) calloc(cap, sizeof(T));
+	List(int aCapacity) : cap(aCapacity), n(0), slots(cap) {
 	}
 	
 	~List() {
-		free(slots);
+		while(n > 0) {
+			--n;
+			slots[n].~T();
+		}
 	}
 	
 	int capacity() const { return cap; }
@@ -219,19 +196,21 @@ public:
 	bool empty() const { return n == 0; }
 	bool full() const { return n == cap; }
 
-	T* begin() const { return slots->address(); }
-	T* end() const { return begin() + n; }
+	const T* begin() const { return slots.ptr(); }
+	const T* end() const { return slots.ptr() + n; }
+	T* begin() { return slots.ptr(); }
+	T* end() { return slots.ptr() + n; }
 	
 	T get(int i) const {
 		ASSERT(i >= 0);
 		ASSERT(i < n);
-		return slots[i].value();
+		return slots[i];
 	}
 
 	T& operator[](int i) {
 		ASSERT(i >= 0);
 		ASSERT(i < n);
-		return slots[i].reference();
+		return slots[i];
 	}
 	
 	void clear() {
@@ -241,20 +220,19 @@ public:
 	void append(const T& val) {
 		ASSERT(n < cap);
 		++n;
-		new(slots[n-1].address()) T(val);
+		new(slots + (n-1)) T(val);
 	}
 	
 	template<typename... Args>
 	T* alloc(Args&&... args) {
 		ASSERT(n < cap);
 		++n;
-		return new(slots[n-1].address()) T(args ...);
+		return new(slots + (n-1)) T(args ...);
 	}
 	
 	int offsetOf(const T* t) {
-		auto slot = (Slot<T>*) t;
-		ASSERT(slot >= slots && slot < slots + n);
-		return slot - slots;
+		ASSERT(t >= slots.ptr() && t < slots + n);
+		return t - slots.ptr();
 	}
 	
 	bool tryAppend(const T& val) {
@@ -268,19 +246,19 @@ public:
 	
 	T& peekFirst() {
 		ASSERT(n > 0);
-		return slots[0].reference();
+		return slots[0];
 	}
 	
 	T& peekLast() {
 		ASSERT(n > 0);
-		return slots[n-1].reference();
+		return slots[n-1];
 	}
 	
 	T pop() {
 		ASSERT(n > 0);
 		n--;
-		auto result = slots[n].value();
-		slots[n].release();
+		auto result = slots[n];
+		slots[n].~T();
 		return result;
 	}
 	
@@ -291,7 +269,7 @@ public:
 			slots[j-1] = slots[j];
 		}
 		n--;
-		slots[n].release();
+		slots[n].~T();
 	}
 	
 	void insertAt(const T& val, int i) {
@@ -304,7 +282,7 @@ public:
 			for(int j=n; j > i; --j) {
 				slots[j] = slots[j-1];
 			}
-			slots[i].reference() = val;
+			slots[i] = val;
 			n++;
 		}
 	}
@@ -315,14 +293,14 @@ public:
 	
 	int findFirst(const T& val) const {
 		for(int i=0; i<n; ++i) {
-			if (slots[i].value() == val) { return i; }
+			if (slots[i] == val) { return i; }
 		}
 		return -1;
 	}
 	
 	int findLast(const T& val) const {
 		for(int i=n-1; i>=0; --i) {
-			if (slots[i].value() == val) { return i; }
+			if (slots[i] == val) { return i; }
 		}
 		return -1;
 	}
@@ -339,11 +317,10 @@ class BitArray {
 friend class BitLister;
 private:
 	unsigned capacity;
-	uint32_t *words;
+	Array<uint32_t> words;
 	
 public:
 	BitArray(unsigned cap);
-	~BitArray();
 	
 	void clear();
 	void clear(unsigned i);
@@ -408,4 +385,10 @@ struct Link {
 	}
 };
 
+template<typename T>
+class Linkable : public Link, public T {
+public:
+	static T* getValue(Link *link) { return static_cast<Linkable<T>*>(link); }
+	static Link* getLink(T* value) { return static_cast<Linkable<T>*>(value); }
+};
 
