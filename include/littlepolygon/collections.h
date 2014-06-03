@@ -172,14 +172,24 @@ public:
 // SIMPLE TEMPLATE LIST/STACK
 //--------------------------------------------------------------------------------
 
-template<typename T>
+template<typename T, bool grow=false>
 class List {
 private:
 	int cap, n;
-	Array<T> slots;
+	T* slots;
 
+	void makeRoom() {
+		if (slots == 0) {
+			slots = (T*) calloc(cap, sizeof(T));
+		} else if (n == cap) {
+			ASSERT(grow);
+			cap += cap;
+			slots = (T*) realloc(slots, cap * sizeof(T));
+		}
+	}
+	
 public:
-	List(int aCapacity) : cap(aCapacity), n(0), slots(cap) {
+	List(int aCapacity) : cap(aCapacity), n(0), slots(0) {
 	}
 	
 	~List() {
@@ -187,6 +197,7 @@ public:
 			--n;
 			slots[n].~T();
 		}
+		free(slots);
 	}
 	
 	int capacity() const { return cap; }
@@ -196,10 +207,10 @@ public:
 	bool empty() const { return n == 0; }
 	bool full() const { return n == cap; }
 
-	const T* begin() const { return slots.ptr(); }
-	const T* end() const { return slots.ptr() + n; }
-	T* begin() { return slots.ptr(); }
-	T* end() { return slots.ptr() + n; }
+	const T* begin() const { return slots; }
+	const T* end() const { return slots + n; }
+	T* begin() { return slots; }
+	T* end() { return slots + n; }
 	
 	T get(int i) const {
 		ASSERT(i >= 0);
@@ -214,25 +225,28 @@ public:
 	}
 	
 	void clear() {
-		n = 0;
+		while(n > 0) {
+			--n;
+			slots[n].~T();
+		}
 	}
 	
 	void append(const T& val) {
-		ASSERT(n < cap);
+		makeRoom();
 		++n;
 		new(slots + (n-1)) T(val);
 	}
 	
 	template<typename... Args>
 	T* alloc(Args&&... args) {
-		ASSERT(n < cap);
+		makeRoom();
 		++n;
 		return new(slots + (n-1)) T(args ...);
 	}
 	
 	int offsetOf(const T* t) {
-		ASSERT(t >= slots.ptr() && t < slots + n);
-		return t - slots.ptr();
+		ASSERT(t >= slots && t < slots + n);
+		return t - slots;
 	}
 	
 	bool tryAppend(const T& val) {
@@ -279,6 +293,7 @@ public:
 		if (i == n) {
 			append(val);
 		} else {
+			makeRoom();
 			for(int j=n; j > i; --j) {
 				slots[j] = slots[j-1];
 			}
@@ -308,6 +323,8 @@ public:
 	bool contains(const T& val) const {
 		return findFirst(val) != -1;
 	}
+	
+	
 };
 
 //--------------------------------------------------------------------------------
