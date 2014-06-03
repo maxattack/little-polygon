@@ -39,7 +39,7 @@ struct TextureAsset
 	
 	bool initialized() const { return handle != 0; }
 	int format() const { return GL_RGBA; }
-	Vec2 size() const { return vec((float)w,(float)h); }
+	Vec2 size() const { return vec((lpFloat)w,(lpFloat)h); }
 	
 	void init();
 	void bind();
@@ -59,29 +59,29 @@ public:
 	Viewport() {}
 	Viewport(Vec2 aSize, Vec2 aOffset=Vec2(0,0)) :
 		mSize(aSize), mOffset(aOffset) {}
-	Viewport(float w, float h, float x=0, float y=0) :
+	Viewport(lpFloat w, lpFloat h, lpFloat x=0, lpFloat y=0) :
 		mSize(w,h), mOffset(x,y) {}
 	
 	Vec2 size() const { return mSize; }
-	float width() const { return mSize.x; }
-	float height() const { return mSize.y; }
+	lpFloat width() const { return mSize.x; }
+	lpFloat height() const { return mSize.y; }
 	
-	float aspect() const { return mSize.x / mSize.y; }
+	lpFloat aspect() const { return mSize.x / mSize.y; }
 
 	Vec2 offset() const { return mOffset; }
 	Vec2 extent() const { return mOffset + mSize; }
-	float left() const { return mOffset.x; }
-	float right() const { return mOffset.x + mSize.x; }
-	float top() const { return mOffset.y; }
-	float bottom() const { return mOffset.y + mSize.y; }
+	lpFloat left() const { return mOffset.x; }
+	lpFloat right() const { return mOffset.x + mSize.x; }
+	lpFloat top() const { return mOffset.y; }
+	lpFloat bottom() const { return mOffset.y + mSize.y; }
 	
 	void setFromWindow();
 	void setSize(Vec2 sz) { mSize = sz; }
-	void setSize(float w, float h) { mSize.set(w,h); }
-	void setSizeWithHeight(float h);
-	void setSizeWithWidth(float w);
+	void setSize(lpFloat w, lpFloat h) { mSize.set(w,h); }
+	void setSizeWithHeight(lpFloat h);
+	void setSizeWithWidth(lpFloat w);
 	void setOffset(Vec2 off) { mOffset = off; }
-	void setOffset(float x, float y) { mOffset.set(x,y); }
+	void setOffset(lpFloat x, lpFloat y) { mOffset.set(x,y); }
 	
 	Vec2 windowToViewport(Vec2 p) const;
 	Vec2 viewportToWindow(Vec2 vp) const;
@@ -90,7 +90,7 @@ public:
 
 	void setMVP(GLuint mvp) const;
 	
-	inline bool contains(Vec2 p, float pad=0.0) const {
+	inline bool contains(Vec2 p, lpFloat pad=0.0) const {
 		return p.x > mOffset.x - pad &&
 		       p.x < mOffset.x + mSize.x + pad &&
 		       p.y > mOffset.y - pad &&
@@ -126,15 +126,15 @@ GLuint generateTexture(TextureGenerator cb, int w=256, int h=256);
 // DYNAMIC PLOTTER
 
 struct Vertex {
-	float x,y,u,v;
+	GLfloat x,y,u,v;
 	Color c1,c2;
 	
 	inline void set(Vec2 p, Vec2 uv, Color c, Color t=rgba(0xffffffff))
 	{
-		x = p.x;
-		y = p.y;
-		u = uv.x;
-		v = uv.y;
+		x = (GLfloat) p.x;
+		y = (GLfloat) p.y;
+		u = (GLfloat) uv.x;
+		v = (GLfloat) uv.y;
 		c1 = c;
 		c2 = t;
 	}
@@ -199,11 +199,12 @@ private:
 	GLuint vao, vbo, uMVP, aPosition, aColor;
 
 	struct LineVertex {
-		Vec2 position;
+		GLfloat x, y;
 		Color color;
 
 		inline void set(Vec2 p, Color c) { 
-			position = p; 
+			x = (GLfloat) p.x;
+			y = (GLfloat) p.y;
 			color = c; 
 		}
 	};
@@ -216,8 +217,8 @@ public:
 	void begin(const Viewport& viewport);
 	void plot(Vec2 p0, Vec2 p1, Color c);
 	void plotBox(Vec2 p0, Vec2 p2, Color c);
-	void plotLittleBox(Vec2 p, float r, Color c);
-	void plotArrow(Vec2 p0, Vec2 p1, float r, Color c);
+	void plotLittleBox(Vec2 p, lpFloat r, Color c);
+	void plotArrow(Vec2 p0, Vec2 p1, lpFloat r, Color c);
 	void end();
 
 private:

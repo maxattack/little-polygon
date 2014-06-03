@@ -18,7 +18,7 @@
 
 static Viewport makeView() {
 	int w, h; SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &w, &h);
-	return Viewport((float)w, (float)h, 0, 0);
+	return Viewport((lpFloat)w, (lpFloat)h, 0, 0);
 }
 
 // http://devnewton.bci.im/en/gamepad_db

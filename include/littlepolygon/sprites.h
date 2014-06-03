@@ -71,8 +71,8 @@ struct TilemapAsset
 	TextureAsset tileAtlas;      // a texture-atlas of all the tiles
 	
 	bool initialized() const { return data != 0; }
-	Vec2 tileSize() const { return vec((float)tw,(float)th); }
-	Vec2 mapSize() const { return vec((float)mw,(float)mh); }
+	Vec2 tileSize() const { return vec((lpFloat)tw,(lpFloat)th); }
+	Vec2 mapSize() const { return vec((lpFloat)mw,(lpFloat)mh); }
 	TileAsset tileAt(int x, int y) const;
 	
 	void init();
@@ -182,6 +182,6 @@ private:
 	Vertex *nextSlice() { return plotter->getVertex(count<<2); }
 	void setTextureAtlas(TextureAsset* texture);
 	void commitBatch();
-	void plotGlyph(const GlyphAsset& g, float x, float y, float h, Color c, Color t);
+	void plotGlyph(const GlyphAsset& g, lpFloat x, lpFloat y, lpFloat h, Color c, Color t);
 
 };

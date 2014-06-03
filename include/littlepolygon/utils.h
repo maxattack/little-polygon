@@ -55,15 +55,15 @@ struct Timer {
 	int ticks;
 	int deltaTicks;
 	
-	float rawSeconds() const { return 0.001f * ticks; }
-	float rawDeltaSeconds() const { return 0.001f * deltaTicks; }
+	lpFloat rawSeconds() const { return 0.001f * ticks; }
+	lpFloat rawDeltaSeconds() const { return 0.001f * deltaTicks; }
 	
 	// virtually scaled "seconds" since the timer started
-	float timeScale;
-	float seconds;
-	float deltaSeconds;
+	lpFloat timeScale;
+	lpFloat seconds;
+	lpFloat deltaSeconds;
 	
-	Timer(float aTimeScale=1.0f);
+	Timer(lpFloat aTimeScale=1.0f);
 	void reset();
 	void tick();
 

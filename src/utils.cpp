@@ -22,7 +22,7 @@
 //--------------------------------------------------------------------------------
 // TIMING
 
-Timer::Timer(float aTimeScale) :
+Timer::Timer(lpFloat aTimeScale) :
 ticks(SDL_GetTicks()),
 deltaTicks(0),
 timeScale(aTimeScale),
@@ -52,7 +52,7 @@ void Timer::tick()
 {
 	deltaTicks = SDL_GetTicks() - ticks;
 	ticks += deltaTicks;
-	deltaSeconds = timeScale * std::min(rawDeltaSeconds(), 1.0f/20.0f);
+	deltaSeconds = timeScale * clamp(rawDeltaSeconds(), 1.0/100.0f, 1.0f/30.0f);
 	seconds += deltaSeconds;
 }
 
@@ -60,9 +60,9 @@ void Timer::tick()
 //--------------------------------------------------------------------------------
 // MISC MATH FUNCS
 
-bool linearIntersection(Vec2 u0, Vec2 u1, Vec2 v0, Vec2 v1, float& u)
+bool linearIntersection(Vec2 u0, Vec2 u1, Vec2 v0, Vec2 v1, lpFloat& u)
 {
-	float norm = (v1.y - v0.y)*(u1.x-u0.x) - (v1.x-v0.x)*(u1.y-u0.y);
+	lpFloat norm = (v1.y - v0.y)*(u1.x-u0.x) - (v1.x-v0.x)*(u1.y-u0.y);
 	if (norm > -M_COLINEAR_SLOP && norm < M_COLINEAR_SLOP) {
 		// lines are parallel
 		return false;
@@ -72,9 +72,9 @@ bool linearIntersection(Vec2 u0, Vec2 u1, Vec2 v0, Vec2 v1, float& u)
 	return true;  
 }
 
-bool linearIntersection(Vec2 u0, Vec2 u1, Vec2 v0, Vec2 v1, float& u, float& v)
+bool linearIntersection(Vec2 u0, Vec2 u1, Vec2 v0, Vec2 v1, lpFloat& u, lpFloat& v)
 {
-	float norm = (v1.y - v0.y)*(u1.x-u0.x) - (v1.x-v0.x)*(u1.y-u0.y);
+	lpFloat norm = (v1.y - v0.y)*(u1.x-u0.x) - (v1.x-v0.x)*(u1.y-u0.y);
 	if (norm > -M_COLINEAR_SLOP && norm < M_COLINEAR_SLOP) {
 		// lines are parallel
 		return false;
@@ -85,17 +85,17 @@ bool linearIntersection(Vec2 u0, Vec2 u1, Vec2 v0, Vec2 v1, float& u, float& v)
 	return true;  
 }
 
-Vec2 quadraticBezier(Vec2 p0, Vec2 p1, Vec2 p2, float u)
+Vec2 quadraticBezier(Vec2 p0, Vec2 p1, Vec2 p2, lpFloat u)
 {
 	return ((1.0f-u)*(1.0f-u))*p0 + (2.0f*(1.0f-u)*u)*p1 + (u*u)*p2;
 }
     
-Vec2 quadraticBezierDeriv(Vec2 p0, Vec2 p1, Vec2 p2, float u)
+Vec2 quadraticBezierDeriv(Vec2 p0, Vec2 p1, Vec2 p2, lpFloat u)
 {
 	return (2.0f*(1.0f-u))*(p1-p0) + (2.0f*u)*(p2-p1);
 }
 
-Vec2 cubicBezier(Vec2 p0, Vec2 p1, Vec2 p2, Vec2 p3, float u)
+Vec2 cubicBezier(Vec2 p0, Vec2 p1, Vec2 p2, Vec2 p3, lpFloat u)
 {
 	return ((1.0f-u) * (1.0f-u) * (1.0f-u)) * p0 +
 		(3.0f * (1.0f-u) * (1.0f-u) * u) * p1 +
@@ -103,7 +103,7 @@ Vec2 cubicBezier(Vec2 p0, Vec2 p1, Vec2 p2, Vec2 p3, float u)
 		(u * u * u) * p3;
 }
 
-Vec2 cubicBezierDeriv(Vec2 p0, Vec2 p1, Vec2 p2, Vec2 p3, float u)
+Vec2 cubicBezierDeriv(Vec2 p0, Vec2 p1, Vec2 p2, Vec2 p3, lpFloat u)
 {
 	return 3.0f * (
 		(-(1.0f-u) * (1.0f-u)) * p0 +
@@ -112,7 +112,7 @@ Vec2 cubicBezierDeriv(Vec2 p0, Vec2 p1, Vec2 p2, Vec2 p3, float u)
 		(u * u) * p3
 	);
 }
-Vec2 cubicHermite(Vec2 p0, Vec2 m0, Vec2 p1, Vec2 m1, float u)
+Vec2 cubicHermite(Vec2 p0, Vec2 m0, Vec2 p1, Vec2 m1, lpFloat u)
 {
 	return (2.f*u*u*u - 3.f*u*u + 1.f) * p0 +
 		(u*u*u - 2.f*u*u + u) * m0 +
@@ -120,7 +120,7 @@ Vec2 cubicHermite(Vec2 p0, Vec2 m0, Vec2 p1, Vec2 m1, float u)
 		(u*u*u - u*u) * m1;
 }
 
-Vec2 CubicHermiteDeriv(Vec2 p0, Vec2 m0, Vec2 p1, Vec2 m1, float u)
+Vec2 CubicHermiteDeriv(Vec2 p0, Vec2 m0, Vec2 p1, Vec2 m1, lpFloat u)
 {
 	return (6.f*(u*u - u)) * p0 +
 		(3.f*u*u - 4.f*u + 1.f) * m0 +
@@ -128,15 +128,15 @@ Vec2 CubicHermiteDeriv(Vec2 p0, Vec2 m0, Vec2 p1, Vec2 m1, float u)
 		(3.f*u*u - 2.f*u) * m1;
 }
 
-Color hsv(float h, float s, float v)
+Color hsv(lpFloat h, lpFloat s, lpFloat v)
 {
 	if(s > 0.001f) {
 		h /= 60;
 		int i = int(h);
-		float f = h - i; // factorial part of h
-		float p = v * ( 1 - s );
-		float q = v * ( 1 - s * f );
-		float t = v * ( 1 - s * ( 1 - f ) );
+		lpFloat f = h - i; // factorial part of h
+		lpFloat p = v * ( 1 - s );
+		lpFloat q = v * ( 1 - s * f );
+		lpFloat t = v * ( 1 - s * ( 1 - f ) );
 		switch( i ) {
 			case 0: return rgb(v, t, p);
 			case 1: return rgb(q, v, p);
@@ -150,12 +150,12 @@ Color hsv(float h, float s, float v)
 	}
 }
 
-void Color::toHSV(float *h, float *s, float *v)
+void Color::toHSV(lpFloat *h, lpFloat *s, lpFloat *v)
 {
-	float r = red();
-	float g = green();
-	float b = blue();
-	float K = 0.f;
+	lpFloat r = red();
+	lpFloat g = green();
+	lpFloat b = blue();
+	lpFloat K = 0.f;
 	if (g < b) {
 		std::swap(g, b);
 		K -= 1.f;
@@ -165,7 +165,7 @@ void Color::toHSV(float *h, float *s, float *v)
 		K = -2.f / 6.f - K;
 	}
 
-	float chroma = r - std::min(g, b);
+	lpFloat chroma = r - std::min(g, b);
 	*h = 360.f * fabsf(K + (g-b) / (6.f * chroma + 1e-20f));
 	*s = chroma / (r + 1e-20f);
 	*v = r;

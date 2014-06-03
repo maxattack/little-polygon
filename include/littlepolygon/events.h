@@ -209,7 +209,7 @@ public:
 class TimerCallback : public EventCallback<> {
 friend class TimerQueue;
 private:
-	float time;
+	lpFloat time;
 	
 public:
 	TimerCallback(Action<> aCallback) : EventCallback<>(aCallback), time(0.0f) {
@@ -217,8 +217,8 @@ public:
 		ASSERT(prev == this);
 	}
 	
-	float nextTime() const { return static_cast<TimerCallback*>(next)->time; }
-	float prevTime() const { return static_cast<TimerCallback*>(prev)->time; }
+	lpFloat nextTime() const { return static_cast<TimerCallback*>(next)->time; }
+	lpFloat prevTime() const { return static_cast<TimerCallback*>(prev)->time; }
 };
 
 // Multiplexes several timeouts to deduplicate timeout work and simply defered
@@ -226,7 +226,7 @@ public:
 
 class TimerQueue {
 private:
-	float time;
+	lpFloat time;
 	TimerCallback head;
 	
 public:
@@ -236,8 +236,8 @@ public:
 	inline bool hasQueue() const { return head.isBound(); }
 
 	void clear() { while(hasQueue()) { head.next->unbind(); } }
-	void enqueue(TimerCallback* newListener, float duration);
-	void tick(float dt);
+	void enqueue(TimerCallback* newListener, lpFloat duration);
+	void tick(lpFloat dt);
 };
 
 

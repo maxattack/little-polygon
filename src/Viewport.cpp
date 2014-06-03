@@ -23,30 +23,30 @@ void Viewport::setFromWindow()
 	SDL_Window *win = SDL_GL_GetCurrentWindow();
 	SDL_Point sz;
 	SDL_GetWindowSize(win, &sz.x, &sz.y);
-	mSize.x = (float)sz.x;
-	mSize.y = (float)sz.y;
+	mSize.x = (lpFloat)sz.x;
+	mSize.y = (lpFloat)sz.y;
 	mOffset = vec(0,0);
 }
 
-void Viewport::setSizeWithHeight(float h)
+void Viewport::setSizeWithHeight(lpFloat h)
 {
 	int ww, wh;
 	SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &ww, &wh);
-	mSize = vec(h * float(ww) / float(wh), h);
+	mSize = vec(h * lpFloat(ww) / lpFloat(wh), h);
 }
 
-void Viewport::setSizeWithWidth(float w)
+void Viewport::setSizeWithWidth(lpFloat w)
 {
 	int ww, wh;
 	SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &ww, &wh);
-	mSize = vec(w, w * float(wh) / float(ww));
+	mSize = vec(w, w * lpFloat(wh) / lpFloat(ww));
 }
 
 Vec2 Viewport::windowToViewport(Vec2 p) const
 {
 	SDL_Window *win = SDL_GL_GetCurrentWindow();
 	int szx, szy;  SDL_GetWindowSize(win, &szx, &szy);
-	return mSize * p / Vec2((float) szx, (float)szy) + mOffset;
+	return mSize * p / Vec2((lpFloat) szx, (lpFloat)szy) + mOffset;
 }
 
 Vec2 Viewport::viewportToWindow(Vec2 vp) const
@@ -54,21 +54,21 @@ Vec2 Viewport::viewportToWindow(Vec2 vp) const
 	SDL_Window *win = SDL_GL_GetCurrentWindow();
 	int w,h;
 	SDL_GetWindowSize(win, &w, &h);
-	return vec((float)w,(float)h) / mSize * (vp - mOffset);
+	return vec((lpFloat)w,(lpFloat)h) / mSize * (vp - mOffset);
 }
 
 Vec2 Viewport::cursor() const
 {
 	int x,y; SDL_GetMouseState(&x, &y);
-	return windowToViewport(vec((float)x, (float)y));
+	return windowToViewport(vec((lpFloat)x, (lpFloat)y));
 }
 
 void Viewport::setMVP(GLuint amvp) const
 {
-	float zfar = 128;
-	float znear = -128;
-	float fan = zfar + znear;
-	float fsn = zfar - znear;
+	lpFloat zfar = 128;
+	lpFloat znear = -128;
+	lpFloat fan = zfar + znear;
+	lpFloat fsn = zfar - znear;
 	Vec2 cext = mOffset + mSize;
 	Vec2 t = - (cext + mOffset) / mSize;
 	GLfloat buf[16] = {

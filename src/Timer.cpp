@@ -16,7 +16,7 @@
 
 #include <littlepolygon/events.h>
 
-void TimerQueue::enqueue(TimerCallback *newListener, float duration)
+void TimerQueue::enqueue(TimerCallback *newListener, lpFloat duration)
 {
 	ASSERT(!newListener->isBound());
 	if (hasQueue()) {
@@ -48,7 +48,7 @@ void TimerQueue::enqueue(TimerCallback *newListener, float duration)
 		
 }
 
-void TimerQueue::tick(float dt)
+void TimerQueue::tick(lpFloat dt)
 {
 	if (hasQueue()) {
 		

@@ -203,17 +203,17 @@ void SpritePlotter::drawQuad(ImageAsset *img, Vec2 p0, Vec2 p1, Vec2 p2, Vec2 p3
 
 #define UV_LABEL_SLOP (0.0001f)
 
-void SpritePlotter::plotGlyph(const GlyphAsset& g, float x, float y, float h, Color c, Color t)
+void SpritePlotter::plotGlyph(const GlyphAsset& g, lpFloat x, lpFloat y, lpFloat h, Color c, Color t)
 {
 	if (count == capacity()) {
 		commitBatch();
 	}
 
 	auto slice = nextSlice();
-	float k = 1.f / workingTexture->w;
-	Vec2 uv = k * vec((float)g.x, (float)g.y);
-	float du = k * (g.advance-UV_LABEL_SLOP);
-	float dv = k * h;
+	lpFloat k = 1.f / workingTexture->w;
+	Vec2 uv = k * vec((lpFloat)g.x, (lpFloat)g.y);
+	lpFloat du = k * (g.advance-UV_LABEL_SLOP);
+	lpFloat dv = k * h;
 
 	slice[0].set(vec(x,y), uv, c, t);
 	slice[1].set(vec(x,y+h), uv+vec(0,dv), c, t);
@@ -228,12 +228,12 @@ void SpritePlotter::drawLabel(FontAsset *font, Vec2 p, Color c, const char *msg,
 	ASSERT(isBound());
 	setTextureAtlas(&(font->texture));
 
-	float px = p.x;
-	float py = p.y;
+	lpFloat px = p.x;
+	lpFloat py = p.y;
 	while(*msg) {
 		if (*msg != '\n') {
 			GlyphAsset g = font->getGlyph(*msg);
-			plotGlyph( g, px, py, (float) font->height, c, tint);
+			plotGlyph( g, px, py, (lpFloat) font->height, c, tint);
 			px += g.advance;
 		} else {
 			px = p.x;
@@ -248,14 +248,14 @@ void SpritePlotter::drawLabelCentered(FontAsset *font, Vec2 p, Color c, const ch
 {
 	ASSERT(isBound());
 	setTextureAtlas(&(font->texture) );
-	float py = p.y;
+	lpFloat py = p.y;
 	while(*msg) {
 		int length;
 		const char* next = font->measureLine(msg, &length);
-		float px = p.x - (length>>1);
+		lpFloat px = p.x - (length>>1);
 		while(msg != next) {
 			GlyphAsset g = font->getGlyph(*msg);
-			plotGlyph( g, px, py, (float) font->height, c, tint);
+			plotGlyph( g, px, py, (lpFloat) font->height, c, tint);
 			px += g.advance;
 			msg++;
 		}
@@ -270,14 +270,14 @@ void SpritePlotter::drawLabelRightJustified(FontAsset *font, Vec2 p, Color c, co
 {
 	ASSERT(isBound());
 	setTextureAtlas(&(font->texture) );
-	float py = p.y;
+	lpFloat py = p.y;
 	while(*msg) {
 		int length;
 		const char* next = font->measureLine(msg, &length);
-		float px = p.x - length;
+		lpFloat px = p.x - length;
 		while(msg != next) {
 			GlyphAsset g = font->getGlyph(*msg);
-			plotGlyph( g, px, py, (float) font->height, c, tint);
+			plotGlyph( g, px, py, (lpFloat) font->height, c, tint);
 			px += g.advance;
 			msg++;
 		}
@@ -299,7 +299,7 @@ void SpritePlotter::drawTilemap(TilemapAsset *map, Vec2 position, Color tint)
 	// make sure the map is initialized
 	map->init();
 	
-	Vec2 cs = view.size() / vec((float)map->tw, (float)map->th);
+	Vec2 cs = view.size() / vec((lpFloat)map->tw, (lpFloat)map->th);
 	int latticeW = floorToInt(ceilf(cs.x) + 1);
 	int latticeH = floorToInt(ceilf(cs.y) + 1);
 
@@ -310,15 +310,15 @@ void SpritePlotter::drawTilemap(TilemapAsset *map, Vec2 position, Color tint)
 	int voy = int(scroll.y/map->th);
 	
 	Vec2 rem = vec(
-		fmodf(scroll.x, (float)map->tw),
-		fmodf(scroll.y, (float)map->th)
+		fmodf(scroll.x, (lpFloat)map->tw),
+		fmodf(scroll.y, (lpFloat)map->th)
 	);
 	setTextureAtlas(&map->tileAtlas);
 
-	float tw = map->tw + TILE_SLOP + TILE_SLOP;
-	float th = map->th + TILE_SLOP + TILE_SLOP;
-	float uw = (map->tw - TILE_SLOP - TILE_SLOP) / float(map->tileAtlas.w);
-	float uh = (map->th - TILE_SLOP - TILE_SLOP) / float(map->tileAtlas.h);
+	lpFloat tw = map->tw + TILE_SLOP + TILE_SLOP;
+	lpFloat th = map->th + TILE_SLOP + TILE_SLOP;
+	lpFloat uw = (map->tw - TILE_SLOP - TILE_SLOP) / lpFloat(map->tileAtlas.w);
+	lpFloat uh = (map->th - TILE_SLOP - TILE_SLOP) / lpFloat(map->tileAtlas.h);
 	for(int y=0; y<latticeH; ++y)
 	for(int x=0; x<latticeW; ++x) {
 		int rawX = x+vox;
@@ -326,12 +326,12 @@ void SpritePlotter::drawTilemap(TilemapAsset *map, Vec2 position, Color tint)
 		if (rawX >= 0 && rawX < (int)map->mw && rawY >= 0 && rawY < (int)map->mh) {
 			TileAsset coord = map->tileAt(rawX, rawY);
 			if (coord.isDefined()) {
-				Vec2 p = vec((float) x * map->tw, (float) y * map->th) 
+				Vec2 p = vec((lpFloat) x * map->tw, (lpFloat) y * map->th) 
 					- vec(TILE_SLOP, TILE_SLOP) 
 					- rem + view.offset();
 				Vec2 uv = 
 					(vec(map->tw * coord.x + TILE_SLOP, map->th * coord.y + TILE_SLOP))
-					/ vec((float) map->tileAtlas.w, (float) map->tileAtlas.h);
+					/ vec((lpFloat) map->tileAtlas.w, (lpFloat) map->tileAtlas.h);
 				auto slice = nextSlice();
 
 				slice[0].set(p, uv, rgba(0), tint);

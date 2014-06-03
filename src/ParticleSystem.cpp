@@ -1,12 +1,12 @@
 #include "littlepolygon/particles.h"
 
-Particle::Particle(float at0, float at1, Vec2 ap, Vec2 av) :
+Particle::Particle(lpFloat at0, lpFloat at1, Vec2 ap, Vec2 av) :
 t0(at0), t1(at1), pos(ap), vel(av)
 {
 	ASSERT(t1 > t0);
 }
 
-bool Particle::tick(const ParticleSystem *sys, float dt)
+bool Particle::tick(const ParticleSystem *sys, lpFloat dt)
 {
 	if (sys->time < t1) {
 		vel += dt * sys->gravity;
@@ -49,31 +49,31 @@ void ParticleSystem::setEmitterPosition(Vec2 p)
 	emitterPosition = p;
 }
 
-void ParticleSystem::setEmissionRadius(float r)
+void ParticleSystem::setEmissionRadius(lpFloat r)
 {
 	ASSERT(r >= 0.0f);
 	emissionRadius = r;
 }
 
-void ParticleSystem::setEmissionRate(float rate)
+void ParticleSystem::setEmissionRate(lpFloat rate)
 {
 	ASSERT(rate >= 0.0f);
 	emissionRate = rate;
 }
 
-void ParticleSystem::setEmissionSpeed(float min, float max)
+void ParticleSystem::setEmissionSpeed(lpFloat min, lpFloat max)
 {
 	emitSpeedMin = min;
 	emitSpeedMax = max;
 }
 
-void ParticleSystem::setEmissionRadians(float min, float max)
+void ParticleSystem::setEmissionRadians(lpFloat min, lpFloat max)
 {
 	emitAngleMin = min;
 	emitAngleMax = max;
 }
 
-void ParticleSystem::setLifespan(float life)
+void ParticleSystem::setLifespan(lpFloat life)
 {
 	ASSERT(life > 0.0f);
 	lifespan = life;
@@ -112,7 +112,7 @@ void ParticleSystem::emit(int n)
 	}
 }
 
-void ParticleSystem::tick(float dt)
+void ParticleSystem::tick(lpFloat dt)
 {
 	if  (emitting) {
 		emitCount += dt * emissionRate;

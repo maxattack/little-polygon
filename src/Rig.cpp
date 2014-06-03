@@ -145,7 +145,7 @@ void Rig::resetTime()
 	}
 }
 
-void Rig::tick(float dt)
+void Rig::tick(lpFloat dt)
 {
 	if (currentAnimation) {
 		// UPDATE TIME

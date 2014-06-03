@@ -33,7 +33,7 @@ struct RigBoneAsset
 	
 	Vec2 translation;
 	Vec2 scale;
-	float radians;
+	lpFloat radians;
 
 	AffineMatrix concatenatedMatrix() const {
 		auto uv = unitVector(radians);
@@ -60,14 +60,14 @@ struct RigAttachmentAsset
 struct RigAnimationAsset
 {
 	uint32_t hash;
-	float duration;
+	lpFloat duration;
 };
 
 struct RigTimelineAsset
 {
-	float *times;
+	lpFloat *times;
 	union {
-		float *rotationValues;
+		lpFloat *rotationValues;
 		Vec2 *translationValues;
 		Vec2 *scaleValues;
 		int *attachmentValues;
@@ -104,7 +104,7 @@ private:
 	const RigAsset* data;
 
 	struct Attitude {
-		float radians;
+		lpFloat radians;
 		Vec2 scale;
 		
 		void applyTo(AffineMatrix& mat) {
@@ -125,7 +125,7 @@ private:
 	
 	RigAnimationAsset* currentAnimation;
 	uint32_t currentLayer;
-	float currentTime;
+	lpFloat currentTime;
 	
 	bool xformDirty;
 	
@@ -135,7 +135,7 @@ public:
 	// GETTERS
 	
 	bool playing() const { return currentAnimation != 0; }
-	float time() const { return currentTime; }
+	lpFloat time() const { return currentTime; }
 	bool showingLayer(const char* name) const { return currentLayer == fnv1a(name); }
 	bool showingAnimation(const char* name) const { return currentAnimation->hash == fnv1a(name); }
 	const AffineMatrix& rootTransform() const { return worldTransforms[0]; }
@@ -152,7 +152,7 @@ public:
 	void resetPose();
 	void resetTime();
 	void refreshTransforms();
-	void tick(float dt);
+	void tick(lpFloat dt);
 	void draw(SpritePlotter* plotter, Color c=rgba(0));
 	
 private:

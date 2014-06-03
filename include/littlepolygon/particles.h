@@ -25,20 +25,20 @@ class ParticleSystem;
 
 class Particle {
 private:
-	float t0, t1;
+	lpFloat t0, t1;
 	Vec2 pos;
 	Vec2 vel;
 	
 public:
-	Particle(float at0, float at1, Vec2 ap, Vec2 av);
+	Particle(lpFloat at0, lpFloat at1, Vec2 ap, Vec2 av);
 	
 	Vec2 position() const { return pos; }
 	Vec2 velocity() const { return vel; }
-	float startTime() const { return t0; }
-	float endTime() const { return t1; }
-	float lifespan() const { return t1 - t0; }
+	lpFloat startTime() const { return t0; }
+	lpFloat endTime() const { return t1; }
+	lpFloat lifespan() const { return t1 - t0; }
 	
-	bool tick(const ParticleSystem* sys, float dt);
+	bool tick(const ParticleSystem* sys, lpFloat dt);
 };
 
 class ParticleSystem {
@@ -48,13 +48,13 @@ private:
 	// user-settable parameters
 	bool emitting;
 	Vec2 emitterPosition;
-	float emissionRadius;
-	float emissionRate;
-	float emitSpeedMin;
-	float emitSpeedMax;
-	float emitAngleMin;
-	float emitAngleMax;
-	float lifespan;
+	lpFloat emissionRadius;
+	lpFloat emissionRate;
+	lpFloat emitSpeedMin;
+	lpFloat emitSpeedMax;
+	lpFloat emitAngleMin;
+	lpFloat emitAngleMax;
+	lpFloat lifespan;
 	Vec2 gravity;
 	
 	// render parameters
@@ -64,8 +64,8 @@ private:
 	Color endMod;
 	
 	// simulation parameters
-	float time;
-	float emitCount;
+	lpFloat time;
+	lpFloat emitCount;
 	
 	// particle instances
 	CompactPool<Particle> particles;
@@ -76,18 +76,18 @@ public:
 	
 	void setEmitting(bool flag);
 	void setEmitterPosition(Vec2 p);
-	void setEmissionRadius(float r);
-	void setEmissionRate(float rate);
-	void setEmissionSpeed(float min, float max);
-	void setEmissionRadians(float min, float max);
-	void setLifespan(float life);
+	void setEmissionRadius(lpFloat r);
+	void setEmissionRate(lpFloat rate);
+	void setEmissionSpeed(lpFloat min, lpFloat max);
+	void setEmissionRadians(lpFloat min, lpFloat max);
+	void setLifespan(lpFloat life);
 	void setGravity(Vec2 g);
 	
 	void setColorAdd(Color c0, Color c1);
 	void setColorMod(Color c0, Color c1);
 	
 	void emit(int n);
-	void tick(float dt);
+	void tick(lpFloat dt);
 	void draw(SpritePlotter* plotter, ImageAsset *image);
 	
 };
