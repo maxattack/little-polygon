@@ -126,15 +126,17 @@ GLuint generateTexture(TextureGenerator cb, int w=256, int h=256);
 // DYNAMIC PLOTTER
 
 struct Vertex {
-	float x,y,z,u,v;
-	Color color;
+	float x,y,u,v;
+	Color c1,c2;
 	
-	inline void set(Vec2 p, Vec2 uv, Color c) {
-		x = p.x; y = p.y; z = 0; u = uv.x; v = uv.y; color = c;
-	}
-	
-	inline void set(Vec2 p, float az, Vec2 uv, Color c) {
-		x = p.x; y = p.y; z = az; u = uv.x; v = uv.y; color = c;
+	inline void set(Vec2 p, Vec2 uv, Color c, Color t=rgba(0xffffffff))
+	{
+		x = p.x;
+		y = p.y;
+		u = uv.x;
+		v = uv.y;
+		c1 = c;
+		c2 = t;
 	}
 	
 };

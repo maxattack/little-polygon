@@ -136,7 +136,7 @@ private:
 	GLuint aPosition;
 	GLuint aUV;
 	GLuint aColor;
-	
+	GLuint aTint;
 	
 	GLuint vao[3];
 	GLuint elementBuf;
@@ -160,14 +160,14 @@ public:
 	// to the graphics device if: (i) the buffer has reached capacity or (ii) the texture 
 	// atlas has changed.  Color transforms *can* be batched, because they are encoded
 	// in the vertices, not in shader uniforms.
-	void drawImage(ImageAsset *image, Vec2 position, int frame=0, Color color=rgba(0), float z=0);
-	void drawImage(ImageAsset *image, Vec2 position, Vec2 u, int frame=0, Color color=rgba(0), float z=0);
-	void drawImage(ImageAsset *image, const AffineMatrix& xform, int frame=0, Color color=rgba(0), float z=0);
-	void drawQuad(ImageAsset *image, Vec2 p0, Vec2 p1, Vec2 p2, Vec2 p3, int frame=0, Color color=rgba(0), float z=0);
-	void drawLabel(FontAsset *font, Vec2 p, Color c, const char *msg, float z=0);
-	void drawLabelCentered(FontAsset *font, Vec2 p, Color c, const char *msg, float z=0);
-	void drawLabelRightJustified(FontAsset *font, Vec2 p, Color c, const char *msg, float z=0);
-	void drawTilemap(TilemapAsset *map, Vec2 position=vec(0,0), float z=0);
+	void drawImage(ImageAsset *image, Vec2 position, int frame=0, Color color=rgba(0), Color tint=rgba(0xffffffff));
+	void drawImage(ImageAsset *image, Vec2 position, Vec2 u, int frame=0, Color color=rgba(0), Color tint=rgba(0xffffffff));
+	void drawImage(ImageAsset *image, const AffineMatrix& xform, int frame=0, Color color=rgba(0), Color tint=rgba(0xffffffff));
+	void drawQuad(ImageAsset *image, Vec2 p0, Vec2 p1, Vec2 p2, Vec2 p3, int frame=0, Color color=rgba(0), Color tint=rgba(0xffffffff));
+	void drawLabel(FontAsset *font, Vec2 p, Color c, const char *msg, Color tint=rgba(0xffffffff));
+	void drawLabelCentered(FontAsset *font, Vec2 p, Color c, const char *msg, Color tint=rgba(0xffffffff));
+	void drawLabelRightJustified(FontAsset *font, Vec2 p, Color c, const char *msg, Color tint=rgba(0xffffffff));
+	void drawTilemap(TilemapAsset *map, Vec2 position=vec(0,0), Color tint=rgba(0xffffffff));
 
 	// if you want to monkey with the global rendering state (e.g. change blending settings)
 	// you need to flush the render queue first.
@@ -181,6 +181,6 @@ private:
 	Vertex *nextSlice() { return plotter->getVertex(count<<2); }
 	void setTextureAtlas(TextureAsset* texture);
 	void commitBatch();
-	void plotGlyph(const GlyphAsset& g, float x, float y, float z, float h, Color c);
+	void plotGlyph(const GlyphAsset& g, float x, float y, float h, Color c, Color t);
 
 };
