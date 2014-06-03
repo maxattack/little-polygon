@@ -18,41 +18,77 @@
 #include "sprites.h"
 #include "pools.h"
 
+// A super-simple particle system which is more like a reference implementation
+// than an extensible tool.
+
+class ParticleSystem;
+
 class Particle {
 private:
-	float t;
+	float t0, t1;
 	Vec2 pos;
 	Vec2 vel;
 	
 public:
-	Particle(float t, Vec2 pos, Vec2 vel);
+	Particle(float at0, float at1, Vec2 ap, Vec2 av);
 	
-	float time() const { return t; }
 	Vec2 position() const { return pos; }
 	Vec2 velocity() const { return vel; }
+	float startTime() const { return t0; }
+	float endTime() const { return t1; }
+	float lifespan() const { return t1 - t0; }
 	
-	void tick();
+	bool tick(const ParticleSystem* sys, float dt);
 };
 
 class ParticleSystem {
 friend class Particle;
 private:
+
+	// user-settable parameters
+	bool emitting;
 	Vec2 emitterPosition;
 	float emissionRadius;
 	float emissionRate;
-	float lifespans;
+	float emitSpeedMin;
+	float emitSpeedMax;
+	float emitAngleMin;
+	float emitAngleMax;
+	float lifespan;
 	Vec2 gravity;
-
+	
+	// render parameters
+	Color startColor;
+	Color endColor;
+	Color startMod;
+	Color endMod;
+	
+	// simulation parameters
+	float time;
+	float emitCount;
+	
+	// particle instances
 	CompactPool<Particle> particles;
 	
 	
 public:
-	ParticleSystem(float radius, float rate, float lifespan, Vec2 g);
+	ParticleSystem();
 	
-	void setPosition(Vec2 p);
+	void setEmitting(bool flag);
+	void setEmitterPosition(Vec2 p);
+	void setEmissionRadius(float r);
+	void setEmissionRate(float rate);
+	void setEmissionSpeed(float min, float max);
+	void setEmissionRadians(float min, float max);
+	void setLifespan(float life);
+	void setGravity(Vec2 g);
 	
+	void setColorAdd(Color c0, Color c1);
+	void setColorMod(Color c0, Color c1);
+	
+	void emit(int n);
 	void tick(float dt);
-	void draw(SpritePlotter* plotter, ImageAsset *image, Vec2 position);
+	void draw(SpritePlotter* plotter, ImageAsset *image);
 	
 };
 

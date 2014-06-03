@@ -149,6 +149,7 @@ public:
 
 	int capacity() const { return plotter->getCapacity()>>2; }
 	bool isBound() const { return count >= 0; }
+	const Viewport& viewport() const { return view; }
 
 	// Call this method to initialize the graphics context state.  Asserts that the plotter
 	// is already bound (in case you're coalescing with other plotters) and state e.g. blending are
