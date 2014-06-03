@@ -50,12 +50,22 @@ def add_padding(fmt):
 	
 
 def export(records, **kwargs):
+	
 	# read kwargs
 	byte_order = kwargs.get('byteorder', sys.byteorder)
 	byte_order_prefix = '<' if byte_order == 'little' else '>'
 	pointer_width = kwargs.get('pointer_width', 64 if platform.architecture()[0] =='64bit' else 32)
 	pointer_type = 'p' if pointer_width == 32 else 'P'
 	format_pointer_type = 'I' if pointer_width == 32 else 'Q'
+
+
+	if kwargs.get('double_floats', False):
+		records = map(
+			lambda r: Record(r.key, r.format.replace("f", "d"), r.parameters), 
+			records
+		)
+
+
 
 	# map keys to indices, update records to replace keys with indexes
 	key_to_index = dict((record.key,i) for i,record in enumerate(records) if record.key)
