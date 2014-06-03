@@ -95,7 +95,7 @@ public:
 
 // Forward declarations
 
-template<typename... Args> struct EventCallback;
+template<typename... Args> class EventCallback;
 template<typename... Args> class EventDispatcher;
 
 // EventListener is a control block for a single logical listener.  Multiple

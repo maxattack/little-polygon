@@ -55,7 +55,7 @@ public:
 	
 	~Pool()
 	{
-		for(int i=0; i<bufferCount; ++i) {
+		for(unsigned i=0; i<bufferCount; ++i) {
 			free(buffers[i]);
 		}
 	}
@@ -136,7 +136,7 @@ private:
 		ASSERT(bufferCount < kBufferCapacity);
 		bufferSize = size;
 		auto buf = buffers[bufferCount] = (PoolSlot*) calloc(size, sizeof(PoolSlot));
-		for(int i=0; i<size; ++i) {
+		for(unsigned i=0; i<size; ++i) {
 			buf[i].initLink();
 			buf[i].attachBefore(&idle);
 		}
