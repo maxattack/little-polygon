@@ -20,17 +20,11 @@
 
 //------------------------------------------------------------------------------
 // POOL
-// Allocates objects in arrays with a doubling strategy.  Doesn't allocate
-// anything if you never use it.
-//------------------------------------------------------------------------------
+// Allocates objects in arrays with a doubling strategy, and stores active/free
+// objects in linked lists.
 
-template<typename T>
+template<typename T, int kBufferCapacity=8, int kDefaultReserve=8>
 class Pool {
-public:
-	static const unsigned kBufferCapacity = 8;
-	static const unsigned kDefaultReserve = 8;
-	typedef T InstanceType;
-	
 private:
 	typedef Linkable<T> Slot;
 	unsigned bufferCount, bufferSize;
@@ -41,8 +35,6 @@ public:
 	Pool(unsigned reserve=0) : bufferCount(0), bufferSize(0)
 	{
 		memset(buffers, 0, kBufferCapacity * sizeof(Slot*));
-		active.initLink();
-		idle.initLink();
 		if (reserve) { allocBuffer(reserve); }
 	}
 	
@@ -90,7 +82,6 @@ public:
 	void each(void (Func)(T*))
 	{
 		Link bookmark;
-		bookmark.initLink();
 		auto p = active.next;
 		while(p != &active) {
 			bookmark.attachAfter(p);
@@ -105,7 +96,6 @@ public:
 	void each(void (T0::*Func)(Args...), Args... args)
 	{
 		Link bookmark;
-		bookmark.initLink();
 		auto p = active.next;
 		while(p != &active) {
 			bookmark.attachAfter(p);
@@ -119,7 +109,6 @@ public:
 	void cull(bool (T0::*Func)(Args...), Args... args)
 	{
 		Link bookmark;
-		bookmark.initLink();		
 		auto p = active.next;
 		while(p != &active) {
 			bookmark.attachAfter(p);
@@ -137,7 +126,7 @@ private:
 		bufferSize = size;
 		auto buf = buffers[bufferCount] = (Slot*) calloc(size, sizeof(Slot));
 		for(unsigned i=0; i<size; ++i) {
-			buf[i].initLink();
+			new (static_cast<Link*>(buf+i))Link();
 			buf[i].attachBefore(&idle);
 		}
 		++bufferCount;
@@ -154,11 +143,10 @@ private:
 // particle systems.
 //------------------------------------------------------------------------------
 
-template<typename T>
+template<typename T, int kDefaultReserve = 8>
 class CompactPool {
 public:
 	typedef T InstanceType;
-	static const int kDefaultReserve = 8;
 	
 private:
 	int count, capacity;
@@ -230,14 +218,6 @@ public:
 		}
 	}
 	
-	template<typename T0, typename ...Args>
-	void each(void (T0::*Func)(Args...), Args... args)
-	{
-		for(auto inst=begin(); inst!=end(); ++inst) {
-			(inst->*Func)(args...);
-		}
-	}
-
 	template<typename T0, typename ...Args>
 	void cull(bool (T0::*Func)(Args...), Args... args)
 	{

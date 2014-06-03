@@ -85,7 +85,7 @@ public:
 };
 
 //--------------------------------------------------------------------------------
-// SIMPLE TEMPLATE QUEUE
+// SIMPLE TEMPLATE QUEUE (ring buffer)
 
 template<typename T>
 class Queue {
@@ -169,13 +169,12 @@ public:
 };
 
 //--------------------------------------------------------------------------------
-// SIMPLE TEMPLATE LIST/STACK
-//--------------------------------------------------------------------------------
+// SIMPLE TEMPLATE LIST
 
-template<typename T, bool grow=false>
+template<typename T, bool grow=false, int kDefaultCapacity=8>
 class List {
 private:
-	int cap, n;
+	unsigned cap, n;
 	T* slots;
 
 	void makeRoom() {
@@ -189,7 +188,7 @@ private:
 	}
 	
 public:
-	List(int aCapacity) : cap(aCapacity), n(0), slots(0) {
+	List(unsigned aCapacity) : cap(aCapacity == 0 ? kDefaultCapacity : aCapacity), n(0), slots(0) {
 	}
 	
 	~List() {
@@ -371,9 +370,13 @@ public:
 struct Link {
 	Link *prev, *next;
 	
-	void initLink() {
+	Link() {
 		next = this;
 		prev = this;
+	}
+	
+	~Link() {
+		unbind();
 	}
 	
 	void attachAfter(Link *before) {
