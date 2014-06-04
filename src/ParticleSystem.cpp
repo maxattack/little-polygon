@@ -116,7 +116,7 @@ void ParticleSystem::tick(lpFloat dt)
 void ParticleSystem::draw(SpritePlotter* plotter, ImageAsset *image)
 {
 	// clip to onscreen particles
-	auto r = std::max(image->size.x,image->size.y);
+	auto r = MAX(image->size.x,image->size.y);
 	for(auto p=particles.begin(); p!=particles.end(); ++p) {
 		if (plotter->viewport().contains(p->position(), r)) {
 			auto u = (time - p->startTime()) / p->lifespan();

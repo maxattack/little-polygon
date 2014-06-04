@@ -16,8 +16,6 @@
 
 #pragma once
 #include "base.h"
-#include <utility>
-#include <type_traits>
 
 //--------------------------------------------------------------------------------
 // ARRAY THAT CHECKS BOUNDS IN DEBUG
@@ -233,7 +231,7 @@ public:
 	void append(const T& val) {
 		makeRoom();
 		++n;
-		new(slots + (n-1)) T(val);
+		new(&slots[n-1]) T(val);
 	}
 	
 	template<typename... Args>

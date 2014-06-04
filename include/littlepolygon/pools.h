@@ -135,8 +135,8 @@ private:
 		bufferSize = size;
 		auto buf = buffers[bufferCount] = (Slot*) calloc(size, sizeof(Slot));
 		for(unsigned i=0; i<size; ++i) {
-			new (static_cast<Link*>(buf+i))Link();
-			buf[i].attachBefore(&idle);
+			Link* l = new(static_cast<Link*>(buf+i)) Link();
+			l->attachBefore(&idle);
 		}
 		++bufferCount;
 	}

@@ -25,6 +25,9 @@
 #include <stdint.h>
 #include <limits.h>
 
+#include <utility>
+#include <new>
+
 #include <SDL2/SDL.h>
 #if __IPHONEOS__
 #	include <SDL2/SDL_opengles2.h>
