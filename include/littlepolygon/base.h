@@ -42,9 +42,35 @@
 #include <SDL2_mixer/SDL_mixer.h>
 
 #if LITTLE_POLYGON_DOUBLES
+
 typedef double lpFloat;
+#define lpSin sin
+#define lpCos cos
+#define lpAtan atan
+#define lpAtan2 atan2
+#define lpAbs abs
+#define lpMod fmod
+#define lpPow pow
+#define lpSqrt sqrt
+#define lpFloor floor
+#define lpCeil ceil
+#define lpLog log
+
 #else
+
 typedef float lpFloat;
+#define lpSin sinf
+#define lpCos cosf
+#define lpAtan atanf
+#define lpAtan2 atan2f
+#define lpAbs fabsf
+#define lpMod fmodf
+#define lpPow powf
+#define lpSqrt sqrtf
+#define lpFloor floorf
+#define lpCeil ceilf
+#define lpLog logf
+
 #endif
 
 // handy macros

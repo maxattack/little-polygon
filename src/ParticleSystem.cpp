@@ -1,7 +1,9 @@
 #include "littlepolygon/particles.h"
 
-Particle::Particle(lpFloat at0, lpFloat at1, Vec2 ap, Vec2 av) :
-t0(at0), t1(at1), pos(ap), vel(av)
+//--------------------------------------------------------------------------------
+
+Particle::Particle(lpFloat at0, lpFloat at1, Vec2 ap, Vec2 av, Color ac0, Color ac1) :
+t0(at0), t1(at1), pos(ap), vel(av), c0(ac0), c1(ac1)
 {
 	ASSERT(t1 > t0);
 }
@@ -17,109 +19,91 @@ bool Particle::tick(const ParticleSystem *sys, lpFloat dt)
 	}
 }
 
-ParticleSystem::ParticleSystem() :
-emitterPosition(0,0),
-emissionRadius(0),
-emissionRate(0),
-emitSpeedMin(0),
-emitSpeedMax(0),
-emitAngleMin(0),
-emitAngleMax(kTAU),
-lifespan(1.0f),
-gravity(0,0),
+//--------------------------------------------------------------------------------
 
-startColor(rgba(0)),
-endColor(rgba(0)),
-startMod(rgba(0xffffffff)),
-endMod(rgba(0xffffffff)),
+ParticleEmitter::ParticleEmitter(Vec2 p, lpFloat aRate) :
+position(p),
+rate(aRate),
+radius(0.0f),
+speedMin(0.0f),
+speedMax(0.0f),
+angle(0.0f),
+fov(kTAU),
+timeout(expovariate(1.0f/rate)),
+c0(rgba(0xffffffff)),
+c1(rgba(0xffffff00))
+{
+}
 
+ParticleEmitter* ParticleEmitter::setPosition(Vec2 p)
+{
+	position = p;
+	return this;
+}
+
+ParticleEmitter* ParticleEmitter::setRate(lpFloat aRate)
+{
+	rate = aRate;
+	return this;
+}
+
+ParticleEmitter* ParticleEmitter::setRadius(lpFloat aRadius)
+{
+	radius = aRadius;
+	return this;
+}
+
+ParticleEmitter* ParticleEmitter::setSpeed(lpFloat aMin, lpFloat aMax)
+{
+	speedMin = aMin;
+	speedMax = aMax;
+	return this;
+}
+
+ParticleEmitter* ParticleEmitter::setAngle(lpFloat aAngle, lpFloat aFov)
+{
+	angle = aAngle;
+	fov = 0.5f * aFov;
+	return this;
+}
+
+ParticleEmitter* ParticleEmitter::setColor(Color ac0, Color ac1)
+{
+	c0 = ac0;
+	c1 = ac1;
+	return this;
+}
+
+//--------------------------------------------------------------------------------
+
+ParticleSystem::ParticleSystem(lpFloat life, Vec2 g) :
 time(0),
-emitting(false),
-emitCount(0.0f)
+lifespan(life),
+gravity(g),
+particles(1024)
 {
-}
-
-void ParticleSystem::setEmitting(bool flag)
-{
-	emitting = flag;
-}
-
-void ParticleSystem::setEmitterPosition(Vec2 p)
-{
-	emitterPosition = p;
-}
-
-void ParticleSystem::setEmissionRadius(lpFloat r)
-{
-	ASSERT(r >= 0.0f);
-	emissionRadius = r;
-}
-
-void ParticleSystem::setEmissionRate(lpFloat rate)
-{
-	ASSERT(rate >= 0.0f);
-	emissionRate = rate;
-}
-
-void ParticleSystem::setEmissionSpeed(lpFloat min, lpFloat max)
-{
-	emitSpeedMin = min;
-	emitSpeedMax = max;
-}
-
-void ParticleSystem::setEmissionRadians(lpFloat min, lpFloat max)
-{
-	emitAngleMin = min;
-	emitAngleMax = max;
-}
-
-void ParticleSystem::setLifespan(lpFloat life)
-{
-	ASSERT(life > 0.0f);
-	lifespan = life;
-}
-
-void ParticleSystem::setGravity(Vec2 g)
-{
-	gravity = g;
-}
-
-void ParticleSystem::setColorAdd(Color c0, Color c1)
-{
-	startColor = c0;
-	endColor = c1;
-}
-
-void ParticleSystem::setColorMod(Color c0, Color c1)
-{
-	startMod = c0;
-	endMod = c1;
-}
-
-
-void ParticleSystem::emit(int n)
-{
-	while(n > 0) {
-		particles.alloc(
-			time, time+lifespan,
-			emitterPosition + emissionRadius * randomPointInsideCircle(),
-			polarVector(
-				randomValue(emitSpeedMin, emitSpeedMax),
-				randomValue(emitAngleMin, emitAngleMax)
-			)
-		);
-		--n;
-	}
 }
 
 void ParticleSystem::tick(lpFloat dt)
 {
-	if  (emitting) {
-		emitCount += dt * emissionRate;
-		int cnt = floorToInt(emitCount);
-		if (cnt > 0) {
-			emit(cnt);
-			emitCount -= cnt;
+	time += dt;
+	
+	// tick emitters
+	for(auto e=emitters.list(); e.next();) {
+		e->timeout -= dt;
+		while (e->timeout < 0.0f) {
+			e->timeout += expovariate(1.0f/e->rate);
+			particles.alloc(
+				time, time+lifespan,
+				e->position + polarVector(
+					(1.0f-easeOut2(randomValue())) * e->radius,
+					randomValue(0, kTAU)
+				),
+				polarVector(
+					randomValue(e->speedMin, e->speedMax),
+					randomValue(e->angle - e->fov, e->angle + e->fov)
+				), e->c0, e->c1
+			);
 		}
 	}
 	
@@ -139,9 +123,8 @@ void ParticleSystem::draw(SpritePlotter* plotter, ImageAsset *image)
 			plotter->drawImage(
 				image,
 				p->position(),
-				0,
-				lerp(startColor, endColor, u),
-				lerp(startMod, endMod, u)
+				0, rgba(0),
+				lerp(p->startColor(), p->endColor(), u)
 			);
 		}
 	}

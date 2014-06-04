@@ -17,6 +17,7 @@
 #pragma once
 
 #include "base.h"
+#include <utility>
 
 //------------------------------------------------------------------------------
 // POOL
@@ -41,6 +42,11 @@ public:
 	~Pool()
 	{
 		clear();
+		while(active.isBound()) {
+			Slot::getValue(active.next)->~T();
+			active.next->unbind();
+		}
+		idle.unbind();
 		for(unsigned i=0; i<bufferCount; ++i) {
 			free(buffers[i]);
 		}
@@ -79,31 +85,34 @@ public:
 		link->attachAfter(&idle);
 	}
 	
-	void each(void (Func)(T*))
-	{
+	class Iterator {
+	private:
+		Link* head;
 		Link bookmark;
-		auto p = active.next;
-		while(p != &active) {
-			bookmark.attachAfter(p);
-			Func(getStorage(p));
-			p = bookmark.next;
-			bookmark.unbind();
+		
+	public:
+		Iterator(Link* aHead) : head(aHead) {
+			bookmark.attachAfter(head);
 		}
 		
-	}
-	
-	template<typename T0, typename ...Args>
-	void each(void (T0::*Func)(Args...), Args... args)
-	{
-		Link bookmark;
-		auto p = active.next;
-		while(p != &active) {
-			bookmark.attachAfter(p);
-			(Slot::getValue(p)->*Func)(args...);
-			p = bookmark.next;
+		
+		T* operator->() { return Slot::getValue(bookmark.prev); }
+		T& operator*() { return *Slot::getValue(bookmark.prev); }
+		
+		bool next()
+		{
+			auto p = bookmark.next;
 			bookmark.unbind();
+			if (p == head) {
+				return false;
+			} else {
+				bookmark.attachAfter(p);
+				return true;
+			}
 		}
-	}
+	};
+	
+	Iterator list() { return &active; }
 	
 	template<typename T0, typename ...Args>
 	void cull(bool (T0::*Func)(Args...), Args... args)
@@ -154,10 +163,8 @@ private:
 
 public:
 	
-	CompactPool(unsigned reserve=0) : count(0), capacity(reserve), slots(0) {
-		if (reserve) {
-			slots = (T*) calloc(reserve, sizeof(T));
-		}
+	CompactPool(unsigned reserve=kDefaultReserve) : count(0), capacity(reserve), slots(0) {
+		ASSERT(capacity > 0);
 	}
 	
 	~CompactPool() {
@@ -165,25 +172,14 @@ public:
 		free(slots);
 	}
 	
-	inline bool isEmpty() const
-	{
-		return count == 0;
-	}
-	
-	inline bool active(const T* p) const
-	{
-		return p >= slots && p < slots + count;
-	}
-	
-	inline T* begin()
-	{
-		return slots;
-	}
-	
-	inline T* end()
-	{
-		return slots + count;
-	}
+	bool isEmpty() const { return count == 0; }
+	int size() const { return count; }
+	bool active(const T* p) const { return p >= slots && p < slots + count; }
+
+	T* begin() { return slots; }
+	T* end() { return slots + count; }
+	const T* begin() const { return slots; }
+	const T* end() const { return slots + count; }
 	
 	void clear()
 	{
@@ -195,17 +191,14 @@ public:
 	template<typename... Args>
 	T* alloc(Args&&... args)
 	{
-		if (count == capacity) {
-			if (capacity == 0) {
-				capacity = kDefaultReserve;
-				slots = (T*) calloc(capacity, sizeof(T));
-			} else {
-				capacity += capacity;
-				slots = (T*) realloc(slots, capacity * sizeof(T));
-			}
+		if (slots == 0) {
+			slots = (T*) calloc(capacity, sizeof(T));
+		} else if (count == capacity) {
+			capacity += capacity;
+			slots = (T*) realloc(slots, capacity * sizeof(T));
 		}
 		++count;
-		return new (&slots[count-1]) T(args...);
+		return new (&slots[count-1]) T(std::forward<Args>(args)...);
 	}
 
 	void release(T* p)

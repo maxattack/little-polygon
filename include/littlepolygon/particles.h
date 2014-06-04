@@ -28,65 +28,68 @@ private:
 	lpFloat t0, t1;
 	Vec2 pos;
 	Vec2 vel;
+	Color c0, c1;
 	
 public:
-	Particle(lpFloat at0, lpFloat at1, Vec2 ap, Vec2 av);
+	Particle(lpFloat at0, lpFloat at1, Vec2 ap, Vec2 av, Color ca0, Color ac1);
 	
 	Vec2 position() const { return pos; }
 	Vec2 velocity() const { return vel; }
 	lpFloat startTime() const { return t0; }
 	lpFloat endTime() const { return t1; }
 	lpFloat lifespan() const { return t1 - t0; }
+	Color startColor() const { return c0; }
+	Color endColor() const { return c1; }
 	
 	bool tick(const ParticleSystem* sys, lpFloat dt);
 };
 
+class ParticleEmitter {
+friend class ParticleSystem;
+private:
+	Vec2 position;
+	lpFloat rate;
+	lpFloat radius;
+	lpFloat speedMin, speedMax;
+	lpFloat angle, fov;
+	lpFloat timeout;
+	Color c0, c1;
+	
+public:
+	ParticleEmitter(Vec2 p, lpFloat aRate);
+	
+	ParticleEmitter* setPosition(Vec2 p);
+	ParticleEmitter* setRate(lpFloat rate);
+	ParticleEmitter* setRadius(lpFloat radius);
+	ParticleEmitter* setSpeed(lpFloat min, lpFloat max);
+	ParticleEmitter* setAngle(lpFloat angle, lpFloat fov);
+	ParticleEmitter* setColor(Color ac0, Color ac1);
+};
+
 class ParticleSystem {
 friend class Particle;
+friend class ParticleEmitter;
 private:
 
-	// user-settable parameters
-	bool emitting;
-	Vec2 emitterPosition;
-	lpFloat emissionRadius;
-	lpFloat emissionRate;
-	lpFloat emitSpeedMin;
-	lpFloat emitSpeedMax;
-	lpFloat emitAngleMin;
-	lpFloat emitAngleMax;
+	lpFloat time;
 	lpFloat lifespan;
 	Vec2 gravity;
 	
-	// render parameters
-	Color startColor;
-	Color endColor;
-	Color startMod;
-	Color endMod;
-	
-	// simulation parameters
-	lpFloat time;
-	lpFloat emitCount;
-	
-	// particle instances
+	Pool<ParticleEmitter> emitters;
 	CompactPool<Particle> particles;
 	
 	
 public:
-	ParticleSystem();
+	ParticleSystem(lpFloat life=1.0, Vec2 g=vec(0,0));
 	
-	void setEmitting(bool flag);
-	void setEmitterPosition(Vec2 p);
-	void setEmissionRadius(lpFloat r);
-	void setEmissionRate(lpFloat rate);
-	void setEmissionSpeed(lpFloat min, lpFloat max);
-	void setEmissionRadians(lpFloat min, lpFloat max);
-	void setLifespan(lpFloat life);
-	void setGravity(Vec2 g);
+	int count() const { return particles.size(); }
 	
-	void setColorAdd(Color c0, Color c1);
-	void setColorMod(Color c0, Color c1);
+	void setLifespan(lpFloat life) { ASSERT(life > 0.0f); lifespan = life; }
+	void setGravity(Vec2 g) { gravity = g; }
 	
-	void emit(int n);
+	ParticleEmitter* addEmitter(Vec2 p, lpFloat rate) { return emitters.alloc(p, rate); }
+	void release(ParticleEmitter* emitter) { emitters.release(emitter); }
+	
 	void tick(lpFloat dt);
 	void draw(SpritePlotter* plotter, ImageAsset *image);
 	

@@ -53,10 +53,10 @@ struct Vec2 {
 	lpFloat real() const         { return x; }
 	lpFloat imag() const         { return y; }
 	lpFloat norm() const         { return x*x + y*y; }
-	lpFloat manhattan() const    { return fabsf(x)+fabsf(y); }
-	lpFloat magnitude() const    { return sqrtf(norm()); }
+	lpFloat manhattan() const    { return lpAbs(x)+lpAbs(y); }
+	lpFloat magnitude() const    { return lpSqrt(norm()); }
 	Vec2 conjugate() const     { return Vec2(x,-y); }
-	lpFloat radians() const      { return atan2f(y,x); }
+	lpFloat radians() const      { return lpAtan2(y,x); }
 	Vec2 reflection() const    { return Vec2(y,x); }
 	Vec2 anticlockwise() const { return Vec2(-y, x); }
 	Vec2 clockwise() const     { return Vec2(y, -x); }
@@ -91,8 +91,8 @@ inline lpFloat cross(Vec2 u, Vec2 v) { return u.x * v.y - v.x* u.y; }
 inline Vec2 lerp(Vec2 u, Vec2 v, lpFloat t) { return u + t * (v - u); }
 inline Vec2 slerp(Vec2 u, Vec2 v, lpFloat t)
 {
-	lpFloat theta = acosf(dot(u,v));
-	lpFloat s = 1.f/sinf(theta);
+	lpFloat theta = lpCos(dot(u,v));
+	lpFloat s = 1.f / lpSin(theta);
 	return (sinf((1-t)*theta)*s)*u + (sinf(t*theta)*s)*v;
 }
 
@@ -187,8 +187,8 @@ inline AffineMatrix matTranslation(Vec2 t) { return AffineMatrix(vec(1,0), vec(0
 inline AffineMatrix matTranslation(lpFloat x, lpFloat y) { return matTranslation(vec(x,y)); }
 inline AffineMatrix matAttitude(Vec2 dir) { return AffineMatrix(dir, vec(-dir.y,dir.x), vec(0,0)); }
 inline AffineMatrix matAttitude(lpFloat x, lpFloat y) { return matAttitude(vec(x,y)); }
-inline AffineMatrix matRotation(lpFloat radians) { return matAttitude(cosf(radians), sinf(radians)); }
-inline AffineMatrix matPolar(lpFloat r, lpFloat radians) { return matAttitude(r*cosf(radians), r*sinf(radians)); }
+inline AffineMatrix matRotation(lpFloat radians) { return matAttitude(lpCos(radians), lpSin(radians)); }
+inline AffineMatrix matPolar(lpFloat r, lpFloat radians) { return matAttitude(r*lpCos(radians), r*lpSin(radians)); }
 inline AffineMatrix matScale(Vec2 s) { return AffineMatrix(vec(s.x,0), vec(0,s.y), vec(0,0)); }
 inline AffineMatrix matScale(lpFloat x, lpFloat y) { return matScale(vec(x,y)); }
 inline AffineMatrix matScale(lpFloat k) { return matScale(vec(k,k)); }
@@ -204,10 +204,6 @@ inline lpFloat clamp(lpFloat u, lpFloat lo=0.f, lpFloat hi=1.f) { return u<lo?lo
 inline lpFloat lerp(lpFloat u, lpFloat v, lpFloat t) { return u + t * (v-u); }
 inline lpFloat inverseLerp(lpFloat u, lpFloat v, lpFloat t) { return (t-u) / (v-u); }
 
-inline double clampd(double u, double lo=0.f, double hi=1.f) { return u<lo?lo:u>hi?hi:u; }
-inline double lerpd(double u, double v, double t) { return u + t * (v-u); }
-inline double inverseLerpd(double u, double v, double t) { return (t-u) / (v-u); }
-
 // complex multiplication
 inline Vec2  cmul(Vec2  u, Vec2  v) { return Vec2 (u.x*v.x-u.y*v.y, u.x*v.y+u.y*v.x); }
 
@@ -220,10 +216,10 @@ inline Vec2 cdiv(Vec2 u, Vec2 v)
 
 // polar -> linear conversion
 
-inline Vec2 polarVector(lpFloat radius, lpFloat radians) { return radius * Vec2(cosf(radians), sinf(radians)); }
-inline Vec2 unitVector(lpFloat radians) { return Vec2(cosf(radians), sinf(radians)); }
+inline Vec2 polarVector(lpFloat radius, lpFloat radians) { return radius * Vec2(lpCos(radians), lpSin(radians)); }
+inline Vec2 unitVector(lpFloat radians) { return Vec2(lpCos(radians), lpSin(radians)); }
 
-inline int floorToInt(lpFloat x) { return (int) floorf(x); }
+inline int floorToInt(lpFloat x) { return (int) lpFloor(x); }
 
 // easing functions
 inline lpFloat easeOut2(lpFloat u)
@@ -252,7 +248,7 @@ inline lpFloat easeInOutBack(lpFloat t)
 inline lpFloat easeInOutQuad(lpFloat t) { return t<0.5f ? 2.0f*t*t : -1.0f+(4.0f-t-t)*t; }
 inline lpFloat easeOutBack(lpFloat t) { t-=1.0; return t*t*((1.70158f+1.0f)*t + 1.70158f) + 1.0f; }
 
-inline lpFloat timeIndependentEasing(lpFloat easing, lpFloat dt) { return 1.0f - powf(1.0f-easing, 60.0f * dt); }
+inline lpFloat timeIndependentEasing(lpFloat easing, lpFloat dt) { return 1.0f - lpPow(1.0f-easing, 60.0f * dt); }
 inline lpFloat easeTowards(lpFloat curr, lpFloat target, lpFloat easing, lpFloat dt) { return curr + (target - curr) * timeIndependentEasing(easing, dt); }
 inline Vec2 easeTowards(Vec2 curr, Vec2 target, lpFloat easing, lpFloat dt)    { return curr + (target - curr) * timeIndependentEasing(easing, dt); }
 
@@ -265,12 +261,12 @@ inline lpFloat randomValue(lpFloat u, lpFloat v) { return u + randomValue() * (v
 inline lpFloat randomAngle() { return kTAU * randomValue(); }
 inline Vec2 randomPointOnCircle(lpFloat r=1.0f) { return polarVector(r, randomAngle()); }
 inline Vec2 randomPointInsideCircle(lpFloat r=1.0f) { return polarVector(r * randomValue(), randomAngle()); }
-inline lpFloat expovariate(lpFloat avgDuration, lpFloat rmin=0.00001f, lpFloat rmax=0.99999f) { return -avgDuration*logf(randomValue(rmin, rmax)); }
+inline lpFloat expovariate(lpFloat avgDuration, lpFloat rmin=0.00001f, lpFloat rmax=0.99999f) { return -avgDuration*lpLog(randomValue(rmin, rmax)); }
 	
 // handling radians sanely
 inline lpFloat normalizeAngle(lpFloat radians)
 {
-	radians = fmodf(radians, kTAU);
+	radians = lpMod(radians, kTAU);
 	return radians < 0 ? radians + kTAU : radians;
 }
 
