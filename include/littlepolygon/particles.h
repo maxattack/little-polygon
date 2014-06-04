@@ -52,6 +52,7 @@ private:
 	lpFloat radius;
 	lpFloat speedMin, speedMax;
 	lpFloat angle, fov;
+	lpFloat lifespan;
 	lpFloat timeout;
 	Color c0, c1;
 	
@@ -59,6 +60,7 @@ public:
 	ParticleEmitter(lpVec p, lpFloat aRate);
 	
 	ParticleEmitter* setPosition(lpVec p);
+	ParticleEmitter* setLifespan(lpFloat life);
 	ParticleEmitter* setRate(lpFloat rate);
 	ParticleEmitter* setRadius(lpFloat radius);
 	ParticleEmitter* setSpeed(lpFloat min, lpFloat max);
@@ -72,7 +74,6 @@ friend class ParticleEmitter;
 private:
 
 	lpFloat time;
-	lpFloat lifespan;
 	lpVec gravity;
 	
 	Pool<ParticleEmitter> emitters;
@@ -80,11 +81,10 @@ private:
 	
 	
 public:
-	ParticleSystem(lpFloat life=1.0, lpVec g=vec(0,0));
+	ParticleSystem(lpVec g=vec(0,0));
 	
 	int count() const { return particles.size(); }
 	
-	void setLifespan(lpFloat life) { ASSERT(life > 0.0f); lifespan = life; }
 	void setGravity(lpVec g) { gravity = g; }
 	
 	ParticleEmitter* addEmitter(lpVec p, lpFloat rate) { return emitters.alloc(p, rate); }

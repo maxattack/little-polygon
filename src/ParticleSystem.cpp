@@ -29,10 +29,18 @@ speedMin(0.0f),
 speedMax(0.0f),
 angle(0.0f),
 fov(kTAU),
+lifespan(1.0),
 timeout(expovariate(1.0f/rate)),
 c0(rgba(0xffffffff)),
 c1(rgba(0xffffff00))
 {
+}
+
+ParticleEmitter* ParticleEmitter::setLifespan(lpFloat life)
+{
+	ASSERT(life > 0.0f);
+	lifespan = life;
+	return this;
 }
 
 ParticleEmitter* ParticleEmitter::setPosition(lpVec p)
@@ -76,9 +84,8 @@ ParticleEmitter* ParticleEmitter::setColor(Color ac0, Color ac1)
 
 //--------------------------------------------------------------------------------
 
-ParticleSystem::ParticleSystem(lpFloat life, lpVec g) :
+ParticleSystem::ParticleSystem(lpVec g) :
 time(0),
-lifespan(life),
 gravity(g),
 particles(1024)
 {
@@ -94,7 +101,7 @@ void ParticleSystem::tick(lpFloat dt)
 		while (e->timeout < 0.0f) {
 			e->timeout += expovariate(1.0f/e->rate);
 			particles.alloc(
-				time, time+lifespan,
+				time, time+e->lifespan,
 				e->position + polarVector(
 					(1.0f-easeOut2(randomValue())) * e->radius,
 					randomValue(0, kTAU)
