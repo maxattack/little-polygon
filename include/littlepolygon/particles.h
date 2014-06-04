@@ -26,15 +26,15 @@ class ParticleSystem;
 class Particle {
 private:
 	lpFloat t0, t1;
-	Vec2 pos;
-	Vec2 vel;
+	lpVec pos;
+	lpVec vel;
 	Color c0, c1;
 	
 public:
-	Particle(lpFloat at0, lpFloat at1, Vec2 ap, Vec2 av, Color ca0, Color ac1);
+	Particle(lpFloat at0, lpFloat at1, lpVec ap, lpVec av, Color ca0, Color ac1);
 	
-	Vec2 position() const { return pos; }
-	Vec2 velocity() const { return vel; }
+	lpVec position() const { return pos; }
+	lpVec velocity() const { return vel; }
 	lpFloat startTime() const { return t0; }
 	lpFloat endTime() const { return t1; }
 	lpFloat lifespan() const { return t1 - t0; }
@@ -47,7 +47,7 @@ public:
 class ParticleEmitter {
 friend class ParticleSystem;
 private:
-	Vec2 position;
+	lpVec position;
 	lpFloat rate;
 	lpFloat radius;
 	lpFloat speedMin, speedMax;
@@ -56,9 +56,9 @@ private:
 	Color c0, c1;
 	
 public:
-	ParticleEmitter(Vec2 p, lpFloat aRate);
+	ParticleEmitter(lpVec p, lpFloat aRate);
 	
-	ParticleEmitter* setPosition(Vec2 p);
+	ParticleEmitter* setPosition(lpVec p);
 	ParticleEmitter* setRate(lpFloat rate);
 	ParticleEmitter* setRadius(lpFloat radius);
 	ParticleEmitter* setSpeed(lpFloat min, lpFloat max);
@@ -73,21 +73,21 @@ private:
 
 	lpFloat time;
 	lpFloat lifespan;
-	Vec2 gravity;
+	lpVec gravity;
 	
 	Pool<ParticleEmitter> emitters;
 	CompactPool<Particle> particles;
 	
 	
 public:
-	ParticleSystem(lpFloat life=1.0, Vec2 g=vec(0,0));
+	ParticleSystem(lpFloat life=1.0, lpVec g=vec(0,0));
 	
 	int count() const { return particles.size(); }
 	
 	void setLifespan(lpFloat life) { ASSERT(life > 0.0f); lifespan = life; }
-	void setGravity(Vec2 g) { gravity = g; }
+	void setGravity(lpVec g) { gravity = g; }
 	
-	ParticleEmitter* addEmitter(Vec2 p, lpFloat rate) { return emitters.alloc(p, rate); }
+	ParticleEmitter* addEmitter(lpVec p, lpFloat rate) { return emitters.alloc(p, rate); }
 	void release(ParticleEmitter* emitter) { emitters.release(emitter); }
 	
 	void tick(lpFloat dt);

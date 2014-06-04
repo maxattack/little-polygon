@@ -36,14 +36,14 @@ xformDirty(true)
 	setRootTransform(matIdentity());
 }
 
-void Rig::setRootTransform(const AffineMatrix& mat)
+void Rig::setRootTransform(const lpMatrix& mat)
 {
 	localTransforms[0] = mat;
 	worldTransforms[0] = mat;
 	xformDirty = true;
 }
 
-const AffineMatrix* Rig::findTransform(const char *name) const
+const lpMatrix* Rig::findTransform(const char *name) const
 {
 	uint32_t hash = fnv1a(name);
 	for(unsigned i=0; i<data->nbones; ++i) {
@@ -150,7 +150,7 @@ void Rig::tick(lpFloat dt)
 	if (currentAnimation) {
 		// UPDATE TIME
 		// (just wrapping for now)
-		currentTime = fmodf(currentTime + dt, currentAnimation->duration);
+		currentTime = lpMod(currentTime + dt, currentAnimation->duration);
 		if (currentTime < 0.0f) { currentTime += currentAnimation->duration; }
 		
 		// UPDATE TIMELINES

@@ -21,43 +21,38 @@
 void Viewport::setFromWindow()
 {
 	SDL_Window *win = SDL_GL_GetCurrentWindow();
-	SDL_Point sz;
-	SDL_GetWindowSize(win, &sz.x, &sz.y);
-	mSize.x = (lpFloat)sz.x;
-	mSize.y = (lpFloat)sz.y;
-	mOffset = vec(0,0);
+	int w, h; SDL_GetWindowSize(win, &w, &h);
+	mHalfSize.set(0.5*w, 0.5*h);
+	mCenter = mHalfSize;
 }
 
 void Viewport::setSizeWithHeight(lpFloat h)
 {
-	int ww, wh;
-	SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &ww, &wh);
-	mSize = vec(h * lpFloat(ww) / lpFloat(wh), h);
+	int ww, wh; SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &ww, &wh);
+	mHalfSize = 0.5f * vec(h * lpFloat(ww) / lpFloat(wh), h);
 }
 
 void Viewport::setSizeWithWidth(lpFloat w)
 {
-	int ww, wh;
-	SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &ww, &wh);
-	mSize = vec(w, w * lpFloat(wh) / lpFloat(ww));
+	int ww, wh; SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &ww, &wh);
+	mHalfSize = 0.5f * vec(w, w * lpFloat(wh) / lpFloat(ww));
 }
 
-Vec2 Viewport::windowToViewport(Vec2 p) const
+lpVec Viewport::windowToViewport(lpVec p) const
 {
 	SDL_Window *win = SDL_GL_GetCurrentWindow();
-	int szx, szy;  SDL_GetWindowSize(win, &szx, &szy);
-	return mSize * p / Vec2((lpFloat) szx, (lpFloat)szy) + mOffset;
+	int w, h;  SDL_GetWindowSize(win, &w, &h);
+	return size() * p / vec(w, h) + offset();
 }
 
-Vec2 Viewport::viewportToWindow(Vec2 vp) const
+lpVec Viewport::viewportToWindow(lpVec vp) const
 {
 	SDL_Window *win = SDL_GL_GetCurrentWindow();
-	int w,h;
-	SDL_GetWindowSize(win, &w, &h);
-	return vec((lpFloat)w,(lpFloat)h) / mSize * (vp - mOffset);
+	int w,h; SDL_GetWindowSize(win, &w, &h);
+	return vec((lpFloat)w,(lpFloat)h) / size() * (vp - offset());
 }
 
-Vec2 Viewport::cursor() const
+lpVec Viewport::cursor() const
 {
 	int x,y; SDL_GetMouseState(&x, &y);
 	return windowToViewport(vec((lpFloat)x, (lpFloat)y));
@@ -69,11 +64,11 @@ void Viewport::setMVP(GLuint amvp) const
 	lpFloat znear = -128;
 	lpFloat fan = zfar + znear;
 	lpFloat fsn = zfar - znear;
-	Vec2 cext = mOffset + mSize;
-	Vec2 t = - (cext + mOffset) / mSize;
+	lpVec cext = mCenter + mHalfSize;
+	lpVec t = - (cext + offset()) / size();
 	GLfloat buf[16] = {
-		2.f/mSize.x, 0, 0, 0,
-		0, -2.f/mSize.y, 0, 0,
+		1.f/mHalfSize.x, 0, 0, 0,
+		0, -1.f/mHalfSize.y, 0, 0,
 		0, 0, 2.f/fsn, 0,
 		t.x, -t.y, -fan/fsn, 1
 	};

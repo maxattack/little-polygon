@@ -2,7 +2,7 @@
 
 //--------------------------------------------------------------------------------
 
-Particle::Particle(lpFloat at0, lpFloat at1, Vec2 ap, Vec2 av, Color ac0, Color ac1) :
+Particle::Particle(lpFloat at0, lpFloat at1, lpVec ap, lpVec av, Color ac0, Color ac1) :
 t0(at0), t1(at1), pos(ap), vel(av), c0(ac0), c1(ac1)
 {
 	ASSERT(t1 > t0);
@@ -21,7 +21,7 @@ bool Particle::tick(const ParticleSystem *sys, lpFloat dt)
 
 //--------------------------------------------------------------------------------
 
-ParticleEmitter::ParticleEmitter(Vec2 p, lpFloat aRate) :
+ParticleEmitter::ParticleEmitter(lpVec p, lpFloat aRate) :
 position(p),
 rate(aRate),
 radius(0.0f),
@@ -35,7 +35,7 @@ c1(rgba(0xffffff00))
 {
 }
 
-ParticleEmitter* ParticleEmitter::setPosition(Vec2 p)
+ParticleEmitter* ParticleEmitter::setPosition(lpVec p)
 {
 	position = p;
 	return this;
@@ -76,7 +76,7 @@ ParticleEmitter* ParticleEmitter::setColor(Color ac0, Color ac1)
 
 //--------------------------------------------------------------------------------
 
-ParticleSystem::ParticleSystem(lpFloat life, Vec2 g) :
+ParticleSystem::ParticleSystem(lpFloat life, lpVec g) :
 time(0),
 lifespan(life),
 gravity(g),

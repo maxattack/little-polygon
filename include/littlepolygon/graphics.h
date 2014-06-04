@@ -39,7 +39,7 @@ struct TextureAsset
 	
 	bool initialized() const { return handle != 0; }
 	int format() const { return GL_RGBA; }
-	Vec2 size() const { return vec((lpFloat)w,(lpFloat)h); }
+	lpVec size() const { return vec((lpFloat)w,(lpFloat)h); }
 	
 	void init();
 	void bind();
@@ -52,49 +52,52 @@ struct TextureAsset
 
 class Viewport {
 private:
-	Vec2 mSize;
-	Vec2 mOffset;
+	lpVec mCenter;
+	lpVec mHalfSize;
 
 public:
 	Viewport() {}
-	Viewport(Vec2 aSize, Vec2 aOffset=Vec2(0,0)) :
-		mSize(aSize), mOffset(aOffset) {}
+	Viewport(lpVec aSize, lpVec aCenter=lpVec(0,0)) :
+		mHalfSize(0.5*aSize), mCenter(aCenter) {}
 	Viewport(lpFloat w, lpFloat h, lpFloat x=0, lpFloat y=0) :
-		mSize(w,h), mOffset(x,y) {}
+		mHalfSize(0.5*w,0.5*h), mCenter(x,y) {}
 	
-	Vec2 size() const { return mSize; }
-	lpFloat width() const { return mSize.x; }
-	lpFloat height() const { return mSize.y; }
+	lpVec size() const { return 2.0 * mHalfSize; }
+	lpFloat width() const { return 2.0 * mHalfSize.x; }
+	lpFloat height() const { return 2.0 * mHalfSize.y; }
 	
-	lpFloat aspect() const { return mSize.x / mSize.y; }
+	lpFloat aspect() const { return mHalfSize.x / mHalfSize.y; }
 
-	Vec2 offset() const { return mOffset; }
-	Vec2 extent() const { return mOffset + mSize; }
-	lpFloat left() const { return mOffset.x; }
-	lpFloat right() const { return mOffset.x + mSize.x; }
-	lpFloat top() const { return mOffset.y; }
-	lpFloat bottom() const { return mOffset.y + mSize.y; }
+	lpVec center() const { return mCenter; }
+	lpVec offset() const { return mCenter - mHalfSize; }
+	lpVec extent() const { return mCenter + mHalfSize; }
+	lpFloat left() const { return mCenter.x - mHalfSize.x; }
+	lpFloat right() const { return mCenter.x + mHalfSize.x; }
+	lpFloat top() const { return mCenter.y - mHalfSize.y; }
+	lpFloat bottom() const { return mCenter.y + mHalfSize.y; }
 	
 	void setFromWindow();
-	void setSize(Vec2 sz) { mSize = sz; }
-	void setSize(lpFloat w, lpFloat h) { mSize.set(w,h); }
+	void setSize(lpVec sz) { mHalfSize = 0.5 * sz; }
+	void setSize(lpFloat w, lpFloat h) { mHalfSize.set(0.5*w,0.5*h); }
 	void setSizeWithHeight(lpFloat h);
 	void setSizeWithWidth(lpFloat w);
-	void setOffset(Vec2 off) { mOffset = off; }
-	void setOffset(lpFloat x, lpFloat y) { mOffset.set(x,y); }
+	void setCenter(lpVec center) { mCenter = center; }
+	void setCenter(float x, float y) { mCenter.set(x,y); }
+	void setOffset(lpVec off) { mCenter = off + mHalfSize; }
+	void setOffset(lpFloat x, lpFloat y) { mCenter.set(x-mHalfSize.x, y-mHalfSize.y); }
+	void move(lpVec delta) { mCenter += delta; }
+	void move(lpFloat x, lpFloat y) { mCenter += vec(x,y); }
 	
-	Vec2 windowToViewport(Vec2 p) const;
-	Vec2 viewportToWindow(Vec2 vp) const;
+	lpVec windowToViewport(lpVec p) const;
+	lpVec viewportToWindow(lpVec vp) const;
 
-	Vec2 cursor() const;
+	lpVec cursor() const;
 
 	void setMVP(GLuint mvp) const;
 	
-	inline bool contains(Vec2 p, lpFloat pad=0.0) const {
-		return p.x > mOffset.x - pad &&
-		       p.x < mOffset.x + mSize.x + pad &&
-		       p.y > mOffset.y - pad &&
-		       p.y < mOffset.y + mSize.y + pad;
+	inline bool contains(lpVec p, lpFloat pad=0.0) const {
+		return lpAbs(p.x - mCenter.x) < mHalfSize.x + pad &&
+		       lpAbs(p.y - mCenter.y) < mHalfSize.y + pad;
 	}
 };
 
@@ -129,7 +132,7 @@ struct Vertex {
 	GLfloat x,y,u,v;
 	Color c1,c2;
 	
-	inline void set(Vec2 p, Vec2 uv, Color c, Color t=rgba(0xffffffff))
+	inline void set(lpVec p, lpVec uv, Color c, Color t=rgba(0xffffffff))
 	{
 		x = (GLfloat) p.x;
 		y = (GLfloat) p.y;
@@ -202,7 +205,7 @@ private:
 		GLfloat x, y;
 		Color color;
 
-		inline void set(Vec2 p, Color c) { 
+		inline void set(lpVec p, Color c) { 
 			x = (GLfloat) p.x;
 			y = (GLfloat) p.y;
 			color = c; 
@@ -215,10 +218,10 @@ public:
 	LinePlotter(int capacity);
 
 	void begin(const Viewport& viewport);
-	void plot(Vec2 p0, Vec2 p1, Color c);
-	void plotBox(Vec2 p0, Vec2 p2, Color c);
-	void plotLittleBox(Vec2 p, lpFloat r, Color c);
-	void plotArrow(Vec2 p0, Vec2 p1, lpFloat r, Color c);
+	void plot(lpVec p0, lpVec p1, Color c);
+	void plotBox(lpVec p0, lpVec p2, Color c);
+	void plotLittleBox(lpVec p, lpFloat r, Color c);
+	void plotArrow(lpVec p0, lpVec p1, lpFloat r, Color c);
 	void end();
 
 private:

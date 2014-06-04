@@ -31,13 +31,13 @@ struct RigBoneAsset
 	uint32_t parentIndex;
 	uint32_t hash;
 	
-	Vec2 translation;
-	Vec2 scale;
+	lpVec translation;
+	lpVec scale;
 	lpFloat radians;
 
-	AffineMatrix concatenatedMatrix() const {
+	lpMatrix concatenatedMatrix() const {
 		auto uv = unitVector(radians);
-		return AffineMatrix(scale.x * uv, scale.y * uv.anticlockwise(), translation);
+		return lpMatrix(scale.x * uv, scale.y * uv.anticlockwise(), translation);
 	}
 };
 
@@ -54,7 +54,7 @@ struct RigAttachmentAsset
 	ImageAsset *image;
 	uint32_t hash;
 	uint32_t layerHash;
-	AffineMatrix xform;
+	lpMatrix xform;
 };
 
 struct RigAnimationAsset
@@ -68,8 +68,8 @@ struct RigTimelineAsset
 	lpFloat *times;
 	union {
 		lpFloat *rotationValues;
-		Vec2 *translationValues;
-		Vec2 *scaleValues;
+		lpVec *translationValues;
+		lpVec *scaleValues;
 		int *attachmentValues;
 	};
 	uint32_t nkeyframes;
@@ -105,9 +105,9 @@ private:
 
 	struct Attitude {
 		lpFloat radians;
-		Vec2 scale;
+		lpVec scale;
 		
-		void applyTo(AffineMatrix& mat) {
+		void applyTo(lpMatrix& mat) {
 			auto u = unitVector(radians);
 			mat.u = scale.x * u;
 			mat.v = scale.y * u.anticlockwise();
@@ -116,8 +116,8 @@ private:
 	
 	// (indexed by bone)
 	Array<Attitude> localAttitudes;
-	Array<AffineMatrix> localTransforms;
-	Array<AffineMatrix> worldTransforms;
+	Array<lpMatrix> localTransforms;
+	Array<lpMatrix> worldTransforms;
 	
 	// (indexed by timeline)
 	BitArray timelineMask;
@@ -138,12 +138,12 @@ public:
 	lpFloat time() const { return currentTime; }
 	bool showingLayer(const char* name) const { return currentLayer == fnv1a(name); }
 	bool showingAnimation(const char* name) const { return currentAnimation->hash == fnv1a(name); }
-	const AffineMatrix& rootTransform() const { return worldTransforms[0]; }
-	const AffineMatrix* findTransform(const char* boneName) const;
+	const lpMatrix& rootTransform() const { return worldTransforms[0]; }
+	const lpMatrix* findTransform(const char* boneName) const;
 	
 	// SETTERS
 	
-	void setRootTransform(const AffineMatrix& mat);
+	void setRootTransform(const lpMatrix& mat);
 	void setLayer(const char *layerName);
 	void setAnimation(const char *animName);
 	

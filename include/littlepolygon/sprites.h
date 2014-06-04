@@ -27,7 +27,7 @@
 
 struct FrameAsset
 {
-	Vec2 uv0, uv1,  // UV coordinates of the corners (necessary since the image
+	lpVec uv0, uv1,  // UV coordinates of the corners (necessary since the image
 	     uv2, uv3,  // might have been transposed during packing)
 	     pivot,    // post-trim pivot of the frame
 	     size;      // post-trim size of the frame
@@ -39,7 +39,7 @@ struct ImageAsset
 {
 	TextureAsset* texture; // the texture onto which this image is packed
 	FrameAsset *frames;
-	Vec2 size, pivot;
+	lpVec size, pivot;
 	int32_t    nframes;
 	
 	FrameAsset* frame(int i) {
@@ -71,8 +71,8 @@ struct TilemapAsset
 	TextureAsset tileAtlas;      // a texture-atlas of all the tiles
 	
 	bool initialized() const { return data != 0; }
-	Vec2 tileSize() const { return vec((lpFloat)tw,(lpFloat)th); }
-	Vec2 mapSize() const { return vec((lpFloat)mw,(lpFloat)mh); }
+	lpVec tileSize() const { return vec((lpFloat)tw,(lpFloat)th); }
+	lpVec mapSize() const { return vec((lpFloat)mw,(lpFloat)mh); }
 	TileAsset tileAt(int x, int y) const;
 	
 	void init();
@@ -161,14 +161,14 @@ public:
 	// to the graphics device if: (i) the buffer has reached capacity or (ii) the texture 
 	// atlas has changed.  Color transforms *can* be batched, because they are encoded
 	// in the vertices, not in shader uniforms.
-	void drawImage(ImageAsset *image, Vec2 position, int frame=0, Color color=rgba(0), Color tint=rgba(0xffffffff));
-	void drawImage(ImageAsset *image, Vec2 position, Vec2 u, int frame=0, Color color=rgba(0), Color tint=rgba(0xffffffff));
-	void drawImage(ImageAsset *image, const AffineMatrix& xform, int frame=0, Color color=rgba(0), Color tint=rgba(0xffffffff));
-	void drawQuad(ImageAsset *image, Vec2 p0, Vec2 p1, Vec2 p2, Vec2 p3, int frame=0, Color color=rgba(0), Color tint=rgba(0xffffffff));
-	void drawLabel(FontAsset *font, Vec2 p, Color c, const char *msg, Color tint=rgba(0xffffffff));
-	void drawLabelCentered(FontAsset *font, Vec2 p, Color c, const char *msg, Color tint=rgba(0xffffffff));
-	void drawLabelRightJustified(FontAsset *font, Vec2 p, Color c, const char *msg, Color tint=rgba(0xffffffff));
-	void drawTilemap(TilemapAsset *map, Vec2 position=vec(0,0), Color tint=rgba(0xffffffff));
+	void drawImage(ImageAsset *image, lpVec position, int frame=0, Color color=rgba(0), Color tint=rgba(0xffffffff));
+	void drawImage(ImageAsset *image, lpVec position, lpVec u, int frame=0, Color color=rgba(0), Color tint=rgba(0xffffffff));
+	void drawImage(ImageAsset *image, const lpMatrix& xform, int frame=0, Color color=rgba(0), Color tint=rgba(0xffffffff));
+	void drawQuad(ImageAsset *image, lpVec p0, lpVec p1, lpVec p2, lpVec p3, int frame=0, Color color=rgba(0), Color tint=rgba(0xffffffff));
+	void drawLabel(FontAsset *font, lpVec p, Color c, const char *msg, Color tint=rgba(0xffffffff));
+	void drawLabelCentered(FontAsset *font, lpVec p, Color c, const char *msg, Color tint=rgba(0xffffffff));
+	void drawLabelRightJustified(FontAsset *font, lpVec p, Color c, const char *msg, Color tint=rgba(0xffffffff));
+	void drawTilemap(TilemapAsset *map, lpVec position=vec(0,0), Color tint=rgba(0xffffffff));
 
 	// if you want to monkey with the global rendering state (e.g. change blending settings)
 	// you need to flush the render queue first.

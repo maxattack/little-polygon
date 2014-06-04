@@ -60,7 +60,7 @@ void Timer::tick()
 //--------------------------------------------------------------------------------
 // MISC MATH FUNCS
 
-bool linearIntersection(Vec2 u0, Vec2 u1, Vec2 v0, Vec2 v1, lpFloat& u)
+bool linearIntersection(lpVec u0, lpVec u1, lpVec v0, lpVec v1, lpFloat& u)
 {
 	lpFloat norm = (v1.y - v0.y)*(u1.x-u0.x) - (v1.x-v0.x)*(u1.y-u0.y);
 	if (norm > -M_COLINEAR_SLOP && norm < M_COLINEAR_SLOP) {
@@ -72,7 +72,7 @@ bool linearIntersection(Vec2 u0, Vec2 u1, Vec2 v0, Vec2 v1, lpFloat& u)
 	return true;  
 }
 
-bool linearIntersection(Vec2 u0, Vec2 u1, Vec2 v0, Vec2 v1, lpFloat& u, lpFloat& v)
+bool linearIntersection(lpVec u0, lpVec u1, lpVec v0, lpVec v1, lpFloat& u, lpFloat& v)
 {
 	lpFloat norm = (v1.y - v0.y)*(u1.x-u0.x) - (v1.x-v0.x)*(u1.y-u0.y);
 	if (norm > -M_COLINEAR_SLOP && norm < M_COLINEAR_SLOP) {
@@ -85,17 +85,17 @@ bool linearIntersection(Vec2 u0, Vec2 u1, Vec2 v0, Vec2 v1, lpFloat& u, lpFloat&
 	return true;  
 }
 
-Vec2 quadraticBezier(Vec2 p0, Vec2 p1, Vec2 p2, lpFloat u)
+lpVec quadraticBezier(lpVec p0, lpVec p1, lpVec p2, lpFloat u)
 {
 	return ((1.0f-u)*(1.0f-u))*p0 + (2.0f*(1.0f-u)*u)*p1 + (u*u)*p2;
 }
     
-Vec2 quadraticBezierDeriv(Vec2 p0, Vec2 p1, Vec2 p2, lpFloat u)
+lpVec quadraticBezierDeriv(lpVec p0, lpVec p1, lpVec p2, lpFloat u)
 {
 	return (2.0f*(1.0f-u))*(p1-p0) + (2.0f*u)*(p2-p1);
 }
 
-Vec2 cubicBezier(Vec2 p0, Vec2 p1, Vec2 p2, Vec2 p3, lpFloat u)
+lpVec cubicBezier(lpVec p0, lpVec p1, lpVec p2, lpVec p3, lpFloat u)
 {
 	return ((1.0f-u) * (1.0f-u) * (1.0f-u)) * p0 +
 		(3.0f * (1.0f-u) * (1.0f-u) * u) * p1 +
@@ -103,7 +103,7 @@ Vec2 cubicBezier(Vec2 p0, Vec2 p1, Vec2 p2, Vec2 p3, lpFloat u)
 		(u * u * u) * p3;
 }
 
-Vec2 cubicBezierDeriv(Vec2 p0, Vec2 p1, Vec2 p2, Vec2 p3, lpFloat u)
+lpVec cubicBezierDeriv(lpVec p0, lpVec p1, lpVec p2, lpVec p3, lpFloat u)
 {
 	return 3.0f * (
 		(-(1.0f-u) * (1.0f-u)) * p0 +
@@ -112,7 +112,7 @@ Vec2 cubicBezierDeriv(Vec2 p0, Vec2 p1, Vec2 p2, Vec2 p3, lpFloat u)
 		(u * u) * p3
 	);
 }
-Vec2 cubicHermite(Vec2 p0, Vec2 m0, Vec2 p1, Vec2 m1, lpFloat u)
+lpVec cubicHermite(lpVec p0, lpVec m0, lpVec p1, lpVec m1, lpFloat u)
 {
 	return (2.f*u*u*u - 3.f*u*u + 1.f) * p0 +
 		(u*u*u - 2.f*u*u + u) * m0 +
@@ -120,7 +120,7 @@ Vec2 cubicHermite(Vec2 p0, Vec2 m0, Vec2 p1, Vec2 m1, lpFloat u)
 		(u*u*u - u*u) * m1;
 }
 
-Vec2 CubicHermiteDeriv(Vec2 p0, Vec2 m0, Vec2 p1, Vec2 m1, lpFloat u)
+lpVec CubicHermiteDeriv(lpVec p0, lpVec m0, lpVec p1, lpVec m1, lpFloat u)
 {
 	return (6.f*(u*u - u)) * p0 +
 		(3.f*u*u - 4.f*u + 1.f) * m0 +
@@ -165,8 +165,8 @@ void Color::toHSV(lpFloat *h, lpFloat *s, lpFloat *v)
 		K = -2.f / 6.f - K;
 	}
 
-	lpFloat chroma = r - std::min(g, b);
-	*h = 360.f * fabsf(K + (g-b) / (6.f * chroma + 1e-20f));
+	lpFloat chroma = r - MIN(g, b);
+	*h = 360.f * lpAbs(K + (g-b) / (6.f * chroma + 1e-20f));
 	*s = chroma / (r + 1e-20f);
 	*v = r;
 }
