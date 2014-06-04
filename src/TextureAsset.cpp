@@ -37,7 +37,7 @@ void TextureAsset::init()
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		}
 		uLongf size = 4 * w * h;
-		Bytef *scratch = (Bytef *) calloc(w*h, 4);
+		Bytef *scratch = (Bytef *) lpCalloc(w*h, 4);
 		#if DEBUG
 		int result =
 		#endif
@@ -45,7 +45,7 @@ void TextureAsset::init()
 		ASSERT(result == Z_OK);
 		int fmt = format();
 		glTexImage2D(GL_TEXTURE_2D, 0, fmt, w, h, 0, fmt, GL_UNSIGNED_BYTE, scratch);
-		free(scratch);
+		lpFree(scratch);
 	}
 }
 

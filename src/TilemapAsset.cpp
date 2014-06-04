@@ -21,7 +21,7 @@ void TilemapAsset::init()
 {
 	tileAtlas.init();
 	if (!data) {
-		data = (TileAsset*) calloc( mw * mh, sizeof(TileAsset) );
+		data = (TileAsset*) lpCalloc( mw * mh, sizeof(TileAsset) );
 		uLongf size = sizeof(TileAsset) * mw * mh;
 		int result = uncompress((Bytef*)data, &size, (const Bytef*)compressedData, compressedSize);
 		assert(result == Z_OK);
@@ -32,13 +32,13 @@ void TilemapAsset::init()
 void TilemapAsset::release()
 {
 	tileAtlas.release();
-	free(data);
+	lpFree(data);
 	data = 0;
 }
 
 void TilemapAsset::reload()
 {
-	free(data);
+	lpFree(data);
 	data = 0;
 	init();
 }

@@ -34,12 +34,12 @@ public:
 		#if DEBUG
 		n = length;
 		#endif
-		buf = (T*) calloc(length, sizeof(T));
+		buf = (T*) lpCalloc(length, sizeof(T));
 	}
 	
 	~Array()
 	{
-		free(buf);
+		lpFree(buf);
 	}
 	
 	T& operator[](int i)
@@ -177,11 +177,11 @@ private:
 
 	void makeRoom() {
 		if (slots == 0) {
-			slots = (T*) calloc(cap, sizeof(T));
+			slots = (T*) lpCalloc(cap, sizeof(T));
 		} else if (n == cap) {
 			ASSERT(grow);
 			cap += cap;
-			slots = (T*) realloc(slots, cap * sizeof(T));
+			slots = (T*) lpRealloc(slots, cap * sizeof(T));
 		}
 	}
 	
@@ -194,7 +194,7 @@ public:
 			--n;
 			slots[n].~T();
 		}
-		free(slots);
+		lpFree(slots);
 	}
 	
 	int capacity() const { return cap; }

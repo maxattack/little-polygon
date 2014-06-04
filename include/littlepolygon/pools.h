@@ -48,7 +48,7 @@ public:
 		}
 		idle.unbind();
 		for(unsigned i=0; i<bufferCount; ++i) {
-			free(buffers[i]);
+			lpFree(buffers[i]);
 		}
 	}
 	
@@ -133,7 +133,7 @@ private:
 	void allocBuffer(unsigned size) {
 		ASSERT(bufferCount < kBufferCapacity);
 		bufferSize = size;
-		auto buf = buffers[bufferCount] = (Slot*) calloc(size, sizeof(Slot));
+		auto buf = buffers[bufferCount] = (Slot*) lpCalloc(size, sizeof(Slot));
 		for(unsigned i=0; i<size; ++i) {
 			Link* l = new(static_cast<Link*>(buf+i)) Link();
 			l->attachBefore(&idle);
@@ -169,7 +169,7 @@ public:
 	
 	~CompactPool() {
 		clear();
-		free(slots);
+		lpFree(slots);
 	}
 	
 	bool isEmpty() const { return count == 0; }
@@ -192,10 +192,10 @@ public:
 	T* alloc(Args&&... args)
 	{
 		if (slots == 0) {
-			slots = (T*) calloc(capacity, sizeof(T));
+			slots = (T*) lpCalloc(capacity, sizeof(T));
 		} else if (count == capacity) {
 			capacity += capacity;
-			slots = (T*) realloc(slots, capacity * sizeof(T));
+			slots = (T*) lpRealloc(slots, capacity * sizeof(T));
 		}
 		++count;
 		return new (&slots[count-1]) T(std::forward<Args>(args)...);

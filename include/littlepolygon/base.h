@@ -76,6 +76,11 @@ typedef float lpFloat;
 
 #endif
 
+#define lpMalloc malloc
+#define lpRealloc realloc
+#define lpCalloc calloc
+#define lpFree free
+
 // handy macros
 #ifndef STATIC_ASSERT
 #define STATIC_ASSERT(_x)  ((void)sizeof(char[1 - 2*!(_x)]))

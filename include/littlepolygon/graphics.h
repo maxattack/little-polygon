@@ -52,8 +52,8 @@ struct TextureAsset
 
 class Viewport {
 private:
-	lpVec mCenter;
 	lpVec mHalfSize;
+	lpVec mCenter;
 
 public:
 	Viewport() {}
@@ -61,6 +61,8 @@ public:
 		mHalfSize(0.5*aSize), mCenter(aCenter) {}
 	Viewport(lpFloat w, lpFloat h, lpFloat x=0, lpFloat y=0) :
 		mHalfSize(0.5*w,0.5*h), mCenter(x,y) {}
+	
+	Viewport scaled(lpFloat k) { return Viewport(2.0f*k*mHalfSize, k*mCenter); }
 	
 	lpVec size() const { return 2.0 * mHalfSize; }
 	lpFloat width() const { return 2.0 * mHalfSize.x; }
