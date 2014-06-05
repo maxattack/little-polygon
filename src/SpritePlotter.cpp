@@ -215,6 +215,11 @@ void SpritePlotter::plotGlyph(const GlyphAsset& g, lpFloat x, lpFloat y, lpFloat
 	lpFloat du = k * (g.advance-UV_LABEL_SLOP);
 	lpFloat dv = k * h;
 
+	uv.x += UV_LABEL_SLOP;
+	uv.y += UV_LABEL_SLOP;
+	du -= 2.0f * UV_LABEL_SLOP;
+	dv -= 2.0f * UV_LABEL_SLOP;
+	
 	slice[0].set(vec(x,y), uv, c, t);
 	slice[1].set(vec(x,y+h), uv+vec(0,dv), c, t);
 	slice[2].set(vec(x+g.advance,y), uv+vec(du,0), c, t);
