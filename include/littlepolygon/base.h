@@ -114,14 +114,14 @@ inline uint32_t CLZ(uint32_t value)
 #   define LOG(_x)          printf _x
 #   define LOG_MSG(_msg)    printf("%s:%d " _msg "\n", __FILE__, __LINE__)
 #	define LOG_INT(_expr)	printf("%s:%d " #_expr " = %d\n", __FILE__, __LINE__, (_expr))
-#	define LOG_lpFloat(_expr)	printf("%s:%d " #_expr " = %f\n", __FILE__, __LINE__, (_expr))
+#	define LOG_FLOAT(_expr)	printf("%s:%d " #_expr " = %f\n", __FILE__, __LINE__, (_expr))
 #	define LOG_VEC(_expr)	{ lpVec __u__ = (_expr); printf("%s:%d " #_expr " = <%f,%f>\n", __FILE__, __LINE__, __u__.x, __u__.y); }
 #else
 #   define ASSERT(cond)
 #   define LOG(_x)
 #   define LOG_MSG(_msg)
 #	define LOG_INT(_expr)
-#	define LOG_lpFloat(_expr)
+#	define LOG_FLOAT(_expr)
 #	define LOG_VEC(_expr)
 #endif
 

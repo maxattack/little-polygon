@@ -234,6 +234,9 @@ inline lpFloat easeOut4(lpFloat u)
 	return 1.0f - u*u*u*u;
 }
 
+inline lpFloat easeIn2(lpFloat u) { return u*u; }
+inline lpFloat easeIn4(lpFloat u) { return u*u*u*u; }
+
 inline lpFloat easeInOutBack(lpFloat t)
 {
 	auto v = t + t;

@@ -18,8 +18,18 @@
 #include "sprites.h"
 #include "pools.h"
 
-// A super-simple particle system which is more like a reference implementation
-// than an extensible tool.
+/*
+
+ A super-simple particle system which is more like a reference implementation
+than an extensible tool.
+
+GIFT IDEAS
+- per emitter size?
+- per emitter force?
+- simple world-collision interface?
+ 
+*/
+
 
 class ParticleSystem;
 
