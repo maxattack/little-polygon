@@ -36,11 +36,15 @@ xformDirty(true)
 	setRootTransform(matIdentity());
 }
 
-void Rig::setRootTransform(const lpMatrix& mat)
+void Rig::setRootTransform(const lpMatrix& mat, bool updateChildren)
 {
 	localTransforms[0] = mat;
 	worldTransforms[0] = mat;
-	xformDirty = true;
+	if (updateChildren) {
+		computeWorldTransforms();
+	} else {
+		xformDirty = true;
+	}
 }
 
 const lpMatrix* Rig::findTransform(const char *name) const

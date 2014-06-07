@@ -31,8 +31,8 @@ struct RigBoneAsset
 	uint32_t parentIndex;
 	uint32_t hash;
 	
-	lpVec translation;
-	lpVec scale;
+	lpVec   translation;
+	lpVec   scale;
 	lpFloat radians;
 
 	lpMatrix concatenatedMatrix() const {
@@ -45,32 +45,32 @@ struct RigSlotAsset
 {
 	uint32_t boneIndex;
 	uint32_t defaultAttachment;
-	Color defaultColor;
+	Color    defaultColor;
 };
 
 struct RigAttachmentAsset
 {
-	RigSlotAsset *slot;
-	ImageAsset *image;
-	uint32_t hash;
-	uint32_t layerHash;
-	lpMatrix xform;
+	RigSlotAsset* slot;
+	ImageAsset*   image;
+	uint32_t      hash;
+	uint32_t      layerHash;
+	lpMatrix      xform;
 };
 
 struct RigAnimationAsset
 {
 	uint32_t hash;
-	lpFloat duration;
+	lpFloat  duration;
 };
 
 struct RigTimelineAsset
 {
-	lpFloat *times;
+	lpFloat* times;
 	union {
-		lpFloat *rotationValues;
-		lpVec *translationValues;
-		lpVec *scaleValues;
-		int *attachmentValues;
+		lpFloat* rotationValues;
+		lpVec*   translationValues;
+		lpVec*   scaleValues;
+		int*     attachmentValues;
 	};
 	uint32_t nkeyframes;
 	uint32_t animHash;
@@ -83,17 +83,17 @@ struct RigTimelineAsset
 
 struct RigAsset
 {
-	uint32_t defaultLayer;
-	uint32_t nbones;
-	uint32_t nslots;
-	uint32_t nattachments;
-	uint32_t nanims;
-	uint32_t ntimeslines;
-	RigBoneAsset *bones;
-	RigSlotAsset *slots;
-	RigAttachmentAsset *attachments;
-	RigAnimationAsset *anims;
-	RigTimelineAsset *timelines;
+	uint32_t            defaultLayer,
+	                    nbones,
+	                    nslots,
+	                    nattachments,
+	                    nanims,
+	                    ntimeslines;
+	RigBoneAsset*       bones;
+	RigSlotAsset*       slots;
+	RigAttachmentAsset* attachments;
+	RigAnimationAsset*  anims;
+	RigTimelineAsset*   timelines;
 };
 
 //------------------------------------------------------------------------------
@@ -143,7 +143,7 @@ public:
 	
 	// SETTERS
 	
-	void setRootTransform(const lpMatrix& mat);
+	void setRootTransform(const lpMatrix& mat, bool updateChildren=true);
 	void setLayer(const char *layerName);
 	void setAnimation(const char *animName);
 	

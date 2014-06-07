@@ -28,9 +28,9 @@
 struct FrameAsset
 {
 	lpVec uv0, uv1,  // UV coordinates of the corners (necessary since the image
-	     uv2, uv3,  // might have been transposed during packing)
-	     pivot,    // post-trim pivot of the frame
-	     size;      // post-trim size of the frame
+	      uv2, uv3,  // might have been transposed during packing)
+	      pivot,     // post-trim pivot of the frame
+	      size;      // post-trim size of the frame
 	
 	
 };
@@ -38,9 +38,9 @@ struct FrameAsset
 struct ImageAsset
 {
 	TextureAsset* texture; // the texture onto which this image is packed
-	FrameAsset *frames;
-	lpVec size, pivot;
-	int32_t    nframes;
+	FrameAsset *  frames;
+	lpVec         size, pivot;
+	int32_t       nframes;
 	
 	FrameAsset* frame(int i) {
 		ASSERT(i >= 0 && i < nframes);
