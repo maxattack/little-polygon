@@ -24,9 +24,11 @@
 // Allocates objects in arrays with a doubling strategy, and stores active/free
 // objects in linked lists.
 
-template<typename T, int kBufferCapacity=8, int kDefaultReserve=8>
+template<typename T>
 class Pool {
 private:
+	static const int kDefaultReserve = 1024;
+	static const int kBufferCapacity = 8;
 	typedef Linkable<T> Slot;
 	unsigned bufferCount, bufferSize;
 	Link active, idle;
@@ -152,9 +154,10 @@ private:
 // particle systems.
 //------------------------------------------------------------------------------
 
-template<typename T, int kDefaultReserve = 8>
+template<typename T>
 class CompactPool {
 public:
+	static const int kDefaultReserve = 1024;
 	typedef T InstanceType;
 	
 private:

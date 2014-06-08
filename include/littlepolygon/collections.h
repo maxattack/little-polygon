@@ -169,9 +169,10 @@ public:
 //--------------------------------------------------------------------------------
 // SIMPLE TEMPLATE LIST
 
-template<typename T, bool grow=false, int kDefaultCapacity=8>
+template<typename T, bool grow=false>
 class List {
 private:
+	static const int kDefaultCapacity = 32;
 	unsigned cap, n;
 	T* slots;
 
