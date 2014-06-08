@@ -58,6 +58,8 @@ typedef double lpFloat;
 #define lpFloor floor
 #define lpCeil ceil
 #define lpLog log
+#define lpMax maxf
+#define lpMin minf
 
 #else
 
@@ -73,6 +75,8 @@ typedef float lpFloat;
 #define lpFloor floorf
 #define lpCeil ceilf
 #define lpLog logf
+#define lpMax fmaxf
+#define lpMin fminf
 
 #endif
 

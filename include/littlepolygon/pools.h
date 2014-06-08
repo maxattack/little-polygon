@@ -214,8 +214,8 @@ public:
 	template<typename T0, typename ...Args>
 	void cull(bool (T0::*Func)(Args...), Args... args)
 	{
-		for(auto inst=begin(); inst!=end();) {
-			if ((inst->*Func)(args...)) { release(inst); } else { ++inst; }
+		for(int i=0; i<count;) {
+			if ((slots[i].*Func)(args...)) { release(slots+i); } else { ++i; }
 		}
 	}
 	

@@ -48,6 +48,13 @@ struct lpVec {
 	operator b2Vec2() { return b2Vec2(x, y); }
 	#endif
 
+	#ifdef CHIPMUNK_HEADER
+	lpVec(cpVect v) : x(v.x), y(v.y) {}
+	operator cpVect() { return { x, y }; }
+	#endif
+	
+
+	
 	void set(lpFloat ax, lpFloat ay) { x=ax; y=ay; }
 
 	lpFloat real() const         { return x; }
@@ -332,7 +339,7 @@ struct Color {
 	Color(b2Color c) : r(0xff*c.r), g(0xff*c.g), b(0xff*c.b), a(0xff) {}
 	operator b2Color() { return b2Color(red(), green(), blue()); }
 	#endif
-
+	
 	lpFloat red() { return r * (1.f/255.f); }
 	lpFloat green() { return g * (1.f/255.f); }
 	lpFloat blue() { return b * (1.f/255.f); }
