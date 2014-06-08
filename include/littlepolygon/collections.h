@@ -221,6 +221,11 @@ public:
 		ASSERT(i < n);
 		return slots[i];
 	}
+	const T& operator[](int i) const {
+		ASSERT(i >= 0);
+		ASSERT(i < n);
+		return slots[i];
+	}
 	
 	void clear() {
 		while(n > 0) {
