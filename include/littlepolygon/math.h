@@ -16,6 +16,7 @@
 
 #pragma once
 #include "base.h"
+#include "mrand.h"
 
 #ifndef M_PI
 #define M_PI  (3.141592653589793)
@@ -264,9 +265,9 @@ inline lpVec easeTowards(lpVec curr, lpVec target, lpFloat easing, lpFloat dt)  
 
 
 // random number functions
-inline int randInt(int x) { return rand() % x; }
+inline int randInt(int x) { return genrand_int32() % x; }
 inline int randInt(int inclusiveMin, int exclusiveMax) { return inclusiveMin + randInt(exclusiveMax-inclusiveMin); }
-inline lpFloat randomValue() { return (lpFloat)(rand() / double(RAND_MAX)); }
+inline lpFloat randomValue() { return (lpFloat)genrand_real1(); }
 inline lpFloat randomValue(lpFloat u, lpFloat v) { return u + randomValue() * (v - u); }
 inline lpFloat randomAngle() { return kTAU * randomValue(); }
 inline lpVec randomPointOnCircle(lpFloat r=1.0f) { return polarVector(r, randomAngle()); }
