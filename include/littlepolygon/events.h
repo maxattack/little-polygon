@@ -242,26 +242,26 @@ public:
 //------------------------------------------------------------------------------
 // GENERIC DEFERED ACTION QUEUE
 //------------------------------------------------------------------------------
-
-class DeferredActionQueue {
-private:
-	List< Action<> > actions;
-	
-public:
-	DeferredActionQueue() : actions(1024) {}
-	
-	void addAction(Action<> action) {
-		if (actions.findFirst(action) == -1) {
-			actions.append(action);
-		}
-	}
-	
-	void flush() {
-		for(int i=0; i<actions.count(); ++i) {
-			actions[i]();
-		}
-		actions.clear();
-	}
-};
-
-
+//
+//class DeferredActionQueue {
+//private:
+//	List< Action<> > actions;
+//	
+//public:
+//	DeferredActionQueue() : actions(1024) {}
+//	
+//	void addAction(Action<> action) {
+//		if (actions.findFirst(action) == -1) {
+//			actions.append(action);
+//		}
+//	}
+//	
+//	void flush() {
+//		for(int i=0; i<actions.count(); ++i) {
+//			actions[i]();
+//		}
+//		actions.clear();
+//	}
+//};
+//
+//

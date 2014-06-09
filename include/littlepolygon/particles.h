@@ -103,5 +103,9 @@ public:
 	void tick(lpFloat dt);
 	void draw(SpritePlotter* plotter, ImageAsset *image);
 	
+	void emit(lpFloat lifespan, lpVec pos, lpVec vel, Color c0, Color c1) {
+		particles.alloc(time, time+lifespan, pos, vel, c0, c1);
+	}
+	
 };
 

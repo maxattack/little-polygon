@@ -68,10 +68,10 @@ SDLContext::SDLContext(const char *caption, int w, int h)
 		caption ? caption : "Little Polygon Context",
 		SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
 		w, h,
-#if DEBUG || __WINDOWS__
+#if DEBUG //|| __WINDOWS__
 		SDL_WINDOW_OPENGL
 #else
-		SDL_WINDOW_OPENGL //| SDL_WINDOW_FULLSCREEN_DESKTOP
+		SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN_DESKTOP
 #endif
 	);
 	
