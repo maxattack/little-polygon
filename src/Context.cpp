@@ -52,7 +52,7 @@ SDLContext::SDLContext(const char *caption, int w, int h)
 
 	
 	auto result = SDL_Init(
-		SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER | SDL_INIT_EVENTS
+		SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER | SDL_INIT_EVENTS
 	);
 	if (result != 0) {
 		LOG(("SDL INIT FAILED: %s\n", SDL_GetError()));
@@ -71,7 +71,7 @@ SDLContext::SDLContext(const char *caption, int w, int h)
 #if DEBUG || __WINDOWS__
 		SDL_WINDOW_OPENGL
 #else
-		SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN_DESKTOP
+		SDL_WINDOW_OPENGL //| SDL_WINDOW_FULLSCREEN_DESKTOP
 #endif
 	);
 	
