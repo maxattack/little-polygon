@@ -44,6 +44,10 @@
 #endif
 #include <SDL2_mixer/SDL_mixer.h>
 
+#if __WINDOWS__
+#define snprintf _snprintf_s
+#endif
+
 #if LITTLE_POLYGON_DOUBLES
 
 typedef double lpFloat;
