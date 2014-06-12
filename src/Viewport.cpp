@@ -28,13 +28,13 @@ void Viewport::setFromWindow()
 
 void Viewport::setSizeWithHeight(lpFloat h)
 {
-	int ww, wh; SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &ww, &wh);
+	int ww, wh; SDL_GL_GetDrawableSize(SDL_GL_GetCurrentWindow(), &ww, &wh);
 	mHalfSize = 0.5f * vec(h * lpFloat(ww) / lpFloat(wh), h);
 }
 
 void Viewport::setSizeWithWidth(lpFloat w)
 {
-	int ww, wh; SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &ww, &wh);
+	int ww, wh; SDL_GL_GetDrawableSize(SDL_GL_GetCurrentWindow(), &ww, &wh);
 	mHalfSize = 0.5f * vec(w, w * lpFloat(wh) / lpFloat(ww));
 }
 

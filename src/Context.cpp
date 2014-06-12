@@ -17,7 +17,7 @@
 #include "littlepolygon/context.h"
 
 static Viewport makeView() {
-	int w, h; SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &w, &h);
+	int w, h; SDL_GL_GetDrawableSize(SDL_GL_GetCurrentWindow(), &w, &h);
 	return Viewport((lpFloat)w, (lpFloat)h, 0, 0);
 }
 
@@ -68,10 +68,10 @@ SDLContext::SDLContext(const char *caption, int w, int h)
 		caption ? caption : "Little Polygon Context",
 		SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
 		w, h,
-#if DEBUG //|| __WINDOWS__
+#if DEBUG
 		SDL_WINDOW_OPENGL
 #else
-		SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN_DESKTOP
+		SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN_DESKTOP | SDL_WINDOW_ALLOW_HIGHDPI
 #endif
 	);
 	
@@ -101,7 +101,8 @@ SDLContext::SDLContext(const char *caption, int w, int h)
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	
+//	int dw, dh; SDL_GL_GetDrawableSize(window, &dw, &dh);
+//	glViewport(0, 0, dw, dh);
 }
 
 SDLContext::~SDLContext()
