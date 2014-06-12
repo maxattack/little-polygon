@@ -100,9 +100,6 @@ SDLContext::SDLContext(const char *caption, int w, int h)
 	
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-//	int dw, dh; SDL_GL_GetDrawableSize(window, &dw, &dh);
-//	glViewport(0, 0, dw, dh);
 }
 
 SDLContext::~SDLContext()

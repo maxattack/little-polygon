@@ -100,8 +100,8 @@ inline lpVec lerp(lpVec u, lpVec v, lpFloat t) { return u + t * (v - u); }
 inline lpVec slerp(lpVec u, lpVec v, lpFloat t)
 {
 	lpFloat theta = lpCos(dot(u,v));
-	lpFloat s = 1.f / lpSin(theta);
-	return (lpSin((1-t)*theta)*s)*u + (lpSin(t*theta)*s)*v;
+	lpFloat s = 1.0 / lpSin(theta);
+	return (lpSin((1.0-t)*theta)*s)*u + (lpSin(t*theta)*s)*v;
 }
 
 //--------------------------------------------------------------------------------
