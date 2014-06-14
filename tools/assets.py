@@ -82,11 +82,13 @@ def list_yaml_items(params, name):
 		return tuple()
 
 def _parse_yaml_path(context, local_path):
+	if isinstance(local_path,list):
+		return [ _parse_yaml_path(context,p) for p in local_path ]
+
 	if local_path.startswith('/'):
-		result = local_path
-	else:
-		result = os.path.join(context.dir, local_path)
-	return result
+		return local_path
+
+	return os.path.join(context.dir, local_path)
 
 ################################################################################
 # TEXTURE ASSET
@@ -150,10 +152,14 @@ def _parse_yaml_image(context, namespace_id, params):
 			t == 'animation'
 		)
 	else:
-		return _create_image(id, _parse_yaml_path(context, params), '', False)
+		return _create_image(id, _parse_yaml_path(context, params), 'center', True, False)
 
 def _load_frames(path):
-	if path.lower().endswith('.gif'):
+	if isinstance(path,list):
+		# list of frames
+		frames = map(open_image, path)
+
+	elif path.lower().endswith('.gif'):
 		# animated gif
 		im = open_image(path)
 		curr_frame = 0

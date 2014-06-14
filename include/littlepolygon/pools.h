@@ -154,7 +154,7 @@ private:
 // particle systems.
 //------------------------------------------------------------------------------
 
-template<typename T>
+template<typename T, bool kGrow=true>
 class CompactPool {
 public:
 	static const int kDefaultReserve = 1024;
@@ -197,6 +197,7 @@ public:
 		if (slots == 0) {
 			slots = (T*) lpCalloc(capacity, sizeof(T));
 		} else if (count == capacity) {
+			ASSERT(kGrow);
 			capacity += capacity;
 			slots = (T*) lpRealloc(slots, capacity * sizeof(T));
 		}

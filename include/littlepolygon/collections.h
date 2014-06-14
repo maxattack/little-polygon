@@ -37,6 +37,11 @@ public:
 		buf = (T*) lpCalloc(length, sizeof(T));
 	}
 	
+	Array(Array<T>&& o) {
+		buf = o.buf;
+		o.buf = 0;
+	}
+	
 	~Array()
 	{
 		lpFree(buf);
@@ -190,6 +195,14 @@ public:
 	List(unsigned aCapacity) : cap(aCapacity == 0 ? kDefaultCapacity : aCapacity), n(0), slots(0) {
 	}
 	
+	List(List<T,grow>&& o) {
+		cap = o.cap;
+		n = o.n;
+		slots = o.slots;
+		o.n = 0;
+		o.slots = 0;
+	}
+	
 	~List() {
 		while(n > 0) {
 			--n;
@@ -245,6 +258,12 @@ public:
 		makeRoom();
 		++n;
 		return new(slots + (n-1)) T(args ...);
+	}
+	
+	T* move(T& val) {
+		makeRoom();
+		++n;
+		return new(slots + (n-1)) T(std::move(val));
 	}
 	
 	int offsetOf(const T* t) {
