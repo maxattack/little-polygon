@@ -16,7 +16,7 @@ tint(rgba(0))
 }
 
 void Hero::tick() {
-	float dt = lpTimer.dt();
+	float dt = lpTimer.deltaSeconds;
 	
 	// MOVEMENT
 	auto speedTarget = kHeroMoveSpeed * gWorld.input.dirX();
@@ -97,7 +97,7 @@ void Hero::performAction() {
 void Hero::draw() {
 	lpSprites.drawImage(
 		img,
-		AffineMatrix(vec((2.0f-yScale) * dir,0), vec(0,yScale), pixelPosition()),
+		lpMatrix(vec((2.0f-yScale) * dir,0), vec(0,yScale), pixelPosition()),
 		getFrame(),
 		tint
 	);
@@ -107,7 +107,7 @@ bool Hero::isStandingStill() const {
 	return speed.x > -0.133f && speed.x < 0.133f;
 }
 
-Vec2 Hero::carryAnchor() const {
+lpVec Hero::carryAnchor() const {
 	return position + vec(dir * halfSize.x, -2.1f * yScale * halfSize.y) - vec(0, kMetersPerPixel * getFrame());
 }
 

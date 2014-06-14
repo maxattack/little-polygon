@@ -7,6 +7,8 @@ restColor(lpAssets.palette("global")->getColor(0)),
 position(0,0)
 {
 	glClearColor(restColor.red(), restColor.green(), restColor.blue(), 0);
+	lpView.setSizeWithHeight(8 * kPixelsPerMeter);
+	lpView.setOffset(lpVec(0,0));
 }
 
 void Camera::quake() {

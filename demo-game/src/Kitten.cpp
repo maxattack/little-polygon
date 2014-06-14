@@ -76,7 +76,7 @@ void Kitten::tickPausing() {
 }
 
 void Kitten::tickWalking() {
-	float dt = lpTimer.dt();
+	float dt = lpTimer.deltaSeconds;
 	animTime += kKittenStepsPerMeter * dt;
 	if (dir > 0) {
 		position.x += dt * kKittenMoveSpeed;
@@ -139,7 +139,7 @@ void Kitten::tickFalling() {
 void Kitten::draw() {
 	lpSprites.drawImage(
 		img,
-		AffineMatrix(vec(dir, 0), vec(0, 1), pixelPosition()),
+		lpMatrix(vec(dir, 0), vec(0, 1), pixelPosition()),
 		int(animTime) % 2,
 		status == Shooting ? rgb(0xffffff) : rgba(0)
 	);

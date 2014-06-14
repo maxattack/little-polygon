@@ -1,6 +1,6 @@
 #include "game.h"
 
-Entity::Entity(Vec2 aPos, Vec2 aSize) :
+Entity::Entity(lpVec aPos, lpVec aSize) :
 position(aPos.x, aPos.y - 0.5f * aSize.y),
 speed(0,0),
 anchor(0, 0.5f * aSize.y),
@@ -18,7 +18,7 @@ bool Entity::overlaps(const Entity *other) {
 void Entity::move(int* hitX, int* hitY) {
 	*hitX = 0;
 	*hitY = 0;
-	auto displacement = speed * lpTimer.dt();
+	auto displacement = speed * lpTimer.deltaSeconds;
 	auto p1 = position + displacement;
 	if (gWorld.mask.check(p1 - halfSize, p1 + halfSize)) {
 		
@@ -27,7 +27,7 @@ void Entity::move(int* hitX, int* hitY) {
 			// MOVE DOWN
 			float dy;
 			if (gWorld.mask.checkBottom(vec(left(), position.y), vec(right(), bottom()+displacement.y), &dy)) {
-				position.y += std::max(displacement.y + dy, 0.0f);
+				position.y += fmaxf(displacement.y + dy, 0.0f);
 				*hitY = 1;
 				speed.y = 0.0f;
 			} else {
@@ -37,7 +37,7 @@ void Entity::move(int* hitX, int* hitY) {
 			// MOVE UP
 			float dy;
 			if (gWorld.mask.checkTop(vec(left(), top() + displacement.y), vec(right(), position.y), &dy)) {
-				position.y += std::min(displacement.y + dy, 0.0f);
+				position.y += fminf(displacement.y + dy, 0.0f);
 				*hitY = -1;
 				speed.y = 0.0f;
 			} else {
@@ -48,7 +48,7 @@ void Entity::move(int* hitX, int* hitY) {
 			// MOVE RIGHT
 			float dx;
 			if (gWorld.mask.checkRight(vec(position.x, top()), vec(right() + displacement.x, bottom()), &dx)) {
-				position.x += std::max(displacement.x + dx, 0.0f);
+				position.x += fmaxf(displacement.x + dx, 0.0f);
 				*hitX = 1;
 				speed.x = 0.0f;
 			} else {
@@ -58,7 +58,7 @@ void Entity::move(int* hitX, int* hitY) {
 			// MOVE LEFT
 			float dx;
 			if (gWorld.mask.checkLeft(vec(left() + displacement.x, top()), vec(position.x, bottom()), &dx)) {
-				position.x += std::min(displacement.x + dx, 0.0f);
+				position.x += fminf(displacement.x + dx, 0.0f);
 				*hitX = -1;
 				speed.x = 0.0f;
 			} else {

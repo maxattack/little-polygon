@@ -13,10 +13,9 @@ explosions(8),
 debugDraw(false),
 done(false)
 {
-	lpView.setSizeWithHeight(8 * kPixelsPerMeter);
 }
 
-void World::spawnExplosion(Vec2 position, float delay) {
+void World::spawnExplosion(lpVec position, float delay) {
 	explosions.alloc(kPixelsPerMeter * position, delay);
 }
 

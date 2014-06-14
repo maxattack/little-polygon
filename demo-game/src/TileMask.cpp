@@ -52,7 +52,7 @@ void TileMask::getIndices(int x, int y, int *byteIdx, int *localIdx) const {
 	*localIdx = index - ((*byteIdx) << 3);
 }
 
-bool TileMask::check(Vec2 topLeft, Vec2 bottomRight) const {
+bool TileMask::check(lpVec topLeft, lpVec bottomRight) const {
 	int left = floorToInt(topLeft.x);
 	int right = floorToInt(bottomRight.x);
 	int bottom = floorToInt(bottomRight.y);
@@ -64,7 +64,7 @@ bool TileMask::check(Vec2 topLeft, Vec2 bottomRight) const {
 	return false;
 }
 
-bool TileMask::checkLeft(Vec2 topLeft, Vec2 bottomRight, float *outResult) const {
+bool TileMask::checkLeft(lpVec topLeft, lpVec bottomRight, float *outResult) const {
 	int left = floorToInt(topLeft.x);
 	int right = floorToInt(bottomRight.x);
 	int bottom = floorToInt(bottomRight.y);
@@ -80,7 +80,7 @@ bool TileMask::checkLeft(Vec2 topLeft, Vec2 bottomRight, float *outResult) const
 	return false;
 }
 
-bool TileMask::checkRight(Vec2 topLeft, Vec2 bottomRight, float *outResult) const {
+bool TileMask::checkRight(lpVec topLeft, lpVec bottomRight, float *outResult) const {
 	int left = floorToInt(topLeft.x);
 	int right = floorToInt(bottomRight.x);
 	int bottom = floorToInt(bottomRight.y);
@@ -97,7 +97,7 @@ bool TileMask::checkRight(Vec2 topLeft, Vec2 bottomRight, float *outResult) cons
 
 }
 
-bool TileMask::checkTop(Vec2 topLeft, Vec2 bottomRight, float *outResult) const {
+bool TileMask::checkTop(lpVec topLeft, lpVec bottomRight, float *outResult) const {
 	int left = floorToInt(topLeft.x);
 	int right = floorToInt(bottomRight.x);
 	int bottom = floorToInt(bottomRight.y);
@@ -114,7 +114,7 @@ bool TileMask::checkTop(Vec2 topLeft, Vec2 bottomRight, float *outResult) const 
 
 }
 
-bool TileMask::checkBottom(Vec2 topLeft, Vec2 bottomRight, float *outResult) const {
+bool TileMask::checkBottom(lpVec topLeft, lpVec bottomRight, float *outResult) const {
 	int left = floorToInt(topLeft.x);
 	int right = floorToInt(bottomRight.x);
 	int bottom = floorToInt(bottomRight.y);

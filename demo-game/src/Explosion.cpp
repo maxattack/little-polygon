@@ -1,6 +1,6 @@
 #include "game.h"
 
-Explosion::Explosion(Vec2 pos, float delay) :
+Explosion::Explosion(lpVec pos, float delay) :
 position(pos),
 time(-delay)
 {

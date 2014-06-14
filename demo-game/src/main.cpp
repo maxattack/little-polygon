@@ -6,8 +6,6 @@ int main(int argc, char *argv[]) {
 
 	static World world( *lpAssets.userdata<WorldData>("world") );
 	world.run();
-
-	lpFinalize();
 	
 	return 0;
 }

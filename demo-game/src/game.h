@@ -1,5 +1,6 @@
 #pragma once
 #include <littlepolygon/context.h>
+#include <littlepolygon/pools.h>
 
 //--------------------------------------------------------------------------------
 // CONSTANTS
@@ -31,8 +32,8 @@
 struct WorldData {
 
 	// INITIAL LOCATIONS
-	Vec2 heroPosition;
-	Vec2 kittenPosition;
+	lpVec heroPosition;
+	lpVec kittenPosition;
 
 	// TILE MASK
 	int maskWidth, maskHeight;
@@ -60,13 +61,13 @@ public:
 	void mark(int x, int y);
 	void clear(int x, int y);
 
-	bool check(Vec2 topLeft, Vec2 bottomRight) const;
+	bool check(lpVec topLeft, lpVec bottomRight) const;
 	
 	// TODO: Change args to match check() :P
-	bool checkLeft(Vec2 bottomLeft, Vec2 topRight, float *outResult) const;
-	bool checkRight(Vec2 bottomLeft, Vec2 topRight, float *outResult) const;
-	bool checkTop(Vec2 bottomLeft, Vec2 topRight, float *outResult) const;
-	bool checkBottom(Vec2 bottomLeft, Vec2 topRight, float *outResult) const;
+	bool checkLeft(lpVec bottomLeft, lpVec topRight, float *outResult) const;
+	bool checkRight(lpVec bottomLeft, lpVec topRight, float *outResult) const;
+	bool checkTop(lpVec bottomLeft, lpVec topRight, float *outResult) const;
+	bool checkBottom(lpVec bottomLeft, lpVec topRight, float *outResult) const;
 
 	void debugDraw();
 	
@@ -82,21 +83,21 @@ private:
 
 class Entity {
 public:
-	Vec2 position;
-	Vec2 speed;
-	Vec2 anchor;
-	Vec2 halfSize;
+	lpVec position;
+	lpVec speed;
+	lpVec anchor;
+	lpVec halfSize;
 	
 public:
 	// POSITION AT ANCHOR'S WORLD-COORDINATE
-	Entity(Vec2 position, Vec2 size);
+	Entity(lpVec position, lpVec size);
 	
 	// GETTERS
 	float left() const { return position.x - halfSize.x; }
 	float right() const { return position.x + halfSize.x; }
 	float bottom() const { return position.y + halfSize.y; }
 	float top() const { return position.y - halfSize.y; }
-	Vec2 pixelPosition() const { return kPixelsPerMeter * (position+anchor); }
+	lpVec pixelPosition() const { return kPixelsPerMeter * (position+anchor); }
 	
 	bool overlaps(const Entity *other);
 	
@@ -124,7 +125,7 @@ public:
 	// DPAD
 	int dirX() const { return mDirX; }
 	int dirY() const { return mDirY; }
-	Vec2 dir() const { return vec(mDirX, mDirY); }
+	lpVec dir() const { return vec(mDirX, mDirY); }
 	
 	// BUTTONS
 	bool pressingLeft() const { return mDirX < 0; }
@@ -152,7 +153,7 @@ class Camera {
 private:
 	float quakeTime, flashTime;
 	Color restColor;
-	Vec2 position;
+	lpVec position;
 	
 public:
 	Camera();
@@ -187,7 +188,7 @@ public:
 	bool isGrounded() const { return grounded; }
 	bool isStandingStill() const;
 	int carryDirection() const { return dir; }
-	Vec2 carryAnchor() const;
+	lpVec carryAnchor() const;
 	
 private:
 	int getFrame() const;
@@ -207,7 +208,7 @@ private:
 	float timeout, animTime;
 	float sentryLeft, sentryRight;
 
-	Vec2 carryBasePosition;
+	lpVec carryBasePosition;
 	float carryProgress;
 	
 	
@@ -237,12 +238,12 @@ private:
 
 class Explosion {
 private:
-	Vec2 position;
+	lpVec position;
 	float time;
 	
 public:
 	Explosion() {}
-	Explosion(Vec2 pos, float delay);
+	Explosion(lpVec pos, float delay);
 	bool tick();
 	void draw();
 };
@@ -269,7 +270,7 @@ private:
 public:
 	World(const WorldData& data);
 	
-	void spawnExplosion(Vec2 position, float delay=0.0f);
+	void spawnExplosion(lpVec position, float delay=0.0f);
 	bool destroyTile(int x, int y);
 
 	void run();
