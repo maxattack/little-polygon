@@ -9,15 +9,18 @@ mHeight(data.maskHeight)
 	memcpy(bytes, data.maskBytes, nbytes);
 }
 
-TileMask::~TileMask() {
+TileMask::~TileMask()
+{
 	SDL_free(bytes);
 }
 
-bool TileMask::get(int x, int y) const {
+bool TileMask::get(int x, int y) const
+{
 	return x < 0 || x >= mWidth || (y >= 0 && y < mHeight && rawGet(x,y));
 }
 
-bool TileMask::rawGet(int x, int y) const {
+bool TileMask::rawGet(int x, int y) const
+{
 	ASSERT(x >= 0);
 	ASSERT(y >= 0);
 	ASSERT(x < mWidth);
@@ -26,7 +29,8 @@ bool TileMask::rawGet(int x, int y) const {
 	return bytes[byteIdx] & (1<<localIdx);
 }
 
-void TileMask::mark(int x, int y) {
+void TileMask::mark(int x, int y)
+{
 	ASSERT(x >= 0);
 	ASSERT(y >= 0);
 	ASSERT(x < mWidth);
@@ -36,7 +40,8 @@ void TileMask::mark(int x, int y) {
 	
 }
 
-void TileMask::clear(int x, int y) {
+void TileMask::clear(int x, int y)
+{
 	ASSERT(x >= 0);
 	ASSERT(y >= 0);
 	ASSERT(x < mWidth);
@@ -46,13 +51,15 @@ void TileMask::clear(int x, int y) {
 
 }
 
-void TileMask::getIndices(int x, int y, int *byteIdx, int *localIdx) const {
+void TileMask::getIndices(int x, int y, int *byteIdx, int *localIdx) const
+{
 	int index = x + mWidth * y;
 	*byteIdx = index >> 3;
 	*localIdx = index - ((*byteIdx) << 3);
 }
 
-bool TileMask::check(lpVec topLeft, lpVec bottomRight) const {
+bool TileMask::check(lpVec topLeft, lpVec bottomRight) const
+{
 	int left = floorToInt(topLeft.x);
 	int right = floorToInt(bottomRight.x);
 	int bottom = floorToInt(bottomRight.y);
@@ -64,7 +71,8 @@ bool TileMask::check(lpVec topLeft, lpVec bottomRight) const {
 	return false;
 }
 
-bool TileMask::checkLeft(lpVec topLeft, lpVec bottomRight, float *outResult) const {
+bool TileMask::checkLeft(lpVec topLeft, lpVec bottomRight, float *outResult) const
+{
 	int left = floorToInt(topLeft.x);
 	int right = floorToInt(bottomRight.x);
 	int bottom = floorToInt(bottomRight.y);
@@ -80,7 +88,8 @@ bool TileMask::checkLeft(lpVec topLeft, lpVec bottomRight, float *outResult) con
 	return false;
 }
 
-bool TileMask::checkRight(lpVec topLeft, lpVec bottomRight, float *outResult) const {
+bool TileMask::checkRight(lpVec topLeft, lpVec bottomRight, float *outResult) const
+{
 	int left = floorToInt(topLeft.x);
 	int right = floorToInt(bottomRight.x);
 	int bottom = floorToInt(bottomRight.y);
@@ -97,7 +106,8 @@ bool TileMask::checkRight(lpVec topLeft, lpVec bottomRight, float *outResult) co
 
 }
 
-bool TileMask::checkTop(lpVec topLeft, lpVec bottomRight, float *outResult) const {
+bool TileMask::checkTop(lpVec topLeft, lpVec bottomRight, float *outResult) const
+{
 	int left = floorToInt(topLeft.x);
 	int right = floorToInt(bottomRight.x);
 	int bottom = floorToInt(bottomRight.y);
@@ -114,7 +124,8 @@ bool TileMask::checkTop(lpVec topLeft, lpVec bottomRight, float *outResult) cons
 
 }
 
-bool TileMask::checkBottom(lpVec topLeft, lpVec bottomRight, float *outResult) const {
+bool TileMask::checkBottom(lpVec topLeft, lpVec bottomRight, float *outResult) const
+{
 	int left = floorToInt(topLeft.x);
 	int right = floorToInt(bottomRight.x);
 	int bottom = floorToInt(bottomRight.y);
@@ -130,7 +141,8 @@ bool TileMask::checkBottom(lpVec topLeft, lpVec bottomRight, float *outResult) c
 	return false;
 }
 
-void TileMask::debugDraw() {
+void TileMask::debugDraw()
+{
 	for(int y=0; y<mHeight; ++y)
 	for(int x=0; x<mWidth; ++x) {
 		if (rawGet(x,y)) {
@@ -140,7 +152,8 @@ void TileMask::debugDraw() {
 		
 }
 
-bool TileMask::isFloor(int x, int y) const {
+bool TileMask::isFloor(int x, int y) const
+{
 	return !get(x,y) && get(x, y+1);
 }
 

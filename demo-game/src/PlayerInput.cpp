@@ -13,19 +13,22 @@ gamepad(0)
 	}
 }
 
-PlayerInput::~PlayerInput() {
-//	if (gamepad) {
-//		SDL_GameControllerClose(gamepad);
-//	}
+PlayerInput::~PlayerInput()
+{
+	if (gamepad) {
+		SDL_GameControllerClose(gamepad);
+	}
 }
 
-void PlayerInput::enterFrame() {
+void PlayerInput::enterFrame()
+{
 	mPressedJump = false;
 	mPressedAction = false;
 	
 }
 
-bool PlayerInput::handleEvent(const SDL_Event& event) {
+bool PlayerInput::handleEvent(const SDL_Event& event)
+{
 	switch(event.type) {
 		case SDL_KEYDOWN: return handleKeyDown(event.key);
 		case SDL_KEYUP: return handleKeyUp((event.key));
@@ -35,7 +38,8 @@ bool PlayerInput::handleEvent(const SDL_Event& event) {
 	}
 }
 
-bool PlayerInput::handleKeyDown(const SDL_KeyboardEvent& event) {
+bool PlayerInput::handleKeyDown(const SDL_KeyboardEvent& event)
+{
 	if (event.repeat) { return true; }
 	switch(event.keysym.sym) {
 		
@@ -75,7 +79,8 @@ bool PlayerInput::handleKeyDown(const SDL_KeyboardEvent& event) {
 	}
 }
 
-bool PlayerInput::handleKeyUp(const SDL_KeyboardEvent& event) {
+bool PlayerInput::handleKeyUp(const SDL_KeyboardEvent& event)
+{
 	switch(event.keysym.sym) {
 		
 		case SDLK_LEFT:
@@ -105,7 +110,8 @@ bool PlayerInput::handleKeyUp(const SDL_KeyboardEvent& event) {
 	}
 }
 
-bool PlayerInput::handleButtonDown(const SDL_ControllerButtonEvent& event) {
+bool PlayerInput::handleButtonDown(const SDL_ControllerButtonEvent& event)
+{
 	switch(event.button) {
 		case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
 			mDirX = -1;
@@ -127,7 +133,8 @@ bool PlayerInput::handleButtonDown(const SDL_ControllerButtonEvent& event) {
 	}
 }
 
-bool PlayerInput::handleButtonUp(const SDL_ControllerButtonEvent& event) {
+bool PlayerInput::handleButtonUp(const SDL_ControllerButtonEvent& event)
+{
 	switch(event.button) {
 		case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
 			if (mDirX == -1) { mDirX = 0; }

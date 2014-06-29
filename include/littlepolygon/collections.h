@@ -35,10 +35,19 @@ public:
 		n = length;
 		#endif
 		buf = (T*) lpCalloc(length, sizeof(T));
+		ASSERT(length == 0 || buf != 0);
 	}
 	
+	Array(const Array<T>& noCopy);
+	
 	Array(Array<T>&& o) {
+		#if DEBUG
+		n = o.n;
+		#endif
 		buf = o.buf;
+		#if DEBUG
+		o.n = 0;
+		#endif
 		o.buf = 0;
 	}
 	
@@ -184,10 +193,12 @@ private:
 	void makeRoom() {
 		if (slots == 0) {
 			slots = (T*) lpCalloc(cap, sizeof(T));
+			ASSERT(slots);
 		} else if (n == cap) {
 			ASSERT(grow);
 			cap += cap;
 			slots = (T*) lpRealloc(slots, cap * sizeof(T));
+			ASSERT(slots);
 		}
 	}
 	

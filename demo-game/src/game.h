@@ -27,9 +27,15 @@
 #define kGravity        			(72.0f)
 
 //--------------------------------------------------------------------------------
+// GLOBALS
+
+#define gWorld (World::getInstance())
+
+//--------------------------------------------------------------------------------
 // WORLD ASSET
 
-struct WorldData {
+struct WorldData
+{
 
 	// INITIAL LOCATIONS
 	lpVec heroPosition;
@@ -45,7 +51,8 @@ struct WorldData {
 //--------------------------------------------------------------------------------
 // TILE MASK (for collisions)
 
-class TileMask {
+class TileMask
+{
 private:
 	int mWidth, mHeight;
 	uint8_t *bytes;
@@ -81,7 +88,8 @@ private:
 //--------------------------------------------------------------------------------
 // BASE MOVEABLE ENTITY
 
-class Entity {
+class Entity
+{
 public:
 	lpVec position;
 	lpVec speed;
@@ -112,7 +120,8 @@ inline float jumpImpulse(float height) { return -sqrtf(2.0f * height * kGravity)
 //--------------------------------------------------------------------------------
 // PLAYER INPUT WRAPPER
 
-class PlayerInput {
+class PlayerInput
+{
 private:
 	int mDirX, mDirY;
 	int mPressedJump, mPressedAction;
@@ -149,7 +158,8 @@ private:
 //--------------------------------------------------------------------------------
 // CAMERA CONTROLLER
 
-class Camera {
+class Camera
+{
 private:
 	float quakeTime, flashTime;
 	Color restColor;
@@ -169,7 +179,8 @@ public:
 //--------------------------------------------------------------------------------
 // HERO ENTITY
 
-class Hero : public Entity {
+class Hero : public Entity
+{
 private:
 	ImageAsset *img;
 	int dir;
@@ -198,7 +209,8 @@ private:
 //--------------------------------------------------------------------------------
 // KITTEN ENTITY
 
-class Kitten : public Entity {
+class Kitten : public Entity
+{
 public:
 	enum Status { Pausing, Walking, Carried, Shooting, Falling };
 private:
@@ -236,7 +248,8 @@ private:
 //--------------------------------------------------------------------------------
 // EXPLOSIONS
 
-class Explosion {
+class Explosion
+{
 private:
 	lpVec position;
 	float time;
@@ -251,7 +264,8 @@ public:
 //--------------------------------------------------------------------------------
 // ROOT WORLD OBJECT
 
-class World : public Singleton<World> {
+class World : public Singleton<World>
+{
 public:
 	PlayerInput input;
 	TileMask mask;
@@ -284,4 +298,4 @@ private:
 	
 };
 
-#define gWorld (World::getInstance())
+

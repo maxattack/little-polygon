@@ -12,7 +12,8 @@ dir(1)
 	startSentry();
 }
 
-void Kitten::startSentry() {
+void Kitten::startSentry()
+{
 	animTime = 0.0f;
 
 	auto x0 = floorToInt(position.x);
@@ -39,20 +40,23 @@ void Kitten::startSentry() {
 	status = Pausing;
 }
 
-void Kitten::pickup() {
+void Kitten::pickup()
+{
 	status = Carried;
 	carryProgress = 0.0f;
 	carryBasePosition = position;
 	animTime = 1.0f;
 }
 
-void Kitten::shoot() {
+void Kitten::shoot()
+{
 	status = Shooting;
 	position.y = gWorld.hero.position.y;
 	speed = vec(kKittenShootSpeed * dir, 0);
 }
 
-void Kitten::tick() {
+void Kitten::tick()
+{
 	switch(status) {
 		case Pausing: tickPausing(); break;
 		case Walking: tickWalking(); break;
@@ -63,7 +67,8 @@ void Kitten::tick() {
 	}
 }
 
-void Kitten::tickPausing() {
+void Kitten::tickPausing()
+{
 	if (timeout > 0.0f) {
 		timeout -= lpTimer.deltaSeconds;
 		if (timeout <= 0.0f) {
@@ -75,7 +80,8 @@ void Kitten::tickPausing() {
 	}
 }
 
-void Kitten::tickWalking() {
+void Kitten::tickWalking()
+{
 	float dt = lpTimer.deltaSeconds;
 	animTime += kKittenStepsPerMeter * dt;
 	if (dir > 0) {
@@ -97,7 +103,8 @@ void Kitten::tickWalking() {
 	}
 }
 
-void Kitten::tickCarried() {
+void Kitten::tickCarried()
+{
 	if (carryProgress < 1.0f) {
 		carryProgress += lpTimer.deltaSeconds / kKittenPickupTime;
 		if (carryProgress > 1.0f) { carryProgress = 1.0f; }
@@ -110,7 +117,8 @@ void Kitten::tickCarried() {
 	
 }
 
-void Kitten::tickShooting() {
+void Kitten::tickShooting()
+{
 	// travel until you hit a tile of the side of the screen
 	int hitX, hitY; move(&hitX, &hitY);
 	if (hitX) {
@@ -128,7 +136,8 @@ void Kitten::tickShooting() {
 }
 
 
-void Kitten::tickFalling() {
+void Kitten::tickFalling()
+{
 	speed.y += kGravity * lpTimer.deltaSeconds;
 	int hitX, hitY; move(&hitX, &hitY);
 	if (hitY > 0) {
@@ -136,7 +145,8 @@ void Kitten::tickFalling() {
 	}
 }
 
-void Kitten::draw() {
+void Kitten::draw()
+{
 	lpSprites.drawImage(
 		img,
 		lpMatrix(vec(dir, 0), vec(0, 1), pixelPosition()),

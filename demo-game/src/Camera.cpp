@@ -11,16 +11,19 @@ position(0,0)
 	lpView.setOffset(lpVec(0,0));
 }
 
-void Camera::quake() {
+void Camera::quake()
+{
 	quakeTime = 0.15f;
 }
 
-void Camera::flash() {
+void Camera::flash()
+{
 	glClearColor(1, 1, 1, 1);
 	flashTime = 0.115f;
 }
 
-void Camera::tick() {
+void Camera::tick()
+{
 	if (quakeTime > 0.0f) {
 		quakeTime -= lpTimer.deltaSeconds;
 		if (quakeTime <= 0.0f) {

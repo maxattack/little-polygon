@@ -15,11 +15,13 @@ done(false)
 {
 }
 
-void World::spawnExplosion(lpVec position, float delay) {
+void World::spawnExplosion(lpVec position, float delay)
+{
 	explosions.alloc(kPixelsPerMeter * position, delay);
 }
 
-bool World::destroyTile(int x, int y) {
+bool World::destroyTile(int x, int y)
+{
 	if (x >= 0 && x < tilemap->mw && y >= 0 && y < tilemap->mh && tilemap->tileAt(x,y).isDefined()) {
 		tilemap->clearTile(x,y);
 		mask.clear(x,y);
@@ -35,7 +37,8 @@ bool World::destroyTile(int x, int y) {
 	}
 }
 
-void World::run() {
+void World::run()
+{
 	
 	for(int i=0; i<MIX_CHANNELS; ++i) {
 		Mix_Volume(i, 50);
@@ -56,7 +59,8 @@ void World::run() {
 	}
 }
 
-void World::tick() {
+void World::tick()
+{
 	hero.tick();
 	kitten.tick();
 	camera.tick();
@@ -66,7 +70,8 @@ void World::tick() {
 	//gView.setOffset(gView.offset() + vec(4.0f * gTimer.deltaSeconds, 0));
 }
 
-void World::draw() {
+void World::draw()
+{
 	
 	if (!camera.isFlashing()) {
 	
@@ -95,7 +100,8 @@ void World::draw() {
 	
 }
 
-void World::handleKeydown(const SDL_KeyboardEvent& event) {
+void World::handleKeydown(const SDL_KeyboardEvent& event)
+{
 	if (event.repeat) { return; }
 	switch(event.keysym.sym) {
 		case SDLK_ESCAPE:
@@ -111,7 +117,8 @@ void World::handleKeydown(const SDL_KeyboardEvent& event) {
 	}
 }
 
-void World::handleEvents() {
+void World::handleEvents()
+{
 	SDL_Event event;
 	while(SDL_PollEvent(&event)) {
 		if (input.handleEvent(event)) { continue; }

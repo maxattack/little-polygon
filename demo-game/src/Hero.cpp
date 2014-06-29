@@ -15,7 +15,8 @@ tint(rgba(0))
 {
 }
 
-void Hero::tick() {
+void Hero::tick()
+{
 	float dt = lpTimer.deltaSeconds;
 	
 	// MOVEMENT
@@ -84,7 +85,8 @@ void Hero::tick() {
 	tint = easeTowards(tint, rgba(0xffffff00), 0.15f, dt);
 }
 
-void Hero::performAction() {
+void Hero::performAction()
+{
 	if (gWorld.kitten.isCarried()) {
 		// SHOOT
 		lpAssets.sample("shoot")->play();
@@ -94,7 +96,8 @@ void Hero::performAction() {
 	
 }
 
-void Hero::draw() {
+void Hero::draw()
+{
 	lpSprites.drawImage(
 		img,
 		lpMatrix(vec((2.0f-yScale) * dir,0), vec(0,yScale), pixelPosition()),
@@ -103,15 +106,18 @@ void Hero::draw() {
 	);
 }
 
-bool Hero::isStandingStill() const {
+bool Hero::isStandingStill() const
+{
 	return speed.x > -0.133f && speed.x < 0.133f;
 }
 
-lpVec Hero::carryAnchor() const {
+lpVec Hero::carryAnchor() const
+{
 	return position + vec(dir * halfSize.x, -2.1f * yScale * halfSize.y) - vec(0, kMetersPerPixel * getFrame());
 }
 
-int Hero::getFrame() const {
+int Hero::getFrame() const
+{
 	if (!grounded) {
 		return 1;
 	} else if (!isStandingStill()) {

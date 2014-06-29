@@ -8,14 +8,16 @@ halfSize(0.5f * aSize)
 {
 }
 
-bool Entity::overlaps(const Entity *other) {
+bool Entity::overlaps(const Entity *other)
+{
 	auto dx = fabsf(position.x - other->position.x);
 	auto dy = fabsf(position.y - other->position.y);
 	return dx < halfSize.x + other->halfSize.x &&
 		dy < halfSize.y + other->halfSize.y;
 }
 
-void Entity::move(int* hitX, int* hitY) {
+void Entity::move(int* hitX, int* hitY)
+{
 	*hitX = 0;
 	*hitY = 0;
 	auto displacement = speed * lpTimer.deltaSeconds;
@@ -71,7 +73,8 @@ void Entity::move(int* hitX, int* hitY) {
 	}
 }
 
-void Entity::debugDraw() {
+void Entity::debugDraw()
+{
 //	int x0 = left();
 //	int x1 = right();
 //	int y0 = top();
