@@ -206,10 +206,11 @@ public:
 	List(unsigned aCapacity) : cap(aCapacity == 0 ? kDefaultCapacity : aCapacity), n(0), slots(0) {
 	}
 	
-	List(List<T,grow>&& o) {
+	List(List<T,grow>&& o) {		
 		cap = o.cap;
 		n = o.n;
 		slots = o.slots;
+		o.cap = 0;
 		o.n = 0;
 		o.slots = 0;
 	}
