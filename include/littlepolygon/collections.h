@@ -39,15 +39,14 @@ public:
 	}
 	
 	Array(const Array<T>& noCopy);
+	Array<T>& operator=(const Array<T>& noAssign);
 	
 	Array(Array<T>&& o) {
 		#if DEBUG
 		n = o.n;
-		#endif
-		buf = o.buf;
-		#if DEBUG
 		o.n = 0;
 		#endif
+		buf = o.buf;
 		o.buf = 0;
 	}
 	
@@ -207,6 +206,7 @@ public:
 	}
 	
 	List(const List<T, grow>& noCopy);
+	List<T,grow>& operator=(const List<T,grow>& noAssign);
 
 	List(List<T,grow>&& o) {		
 		cap = o.cap;
