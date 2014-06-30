@@ -265,15 +265,20 @@ inline lpVec easeTowards(lpVec curr, lpVec target, lpFloat easing, lpFloat dt)  
 
 
 // random number functions
-inline int randInt(int x) { return genrand_int32() % x; }
+//inline int randInt(int x) { return genrand_int32() % x; }
+//inline lpFloat randomValue() { return (lpFloat)genrand_real1(); }
+
+inline int randInt(int x) { return rand() % x; }
+inline lpFloat randomValue() { return (lpFloat) (double(rand()) / double(RAND_MAX)); }
+
 inline int randInt(int inclusiveMin, int exclusiveMax) { return inclusiveMin + randInt(exclusiveMax-inclusiveMin); }
-inline lpFloat randomValue() { return (lpFloat)genrand_real1(); }
 inline lpFloat randomValue(lpFloat u, lpFloat v) { return u + randomValue() * (v - u); }
 inline lpFloat randomAngle() { return kTAU * randomValue(); }
 inline lpVec randomPointOnCircle(lpFloat r=1.0f) { return polarVector(r, randomAngle()); }
 inline lpVec randomPointInsideCircle(lpFloat r=1.0f) { return polarVector(r * randomValue(), randomAngle()); }
 inline lpFloat expovariate(lpFloat avgDuration, lpFloat rmin=0.00001f, lpFloat rmax=0.99999f) { return -avgDuration*lpLog(randomValue(rmin, rmax)); }
-	
+
+
 // handling radians sanely
 inline lpFloat normalizeAngle(lpFloat radians)
 {
