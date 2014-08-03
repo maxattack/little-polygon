@@ -185,7 +185,6 @@ public:
 template<typename T, bool grow=false>
 class List {
 private:
-	static const int kDefaultCapacity = 32;
 	unsigned cap, n;
 	T* slots;
 
@@ -202,7 +201,8 @@ private:
 	}
 	
 public:
-	List(unsigned aCapacity) : cap(aCapacity == 0 ? kDefaultCapacity : aCapacity), n(0), slots(0) {
+	List(unsigned aCapacity=32) : cap(aCapacity), n(0), slots(0) {
+		ASSERT(cap > 0);
 	}
 	
 	List(const List<T, grow>& noCopy);
