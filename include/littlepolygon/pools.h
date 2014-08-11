@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "base.h"
+#include "collections.h"
 #include <utility>
 
 //------------------------------------------------------------------------------
@@ -28,16 +28,14 @@ template<typename T>
 class Pool {
 private:
 	static const int kDefaultReserve = 1024;
-	static const int kBufferCapacity = 8;
 	typedef Linkable<T> Slot;
-	unsigned bufferCount, bufferSize;
+	unsigned bufferSize;
 	Link active, idle;
-	Slot *buffers[kBufferCapacity];
+	List<Slot*, true> buffers;
 	
 public:
-	Pool(unsigned reserve=0) : bufferCount(0), bufferSize(0)
+	Pool(unsigned reserve=0) : bufferSize(0)
 	{
-		memset(buffers, 0, kBufferCapacity * sizeof(Slot*));
 		if (reserve) { allocBuffer(reserve); }
 	}
 	
@@ -49,7 +47,7 @@ public:
 			active.next->unbind();
 		}
 		idle.unbind();
-		for(unsigned i=0; i<bufferCount; ++i) {
+		for(unsigned i=0; i<buffers.count(); ++i) {
 			lpFree(buffers[i]);
 		}
 	}
@@ -133,14 +131,13 @@ public:
 
 private:
 	void allocBuffer(unsigned size) {
-		ASSERT(bufferCount < kBufferCapacity);
 		bufferSize = size;
-		auto buf = buffers[bufferCount] = (Slot*) lpCalloc(size, sizeof(Slot));
+		auto buf = (Slot*) lpCalloc(size, sizeof(Slot));
 		for(unsigned i=0; i<size; ++i) {
 			Link* l = new(static_cast<Link*>(buf+i)) Link();
 			l->attachBefore(&idle);
 		}
-		++bufferCount;
+		buffers.append(buf);
 	}
 	
 };
