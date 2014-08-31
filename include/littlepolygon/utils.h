@@ -99,6 +99,32 @@ public:
 template<typename T> T* Singleton<T>::inst = nullptr;
 
 
+//--------------------------------------------------------------------------------------------------
+// Unity3D-inspired "does this type have a method named XYZ?" detection via SFINAE
+
+#define DECLARE_HAS_MEMBER(member)                                                \
+                                                                                  \
+template < class T >                                                              \
+class has_member_##member                                                         \
+{                                                                                 \
+private:                                                                          \
+    using Yes = char[2];                                                          \
+    using  No = char[1];                                                          \
+                                                                                  \
+    struct Fallback { int member; };                                              \
+    struct Derived : T, Fallback { };                                             \
+                                                                                  \
+    template < class U >                                                          \
+    static No& test ( decltype(U::member)* );                                     \
+    template < typename U >                                                       \
+    static Yes& test ( ... );                                                     \
+                                                                                  \
+public:                                                                           \
+    static constexpr bool value = sizeof(test<Derived>(nullptr)) == sizeof(Yes);  \
+};                                                                                \
+
+
+
 
 
 
