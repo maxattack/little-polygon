@@ -103,7 +103,6 @@ template<typename T> T* Singleton<T>::inst = nullptr;
 // Unity3D-inspired "does this type have a method named XYZ?" detection via SFINAE
 
 #define DECLARE_HAS_MEMBER(member)                                                \
-                                                                                  \
 template < class T >                                                              \
 class has_member_##member                                                         \
 {                                                                                 \
