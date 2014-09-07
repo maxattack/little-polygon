@@ -98,6 +98,16 @@ public:
 
 template<typename T> T* Singleton<T>::inst = nullptr;
 
+//------------------------------------------------------------------------------
+// Misc
+
+struct NonCopyable
+{
+	NonCopyable() {}
+	NonCopyable(const NonCopyable&);
+	NonCopyable& operator=(const NonCopyable&);
+};
+
 
 //--------------------------------------------------------------------------------------------------
 // Unity3D-inspired "does this type have a method named XYZ?" detection via SFINAE

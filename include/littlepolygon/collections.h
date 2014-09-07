@@ -419,15 +419,15 @@ struct Link {
 	void attachAfter(Link *before) {
 		next = before->next;
 		prev = before;
-		before->next = this;
+		prev->next = this;
 		next->prev = this;
 	}
 	
 	void attachBefore(Link *after) {
 		next = after;
 		prev = after->prev;
-		after->prev = this;
 		prev->next = this;
+		next->prev = this;
 	}
 	
 	void unbind() {
