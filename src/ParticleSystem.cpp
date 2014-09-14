@@ -96,7 +96,7 @@ void ParticleSystem::tick(lpFloat dt)
 	time += dt;
 	
 	// tick emitters
-	for(auto e=emitters.list(); e.next();) {
+	for(emitters.iterBegin(); auto e=emitters.iterNext();) {
 		e->timeout -= dt;
 		while (e->timeout < 0.0f) {
 			e->timeout += expovariate(1.0f/e->rate);

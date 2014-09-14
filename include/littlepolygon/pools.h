@@ -21,127 +21,119 @@
 
 //------------------------------------------------------------------------------
 // POOL
-// Allocates objects in arrays with a doubling strategy, and stores active/free
-// objects in linked lists.
+#include <cstdlib>
+#include <cstdio>
+#include <utility>
+#include <new>
 
 template<typename T>
-class Pool {
+class Pool
+{
 private:
-	static const int kDefaultReserve = 1024;
-	typedef Linkable<T> Slot;
-	unsigned bufferSize;
-	Link active, idle;
-	List<Slot*, true> buffers;
-	
+	Array<T> objects;
+	Array<T*> roster;
+	Array<T**> backRef;
+	T** mCurr;
+	T** mEnd;
+	int mCount;
+	int mCap;
+
+
 public:
-	Pool(unsigned reserve=0) : bufferSize(0)
+	Pool(int n=1024)
+	: objects(n), roster(n), backRef(n), mCurr(0), mEnd(0), mCount(0), mCap(n)
 	{
-		if (reserve) { allocBuffer(reserve); }
-	}
-	
-	~Pool()
-	{
-		clear();
-		while(active.isBound()) {
-			Slot::getValue(active.next)->~T();
-			active.next->unbind();
-		}
-		idle.unbind();
-		for(unsigned i=0; i<buffers.count(); ++i) {
-			lpFree(buffers[i]);
+		for(int i=0; i<n; ++i) {
+			roster[i] = objects + i;
 		}
 	}
-	
-	bool isEmpty() const
+
+	int count() const { return mCount; }
+	int cap() const { return mCap; }
+
+	bool isActive(T* inst) const
 	{
-		return !active.isBound();
-	}
-	
-	void clear()
-	{
-		while(active.isBound()) {
-			release(Slot::getValue(active.next));
+		for(auto p=roster; p!=roster+mCount; ++p) {
+			if (*p == inst) { return true; }
 		}
+		return false;
 	}
-	
+
 	template<typename... Args>
 	T* alloc(Args&&... args)
 	{
-		if (!idle.isBound()) {
-			allocBuffer(bufferSize > 0 ? (bufferSize + bufferSize) : kDefaultReserve);
+		if (mCount < mCap) {
+			auto inst = roster[mCount];
+			backRef[getIndex(inst)] = roster + mCount;
+			++mCount;
+			return new(inst) T (std::forward<Args>(args)...);
+		} else {
+			return 0;
 		}
-		auto link = idle.next;
-		link->unbind();
-		link->attachAfter(&active);
-		return new(Slot::getValue(link)) T(std::forward<Args>(args) ...);
 	}
-	
-	void release(T* p)
+
+	void release(T* inst)
 	{
-		auto link = Slot::getLink(p);
-		ASSERT(link->isBound());
-		p->~T();
-		link->unbind();
-		link->attachAfter(&idle);
+		auto iter = getIter(inst);
+		--mCount;
+		if (iter >= mEnd) {
+			// element is after the iteration slice, 1 swap
+			doSwap(inst, roster[mCount]);
+		} else if (iter >= mCurr) {
+			// element is inside the iteration slice, 2 swaps
+			--mEnd;
+			doSwap(inst, *mEnd);
+			doSwap(*mEnd, roster[mCount]);
+		} else {
+			// element is before the iteration slice, 3 swaps
+			--mCurr;
+			--mEnd;
+			doSwap(inst, *mCurr);
+			doSwap(*mCurr, *mEnd);
+			doSwap(*mEnd, roster[mCount]);
+		}		
+		backRef[getIndex(inst)] = 0;
+		inst->~T();
 	}
-	
-	class Iterator {
-	private:
-		Link* head;
-		Link bookmark;
-		
-	public:
-		Iterator(Link* aHead) : head(aHead) {
-			bookmark.attachAfter(head);
-		}
-		
-		
-		T* operator->() { return Slot::getValue(bookmark.prev); }
-		T& operator*() { return *Slot::getValue(bookmark.prev); }
-		
-		bool next()
-		{
-			auto p = bookmark.next;
-			bookmark.unbind();
-			if (p == head) {
-				return false;
-			} else {
-				bookmark.attachAfter(p);
-				return true;
-			}
-		}
-	};
-	
-	Iterator list() { return &active; }
-	
-	template<typename T0, typename ...Args>
-	void cull(bool (T0::*Func)(Args...), Args... args)
+
+	void iterBegin()
 	{
-		Link bookmark;
-		auto p = active.next;
-		while(p != &active) {
-			bookmark.attachAfter(p);
-			auto ptr = Slot::getValue(p);
-			if ((ptr->*Func)(args...)) { release(ptr); }
-			p = bookmark.next;
-			bookmark.unbind();
+		mCurr = roster.ptr();
+		mEnd = roster.ptr() + mCount;
+	}
+
+	void iterCancel()
+	{
+		mCurr = 0;
+		mEnd = 0;
+	}
+
+	T* iterNext()
+	{
+		if (mCurr != mEnd) {
+			auto result = *mCurr;
+			++mCurr;
+			return result;
+		}  else {
+			return 0;
 		}
-			
 	}
 
 private:
-	void allocBuffer(unsigned size) {
-		bufferSize = size;
-		auto buf = (Slot*) lpCalloc(size, sizeof(Slot));
-		for(unsigned i=0; i<size; ++i) {
-			Link* l = new(static_cast<Link*>(buf+i)) Link();
-			l->attachBefore(&idle);
-		}
-		buffers.append(buf);
-	}
-	
-};
+	inline int getIndex(T* inst) const { return (int)(inst - objects.ptr()); }
+	inline T** getIter(T* inst) const { return backRef[getIndex(inst)]; }
 
+	void doSwap(T* slot, T* tail)
+	{
+		if (slot != tail) {
+			auto slotIdx = getIndex(slot);
+			auto tailIdx = getIndex(tail);
+			std::swap(*backRef[slotIdx], *backRef[tailIdx]);
+			std::swap(backRef[slotIdx], backRef[tailIdx]);
+		}
+	}
+
+};
 
 //------------------------------------------------------------------------------
 // COMPACT POOL
