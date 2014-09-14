@@ -20,11 +20,7 @@
 #include <utility>
 
 //------------------------------------------------------------------------------
-// POOL
-#include <cstdlib>
-#include <cstdio>
-#include <utility>
-#include <new>
+// GENERIC COMPONENT POOL
 
 template<typename T>
 class Pool
@@ -50,30 +46,21 @@ public:
 
 	int count() const { return mCount; }
 	int cap() const { return mCap; }
-
-	bool isActive(T* inst) const
-	{
-		for(auto p=roster; p!=roster+mCount; ++p) {
-			if (*p == inst) { return true; }
-		}
-		return false;
-	}
+	bool isActive(T* inst) const { return backRef[getIndex(inst)] != 0; }
 
 	template<typename... Args>
 	T* alloc(Args&&... args)
 	{
-		if (mCount < mCap) {
-			auto inst = roster[mCount];
-			backRef[getIndex(inst)] = roster + mCount;
-			++mCount;
-			return new(inst) T (std::forward<Args>(args)...);
-		} else {
-			return 0;
-		}
+		ASSERT(mCount  < mCap);
+		auto inst = roster[mCount];
+		backRef[getIndex(inst)] = roster + mCount;
+		++mCount;
+		return new(inst) T (std::forward<Args>(args)...);
 	}
 
 	void release(T* inst)
 	{
+		ASSERT(isActive(inst));
 		auto iter = getIter(inst);
 		--mCount;
 		if (iter >= mEnd) {
@@ -115,6 +102,8 @@ public:
 			++mCurr;
 			return result;
 		}  else {
+			mCurr = 0;
+			mEnd = 0;
 			return 0;
 		}
 	}
