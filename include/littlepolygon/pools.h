@@ -26,9 +26,9 @@ template<typename T>
 class Pool
 {
 private:
-	Array<T> objects;
-	Array<T*> roster;
-	Array<T**> backRef;
+	Array<T> mRecords;
+	Array<T*> mRoster;
+	Array<T**> mBackRefs;
 	T** mCurr;
 	T** mEnd;
 	int mCount;
@@ -37,27 +37,41 @@ private:
 
 public:
 	Pool(int n=1024)
-	: objects(n), roster(n), backRef(n), mCurr(0), mEnd(0), mCount(0), mCap(n)
+	: mRecords(n), mRoster(n), mBackRefs(n), mCurr(0), mEnd(0), mCount(0), mCap(n)
 	{
 		for(int i=0; i<n; ++i) {
-			roster[i] = objects + i;
+			mRoster[i] = mRecords + i;
 		}
+	}
+	
+	~Pool()
+	{
+		clear();
 	}
 
 	int count() const { return mCount; }
 	int cap() const { return mCap; }
-	bool isActive(T* inst) const { return backRef[getIndex(inst)] != 0; }
+	bool isActive(T* inst) const { return mBackRefs[getIndex(inst)] != 0; }
 
 	template<typename... Args>
 	T* alloc(Args&&... args)
 	{
 		ASSERT(mCount  < mCap);
-		auto inst = roster[mCount];
-		backRef[getIndex(inst)] = roster + mCount;
+		auto inst = mRoster[mCount];
+		mBackRefs[getIndex(inst)] = mRoster + mCount;
 		++mCount;
 		return new(inst) T (std::forward<Args>(args)...);
 	}
-
+	
+	void clear()
+	{
+		ASSERT(mCurr == 0);
+		for(auto p=mRoster.ptr(), end=p+mCount; p!=end; ++p) {
+			(*p)->~T();
+		}
+		mCount = 0;
+	}
+	
 	void release(T* inst)
 	{
 		ASSERT(isActive(inst));
@@ -65,28 +79,28 @@ public:
 		--mCount;
 		if (iter >= mEnd) {
 			// element is after the iteration slice, 1 swap
-			doSwap(inst, roster[mCount]);
+			doSwap(inst, mRoster[mCount]);
 		} else if (iter >= mCurr) {
 			// element is inside the iteration slice, 2 swaps
 			--mEnd;
 			doSwap(inst, *mEnd);
-			doSwap(*mEnd, roster[mCount]);
+			doSwap(*mEnd, mRoster[mCount]);
 		} else {
 			// element is before the iteration slice, 3 swaps
 			--mCurr;
 			--mEnd;
 			doSwap(inst, *mCurr);
 			doSwap(*mCurr, *mEnd);
-			doSwap(*mEnd, roster[mCount]);
+			doSwap(*mEnd, mRoster[mCount]);
 		}		
-		backRef[getIndex(inst)] = 0;
+		mBackRefs[getIndex(inst)] = 0;
 		inst->~T();
 	}
 
 	void iterBegin()
 	{
-		mCurr = roster.ptr();
-		mEnd = roster.ptr() + mCount;
+		mCurr = mRoster.ptr();
+		mEnd = mRoster.ptr() + mCount;
 	}
 
 	void iterCancel()
@@ -109,16 +123,16 @@ public:
 	}
 
 private:
-	inline int getIndex(T* inst) const { return (int)(inst - objects.ptr()); }
-	inline T** getIter(T* inst) const { return backRef[getIndex(inst)]; }
+	inline int getIndex(T* inst) const { return (int)(inst - mRecords.ptr()); }
+	inline T** getIter(T* inst) const { return mBackRefs[getIndex(inst)]; }
 
 	void doSwap(T* slot, T* tail)
 	{
 		if (slot != tail) {
 			auto slotIdx = getIndex(slot);
 			auto tailIdx = getIndex(tail);
-			std::swap(*backRef[slotIdx], *backRef[tailIdx]);
-			std::swap(backRef[slotIdx], backRef[tailIdx]);
+			std::swap(*mBackRefs[slotIdx], *mBackRefs[tailIdx]);
+			std::swap(mBackRefs[slotIdx], mBackRefs[tailIdx]);
 		}
 	}
 

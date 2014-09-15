@@ -387,7 +387,8 @@ private:
 	void getIndices(unsigned idx, unsigned* outWord, unsigned *outIndex) const;
 };
 
-class BitLister {
+class BitLister
+{
 private:
 	const BitArray *pArray;
 	unsigned currentWord;
@@ -400,5 +401,4 @@ public:
 	
 	unsigned index() const { ASSERT(currentIndex != -1); return (currentWord<<5) + currentIndex; }
 };
-
 
