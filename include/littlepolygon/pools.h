@@ -140,7 +140,7 @@ private:
 
 //------------------------------------------------------------------------------
 // COMPACT POOL
-// Faster iteration and no upper-bound on size, but records are not guarenteed
+// Faster iteration and no upper-bound on size, but records are not guaranteed
 // to remain at fixed memory addresses (either because of reallocation or
 // swapping-with-end on dealloc).  Designed for "anonymous collections" like
 // particle systems.
@@ -215,4 +215,125 @@ public:
 		}
 	}
 	
+};
+
+//--------------------------------------------------------------------------------
+// BATCHES are extend Compact Pools with an index so that callers can received a
+// two-star "handle" to a logical record in the pool, even though it still moves
+// around.
+//
+// Batches are optimized for component systems which benefit from memory locality
+// of records and won't to modify the collection during iteration.  A good example
+// is a batch of draw calls.
+//
+// WARNING: Records in batches will be treated like Plain-Old-Data.  Objects will
+// be moved using memcpy() and released using free().  As a convenience, they can
+// have nontrivial constructors, but no destructors.
+//--------------------------------------------------------------------------------
+
+template<typename T>
+union BatchIndex 
+{
+	T* slot;
+	BatchIndex<T>* next;
+};
+
+template<typename T>
+struct BatchHandle
+{
+	BatchIndex<T>* index;
+
+	BatchHandle() {}
+	BatchHandle(BatchIndex<T>* aHandle) : index(aHandle) {}
+
+	T& operator*() { return *(index->slot); }
+	T* operator->() { return index->slot; }
+	const T& operator*() const { return *(index->slot); }
+	const T* operator->() const { return index->slot; }
+	
+	bool operator==(const BatchHandle<T>& h) const { return index == h.index; }
+	bool operator!=(const BatchHandle<T>& h) const { return index != h.index; }
+};
+
+template<typename T>
+class BatchPool
+{
+private:
+	int mCount, mCap;
+	Array<T> mSlots;
+	Array<BatchIndex<T>> mIndex;
+	Array<BatchIndex<T>*> mBack;
+	BatchIndex<T>* mFreelist;
+
+public:
+
+	BatchPool(int cap=1024) : mCount(0), mCap(cap), mSlots(cap), mIndex(cap), mBack(cap)
+	{
+		resetFreelist();
+	}
+
+	bool isEmpty() const { return mCount == 0; }
+	bool isFull() const { return mCount == mCap; }
+	bool isActive(BatchHandle<T> h) const { return h.index->slot >= begin() && h.index->slot < end(); }
+
+	T* begin() { return mSlots.ptr(); }
+	T* end() { return mSlots.ptr()+mCount; }
+	
+	const T* begin() const { return mSlots.ptr(); }
+	const T* end() const { return mSlots.ptr()+mCount; }
+
+	template<typename... Args> 
+	BatchHandle<T> alloc(Args&&... args)
+	{
+		ASSERT(mFreelist);
+		
+		// pop a handle from the freelist
+		auto result = mFreelist;
+		mFreelist = mFreelist->next;
+
+		// append a new slot to the end
+		auto idx = mCount;
+		++mCount;
+		result->slot = new(mSlots+idx) T (std::forward<Args>(args)...);
+		mBack[idx] = result;
+		return result;
+	}
+
+	void release(BatchHandle<T> handle)
+	{
+		ASSERT(isActive(handle));
+		--mCount;
+		
+		auto i = (int) (handle.index->slot - mSlots.ptr());
+		if (i != mCount) {
+			// fill "hole" with last element
+			memcpy(mSlots + i, mSlots + mCount, sizeof(T));
+			memcpy(mBack + i, mBack + mCount, sizeof(BatchIndex<T>*));
+
+			// update handle to reflect moved record 
+			mBack[i]->slot = mSlots + i;
+		}
+
+		// return handle to freelist
+		handle.index->next = mFreelist;
+		mFreelist = handle.index;
+	}
+
+	void clear()
+	{
+		mCount = 0;
+		resetFreelist();
+	}
+
+private:
+
+	void resetFreelist()
+	{
+		mFreelist = mIndex.ptr();
+		for(int i=0; i<mCap-1; ++i) {
+			mIndex[i].next = mIndex + (i+1);
+		}
+		mIndex[mCap-1].next = 0;				
+	}
+
 };
