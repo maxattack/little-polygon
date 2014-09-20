@@ -17,6 +17,7 @@
 #pragma once
 
 #include "graphics.h"
+#include "pools.h"
 
 //------------------------------------------------------------------------------
 // ASSETS
@@ -185,3 +186,64 @@ private:
 	void plotGlyph(const GlyphAsset& g, lpFloat x, lpFloat y, lpFloat h, Color c, Color t);
 
 };
+
+//------------------------------------------------------------------------------
+// SPRITE BATCH
+//
+// A special object that can be used in a Batch<T> (see pools.h) to efficiently
+// render a collection of sprites.  (Could be specialized, e.g. if you know all
+// your sprites aren't scaled, rotated, tinted, animated, and so forth).
+
+struct Sprite
+{
+	ImageAsset *image;
+	lpMatrix xform;
+	int frame;
+	Color color;
+	Color tint;
+	
+	// convenience ctors
+	Sprite() : image(0), xform(matIdentity()), frame(0), color(rgba(0)), tint(rgba(0xffffffff)) {}
+	Sprite(ImageAsset *img) : image(img), xform(matIdentity()), frame(0), color(rgba(0)), tint(rgba(0xffffffff)) {}
+	
+	Sprite(ImageAsset *img, lpVec pos) : image(img), xform(matTranslation(pos)), frame(0), color(rgba(0)), tint(rgba(0xffffffff)) {}
+	Sprite(ImageAsset *img, lpVec pos, int fr) : image(img), xform(matTranslation(pos)), frame(fr), color(rgba(0)), tint(rgba(0xffffffff)) {}
+	Sprite(ImageAsset *img, lpVec pos, Color col) : image(img), xform(matTranslation(pos)), frame(0), color(col), tint(rgba(0xffffffff)) {}
+	Sprite(ImageAsset *img, lpVec pos, Color col, Color tint) : image(img), xform(matTranslation(pos)), frame(0), color(col), tint(tint) {}
+	Sprite(ImageAsset *img, lpVec pos, int fr, Color col) : image(img), xform(matTranslation(pos)), frame(fr), color(col), tint(rgba(0xffffffff)) {}
+	Sprite(ImageAsset *img, lpVec pos, int fr, Color col, Color tint) : image(img), xform(matTranslation(pos)), frame(fr), color(col), tint(tint) {}
+
+	Sprite(ImageAsset *img, lpMatrix mat) : image(img), xform(mat), frame(0), color(rgba(0)), tint(rgba(0xffffffff)) {}
+	Sprite(ImageAsset *img, lpMatrix mat, int fr) : image(img), xform(mat), frame(fr), color(rgba(0)), tint(rgba(0xffffffff)) {}
+	Sprite(ImageAsset *img, lpMatrix mat, Color col) : image(img), xform(mat), frame(0), color(col), tint(rgba(0xffffffff)) {}
+	Sprite(ImageAsset *img, lpMatrix mat, Color col, Color tint) : image(img), xform(mat), frame(0), color(col), tint(tint) {}
+	Sprite(ImageAsset *img, lpMatrix mat, int fr, Color col) : image(img), xform(mat), frame(fr), color(col), tint(rgba(0xffffffff)) {}
+	Sprite(ImageAsset *img, lpMatrix mat, int fr, Color col, Color tint) : image(img), xform(mat), frame(fr), color(col), tint(tint) {}
+	
+	inline lpVec position() const { return xform.t; }
+	inline void setPosition(lpVec pos) { xform.t = pos; }
+	
+	inline lpVec attitude() const { return xform.u; }
+	inline void setAttitude(lpVec att) { xform.u = att; xform.v = lpVec(-att.y, att.x); }
+	
+	inline void draw(SpritePlotter* plotter)
+	{
+		plotter->drawImage(image, xform, frame, color, tint);
+	}
+	
+	inline void drawClipped(SpritePlotter *plotter)
+	{
+		auto& view = plotter->viewport();
+		auto sz = xform.transformVector(image->size);
+		auto pad = lpAbs(sz.x + sz.y);
+		if (view.contains(xform.t, pad)) {
+			plotter->drawImage(image, xform, frame, color, tint);
+		}
+	}
+};
+
+typedef BatchPool<Sprite> SpriteBatch;
+typedef BatchHandle<Sprite> SpriteHandle;
+
+
+
