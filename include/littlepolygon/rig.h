@@ -115,13 +115,13 @@ private:
 	};
 	
 	// (indexed by bone)
-	Array<Attitude> localAttitudes;
-	Array<lpMatrix> localTransforms;
-	Array<lpMatrix> worldTransforms;
+	Attitude* localAttitudes;
+	lpMatrix* localTransforms;
+	lpMatrix* worldTransforms;
 	
 	// (indexed by timeline)
 	BitArray timelineMask;
-	Array<unsigned> currentKeyframes;
+	unsigned* currentKeyframes;
 	
 	RigAnimationAsset* currentAnimation;
 	uint32_t currentLayer;
@@ -131,7 +131,7 @@ private:
 	
 public:
 	Rig(const RigAsset* asset);
-	
+	~Rig();
 	// GETTERS
 	
 	bool playing() const { return currentAnimation != 0; }

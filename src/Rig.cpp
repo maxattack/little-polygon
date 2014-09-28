@@ -19,21 +19,28 @@
 Rig::Rig(const RigAsset* asset) :
 
 data(asset),
-localAttitudes(data->nbones),
-localTransforms(data->nbones),
-worldTransforms(data->nbones),
-
 timelineMask(data->ntimeslines),
-currentKeyframes(data->ntimeslines),
-
 currentLayer(data->defaultLayer),
 currentAnimation(0),
-
 xformDirty(true)
 
 {
+	localAttitudes = (Attitude*) lpMalloc(
+		data->nbones * (sizeof(Attitude) + sizeof(lpMatrix) + sizeof(lpMatrix)) +
+		data->ntimeslines * sizeof(unsigned)
+	);
+	localTransforms = (lpMatrix*) (localAttitudes + data->nbones);
+	worldTransforms = localTransforms + data->nbones;
+	currentKeyframes = (unsigned*) (worldTransforms + data->nbones);
+
+
 	setDefaultPose();
 	setRootTransform(matIdentity());
+}
+
+Rig::~Rig()
+{
+	lpFree(localAttitudes);
 }
 
 void Rig::setRootTransform(const lpMatrix& mat, bool updateChildren)

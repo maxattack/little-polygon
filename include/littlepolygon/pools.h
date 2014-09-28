@@ -25,9 +25,9 @@ template<typename T>
 class Pool
 {
 private:
-	Array<T> mRecords;
-	Array<T*> mRoster;
-	Array<T**> mBackRefs;
+	T* mRecords;
+	T** mRoster;
+	T*** mBackRefs;
 	T** mCurr;
 	T** mEnd;
 	int mCount;
@@ -35,9 +35,14 @@ private:
 
 
 public:
+
 	Pool(int n=1024)
-	: mRecords(n), mRoster(n), mBackRefs(n), mCurr(0), mEnd(0), mCount(0), mCap(n)
+	: mCurr(0), mEnd(0), mCount(0), mCap(n)
 	{
+		mRecords = (T*) lpMalloc(n * (sizeof(T) + sizeof(T*) + sizeof(T**)));
+		mRoster = (T**) (mRecords + n);
+		mBackRefs = (T***) (mRoster + n);
+		memset(mBackRefs, 0, n * sizeof(T**));
 		for(int i=0; i<n; ++i) {
 			mRoster[i] = mRecords + i;
 		}
@@ -46,6 +51,7 @@ public:
 	~Pool()
 	{
 		clear();
+		lpFree(mRecords);
 	}
 
 	int count() const { return mCount; }
@@ -65,10 +71,9 @@ public:
 	void clear()
 	{
 		ASSERT(mCurr == 0);
-		for(auto p=mRoster.ptr(), end=p+mCount; p!=end; ++p) {
-			(*p)->~T();
+		while(mCount > 0) {
+			release(mRoster[mCount-1]);
 		}
-		mCount = 0;
 	}
 	
 	void release(T* inst)
@@ -98,8 +103,8 @@ public:
 
 	void iterBegin()
 	{
-		mCurr = mRoster.ptr();
-		mEnd = mRoster.ptr() + mCount;
+		mCurr = mRoster;
+		mEnd = mRoster + mCount;
 	}
 
 	void iterCancel()
@@ -122,7 +127,7 @@ public:
 	}
 
 private:
-	inline int getIndex(T* inst) const { return (int)(inst - mRecords.ptr()); }
+	inline int getIndex(T* inst) const { return (int)(inst - mRecords); }
 	inline T** getIter(T* inst) const { return mBackRefs[getIndex(inst)]; }
 
 	void doSwap(T* slot, T* tail)
@@ -259,27 +264,36 @@ class BatchPool
 {
 private:
 	int mCount, mCap;
-	Array<T> mSlots;
-	Array<BatchIndex<T>> mIndex;
-	Array<BatchIndex<T>*> mBack;
+	T* mSlots;
+	BatchIndex<T>* mIndex;
+	BatchIndex<T>** mBack;
 	BatchIndex<T>* mFreelist;
 
 public:
 
-	BatchPool(int cap=1024) : mCount(0), mCap(cap), mSlots(cap), mIndex(cap), mBack(cap)
+	BatchPool(int cap=1024) : mCount(0), mCap(cap)
 	{
+		mSlots = (T*) lpMalloc(cap * (sizeof(T*) + sizeof(BatchIndex<T>*) + sizeof(BatchIndex<T>*)));
+		mIndex = (BatchIndex<T>*) (mSlots + cap);
+		mBack = (BatchIndex<T>**) (mIndex + cap);
+		
 		resetFreelist();
+	}
+	
+	~BatchPool()
+	{
+		lpFree(mSlots);
 	}
 
 	bool isEmpty() const { return mCount == 0; }
 	bool isFull() const { return mCount == mCap; }
 	bool isActive(BatchHandle<T> h) const { return h.index->slot >= begin() && h.index->slot < end(); }
 
-	T* begin() { return mSlots.ptr(); }
-	T* end() { return mSlots.ptr()+mCount; }
+	T* begin() { return mSlots; }
+	T* end() { return mSlots+mCount; }
 	
-	const T* begin() const { return mSlots.ptr(); }
-	const T* end() const { return mSlots.ptr()+mCount; }
+	const T* begin() const { return mSlots; }
+	const T* end() const { return mSlots+mCount; }
 
 	template<typename... Args> 
 	BatchHandle<T> alloc(Args&&... args)
@@ -303,7 +317,7 @@ public:
 		ASSERT(isActive(handle));
 		--mCount;
 		
-		auto i = (int) (handle.index->slot - mSlots.ptr());
+		auto i = (int) (handle.index->slot - mSlots);
 		if (i != mCount) {
 			// fill "hole" with last element
 			memcpy(mSlots + i, mSlots + mCount, sizeof(T));
@@ -328,7 +342,7 @@ private:
 
 	void resetFreelist()
 	{
-		mFreelist = mIndex.ptr();
+		mFreelist = mIndex;
 		for(int i=0; i<mCap-1; ++i) {
 			mIndex[i].next = mIndex + (i+1);
 		}
