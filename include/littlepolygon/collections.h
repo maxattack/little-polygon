@@ -102,10 +102,17 @@ template<typename T>
 class Queue {
 private:
 	int cap, n, i;
-	Array<T> slots;
+	T* slots;
+
+	void makeRoom()
+	{
+		if (slots == 0) {
+			slots = (T*) lpMalloc(cap * sizeof(T));
+		}
+	}
 
 public:
-	Queue(int aCapacity) : cap(aCapacity), n(0), i(0), slots(cap) {
+	Queue(int aCapacity) : cap(aCapacity), n(0), i(0), slots(0) {
 	}
 	
 	~Queue() {
@@ -114,6 +121,7 @@ public:
 			n--;
 			i = (i+1) % cap;
 		}
+		lpFree(slots);
 	}
 	
 	int capacity() const { return cap; }
@@ -123,6 +131,7 @@ public:
 	
 	void enqueue(const T& val) {
 		ASSERT(n < cap);
+		makeRoom();
 		new(&slots[(i + n) % cap]) T(val);
 		n++;
 	}
@@ -130,6 +139,7 @@ public:
 	template<typename... Args>
 	void emplace(Args&&... args) {
 		ASSERT(n < cap);
+		makeRoom();
 		new(&slots[(i + n) % cap]) T(std::forward<Args>(args) ...);
 		n++;
 	}
