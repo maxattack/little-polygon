@@ -131,74 +131,83 @@ void SpritePlotter::begin(const Viewport& aView)
 
 void SpritePlotter::drawImage(ImageAsset *img, lpVec pos, int frame, Color c, Color tint)
 {
-	ASSERT(isBound());
-	setTextureAtlas(img->texture);
-	auto slice = nextSlice();
-	FrameAsset *fr = img->frame(frame);
-
+	auto *fr = img->frame(frame);
 	pos -= fr->pivot;
-	
-	slice[0].set(pos,                    fr->uv0, c, tint);
-	slice[1].set(pos+vec(0,fr->size.y),  fr->uv1, c, tint);
-	slice[2].set(pos+vec(fr->size.x, 0), fr->uv2, c, tint);
-	slice[3].set(pos+fr->size,           fr->uv3, c, tint);
-
-	++count;
+	drawQuad(
+		img,
+		pos,
+		pos+vec(0,fr->size.y),
+		pos+vec(fr->size.x, 0),
+		pos+fr->size,
+		frame, c, tint
+	);
 }
 
 void SpritePlotter::drawImage(ImageAsset *img, lpVec pos, lpVec u, int frame, Color c, Color tint)
 {
-	ASSERT(isBound());
-	setTextureAtlas(img->texture);
-	auto slice = nextSlice();
-	FrameAsset *fr = img->frame(frame);
-
+	auto *fr = img->frame(frame);
 	lpVec p0 = -fr->pivot;
-	lpVec p1 = p0 + vec(0, fr->size.y);
-	lpVec p2 = p0 + vec(fr->size.x, 0);
-	lpVec p3 = p0 + fr->size;
-
-	slice[0].set(pos+cmul(p0,u), fr->uv0, c, tint);
-	slice[1].set(pos+cmul(p1,u), fr->uv1, c, tint);
-	slice[2].set(pos+cmul(p2,u), fr->uv2, c, tint);
-	slice[3].set(pos+cmul(p3,u), fr->uv3, c, tint);
-
-	++count;
+	drawQuad(
+		img,
+		pos+cmul(p0, u),
+		pos+cmul(p0 + vec(0, fr->size.y), u),
+		pos+cmul(p0 + vec(fr->size.x, 0), u),
+		pos+cmul(p0 + fr->size, u),
+		frame, c, tint
+	);
 }
 
 void SpritePlotter::drawImage(ImageAsset *img, const lpMatrix& xform, int frame, Color c, Color tint)
 {
-	ASSERT(isBound());
-	setTextureAtlas(img->texture);
-	auto slice = nextSlice();
-	FrameAsset *fr = img->frame(frame);
-
+	auto *fr = img->frame(frame);
 	lpVec p0 = -fr->pivot;
-	lpVec p1 = p0 + vec(0, fr->size.y);
-	lpVec p2 = p0 + vec(fr->size.x, 0);
-	lpVec p3 = p0 + fr->size;
-	
-	slice[0].set(xform.transformPoint(p0), fr->uv0, c, tint);
-	slice[1].set(xform.transformPoint(p1), fr->uv1, c, tint);
-	slice[2].set(xform.transformPoint(p2), fr->uv2, c, tint);
-	slice[3].set(xform.transformPoint(p3), fr->uv3, c, tint);
+	drawQuad(
+		img,
+		xform.transformPoint(p0),
+		xform.transformPoint(p0 + vec(0, fr->size.y)),
+		xform.transformPoint(p0 + vec(fr->size.x, 0)),
+		xform.transformPoint(p0 + fr->size),
+		frame, c, tint
+	);
+}
 
-	++count;	
+inline float min4(float a, float b, float c, float d)
+{
+	using namespace std;
+	return min(min(a,b), min(c,d));
+}
+
+inline float max4(float a, float b, float c, float d)
+{
+	using namespace std;
+	return max(max(a,b), max(c,d));
 }
 
 void SpritePlotter::drawQuad(ImageAsset *img, lpVec p0, lpVec p1, lpVec p2, lpVec p3, int frame, Color c, Color tint)
 {
 	ASSERT(isBound());
-	setTextureAtlas(img->texture);
-	auto slice = nextSlice();
-	FrameAsset *fr = img->frame(frame);
+	
+	// OBB Test (faster impl?)
+	auto min = vec(min4(p0.x, p1.x, p2.x, p3.x), min4(p0.y, p1.y, p2.y, p3.y));
+	auto max = vec(max4(p0.x, p1.x, p2.x, p3.x), max4(p0.y, p1.y, p2.y, p3.y));
+	auto halfSize = 0.5f * (max - min);
+	auto center = min + halfSize;
+	auto offset = center - view.center();
+	auto sz = halfSize + view.halfSize();
+	
+	if (lpAbs(offset.x) < sz.x && lpAbs(offset.y) < sz.y) {
+	
+		setTextureAtlas(img->texture);
+		auto slice = nextSlice();
+		FrameAsset *fr = img->frame(frame);
 
-	slice[0].set(p0, fr->uv0, c, tint);
-	slice[1].set(p1, fr->uv1, c, tint);
-	slice[2].set(p2, fr->uv2, c, tint);
-	slice[3].set(p3, fr->uv3, c, tint);
+		slice[0].set(p0, fr->uv0, c, tint);
+		slice[1].set(p1, fr->uv1, c, tint);
+		slice[2].set(p2, fr->uv2, c, tint);
+		slice[3].set(p3, fr->uv3, c, tint);
 
-	++count;	
+		++count;
+	}
 }
 
 #define UV_LABEL_SLOP (0.0001f)

@@ -65,8 +65,10 @@ public:
 	Viewport scaled(lpFloat k) { return Viewport(2.0f*k*mHalfSize, k*mCenter); }
 	
 	lpVec size() const { return 2.0 * mHalfSize; }
+	lpVec halfSize() const { return mHalfSize; }
 	lpFloat width() const { return 2.0 * mHalfSize.x; }
 	lpFloat height() const { return 2.0 * mHalfSize.y; }
+
 	
 	lpFloat aspect() const { return mHalfSize.x / mHalfSize.y; }
 
