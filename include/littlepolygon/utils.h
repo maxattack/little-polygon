@@ -112,26 +112,42 @@ struct NonCopyable
 //--------------------------------------------------------------------------------------------------
 // Unity3D-inspired "does this type have a method named XYZ?" detection via SFINAE
 
-#define DECLARE_HAS_MEMBER(member)                                                \
-template < class T >                                                              \
-class has_member_##member                                                         \
-{                                                                                 \
-private:                                                                          \
-    using Yes = char[2];                                                          \
-    using  No = char[1];                                                          \
-                                                                                  \
-    struct Fallback { int member; };                                              \
-    struct Derived : T, Fallback { };                                             \
-                                                                                  \
-    template < class U >                                                          \
-    static No& test ( decltype(U::member)* );                                     \
-    template < typename U >                                                       \
-    static Yes& test ( ... );                                                     \
-                                                                                  \
-public:                                                                           \
-enum e_value { value = sizeof(test<Derived>(nullptr)) == sizeof(Yes) };           \
-};                                                                                \
+//#define DECLARE_HAS_MEMBER(member)                                                \
+//template < class T >                                                              \
+//class has_member_##member                                                         \
+//{                                                                                 \
+//private:                                                                          \
+//    using Yes = char[2];                                                          \
+//    using  No = char[1];                                                          \
+//                                                                                  \
+//    struct Fallback { int member; };                                              \
+//    struct Derived : T, Fallback { };                                             \
+//                                                                                  \
+//    template < class U >                                                          \
+//    static No& test ( decltype(U::member)* );                                     \
+//    template < typename U >                                                       \
+//    static Yes& test ( ... );                                                     \
+//                                                                                  \
+//public:                                                                           \
+//enum e_value { value = sizeof(test<Derived>(nullptr)) == sizeof(Yes) };           \
+//};                                                                                \
+//
 
+#define DECLARE_HAS_MEMBER(X)                                                       \
+template<typename T> class has_member_##X {                                         \
+    struct Fallback { int X; };                                                     \
+    struct Derived : T, Fallback { };                                               \
+                                                                                    \
+    template<typename U, U> struct Check;                                           \
+                                                                                    \
+    typedef char ArrayOfOne[1];                                                     \
+    typedef char ArrayOfTwo[2];                                                     \
+                                                                                    \
+    template<typename U> static ArrayOfOne & func(Check<int Fallback::*, &U::X> *); \
+    template<typename U> static ArrayOfTwo & func(...);                             \
+  public:                                                                           \
+    enum { value = sizeof(func<Derived>(0)) == 2 };                                 \
+};
 
 
 
