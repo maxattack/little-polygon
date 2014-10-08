@@ -129,7 +129,7 @@ private:                                                                        
     static Yes& test ( ... );                                                     \
                                                                                   \
 public:                                                                           \
-    static constexpr bool value = sizeof(test<Derived>(nullptr)) == sizeof(Yes);  \
+enum e_value { value = sizeof(test<Derived>(nullptr)) == sizeof(Yes) };           \
 };                                                                                \
 
 

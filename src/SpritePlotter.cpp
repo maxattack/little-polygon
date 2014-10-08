@@ -171,15 +171,16 @@ void SpritePlotter::drawImage(ImageAsset *img, const lpMatrix& xform, int frame,
 	);
 }
 
+inline float min(float a, float b) { return a < b ? a : b;  }
+inline float max(float a, float b) { return a > b ? a : b;  }
+
 inline float min4(float a, float b, float c, float d)
 {
-	using namespace std;
 	return min(min(a,b), min(c,d));
 }
 
 inline float max4(float a, float b, float c, float d)
 {
-	using namespace std;
 	return max(max(a,b), max(c,d));
 }
 
