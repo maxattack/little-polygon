@@ -74,6 +74,10 @@ public:
 		while(mCount > 0) {
 			release(mRoster[mCount-1]);
 		}
+		// defrag
+		for(int i=0; i<mCap; ++i) {
+			mRoster[i] = mRecords + i;
+		}
 	}
 	
 	void release(T* inst)
