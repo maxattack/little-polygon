@@ -50,7 +50,7 @@ public:
 	
 	~Pool()
 	{
-		clear();
+		drain();
 		lpFree(mRecords);
 	}
 
@@ -68,7 +68,7 @@ public:
 		return new(inst) T (std::forward<Args>(args)...);
 	}
 	
-	void clear()
+	void drain()
 	{
 		ASSERT(mCurr == 0);
 		while(mCount > 0) {
